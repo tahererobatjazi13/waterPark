@@ -1,0 +1,101 @@
+<resources>
+    <string name="app_name">hotel</string>
+    <string name="label_app_name">موج های آبی</string>
+    <string name="label_username">نام کاربری</string>
+    <string name="label_password">رمز عبور</string>
+    <string name="label_forgot_password">فراموشی رمز عبور</string>
+    <string name="label_login">ورود</string>
+    <string name="label_collaborative_collections_list">لیست مجموعه های همکار</string>
+    <string name="label_visits_list">لیست بازدیدها</string>
+    <string name="label_visit_details">جزییات بازدید</string>
+    <string name="label_contact_number">شماره تماس</string>
+    <string name="label_user_role">نقش کاربری</string>
+    <string name="label_change_password">تغییر رمز عبور</string>
+    <string name="label_settings">تنظیمات</string>
+    <string name="label_setting_theme">تنظیمات تم</string>
+    <string name="label_edit_information">ویرایش اطلاعات</string>
+    <string name="label_log_out_account">خروج از حساب کاربری</string>
+    <string name="label_region">منطقه</string>
+    <string name="label_visitor">بازدیدکننده</string>
+    <string name="label_rating">امتیاز</string>
+    <string name="label_date">تاریخ</string>
+    <string name="label_status_active">فعال</string>
+    <string name="label_status_inactive">غیرفعال</string>
+    <string name="label_location">موقعیت مکانی</string>
+    <string name="label_description">توضیحات</string>
+    <string name="label_visitor_name">نام بازدیدکننده</string>
+    <string name="label_visit_date">تاریخ بازدید</string>
+    <string name="label_visit_time">ساعت بازدید</string>
+    <string name="label_status">وضعیت</string>
+    <string name="label_status_done">انجام شد</string>
+    <string name="label_search">جستجو ...</string>
+    <string name="label_filters">فیلترها</string>
+    <string name="label_collection">مجموعه</string>
+    <string name="label_active_collections">مجموعه های فعال</string>
+    <string name="label_inactive_collections">مجموعه های غیر فعال</string>
+    <string name="label_logout_title">خروج از حساب</string>
+    <string name="label_logout">خروج</string>
+    <string name="label_cancellation">انصراف</string>
+    <string name="label_light_theme">حالت روشن</string>
+    <string name="label_dark_theme">حالت تیره</string>
+    <string name="label_system_theme">مطابق سیستم</string>
+    <string name="label_choose_theme_mode">انتخاب حالت نمایش</string>
+    <string name="label_display_mode">حالت نمایش</string>
+    <string name="label_name_collaborative">نام مجموعه همکار</string>
+    <string name="label_name_recipient">نام پذیرش کننده</string>
+    <string name="label_date_time">تاریخ و ساعت</string>
+    <string name="label_visit_physical_result">نتیجه بازدید</string>
+    <string name="label_visit_phone_result">نتیجه تماس</string>
+    <string name="label_title_image_picker">برای انتخاب تصویر، ضربه بزنید</string>
+    <string name="label_image_picker_subtitle">حداکثر ۵ مگابایت، png/jpg</string>
+    <string name="label_register_gps">ثبت موقعیت مکانی GPS</string>
+    <string name="label_submit_visit">ثبت بازدید</string>
+    <string name="label_visit_image">تصویر بازدید</string>
+    <string name="label_gps_success_msg">موقعیت مکانی با GPS ثبت شد</string>
+    <string name="label_summary_title">خلاصه فعالیت امروز</string>
+    <string name="label_received_visits">بازدیدهای دریافتی</string>
+    <string name="label_phone_calls">تماس‌های تلفنی</string>
+    <string name="label_delivered_referrals">معرفی‌نامه‌های تحویلی</string>
+    <string name="label_in_person_visits">بازدیدهای حضوری</string>
+    <string name="label_shortcut_title">میانبر ثبت فعالیت</string>
+    <string name="label_register_visit_physical">ثبت بازدید حضوری</string>
+    <string name="label_register_visit_phone">ثبت تماس تلفنی</string>
+    <string name="label_schedule_title">برنامه بازدید امروز</string>
+    <string name="label_confirm">تایید</string>
+    <string name="label_cancel">لغو</string>
+    <string name="label_select_time">انتخاب ساعت</string>
+    <string name="label_user_profile">پروفایل کاربری</string>
+
+    // status
+    <string name="status_done">انجام شد</string>
+    <string name="status_visiting">در حال بازدید</string>
+    <string name="status_planned">برنامه‌ریزی شده</string>
+
+    // nav
+    <string name="nav_dashboard">داشبورد</string>
+    <string name="nav_collaborative_collections">مجموعه های همکار</string>
+    <string name="nav_visits">بازدیدها</string>
+    <string name="nav_cards">کارت‌ها</string>
+    <string name="nav_profile">پروفایل</string>
+
+
+    // sample
+    <string name="greeting_text">رضا، خوش آمدی</string>
+    <string name="gps_address_sample">تهران، سعادت آباد، خیابان سرو شرقی</string>
+    <string name="gps_time_sample">۲۴/۰۳/۱۴۰۳ - ۱۰:۳۰</string>
+
+    // hint
+    <string name="hint_enter_your_username">نام کاربری خود را وارد کنید</string>
+    <string name="hint_enter_your_password">رمز عبور خود را وارد کنید</string>
+    <string name="hint_choose_collaborative">نام مجموعه همکار را انتخاب کنید</string>
+    <string name="hint_enter_name_recipient">نام پذیرش کننده را وارد کنید</string>
+    <string name="hint_visit_physical_result">نتیجه بازدید را وارد کنید</string>
+    <string name="hint_visit_phone_result">نتیجه تماس را وارد کنید</string>
+    <string name="hint_description">توضیحات خود را وارد کنید…</string>
+
+    // error
+    <string name="error_username_required">نام کاربری را وارد کنید</string>
+    <string name="error_password_required">رمز عبور را وارد کنید</string>
+    <string name="error_logout">آیا مطمئن هستید که می‌خواهید از حساب کاربری خارج شوید؟</string>
+
+</resources>
