@@ -22,18 +22,6 @@ fun StatusBadge(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Surface(
-            shape = RoundedCornerShape(50),
-            color = style.badgeContainer
-        ) {
-            Text(
-                text = text,
-                color = style.badgeContent,
-                style = typography.labelSmall,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-            )
-        }
-
         if (icon != null) {
             Surface(
                 shape = CircleShape,
@@ -49,6 +37,18 @@ fun StatusBadge(
                     )
                 }
             }
+        }
+
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = style.badgeContainer
+        ) {
+            Text(
+                text = text,
+                color = style.badgeContent,
+                style = typography.labelSmall,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            )
         }
     }
 }

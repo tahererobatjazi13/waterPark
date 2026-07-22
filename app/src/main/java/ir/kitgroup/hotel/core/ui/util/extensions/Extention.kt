@@ -6,6 +6,11 @@ import ir.kitgroup.hotel.core.ui.model.VisitStatusStyle
 import ir.kitgroup.hotel.core.ui.theme.HotelTheme
 import ir.kitgroup.hotel.feature.dashboard.model.VisitStatus
 
+import androidx.annotation.StringRes
+import ir.kitgroup.hotel.R
+import ir.kitgroup.hotel.core.ui.util.CardStatus
+import ir.kitgroup.hotel.core.ui.util.VisitType
+
 @Composable
 fun VisitStatus.style(): VisitStatusStyle {
 
@@ -35,6 +40,16 @@ fun VisitStatus.style(): VisitStatusStyle {
         )
     }
 }
+
+
+@StringRes
+fun CardStatus.labelRes(): Int {
+    return when (this) {
+        CardStatus.Used -> R.string.status_used
+        CardStatus.Delivered -> R.string.status_delivered
+    }
+}
+
 
 /*
 git add .

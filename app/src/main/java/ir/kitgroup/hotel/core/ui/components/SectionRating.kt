@@ -9,11 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.hotel.core.ui.theme.HotelTheme
 
-
 @Composable
 fun Rating(rating: Int) {
     Row(
-        horizontalArrangement = Arrangement.End,
         modifier = Modifier.fillMaxWidth()
     ) {
         repeat(5) { index ->

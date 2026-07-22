@@ -36,24 +36,19 @@ import ir.kitgroup.hotel.core.ui.components.SectionTitle
 import ir.kitgroup.hotel.core.ui.components.StatusBadge
 import ir.kitgroup.hotel.core.ui.util.extensions.style
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.outlined.Badge
+import ir.kitgroup.hotel.navigation.Screen
 
 @Composable
 fun DashboardScreen(navController: NavController) {
 
     val summaryItems = listOf(
         SummaryCardData(
-            Icons.Filled.Person,
-            Green,
-            "18",
-            stringResource(R.string.label_in_person_visits),
-            Green
-        ),
-        SummaryCardData(
-            Icons.Filled.CreditCard,
-            Purple,
-            "12",
-            stringResource(R.string.label_delivered_referrals),
-            Purple
+            Icons.Filled.Domain,
+            Orange,
+            "34",
+            stringResource(R.string.label_received_visits),
+            Orange
         ),
         SummaryCardData(
             Icons.Filled.Call,
@@ -63,11 +58,19 @@ fun DashboardScreen(navController: NavController) {
             Blue
         ),
         SummaryCardData(
-            Icons.Filled.Domain,
-            Orange,
-            "34",
-            stringResource(R.string.label_received_visits),
-            Orange
+            Icons.Filled.CreditCard,
+            Purple,
+            "12",
+            stringResource(R.string.label_delivered_referrals),
+            Purple
+        ),
+
+        SummaryCardData(
+            Icons.Filled.Person,
+            Green,
+            "18",
+            stringResource(R.string.label_in_person_visits),
+            Green
         )
     )
 
@@ -104,12 +107,22 @@ fun DashboardScreen(navController: NavController) {
                 item { SummarySection(summaryItems) }
                 item { Spacer(Modifier.width(6.dp)) }
                 item {
+
                     QuickActionsSection(
                         onQuickVisitClick = { navController.navigate("register_visit/physical") }, // حضوری
-                        onQuickCallClick = { navController.navigate("register_visit/phone") }      // تلفنی
+                        onQuickCallClick = { navController.navigate("register_visit/phone") },      // تلفنی
+                        onQuickCollectionClick = { navController.navigate(Screen.RegisterCollection.route) },
+                        onQuickCardClick = { navController.navigate(Screen.RegisterCard.route) }
                     )
                 }
                 item { Spacer(Modifier.width(6.dp)) }
+                item {
+                    QuickAccessSection(
+                        onMapClick = { navController.navigate("register_visit/physical") },
+                        onReportClick = { navController.navigate("register_visit/phone") },
+                        onAdvertisingClick = {    navController.navigate(Screen.AdvertisingMenu.route)}
+                    )
+                }
                 item {
                     SectionTitle(
                         stringResource(R.string.label_schedule_title),
@@ -139,19 +152,17 @@ private fun DashboardHeader() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        NotificationIcon()
-
         Text(
             text = stringResource(R.string.greeting_text),
             color = MaterialTheme.colorScheme.onPrimary,
             style = typography.titleLarge
         )
+        NotificationIcon()
     }
 }
 
 @Composable
 private fun NotificationIcon() {
-
     Box(
         modifier = Modifier.size(32.dp),
         contentAlignment = Alignment.Center
@@ -250,7 +261,10 @@ private fun SummaryCard(data: SummaryCardData, modifier: Modifier) {
 @Composable
 private fun QuickActionsSection(
     onQuickVisitClick: () -> Unit,
-    onQuickCallClick: () -> Unit
+    onQuickCallClick: () -> Unit,
+    onQuickCollectionClick: () -> Unit,
+
+    onQuickCardClick: () -> Unit,
 ) {
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -258,17 +272,31 @@ private fun QuickActionsSection(
         SectionTitle(stringResource(R.string.label_shortcut_title))
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-
+            QuickActionCard(
+                stringResource(R.string.label_register_visit_physical),
+                Icons.Filled.CalendarViewDay,
+                onQuickVisitClick,
+                Modifier.weight(1f)
+            )
             QuickActionCard(
                 stringResource(R.string.label_register_visit_phone),
                 Icons.Filled.Call,
                 onQuickCallClick,
                 Modifier.weight(1f)
             )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
             QuickActionCard(
-                stringResource(R.string.label_register_visit_physical),
-                Icons.Filled.CalendarViewDay,
-                onQuickVisitClick,
+                stringResource(R.string.label_add_new_collection),
+                Icons.Filled.LibraryAdd,
+                onQuickCollectionClick,
+                Modifier.weight(1f)
+            )
+            QuickActionCard(
+                stringResource(R.string.label_issuing_new_card),
+                Icons.Outlined.Badge,
+                onQuickCardClick,
                 Modifier.weight(1f)
             )
         }
@@ -324,6 +352,105 @@ private fun QuickActionCard(
 }
 
 @Composable
+fun QuickAccessSection(
+    onMapClick: () -> Unit,
+    onReportClick: () -> Unit,
+    onAdvertisingClick: () -> Unit
+) {
+    Column {
+        Text(
+            text = stringResource(R.string.label_quick_access),
+            style = typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            QuickAccessCard(
+                title = stringResource(R.string.label_map),
+                icon = Icons.Filled.Map,
+                backgroundColor = Color(0xFFEAF8FB),
+                iconTint = Color(0xFF00A7E1),
+                onClick = onMapClick,
+                modifier = Modifier.weight(1f)
+            )
+
+            QuickAccessCard(
+                title = stringResource(R.string.label_reports),
+                icon = Icons.Filled.Assessment,
+                backgroundColor = Color(0xFFF1EAFE),
+                iconTint = Color(0xFF7B61FF),
+                onClick = onReportClick,
+                modifier = Modifier.weight(1f)
+            )
+
+            QuickAccessCard(
+                title = stringResource(R.string.label_advertising_stands),
+                icon = Icons.Filled.Inventory2,
+                backgroundColor = Color(0xFFFFF3E8),
+                iconTint = Color(0xFFFF9800),
+                onClick = onAdvertisingClick,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickAccessCard(
+    title: String,
+    icon: ImageVector,
+    backgroundColor: Color,
+    iconTint: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.aspectRatio(1f),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    )
+    {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier.size(20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Text(
+                text = title,
+                style = typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+
+@Composable
 private fun VisitCard(item: VisitItem) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -342,7 +469,13 @@ private fun VisitCard(item: VisitItem) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            VisitTimeAndStatus(item)
+            Image(
+                painter = painterResource(R.drawable.ic_logo),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(68.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
 
             Column(
                 horizontalAlignment = Alignment.End,
@@ -351,9 +484,10 @@ private fun VisitCard(item: VisitItem) {
                     .padding(horizontal = 10.dp)
             ) {
                 Text(
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     text = item.hotelName,
                     style = typography.titleMedium,
-                    textAlign = TextAlign.End
                 )
 
                 Rating(item.rating)
@@ -363,13 +497,8 @@ private fun VisitCard(item: VisitItem) {
                 )
             }
 
-            Image(
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(68.dp)
-                    .clip(RoundedCornerShape(12.dp))
-            )
+            VisitTimeAndStatus(item)
+
         }
     }
 }
@@ -379,7 +508,7 @@ fun VisitTimeAndStatus(item: VisitItem) {
     val statusStyle = item.status.style()
 
     Column(
-        horizontalAlignment = Alignment.Start,
+        horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(

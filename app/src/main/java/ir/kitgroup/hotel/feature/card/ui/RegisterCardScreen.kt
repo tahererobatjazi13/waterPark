@@ -1,14 +1,19 @@
-package ir.kitgroup.hotel.feature.visits.ui
+package ir.kitgroup.hotel.feature.card.ui
 
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -19,49 +24,32 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import ir.kitgroup.hotel.R
 import ir.kitgroup.hotel.core.ui.components.*
-import ir.kitgroup.hotel.core.ui.util.VisitType
 import saman.zamani.persiandate.PersianDate
-import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.ui.Alignment
 import ir.kitgroup.hotel.core.ui.util.CollectionStatus
 import ir.kitgroup.hotel.feature.collaborative_collection.model.CollectionModel
 import ir.kitgroup.hotel.feature.collaborative_collection.ui.CollaborativeBottomSheet
-import java.time.LocalTime
 
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("DefaultLocale")
 @Composable
-fun RegisterVisitScreen(
+fun CardRegistrationScreen(
     navController: NavController,
-    visitType: VisitType,
     onSubmitClick: () -> Unit = {}
 ) {
+
+    var cardNumber by rememberSaveable { mutableStateOf("") }
     var showCollaborativeSheet by remember { mutableStateOf(false) }
     var selectedCollaborative by rememberSaveable { mutableStateOf<CollectionModel?>(null) }
+    var recipientName by rememberSaveable { mutableStateOf("") }
 
     var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-
     val today = PersianDate()
-
-    var visitDate by rememberSaveable {
+    var cardDate by rememberSaveable {
         mutableStateOf("${today.shYear}/${today.shMonth}/${today.shDay}")
     }
-    val now = remember { LocalTime.now() }
-
-    var visitTime by rememberSaveable {
-        mutableStateOf(
-            String.format("%02d:%02d", now.hour, now.minute)
-        )
-    }
-
-
-    var visitResult by rememberSaveable { mutableStateOf("") }
-    var recipientName by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
-
-    val titleRes = visitType.titleRes
 
     val collaborativelist = listOf(
 
@@ -92,7 +80,7 @@ fun RegisterVisitScreen(
             .background(MaterialTheme.colorScheme.primary)
     ) {
         CustomHeader(
-            title = titleRes,
+            title = R.string.label_registration_delivery_card,
             showBackButton = true,
             onBackClick = { navController.popBackStack() }
         )
@@ -101,19 +89,16 @@ fun RegisterVisitScreen(
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             color = MaterialTheme.colorScheme.background
         ) {
-            RegisterVisitContent(
-                visitType = visitType,
+            CardRegistrationContent(
+                cardNumber = cardNumber,
+                onCardNumberResultChange = { cardNumber = it },
                 selectedCollaborative = selectedCollaborative,
                 isCollaborativeExpanded = showCollaborativeSheet,
                 onCollaborativeClick = { showCollaborativeSheet = true },
-                visitDate = visitDate,
-                visitTime = visitTime,
-                onDateClick = { showDatePicker = true },
-                onTimeClick = { showTimePicker = true },
                 recipientName = recipientName,
                 onRecipientResultChange = { recipientName = it },
-                visitResult = visitResult,
-                onVisitResultChange = { visitResult = it },
+                cardDate = cardDate,
+                onDateClick = { showDatePicker = true },
                 description = description,
                 onDescriptionChange = {
                     if (it.length <= 500) description = it
@@ -129,35 +114,14 @@ fun RegisterVisitScreen(
                 showDatePicker = false
             },
             onDateSelected = { date ->
-                visitDate =
+                cardDate =
                     "${date.year}/${date.month}/${date.day}"
-
                 showDatePicker = false
             }
         )
     }
-    val timePickerState = rememberTimePickerState(
-        initialHour = now.hour,
-        initialMinute = now.minute,
-        is24Hour = true
-    )
-    if (showTimePicker) {
 
-        TimePickerDialog(
-            timePickerState = timePickerState,
-            onConfirm = { hour, minute ->
-
-                visitTime = String.format("%02d:%02d", hour, minute)
-
-                showTimePicker = false
-            },
-            onDismiss = {
-                showTimePicker = false
-            }
-        )
-    }
     if (showCollaborativeSheet) {
-
         CollaborativeBottomSheet(
             list = collaborativelist,
             onDismiss = { showCollaborativeSheet = false },
@@ -170,26 +134,20 @@ fun RegisterVisitScreen(
 }
 
 @Composable
-private fun RegisterVisitContent(
-    visitType: VisitType,
+private fun CardRegistrationContent(
+    cardNumber: String,
+    onCardNumberResultChange: (String) -> Unit,
     selectedCollaborative: CollectionModel?,
     isCollaborativeExpanded: Boolean,
     onCollaborativeClick: () -> Unit,
-    visitDate: String,
-    visitTime: String,
-    onDateClick: () -> Unit,
-    onTimeClick: () -> Unit,
     recipientName: String,
     onRecipientResultChange: (String) -> Unit,
-    visitResult: String,
-    onVisitResultChange: (String) -> Unit,
+    cardDate: String,
+    onDateClick: () -> Unit,
     description: String,
     onDescriptionChange: (String) -> Unit,
     onSubmitClick: () -> Unit
 ) {
-    val resultTitleRes = visitType.resultTitleRes
-    val resultHintRes = visitType.resultHintRes
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -197,7 +155,13 @@ private fun RegisterVisitContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
+        CustomEditTextField(
+            value = cardNumber,
+            onValueChange = onCardNumberResultChange,
+            label = stringResource(R.string.label_card_number),
+            placeholder = stringResource(R.string.hint_enter_card_number),
+            leadingIcon = null,
+        )
         CustomSelectorField(
             value = selectedCollaborative?.name ?: "",
             label = stringResource(R.string.label_name_collaborative),
@@ -209,24 +173,14 @@ private fun RegisterVisitContent(
         CustomEditTextField(
             value = recipientName,
             onValueChange = onRecipientResultChange,
-            label = stringResource(R.string.label_name_recipient),
-            placeholder = stringResource(R.string.hint_enter_name_recipient),
+            label = stringResource(R.string.label_recipient_name),
+            placeholder = stringResource(R.string.hint_enter_recipient_name),
             leadingIcon = null,
         )
 
-        VisitDateTimeFields(
-            visitDate = visitDate,
+        VisitDateFields(
+            visitDate = cardDate,
             onDateClick = onDateClick,
-            visitTime = visitTime,
-            onTimeClick = onTimeClick
-        )
-
-        CustomEditTextField(
-            value = visitResult,
-            onValueChange = onVisitResultChange,
-            label = stringResource(resultTitleRes),
-            placeholder = stringResource(resultHintRes),
-            leadingIcon = null,
         )
 
         CustomDescriptionField(
@@ -236,16 +190,6 @@ private fun RegisterVisitContent(
             placeholder = stringResource(R.string.hint_description)
         )
 
-        if (visitType.showFields) {
-            ImageUploadField(
-                label = stringResource(R.string.label_visit_image)
-            )
-
-            GpsLocationField(
-                label = stringResource(R.string.label_register_gps)
-            )
-        }
-
         Button(
             onClick = onSubmitClick,
             modifier = Modifier
@@ -254,7 +198,7 @@ private fun RegisterVisitContent(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = stringResource(R.string.label_submit_visit),
+                text = stringResource(R.string.label_registration),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -262,3 +206,53 @@ private fun RegisterVisitContent(
     }
 }
 
+
+@Composable
+fun VisitDateFields(
+    visitDate: String,
+    onDateClick: () -> Unit
+) {
+    val colors = MaterialTheme.colorScheme
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.label_date_time),
+            style = typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(colors.surface, RoundedCornerShape(12.dp))
+                .border(1.dp, colors.outline, RoundedCornerShape(12.dp)),
+
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clickable { onDateClick() }
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = null,
+                    tint = colors.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = visitDate,
+                    style = typography.bodyMedium,
+                    color = colors.onSurface
+                )
+            }
+        }
+    }
+}

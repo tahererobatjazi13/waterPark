@@ -7,7 +7,9 @@
     <string name="label_login">ورود</string>
     <string name="label_collaborative_collections_list">لیست مجموعه های همکار</string>
     <string name="label_visits_list">لیست بازدیدها</string>
+    <string name="label_cards_list">لیست کارت ها</string>
     <string name="label_visit_details">جزییات بازدید</string>
+    <string name="label_collections_details">جزییات مجموعه</string>
     <string name="label_contact_number">شماره تماس</string>
     <string name="label_user_role">نقش کاربری</string>
     <string name="label_change_password">تغییر رمز عبور</string>
@@ -27,6 +29,7 @@
     <string name="label_visit_date">تاریخ بازدید</string>
     <string name="label_visit_time">ساعت بازدید</string>
     <string name="label_status">وضعیت</string>
+    <string name="label_all_status">همه وضعیت‌ها</string>
     <string name="label_status_done">انجام شد</string>
     <string name="label_search">جستجو ...</string>
     <string name="label_filters">فیلترها</string>
@@ -41,8 +44,11 @@
     <string name="label_system_theme">مطابق سیستم</string>
     <string name="label_choose_theme_mode">انتخاب حالت نمایش</string>
     <string name="label_display_mode">حالت نمایش</string>
-    <string name="label_name_collaborative">نام مجموعه همکار</string>
+    <string name="label_name_collaborative_collection">نام مجموعه همکار</string>
+    <string name="label_name_collaborative">نام مجموعه</string>
+    <string name="label_name_group_manager">نام مدیر مجموعه</string>
     <string name="label_name_recipient">نام پذیرش کننده</string>
+    <string name="label_capacity">ظرفیت (تعداد نفر)</string>
     <string name="label_date_time">تاریخ و ساعت</string>
     <string name="label_visit_physical_result">نتیجه بازدید</string>
     <string name="label_visit_phone_result">نتیجه تماس</string>
@@ -60,16 +66,106 @@
     <string name="label_shortcut_title">میانبر ثبت فعالیت</string>
     <string name="label_register_visit_physical">ثبت بازدید حضوری</string>
     <string name="label_register_visit_phone">ثبت تماس تلفنی</string>
+    <string name="label_add_new_collection">افزودن مجموعه جدید</string>
     <string name="label_schedule_title">برنامه بازدید امروز</string>
     <string name="label_confirm">تایید</string>
+    <string name="label_save">ذخیره</string>
     <string name="label_cancel">لغو</string>
     <string name="label_select_time">انتخاب ساعت</string>
     <string name="label_user_profile">پروفایل کاربری</string>
+    <string name="label_collection_images">تصاویر مجموعه</string>
+    <string name="label_collection_grade">درجه مجموعه</string>
+    <string name="label_reception_phone">تلفن پذیرش</string>
+    <string name="label_mobile_number">شماره موبایل</string>
+    <string name="label_address">آدرس</string>
+    <string name="label_arab_guest_reception">پذیرش مهمان عرب: </string>
+    <string name="label_has">دارد</string>
+    <string name="label_has_not">ندارد</string>
+    <string name="label_collection_status">وضعیت مجموعه: </string>
+    <string name="label_active">فعال</string>
+    <string name="label_inactive">غیرفعال</string>
+    <string name="label_add_image">افزودن تصویر</string>
+    <string name="label_maximum_10_images">حداکثر 10 تصویر</string>
+    <string name="label_registration_delivery_card">ثبت و تحویل کارت</string>
+    <string name="label_card_delivery">تحویل کارت</string>
+    <string name="label_card_registration">ثبت کارت </string>
+    <string name="label_registration">ثبت</string>
+    <string name="label_issuing_new_card">صدور کارت جدید</string>
+    <string name="label_all_visitors">همه بازدیدکنندگان</string>
+    <string name="label_pick_date">انتخاب تاریخ</string>
+    <string name="label_image_gallery">گالری تصویر</string>
+    <string name="label_rating_evaluation">امتیاز و ارزیابی</string>
+    <string name="label_deactivation">غیرفعال‌سازی</string>
+    <string name="label_edit_collection">ویرایش مجموعه</string>
+    <string name="label_quick_access">دسترسی سریع</string>
+    <string name="label_map">نقشه</string>
+    <string name="label_reports">گزارشات</string>
+    <string name="label_advertising_stands">استندهای تبلیغاتی</string>
+    <string name="label_managing_promotional_items">مدیریت آیتمهای تبلیغاتی</string>
+    <string name="label_recipient_name">نام گیرنده</string>
+    <string name="label_card_number">شماره کارت</string>
+    <string name="label_add_new_item">آیتم جدید</string>
+    <string name="label_edit">ویرایش</string>
+
+    <string name="label_item_type">نوع آیتم</string>
+    <string name="label_stock">موجودی</string>
+
+    <string name="status_active">فعال</string>
+    <string name="status_inactive">غیرفعال</string>
+    <string name="status_out_of_stock">ناموجود</string>
+    <string name="label_add_new_items">افزودن آیتم جدید</string>
+    <string name="label_edit_item">ویرایش آیتم تبلیغاتی</string>
+    <string name="label_item_title">عنوان آیتم</string>
+    <string name="placeholder_item_title">مثلا استند رومیزی VIP</string>
+    <string name="placeholder_stock">مثلا 25</string>
+    <string name="label_icon_category">آیکن / دسته</string>
+    <string name="label_active_status">وضعیت فعال</string>
+    <string name="placeholder_description">توضیح کوتاه درباره آیتم...</string>
+    <string name="btn_submit_item">ثبت آیتم</string>
+    <string name="btn_edit_item">ذخیره تغییرات</string>
+    <string name="label_add_edit_view_advertising_items">افزودن، ویرایش و مشاهده آیتم‌های تبلیغاتی</string>
+    <string name="label_allocate_advertising_items">تخصیص آیتم‌های تبلیغاتی</string>
+    <string name="label_allocate_items_to_visitor">تخصیص آیتم‌ها به ویزیتور</string>
+    <string name="label_allocate_items_to_collection">تخصیص آیتم‌ها به مجموعه ی همکار</string>
+    <string name="label_no_items_found">آیتمی برای نمایش یافت نشد</string>
+    <string name="label_advertising_allocation">تخصیص آیتم‌های تبلیغاتی</string>
+    <string name="label_allocate_stand_to_visitor">تخصیص استندها به ویزیتورها</string>
+    <string name="label_allocate_stand_to_collection">تخصیص استندها به مجموعه همکار</string>
+    <string name="btn_new_allocation">تخصیص جدید</string>
+    <string name="label_new_allocation">تخصیص جدید</string>
+    <string name="desc_back">بازگشت</string>
+    <string name="desc_menu">منو</string>
+
+    <string name="filter_all">همه</string>
+    <string name="filter_delivered">تحویل شده</string>
+    <string name="filter_pending">در انتظار</string>
+
+    <string name="label_hotel_name">نام هتل</string>
+    <string name="label_allocated_count">تعداد</string>
+    <string name="label_allocated_date">تاریخ تخصیص</string>
+    <string name="label_unit_count">عدد</string>
+    <string name="status_pending">در انتظار</string>
+
+
+    <!-- انواع آیتم‌ها -->
+    <string name="type_desktop_stand">استند رومیزی</string>
+    <string name="type_wall_stand">استند دیواری</string>
+    <string name="type_brochure">بروشور</string>
+    <string name="type_other">سایر</string>
+
+    <!-- نام آیکن‌ها -->
+    <string name="icon_stand">استند</string>
+    <string name="icon_brochure">بروشور</string>
+    <string name="icon_campaign">کمپین</string>
+    <string name="icon_location">محل</string>
+
 
     // status
     <string name="status_done">انجام شد</string>
     <string name="status_visiting">در حال بازدید</string>
     <string name="status_planned">برنامه‌ریزی شده</string>
+    <string name="status_used">استفاده شده</string>
+    <string name="status_delivered">تحویل شده</string>
 
     // nav
     <string name="nav_dashboard">داشبورد</string>
@@ -77,6 +173,16 @@
     <string name="nav_visits">بازدیدها</string>
     <string name="nav_cards">کارت‌ها</string>
     <string name="nav_profile">پروفایل</string>
+
+    // tab
+    <string name="tab_all">همه</string>
+    <string name="tab_active">فعال</string>
+    <string name="tab_out_of_stock">ناموجود</string>
+
+
+    // message
+    <string name="msg_no_item_found">آیتمی یافت نشد</string>
+    <string name="msg_select_one_of_options">یکی از گزینه‌های زیر را انتخاب کنید</string>
 
 
     // sample
@@ -88,10 +194,19 @@
     <string name="hint_enter_your_username">نام کاربری خود را وارد کنید</string>
     <string name="hint_enter_your_password">رمز عبور خود را وارد کنید</string>
     <string name="hint_choose_collaborative">نام مجموعه همکار را انتخاب کنید</string>
-    <string name="hint_enter_name_recipient">نام پذیرش کننده را وارد کنید</string>
+    <string name="hint_enter_name_recipient">نام پذیرش را وارد کنید</string>
+    <string name="hint_enter_recipient_name">نام گیرنده را وارد کنید</string>
+    <string name="hint_enter_name_collection">نام مجموعه را وارد کنید</string>
+    <string name="hint_enter_name_group_manager">نام مدیر را وارد کنید</string>
+    <string name="hint_enter_card_number">شماره کارت را وارد کنید</string>
+    <string name="hint_enter_collection_capacity">ظرفیت را وارد کنید</string>
+    <string name="hint_enter_reception_phone">تلفن پذیرش را وارد کنید</string>
+    <string name="hint_enter_mobile_number">شماره موبایل را وارد کنید</string>
+    <string name="hint_enter_address">آدرس را وارد کنید</string>
     <string name="hint_visit_physical_result">نتیجه بازدید را وارد کنید</string>
     <string name="hint_visit_phone_result">نتیجه تماس را وارد کنید</string>
     <string name="hint_description">توضیحات خود را وارد کنید…</string>
+    <string name="hint_search_card_number">جستجو بر اساس شماره کارت ...</string>
 
     // error
     <string name="error_username_required">نام کاربری را وارد کنید</string>

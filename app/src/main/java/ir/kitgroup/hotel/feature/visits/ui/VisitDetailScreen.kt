@@ -136,6 +136,15 @@ fun CollectionsInfoCard(visit: VisitDetailModel) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Image(
+                painter = painterResource(R.drawable.ic_logo),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(110.dp)
+                    .clip(RoundedCornerShape(14.dp)),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(Modifier.width(12.dp))
 
             Column(
                 modifier = Modifier
@@ -146,7 +155,6 @@ fun CollectionsInfoCard(visit: VisitDetailModel) {
                 Text(
                     text = visit.title,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.End,
                     style = typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -159,15 +167,6 @@ fun CollectionsInfoCard(visit: VisitDetailModel) {
                 Rating(visit.rating)
 
             }
-            Spacer(Modifier.width(12.dp))
-            Image(
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(110.dp)
-                    .clip(RoundedCornerShape(14.dp)),
-                contentScale = ContentScale.Crop
-            )
         }
     }
 }
@@ -228,16 +227,34 @@ fun InfoRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "$label :",
+                style = typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
 
         if (status != null) {
             StatusBadge(
                 text = value,
                 style = status.style()
             )
-
         } else {
             Text(
                 text = value,
@@ -245,30 +262,7 @@ fun InfoRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Start
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                textAlign = TextAlign.End,
-                text = ":$label",
-                style = typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp)
             )
         }
     }
@@ -325,8 +319,7 @@ fun DescriptionCard(text: String) {
         Text(
             text = text,
             modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.End,
-            style = typography.bodyMedium,
+            style = typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

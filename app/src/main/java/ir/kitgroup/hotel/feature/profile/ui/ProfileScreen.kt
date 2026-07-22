@@ -153,7 +153,6 @@ private fun ProfileDivider() {
         color = HotelTheme.colors.border
     )
 }
-
 @Composable
 private fun UserInfoRow(
     label: String,
@@ -164,22 +163,8 @@ private fun UserInfoRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.End
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = value,
-            style = typography.labelMedium,
-            color = HotelTheme.colors.textPrimary,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.End
-        )
-        Text(
-            text = "  | $label ",
-            style = typography.labelSmall,
-            color = HotelTheme.colors.textSecondary
-        )
-        Spacer(modifier = Modifier.width(8.dp))
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -193,5 +178,31 @@ private fun UserInfoRow(
                 modifier = Modifier.size(20.dp)
             )
         }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = label,
+            style = typography.labelSmall,
+            color = HotelTheme.colors.textSecondary
+        )
+
+        Spacer(modifier = Modifier.width(6.dp))
+
+        Text(
+            text = "|",
+            style = typography.labelSmall,
+            color = HotelTheme.colors.textSecondary
+        )
+
+        Spacer(modifier = Modifier.width(6.dp))
+
+        Text(
+            text = value,
+            style = typography.labelMedium,
+            color = HotelTheme.colors.textPrimary,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Start
+        )
     }
 }

@@ -10,8 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import ir.kitgroup.hotel.R
 import ir.kitgroup.hotel.feature.collaborative_collection.model.CollectionModel
 import ir.kitgroup.hotel.core.ui.components.*
 
@@ -22,7 +24,7 @@ fun CollaborativeBottomSheet(
     onDismiss: () -> Unit,
     onItemSelected: (CollectionModel) -> Unit
 ) {
-    val searchQuery by remember { mutableStateOf("") }
+    var searchQuery by remember { mutableStateOf("") }
 
     val filteredList = remember(searchQuery, list) {
         list.filter {
@@ -43,7 +45,10 @@ fun CollaborativeBottomSheet(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                FilterSection()
+                FilterSection(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    hint = stringResource(R.string.label_search))
 
                 Spacer(modifier = Modifier.height(16.dp))
 

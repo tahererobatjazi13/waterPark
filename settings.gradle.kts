@@ -1,6 +1,5 @@
 pluginManagement {
     repositories {
-        // این بخش برای دانلود پلاگین‌ها ضروری است
         google {
             content {
                 includeGroupByRegex("com\\.android.*")

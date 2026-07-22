@@ -63,10 +63,12 @@ import ir.kitgroup.hotel.core.ui.model.FilterItem
 import ir.kitgroup.hotel.core.ui.theme.HotelTheme
 import ir.kitgroup.hotel.core.ui.util.CollectionStatus
 import ir.kitgroup.hotel.feature.collaborative_collection.model.CollectionModel
+import ir.kitgroup.hotel.navigation.Screen
 
 @Composable
 fun CollaborativeCollectionsScreen(navController: NavController) {
     var selectedTab by remember { mutableStateOf(true) }
+    var searchQuery by remember { mutableStateOf("") }
 
     val collections = listOf(
 
@@ -114,7 +116,11 @@ fun CollaborativeCollectionsScreen(navController: NavController) {
             Column(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)
             ) {
-                FilterSection()
+                FilterSection(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    hint = stringResource(R.string.label_search)
+                )
 
                 Spacer(Modifier.height(8.dp))
 
@@ -137,7 +143,16 @@ fun CollaborativeCollectionsScreen(navController: NavController) {
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
                     items(filteredList) { collection ->
-                        CollectionsCard(collection)
+                        CollectionsCard(
+                            collection = collection,
+                            onClick = {
+                                navController.navigate(
+                                    Screen.CollectionDetail.createRoute(
+                                        collection.id
+                                    )
+                                )
+                            }
+                        )
                     }
 
                     item { Spacer(Modifier.height(80.dp)) }
@@ -150,29 +165,15 @@ fun CollaborativeCollectionsScreen(navController: NavController) {
 @Composable
 fun CollectionsFiltersRow() {
     val filters = listOf(
-        FilterItem(R.string.label_rating, Icons.Default.Star),
+        FilterItem(R.string.label_region, Icons.Default.LocationCity),
         FilterItem(R.string.label_visitor, Icons.Default.Person),
-        FilterItem(R.string.label_region, Icons.Default.LocationCity)
+        FilterItem(R.string.label_rating, Icons.Default.Star)
     )
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            items(filters) { filter ->
-                FilterChip(
-                    text = stringResource(filter.titleRes),
-                    icon = filter.icon
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
         Button(
             onClick = { },
             colors = ButtonDefaults.buttonColors(
@@ -200,6 +201,19 @@ fun CollectionsFiltersRow() {
                 style = typography.labelSmall
             )
         }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            items(filters) { filter ->
+                FilterChip(
+                    text = stringResource(filter.titleRes),
+                    icon = filter.icon
+                )
+            }
+        }
     }
 }
 
@@ -220,19 +234,18 @@ fun CollectionsTabSwitcher(
             .padding(4.dp)
     ) {
         TabItem(
-            title = R.string.label_inactive_collections,
-            count = inactiveCount.toString(),
-            isSelected = !selectedTab,
-            modifier = Modifier.weight(1f),
-            onClick = { onTabChange(false) }
-        )
-
-        TabItem(
             title = R.string.label_active_collections,
             count = activeCount.toString(),
             isSelected = selectedTab,
             modifier = Modifier.weight(1f),
             onClick = { onTabChange(true) }
+        )
+        TabItem(
+            title = R.string.label_inactive_collections,
+            count = inactiveCount.toString(),
+            isSelected = !selectedTab,
+            modifier = Modifier.weight(1f),
+            onClick = { onTabChange(false) }
         )
     }
 }
@@ -271,6 +284,16 @@ fun TabItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
+        Text(
+            text = stringResource(title),
+            color = titleColor,
+            style = typography.bodySmall.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+            )
+        )
+
+        Spacer(Modifier.width(8.dp))
+
         Box(
             modifier = Modifier
                 .background(
@@ -285,24 +308,18 @@ fun TabItem(
                 style = typography.titleSmall
             )
         }
-
-        Spacer(Modifier.width(8.dp))
-
-        Text(
-            text = stringResource(title),
-            color = titleColor,
-            style = typography.bodySmall.copy(
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-            )
-        )
     }
 }
 
 @Composable
-fun CollectionsCard(collection: CollectionModel) {
-
+fun CollectionsCard(
+    collection: CollectionModel,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -316,6 +333,14 @@ fun CollectionsCard(collection: CollectionModel) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Image(
+                painter = painterResource(R.drawable.ic_logo),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             Column(
                 modifier = Modifier
@@ -327,8 +352,6 @@ fun CollectionsCard(collection: CollectionModel) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-
-                    CollectionStatusBadge(collection.status)
                     Text(
                         text = collection.name,
                         style = typography.titleMedium,
@@ -336,21 +359,14 @@ fun CollectionsCard(collection: CollectionModel) {
                         textAlign = TextAlign.End,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    CollectionStatusBadge(collection.status)
                 }
+
                 Spacer(Modifier.height(4.dp))
                 Rating(collection.rating)
                 Spacer(Modifier.height(6.dp))
                 LocationRow(location = collection.location)
             }
-
-            Image(
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(90.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
         }
     }
 }

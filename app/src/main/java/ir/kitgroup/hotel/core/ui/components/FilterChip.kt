@@ -64,12 +64,11 @@ fun FilterChip(
             modifier = Modifier.padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
+                imageVector = icon,
                 contentDescription = null,
-                tint = arrowColor,
-                modifier = Modifier.size(14.dp)
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
             )
 
             Spacer(Modifier.width(6.dp))
@@ -81,12 +80,11 @@ fun FilterChip(
             )
 
             Spacer(Modifier.width(6.dp))
-
             Icon(
-                imageVector = icon,
+                imageVector = Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
+                tint = arrowColor,
+                modifier = Modifier.size(14.dp)
             )
         }
     }

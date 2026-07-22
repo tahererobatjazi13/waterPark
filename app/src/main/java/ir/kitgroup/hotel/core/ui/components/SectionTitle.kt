@@ -27,7 +27,7 @@ fun SectionTitle(
     ) {
         Text(
             text = title,
-            style = typography.titleMedium,
+            modifier = Modifier.fillMaxWidth(), style = typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
 
