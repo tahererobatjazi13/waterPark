@@ -1,0 +1,65 @@
+package ir.kitgroup.partnerManagement.core.ui.components
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Badge
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
+import ir.kitgroup.partnerManagement.core.ui.util.Status
+
+@Composable
+fun StatusBadge(
+    status: Status,
+    modifier: Modifier = Modifier
+) {
+    val containerColor: Color
+    val contentColor: Color
+    val text: String
+
+    when (status) {
+        Status.ACTIVE -> {
+            containerColor = PartnerManagementTheme.colors.successContainer
+            contentColor = PartnerManagementTheme.colors.onSuccessContainer
+            text = stringResource(R.string.label_active)
+        }
+
+        Status.INACTIVE -> {
+            containerColor = PartnerManagementTheme.colors.errorContainer
+            contentColor = PartnerManagementTheme.colors.onErrorContainer
+            text = stringResource(R.string.label_inactive)
+        }
+
+        Status.USED -> {
+            containerColor = PartnerManagementTheme.colors.successContainer
+            contentColor = PartnerManagementTheme.colors.onSuccessContainer
+            text = stringResource(R.string.label_used)
+        }
+
+        Status.DELIVERED -> {
+            containerColor = PartnerManagementTheme.colors.infoContainer
+            contentColor = PartnerManagementTheme.colors.onInfoContainer
+            text = stringResource(R.string.label_delivered)
+        }
+    }
+
+    Badge(
+        modifier = modifier,
+        containerColor = containerColor,
+        contentColor = contentColor
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(
+                horizontal = 10.dp,
+                vertical = 5.dp
+            )
+        )
+    }
+}

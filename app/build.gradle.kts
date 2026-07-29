@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "ir.kitgroup.hotel"
+    namespace = "ir.kitgroup.partnerManagement"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "ir.kitgroup.hotel"
+        applicationId = "ir.kitgroup.partnerManagement"
         minSdk = 23
         targetSdk = 35
         versionCode = 1
