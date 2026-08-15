@@ -18,8 +18,8 @@ import ir.kitgroup.partnerManagement.core.ui.components.*
 import saman.zamani.persiandate.PersianDate
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.collaborative_collection.model.CollectionModel
-import ir.kitgroup.partnerManagement.feature.collaborative_collection.ui.CollaborativeBottomSheet
+import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
+import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationBottomSheet
 import java.util.Calendar
 import java.util.Locale
 
@@ -33,7 +33,7 @@ fun AddCardScreen(
 
     var cardNumber by rememberSaveable { mutableStateOf("") }
     var showCollaborativeSheet by remember { mutableStateOf(false) }
-    var selectedCollaborative by rememberSaveable { mutableStateOf<CollectionModel?>(null) }
+    var selectedCollaborative by rememberSaveable { mutableStateOf<OrganizationModel?>(null) }
     var recipientName by rememberSaveable { mutableStateOf("") }
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -66,18 +66,18 @@ fun AddCardScreen(
 
     val collaborativelist = remember {
         listOf(
-            CollectionModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5),
-            CollectionModel(2, " مجموعه پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4),
-            CollectionModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
-            CollectionModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
-            CollectionModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3),
-            CollectionModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2),
-            CollectionModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3),
-            CollectionModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4),
-            CollectionModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2),
-            CollectionModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3),
-            CollectionModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5),
-            CollectionModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2)
+            OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5),
+            OrganizationModel(2, " مجموعه پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4),
+            OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
+            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
+            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3),
+            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2),
+            OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3),
+            OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4),
+            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2),
+            OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3),
+            OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5),
+            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2)
         )
     }
 
@@ -121,8 +121,8 @@ fun AddCardScreen(
 
                     CustomSelectorField(
                         value = selectedCollaborative?.name ?: "",
-                        label = stringResource(R.string.label_name_collaborative),
-                        placeholder = stringResource(R.string.hint_choose_collaborative),
+                        label = stringResource(R.string.label_organization_name),
+                        placeholder = stringResource(R.string.hint_choose_organization_name),
                         isExpanded = showCollaborativeSheet,
                         onClick = { showCollaborativeSheet = true }
                     )
@@ -190,7 +190,7 @@ fun AddCardScreen(
     }
 
     if (showCollaborativeSheet) {
-        CollaborativeBottomSheet(
+        OrganizationBottomSheet(
             list = collaborativelist,
             onDismiss = { showCollaborativeSheet = false },
             onItemSelected = { item ->

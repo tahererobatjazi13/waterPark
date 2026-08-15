@@ -38,22 +38,12 @@ class MainPreferences @Inject constructor(
         val KEY_ID = intPreferencesKey("key_id")
         val KEY_FIRST_NAME = stringPreferencesKey("key_firstName")
         val KEY_LAST_NAME = stringPreferencesKey("key_lastName")
-        val KEY_PERSONNEL_ID = intPreferencesKey("key_personnelId")
         val KEY_IS_LOGGED = booleanPreferencesKey("key_is_login")
-        val KEY_SALE_CENTER_ID = intPreferencesKey("key_sale_center_id")
-        val KEY_DEFAULT_ANBAR_ID = intPreferencesKey("key_default_anbar_Id")
-        val KEY_CONTROL_VISIT_SCHEDULE = booleanPreferencesKey("key_control_visit_schedule")
         val KEY_BASE_URL = stringPreferencesKey("base_url")
+        val KEY_USER_ROLE = stringPreferencesKey("key_user_role")
+        val KEY_USERNAME = stringPreferencesKey("key_username")
 
 
-        val KEY_FILTER_CONDITION = stringPreferencesKey("filter_condition")
-        val KEY_FROM_DATE = stringPreferencesKey("from_date")
-        val KEY_TO_DATE = stringPreferencesKey("to_date")
-        val KEY_CUSTOMER_ID = intPreferencesKey("customer_id")
-        val KEY_CUSTOMER_NAME = stringPreferencesKey("customer_name")
-        val KEY_DIRECTION_CODES = stringPreferencesKey("direction_codes")
-        val KEY_DIRECTION_NAMES = stringPreferencesKey("direction_names")
-        val KEY_DIRECTION_CLEARED = booleanPreferencesKey("direction_cleared")
     }
 
     val id: Flow<Int?> = context.dataStore.data
@@ -65,121 +55,40 @@ class MainPreferences @Inject constructor(
     val lastName: Flow<String?> = context.dataStore.data
         .map { it[KEY_LAST_NAME] }
 
-    val personnelId: Flow<Int?> = context.dataStore.data
-        .map { it[KEY_PERSONNEL_ID] }
+    val isLoggedIn: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[KEY_IS_LOGGED] ?: false
+        }
 
-    val isLoggedIn: Flow<Boolean?> = context.dataStore.data
-        .map { it[KEY_IS_LOGGED] }
-
-    val saleCenterId: Flow<Int?> = context.dataStore.data
-        .map { it[KEY_SALE_CENTER_ID] }
-
-    val defaultAnbarId: Flow<Int?> = context.dataStore.data
-        .map { it[KEY_DEFAULT_ANBAR_ID] }
-
-    val controlVisitSchedule: Flow<Boolean?> = context.dataStore.data
-        .map { it[KEY_CONTROL_VISIT_SCHEDULE] }
-
-    val filterCondition: Flow<String?> = context.filterConditionDataStore.data
-        .map { it[KEY_FILTER_CONDITION] }
-
-    val fromDate: Flow<String?> = context.filterConditionDataStore.data
-        .map { it[KEY_FROM_DATE] }
-
-    val toDate: Flow<String?> = context.filterConditionDataStore.data
-        .map { it[KEY_TO_DATE] }
-
-    val customerName: Flow<String?> = context.filterConditionDataStore.data
-        .map { it[KEY_CUSTOMER_NAME] }
-
-    val customerId: Flow<Int?> = context.filterConditionDataStore.data
-        .map { it[KEY_CUSTOMER_ID] }
-
-    val directionCodes: Flow<String?> = context.filterConditionDataStore.data
-        .map { it[KEY_DIRECTION_CODES] }
-
-    val directionNames: Flow<String?> = context.filterConditionDataStore.data
-        .map { it[KEY_DIRECTION_NAMES] }
 
     val baseUrlFlow: Flow<String?> = context.settingsDataStore.data
         .map { it[KEY_BASE_URL] }
 
+    val userRole: Flow<String?> = context.dataStore.data.map { it[KEY_USER_ROLE] }
+    val username: Flow<String?> = context.dataStore.data.map { it[KEY_USERNAME] }
 
-    suspend fun saveUserInfo(
-        id: Int,
-        firstName: String, lastName: String, personnelId: Int
-    ) {
+
+    suspend fun saveLoginInfo(username: String, role: String) {
         context.dataStore.edit { prefs ->
-            prefs[KEY_ID] = id
-            prefs[KEY_FIRST_NAME] = firstName
-            prefs[KEY_LAST_NAME] = lastName
-            prefs[KEY_PERSONNEL_ID] = personnelId
+            prefs[KEY_USERNAME] = username
+            prefs[KEY_USER_ROLE] = role
             prefs[KEY_IS_LOGGED] = true
         }
     }
 
     suspend fun clearUserInfo() {
-        context.dataStore.edit { it.clear() }
-    }
-
-    suspend fun saveVisitorInfo(
-        id: Int,
-        saleCenterId: Int
-    ) {
         context.dataStore.edit { prefs ->
-            prefs[KEY_SALE_CENTER_ID] = saleCenterId
-        }
-    }
-
-    suspend fun saveDefaultAnbarId(
-        defaultAnbarId: Int
-    ) {
-        context.dataStore.edit { prefs ->
-            prefs[KEY_DEFAULT_ANBAR_ID] = defaultAnbarId
-        }
-    }
-
-    suspend fun saveControlVisitSchedule(controlVisitSchedule: Boolean) {
-        context.dataStore.edit { prefs ->
-            prefs[KEY_CONTROL_VISIT_SCHEDULE] = controlVisitSchedule
-        }
-    }
-
-    suspend fun saveFilterConditionInfo(
-        filterCondition: String,
-        fromDate: String, toDate: String, customerId: Int, customerName: String
-    ) {
-        context.filterConditionDataStore.edit { prefs ->
-            prefs[KEY_FILTER_CONDITION] = filterCondition
-            prefs[KEY_FROM_DATE] = fromDate
-            prefs[KEY_TO_DATE] = toDate
-            prefs[KEY_CUSTOMER_ID] = customerId
-            prefs[KEY_CUSTOMER_NAME] = customerName
+            prefs.remove(KEY_ID)
+            prefs.remove(KEY_FIRST_NAME)
+            prefs.remove(KEY_LAST_NAME)
+            prefs.remove(KEY_IS_LOGGED)
+            prefs.remove(KEY_USERNAME)
+            prefs.remove(KEY_USER_ROLE)
         }
     }
 
     suspend fun clearFilterConditionInfo() {
         context.filterConditionDataStore.edit { it.clear() }
-    }
-
-    suspend fun saveDirectionFilter(directionCodes: String, directionNames: String) {
-        context.filterConditionDataStore.edit { prefs ->
-            prefs[KEY_DIRECTION_CODES] = directionCodes
-            prefs[KEY_DIRECTION_NAMES] = directionNames
-        }
-    }
-
-    suspend fun clearDirectionFilter() {
-        context.filterConditionDataStore.edit { prefs ->
-            prefs.remove(KEY_DIRECTION_CODES)
-            prefs.remove(KEY_DIRECTION_NAMES)
-        }
-    }
-
-    suspend fun setDirectionCleared(value: Boolean) {
-        context.filterConditionDataStore.edit {
-            it[KEY_DIRECTION_CLEARED] = value
-        }
     }
 
     suspend fun saveBaseUrl(baseUrl: String) {
@@ -191,6 +100,5 @@ class MainPreferences @Inject constructor(
     suspend fun getBaseUrl(): String {
         return baseUrlFlow.first() ?: "http://default/api/Android/"
     }
-
 
 }

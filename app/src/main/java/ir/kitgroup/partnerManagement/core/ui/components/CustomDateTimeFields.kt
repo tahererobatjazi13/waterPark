@@ -32,8 +32,9 @@ fun CustomDateTimeFields(
     label: String,
     date: String,
     onDateClick: () -> Unit,
-    time: String,
-    onTimeClick: () -> Unit,
+    time: String = "",
+    onTimeClick: () -> Unit = {},
+    showTime: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
@@ -46,19 +47,78 @@ fun CustomDateTimeFields(
         )
         Spacer(modifier = Modifier.height(6.dp))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(colors.surface, RoundedCornerShape(12.dp))
-                .border(1.dp, colors.outline, RoundedCornerShape(12.dp)),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // بخش تاریخ
+        if (showTime) {
             Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(colors.surface, RoundedCornerShape(12.dp))
+                    .border(1.dp, colors.outline, RoundedCornerShape(12.dp)),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // بخش تاریخ
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable { onDateClick() }
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = null,
+                        tint = colors.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = date,
+                        style = typography.bodyMedium,
+                        color = colors.onSurface
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight(0.6f)
+                        .background(colors.outline.copy(alpha = 0.5f))
+                )
+
+                // بخش ساعت
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable { onTimeClick() }
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccessTime,
+                        contentDescription = null,
+                        tint = colors.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = time,
+                        style = typography.bodyMedium,
+                        color = colors.onSurface
+                    )
+                }
+            }
+        } else {
+            // فقط تاریخ
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(colors.surface, RoundedCornerShape(12.dp))
+                    .border(1.dp, colors.outline, RoundedCornerShape(12.dp))
                     .clickable { onDateClick() }
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -73,37 +133,6 @@ fun CustomDateTimeFields(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = date,
-                    style = typography.bodyMedium,
-                    color = colors.onSurface
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .fillMaxHeight(0.6f)
-                    .background(colors.outline.copy(alpha = 0.5f))
-            )
-
-            // بخش ساعت
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clickable { onTimeClick() }
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccessTime,
-                    contentDescription = null,
-                    tint = colors.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = time,
                     style = typography.bodyMedium,
                     color = colors.onSurface
                 )

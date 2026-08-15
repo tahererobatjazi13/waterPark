@@ -68,10 +68,18 @@ import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
 import saman.zamani.persiandate.PersianDate
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
+import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
+import ir.kitgroup.partnerManagement.core.ui.util.Status
 
 @Composable
 fun VisitsScreen(
     onVisitClick: (Int) -> Unit,
+    onEditVisitClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -82,6 +90,7 @@ fun VisitsScreen(
     var selectedVisitor by remember { mutableStateOf(allVisitorsLabel) }
     var selectedStartDate by rememberSaveable { mutableStateOf<String?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var visitPendingDelete by remember { mutableStateOf<VisitModel?>(null) }
 
     val today = remember { PersianDate() }
     val todayDate = remember(today) {
@@ -91,13 +100,46 @@ fun VisitsScreen(
             }"
         )
     }
-
-    val items = remember {
-        listOf(
-            VisitModel(1, "هتل قصر طلایی", "بازدید حضوری", "علی محمدی", "۱۴۰۳/۰۲/۱۵", Icons.Default.DirectionsWalk),
-            VisitModel(2, "هتل پارسیان آزادی", "تماس تلفنی", "مریم رضایی", "۱۴۰۳/۰۲/۱۶", Icons.Default.Phone),
-            VisitModel(3, "هتل الماس", "بازدید حضوری", "علی رضایی", "۱۴۰۳/۰۲/۱۷", Icons.Default.DirectionsWalk),
-            VisitModel(4, "هتل پارسیان", "تماس تلفنی", "مریم مفرد", "۱۴۰۳/۰۲/۱۸", Icons.Default.Phone)
+    var items by remember {
+        mutableStateOf(
+            listOf(
+                VisitModel(
+                    id = 1,
+                    title = "هتل قصر طلایی",
+                    type = "بازدید حضوری برنامه‌ریزی شده",
+                    person = "علی محمدی",
+                    date = "۱۴۰۳/۰۲/۱۵ , 11:30",
+                    icon = Icons.Default.DirectionsWalk,
+                    status = Status.PLANNED
+                ),
+                VisitModel(
+                    id = 2,
+                    title = "هتل الماس",
+                    type = "بازدید تلفنی",
+                    person = "علی رضایی",
+                    date = "۱۴۰۳/۰۲/۱۷ , 10:30",
+                    icon = Icons.Default.Phone,
+                    status = Status.DONE
+                ),
+                VisitModel(
+                    id = 3,
+                    title = "هتل پارسیان آزادی",
+                    type = "بازدید حضوری غیربرنامه‌ریزی شده",
+                    person = "مریم رضایی",
+                    date = "۱۴۰۳/۰۲/۱۶ , 02:30",
+                    icon = Icons.Default.DirectionsWalk,
+                    status = Status.CANCELLED
+                ),
+                VisitModel(
+                    id = 4,
+                    title = "هتل پارسیان",
+                    type = "بازدید تلفنی",
+                    person = "مریم مفرد",
+                    date = "۱۴۰۳/۰۲/۱۸ , 10:30",
+                    icon = Icons.Default.Phone,
+                    status = Status.PLANNED
+                )
+            )
         )
     }
 
@@ -105,14 +147,22 @@ fun VisitsScreen(
         listOf(allVisitorsLabel) + items.map { it.person }.distinct()
     }
 
-    val filteredItems = remember(items, searchQuery, selectedVisitor, selectedStartDate, todayDate, allVisitorsLabel) {
+    val filteredItems = remember(
+        items,
+        searchQuery,
+        selectedVisitor,
+        selectedStartDate,
+        todayDate,
+        allVisitorsLabel
+    ) {
         items.filter { item ->
             val matchesSearch = searchQuery.isBlank() ||
                     item.title.contains(searchQuery, ignoreCase = true) ||
                     item.person.contains(searchQuery, ignoreCase = true) ||
                     item.date.contains(searchQuery, ignoreCase = true)
 
-            val matchesVisitor = selectedVisitor == allVisitorsLabel || item.person == selectedVisitor
+            val matchesVisitor =
+                selectedVisitor == allVisitorsLabel || item.person == selectedVisitor
 
             val matchesDateRange = selectedStartDate == null || run {
                 val itemDate = normalizeDate(item.date)
@@ -198,7 +248,15 @@ fun VisitsScreen(
                         ) { item ->
                             VisitCard(
                                 item = item,
-                                onClick = { onVisitClick(item.id) }
+                                onClick = {
+                                    onVisitClick(item.id)
+                                },
+                                onEditClick = {
+                                    onEditVisitClick(item.id)
+                                },
+                                onDeleteClick = {
+                                    visitPendingDelete = item
+                                }
                             )
                         }
                         item {
@@ -223,6 +281,21 @@ fun VisitsScreen(
             }
         )
     }
+
+    visitPendingDelete?.let { visit ->
+        DeleteConfirmationDialog(
+            itemType = stringResource(R.string.label_visit),
+            itemName = visit.title,
+            onConfirm = {
+                items = items.filter { it.id != visit.id }
+                visitPendingDelete = null
+            },
+            onDismiss = {
+                visitPendingDelete = null
+            }
+        )
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -384,7 +457,9 @@ private fun VisitFiltersRow(
 @Composable
 fun VisitCard(
     item: VisitModel,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -393,8 +468,13 @@ fun VisitCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
-        border = BorderStroke(width = 0.7.dp, color = appColors.border)
+        colors = CardDefaults.cardColors(
+            containerColor = appColors.cardBackground
+        ),
+        border = BorderStroke(
+            width = 0.7.dp,
+            color = appColors.border
+        )
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -404,22 +484,33 @@ fun VisitCard(
                 painter = painterResource(R.drawable.ic_logo),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(90.dp)
+                    .size(60.dp)
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = appColors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = appColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+                    StatusBadge(item.status)
+
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -430,11 +521,59 @@ fun VisitCard(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                DetailRow(Icons.Default.Person, item.person)
+                DetailRow(
+                    icon = Icons.Default.Person,
+                    text = item.person
+                )
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                DetailRow(Icons.Default.DateRange, item.date)
+                DetailRow(
+                    icon = Icons.Default.DateRange,
+                    text = item.date
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        space = 8.dp,
+                        alignment = Alignment.End
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = onEditClick,
+                        modifier = Modifier.size(38.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.EditNote,
+                            contentDescription = stringResource(R.string.label_edit_visit_item),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onDeleteClick,
+                        modifier = Modifier.size(38.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = stringResource(R.string.label_delete_visit),
+                            modifier = Modifier.size(21.dp)
+                        )
+                    }
+                }
+
             }
         }
     }
@@ -533,7 +672,8 @@ private fun normalizeDate(date: String): String {
 private fun VisitScreenPreview() {
     AppScreenPreview {
         VisitsScreen(
-            onVisitClick = {}
+            onVisitClick = {},
+            onEditVisitClick = {}
         )
     }
 }

@@ -33,14 +33,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
 import ir.kitgroup.partnerManagement.core.ui.components.Rating
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import ir.kitgroup.partnerManagement.core.ui.util.extensions.style
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.outlined.Badge
-import ir.kitgroup.partnerManagement.core.ui.components.StatusImageBadge
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
+import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
+import ir.kitgroup.partnerManagement.core.ui.util.Status
+import ir.kitgroup.partnerManagement.core.ui.util.UserRole
+import ir.kitgroup.partnerManagement.core.ui.util.VisitType
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 @Composable
-fun DashboardScreen(navController: NavController) {
+fun DashboardScreen(
+    navController: NavController, viewModel: SessionViewModel = hiltViewModel()
+) {
+
+    val role by viewModel.userRole.collectAsState()
+    val isSupervisor = role == UserRole.SUPERVISOR.name
 
     val summaryItems = listOf(
         SummaryCardData(
@@ -76,17 +87,39 @@ fun DashboardScreen(navController: NavController) {
 
     val visits = listOf(
         VisitItem(
-            "10:00",
-            "هتل آزادی",
-            "مشهد",
-            "خیابان آزادی",
-            4,
-            VisitStatus.DONE
+            id = 1,
+            time = "۱۴۰۳/۰۲/۱۷",
+            collectionName = "هتل آزادی",
+            city = "مشهد",
+            district = "خیابان آزادی",
+            rating = 4,
+            status = Status.DONE,
+            visitType = VisitType.SCHEDULED_IN_PERSON
         ),
-        VisitItem("11:30", "مجموعه پالاس", "مشهد", "احمد آباد", 4, VisitStatus.VISITING),
-        VisitItem("14:00", "هتل پردیسان", "مشهد", "پاسداران", 3, VisitStatus.PLANNED),
-        VisitItem("16:30", "سازمان بزرگ سیمرغ", "مشهد", "ولیعصر", 5, VisitStatus.PLANNED)
+
+        VisitItem(
+            id = 2,
+            time = "۱۴۰۳/۰۲/۱۸",
+            collectionName = "مجموعه پالاس",
+            city = "مشهد",
+            district = "احمد آباد",
+            rating = 4,
+            status = Status.CANCELLED,
+            visitType = VisitType.SCHEDULED_IN_PERSON
+        ),
+
+        VisitItem(
+            id = 3,
+            time = "۱۴۰۳/۰۲/۱۹",
+            collectionName = "هتل پردیسان",
+            city = "مشهد",
+            district = "پاسداران",
+            rating = 3,
+            status = Status.PLANNED,
+            visitType = VisitType.SCHEDULED_IN_PERSON
+        )
     )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -107,10 +140,8 @@ fun DashboardScreen(navController: NavController) {
                 item { SummarySection(summaryItems) }
                 item { Spacer(Modifier.width(6.dp)) }
                 item {
-
                     QuickActionsSection(
-                        onQuickVisitClick = { navController.navigate("register_visit/physical") }, // حضوری
-                        onQuickCallClick = { navController.navigate("register_visit/phone") },      // تلفنی
+                        onQuickVisitClick = { navController.navigate(Screen.RegisterVisit.createRoute()) },
                         onQuickCollectionClick = { navController.navigate(Screen.AddCollection.route) },
                         onQuickCardClick = { navController.navigate(Screen.RegisterCard.route) }
                     )
@@ -118,9 +149,17 @@ fun DashboardScreen(navController: NavController) {
                 item { Spacer(Modifier.width(6.dp)) }
                 item {
                     QuickAccessSection(
-                        onMapClick = { navController.navigate("register_visit/physical") },
-                        onReportClick = { navController.navigate("register_visit/phone") },
-                        onAdvertisingClick = {    navController.navigate(Screen.AdvertisingMenu.route)}
+                        onMapClick = {/* navController.navigate("register_visit/physical")*/ },
+                        onReportClick = { navController.navigate(Screen.ReportMenu.route) },
+                        onAdvertisingClick = {
+                            if (isSupervisor) {
+                                navController.navigate(Screen.AdvertisingStandMenu.route)
+                            } else {
+                                navController.navigate(
+                                    Screen.AdvertisingStandAssignmentOrganizationList.route
+                                )
+                            }
+                        }
                     )
                 }
                 item {
@@ -129,9 +168,38 @@ fun DashboardScreen(navController: NavController) {
                         Icons.Default.Schedule
                     )
                 }
-                items(visits) {
-                    VisitCard(it)
+                items(
+                    items = visits,
+                    key = { it.id }
+                ) { item ->
+
+                    val isEditableScheduledPhysicalVisit =
+                        item.visitType == VisitType.SCHEDULED_IN_PERSON &&
+                                item.status == Status.PLANNED
+
+                    VisitCard(
+                        item = item,
+
+                        // فقط ویزیت حضوری برنامه‌ریزی‌شده با کلیک روی کارت باز می‌شود.
+                        onClick = {
+                            if (isEditableScheduledPhysicalVisit) {
+                                navController.navigate(
+                                    Screen.RegisterVisit.createRoute(
+                                        visitId = item.id
+                                    )
+                                )
+                            } else {
+                                navController.navigate(
+                                    Screen.RegisterVisit.createRoute(
+                                        visitId = item.id
+                                    )
+                                )
+                            }
+                        }
+
+                    )
                 }
+
             }
         }
     }
@@ -261,9 +329,7 @@ private fun SummaryCard(data: SummaryCardData, modifier: Modifier) {
 @Composable
 private fun QuickActionsSection(
     onQuickVisitClick: () -> Unit,
-    onQuickCallClick: () -> Unit,
     onQuickCollectionClick: () -> Unit,
-
     onQuickCardClick: () -> Unit,
 ) {
 
@@ -273,26 +339,21 @@ private fun QuickActionsSection(
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             QuickActionCard(
-                stringResource(R.string.label_register_visit_physical),
+                stringResource(R.string.label_register_visit),
                 Icons.Filled.CalendarViewDay,
                 onQuickVisitClick,
-                Modifier.weight(1f)
-            )
-            QuickActionCard(
-                stringResource(R.string.label_register_visit_phone),
-                Icons.Filled.Call,
-                onQuickCallClick,
                 Modifier.weight(1f)
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
 
             QuickActionCard(
-                stringResource(R.string.label_add_new_collection),
+                stringResource(R.string.label_add_new_organization),
                 Icons.Filled.LibraryAdd,
                 onQuickCollectionClick,
                 Modifier.weight(1f)
             )
+
             QuickActionCard(
                 stringResource(R.string.label_issuing_new_card),
                 Icons.Outlined.Badge,
@@ -372,29 +433,27 @@ fun QuickAccessSection(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             QuickAccessCard(
-                title = stringResource(R.string.label_map),
-                icon = Icons.Filled.Map,
-                backgroundColor = Color(0xFFEAF8FB),
-                iconTint = Color(0xFF00A7E1),
-                onClick = onMapClick,
+                title = stringResource(R.string.label_advertising_stands),
+                icon = Icons.Filled.Inventory2,
+                backgroundColor = PartnerManagementTheme.colors.warningContainer,
+                iconTint = PartnerManagementTheme.colors.onWarningContainer,
+                onClick = onAdvertisingClick,
                 modifier = Modifier.weight(1f)
             )
-
             QuickAccessCard(
                 title = stringResource(R.string.label_reports),
                 icon = Icons.Filled.Assessment,
-                backgroundColor = Color(0xFFF1EAFE),
-                iconTint = Color(0xFF7B61FF),
+                backgroundColor = PartnerManagementTheme.colors.purpleContainer,
+                iconTint = PartnerManagementTheme.colors.onPurpleContainer,
                 onClick = onReportClick,
                 modifier = Modifier.weight(1f)
             )
-
             QuickAccessCard(
-                title = stringResource(R.string.label_advertising_stands),
-                icon = Icons.Filled.Inventory2,
-                backgroundColor = Color(0xFFFFF3E8),
-                iconTint = Color(0xFFFF9800),
-                onClick = onAdvertisingClick,
+                title = stringResource(R.string.label_map),
+                icon = Icons.Filled.Map,
+                backgroundColor = PartnerManagementTheme.colors.infoContainer,
+                iconTint = PartnerManagementTheme.colors.onInfoContainer,
+                onClick = onMapClick,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -449,12 +508,14 @@ private fun QuickAccessCard(
     }
 }
 
-
 @Composable
-private fun VisitCard(item: VisitItem) {
+private fun VisitCard(
+    item: VisitItem, onClick: () -> Unit,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
+        onClick = onClick,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -484,10 +545,9 @@ private fun VisitCard(item: VisitItem) {
                     .padding(horizontal = 10.dp)
             ) {
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     text = item.collectionName,
-                    style = typography.titleMedium,
+                    style = typography.titleMedium
                 )
 
                 Rating(item.rating)
@@ -503,10 +563,9 @@ private fun VisitCard(item: VisitItem) {
     }
 }
 
+
 @Composable
 fun VisitTimeAndStatus(item: VisitItem) {
-    val statusStyle = item.status.style()
-
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -516,12 +575,7 @@ fun VisitTimeAndStatus(item: VisitItem) {
             style = typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-
-        StatusImageBadge(
-            text = stringResource(item.status.labelRes),
-            icon = item.status.icon,
-            style = statusStyle
-        )
+        StatusBadge(item.status)
     }
 }
 

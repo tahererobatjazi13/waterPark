@@ -1,5 +1,7 @@
 package ir.kitgroup.partnerManagement.core.ui.components
-
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -9,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
-
 @Composable
 fun CustomButton(
     text: String,
@@ -20,17 +21,31 @@ fun CustomButton(
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary
     ),
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    fillMaxWidth: Boolean = true,
+    height: Dp? = 50.dp,
+    cornerRadius: Dp = 16.dp,
+    textStyle: TextStyle = typography.titleLarge,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding
 ) {
+    var finalModifier = modifier
+
+    if (fillMaxWidth) {
+        finalModifier = finalModifier.fillMaxWidth()
+    }
+
+    if (height != null) {
+        finalModifier = finalModifier.height(height)
+    }
+
     Button(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(50.dp),
-        shape = RoundedCornerShape(16.dp),
+        modifier = finalModifier,
+        shape = RoundedCornerShape(cornerRadius),
         colors = colors,
         enabled = enabled,
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+        contentPadding = contentPadding
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -38,7 +53,7 @@ fun CustomButton(
         ) {
             Text(
                 text = text,
-                style = typography.titleLarge
+                style = textStyle
             )
 
             if (icon != null) {

@@ -1,6 +1,7 @@
 package ir.kitgroup.partnerManagement.feature.visits.model
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import ir.kitgroup.partnerManagement.core.ui.util.Status
 
 data class VisitModel(
     val id: Int,
@@ -8,7 +9,14 @@ data class VisitModel(
     val type: String,
     val person: String,
     val date: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val status: Status,
 )
+
+
+
+
+
+
 
 

@@ -46,6 +46,34 @@ fun StatusBadge(
             contentColor = PartnerManagementTheme.colors.onInfoContainer
             text = stringResource(R.string.label_delivered)
         }
+
+        Status.DRAFT -> {
+            containerColor = PartnerManagementTheme.colors.warningContainer
+            contentColor = PartnerManagementTheme.colors.onWarningContainer
+            text = stringResource(R.string.label_draft)
+        }
+
+        Status.BLOCKED -> {
+            containerColor = PartnerManagementTheme.colors.errorContainer
+            contentColor = PartnerManagementTheme.colors.onErrorContainer
+            text = stringResource(R.string.label_blocked)
+        }
+        Status.DONE -> {
+            containerColor = PartnerManagementTheme.colors.successContainer
+            contentColor = PartnerManagementTheme.colors.onSuccessContainer
+            text = stringResource(R.string.label_done)
+        }
+
+        Status.PLANNED -> {
+            containerColor = PartnerManagementTheme.colors.warningContainer
+            contentColor = PartnerManagementTheme.colors.onWarningContainer
+            text = stringResource(R.string.label_planned)
+        }
+        Status.CANCELLED -> {
+            containerColor = PartnerManagementTheme.colors.errorContainer
+            contentColor = PartnerManagementTheme.colors.onErrorContainer
+            text = stringResource(R.string.label_cancelled)
+        }
     }
 
     Badge(

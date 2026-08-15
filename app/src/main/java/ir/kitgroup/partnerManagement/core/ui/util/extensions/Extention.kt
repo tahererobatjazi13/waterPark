@@ -3,14 +3,10 @@ package ir.kitgroup.partnerManagement.core.ui.util.extensions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ir.kitgroup.partnerManagement.core.ui.model.VisitStatusStyle
-import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
-import ir.kitgroup.partnerManagement.feature.dashboard.model.VisitStatus
-import androidx.annotation.StringRes
-import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme.colors
 import ir.kitgroup.partnerManagement.core.ui.util.AllocationStatus
-import ir.kitgroup.partnerManagement.core.ui.util.Status
 
+/*
 @Composable
 fun VisitStatus.style(): VisitStatusStyle {
 
@@ -25,12 +21,14 @@ fun VisitStatus.style(): VisitStatusStyle {
             iconTint = Color.White
         )
 
-        VisitStatus.VISITING -> VisitStatusStyle(
+    */
+/*    VisitStatus.VISITING -> VisitStatusStyle(
             badgeContainer = colors.infoContainer,
             badgeContent = colors.onInfoContainer,
             iconContainer = colors.info,
             iconTint = Color.White
-        )
+        )*//*
+
 
         VisitStatus.PLANNED -> VisitStatusStyle(
             badgeContainer = colors.cardBackgroundAlt,
@@ -38,8 +36,16 @@ fun VisitStatus.style(): VisitStatusStyle {
             iconContainer = colors.textSecondary,
             iconTint = Color.White
         )
+
+        VisitStatus.CANCELLED -> VisitStatusStyle(
+            badgeContainer = colors.errorContainer,
+            badgeContent = colors.onErrorContainer,
+            iconContainer = colors.error,
+            iconTint = Color.White
+        )
     }
 }
+*/
 
 @Composable
 fun AllocationStatus.style(): VisitStatusStyle {
@@ -74,20 +80,11 @@ fun AllocationStatus.style(): VisitStatusStyle {
     }
 }
 
-@StringRes
-fun Status.labelRes(): Int {
-    return when (this) {
-        Status.ACTIVE -> R.string.label_active
-        Status.INACTIVE -> R.string.label_inactive
-        Status.USED -> R.string.label_used
-        Status.DELIVERED -> R.string.label_delivered
-    }
-}
 
 
 /*
 git add .
-git commit -m "add change app name & clean"
+git commit -m "change screens"
 git push -u origin master
 git push
 */

@@ -11,7 +11,17 @@ sealed class Screen(val route: String) {
 
     data object Login : Screen("login")
 
-    data object RegisterVisit : Screen("register_visit")
+    data object RegisterVisit : Screen("register_visit?visitId={visitId}") {
+
+        fun createRoute(visitId: Int? = null): String {
+            return if (visitId != null) {
+                "register_visit?visitId=$visitId"
+            } else {
+                "register_visit"
+            }
+        }
+    }
+
     data object AddCollection : Screen("register_collection")
     data object RegisterCard : Screen("register_card")
 
@@ -21,37 +31,53 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object CollectionDetail : Screen("collection_detail/{collectionId}") {
-        fun createRoute(collectionId: Int): String {
-            return "collection_detail/$collectionId"
+    data object OrganizationDetail : Screen("organization_detail/{organizationId}") {
+        fun createRoute(organizationId: Int): String {
+            return "organization_detail/$organizationId"
         }
     }
 
-    data object AdvertisingMenu : Screen("advertising_menu")
+    data object AssignVisitor :
+        Screen("assign_visitor")
 
-    data object AdvertisingItems : Screen("advertising_items")
+    // Advertising Stand
+    data object AdvertisingStandMenu : Screen("advertising_stand_menu")
 
-    data object AdvertisingDetail : Screen("advertising_detail/{itemId}") {
+    data object AdvertisingStandsList : Screen("advertising_stand_list")
 
+    data object AdvertisingStandDetail : Screen(
+        route = "advertising_stand_detail/{itemId}"
+    ) {
         const val ITEM_ID_ARGUMENT = "itemId"
         const val NEW_ITEM_ID = "new"
 
-        fun createRoute(itemId: String = NEW_ITEM_ID): String {
-            return "advertising_detail/$itemId"
+        fun createRoute(
+            itemId: String = NEW_ITEM_ID
+        ): String {
+            return "advertising_stand_detail/$itemId"
         }
     }
 
-       data object AdvertisingAllocationVisitor :
-        Screen("advertising_allocation_visitor")
 
-    data object AdvertisingAllocationCollection :
-        Screen("advertising_allocation_collection")
+    data object AdvertisingStandAssignmentVisitorList :
+        Screen("advertising_stand_assignment_visitor_list")
+
+    data object AddAdvertisingStandAssignmentVisitor :
+        Screen("add_advertising_stand_assignment_visitor")
+
+    data object AdvertisingStandAssignmentOrganizationList :
+        Screen("advertising_stand_assignment_organization_list")
 
 
-    data object AddAdvertisingAllocationVisitor :
-        Screen("add_advertising_allocation_visitor")
+    data object AddAdvertisingStandAssignmentOrganization :
+        Screen("add_advertising_stand_assignment_organization")
+
+    //report
+    data object ReportMenu : Screen("report_menu")
+    data object VisitorList : Screen("visitor_list")
+    data object VisitorsPerformance : Screen("visitors_performance_dashboard")
+    data object ReportContract : Screen("report_contract")
+    data object CollectionPerformance : Screen("collection_performance")
 
 
-    data object AddAdvertisingAllocationCollection :
-        Screen("add_advertising_allocation_collection")
 }

@@ -16,13 +16,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Subject
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -50,10 +53,9 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
 import ir.kitgroup.partnerManagement.core.ui.components.Rating
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import ir.kitgroup.partnerManagement.core.ui.components.StatusImageBadge
+import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.extensions.style
-import ir.kitgroup.partnerManagement.feature.dashboard.model.VisitStatus
+import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.feature.visits.model.VisitDetailModel
 
 @Composable
@@ -67,12 +69,14 @@ fun VisitDetailScreen(
         VisitDetailModel(
             id = visitId,
             title = "هتل اسپیناس پالاس",
-            type = "بازدید حضوری",
+            type = "حضوری غیر برنامه ریزی شده",
+            subject = "وصول مطالبات",
             rating = 3,
             person = "محمد رضایی",
+            scheduledDate = "۱۴۰۳/۰۳/10",
             date = "۱۴۰۳/۰۳/۲۴",
             time = "۱۰:۳۰",
-            status = VisitStatus.DONE,
+            status = Status.DONE,
             icon = Icons.Default.DirectionsWalk,
             location = "تهران سعادت آباد",
             description = "جلسه با مسئول بازاریابی هتل برگزار شد"
@@ -100,7 +104,7 @@ fun VisitDetailScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                CollectionsInfoCard(visit = visit)
+                OrganizationInfoCard(visit = visit)
 
                 Spacer(Modifier.height(12.dp))
 
@@ -129,7 +133,7 @@ fun VisitDetailScreen(
 }
 
 @Composable
-private fun CollectionsInfoCard(visit: VisitDetailModel) {
+private fun OrganizationInfoCard(visit: VisitDetailModel) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
@@ -183,22 +187,50 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = appColors.cardBackground
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
     ) {
         Column {
             InfoRow(
-                label = stringResource(R.string.label_visitor_name),
-                value = visit.person,
-                icon = Icons.Default.Person
+                label = stringResource(R.string.label_visit_type),
+                value = visit.type,
+                icon = Icons.Default.Category
             )
 
             HorizontalDivider(color = appColors.border)
 
             InfoRow(
-                label = stringResource(R.string.label_visit_date),
+                label = stringResource(R.string.label_visit_subject),
+                value = visit.subject,
+                icon = Icons.Default.Subject
+            )
+
+            HorizontalDivider(color = appColors.border)
+
+            InfoRow(
+                label = stringResource(R.string.label_visitor_name),
+                value = visit.person,
+                icon = Icons.Default.Badge
+            )
+
+            HorizontalDivider(color = appColors.border)
+
+            InfoRow(
+                label = stringResource(R.string.label_visit_Scheduled_date),
                 value = visit.date,
-                icon = Icons.Default.DateRange
+                icon = Icons.Default.Event
+            )
+
+            HorizontalDivider(color = appColors.border)
+
+            InfoRow(
+                label = stringResource(R.string.label_visit_real_date),
+                value = visit.date,
+                icon = Icons.Default.EventAvailable
             )
 
             HorizontalDivider(color = appColors.border)
@@ -213,7 +245,6 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
 
             InfoRow(
                 label = stringResource(R.string.label_status),
-                value = stringResource(visit.status.labelRes),
                 icon = Icons.Default.CheckCircle,
                 status = visit.status
             )
@@ -224,9 +255,9 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
 @Composable
 private fun InfoRow(
     label: String,
-    value: String,
+    value: String? = null,
     icon: ImageVector,
-    status: VisitStatus? = null
+    status: Status? = null
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -258,13 +289,11 @@ private fun InfoRow(
         Spacer(modifier = Modifier.weight(1f))
 
         if (status != null) {
-            StatusImageBadge(
-                text = value,
-                style = status.style()
-            )
+            StatusBadge(status)
+
         } else {
             Text(
-                text = value,
+                text = value!!,
                 style = typography.labelMedium,
                 color = appColors.textPrimary,
                 maxLines = 1,

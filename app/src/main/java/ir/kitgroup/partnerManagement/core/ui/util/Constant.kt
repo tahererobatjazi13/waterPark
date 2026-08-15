@@ -10,6 +10,11 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.MoreHoriz
 
+enum class UserRole {
+    SUPERVISOR,
+    VISITOR
+}
+
 enum class ThemeMode {
     LIGHT,
     DARK,
@@ -20,41 +25,17 @@ enum class Status {
     ACTIVE,
     INACTIVE,
     USED,
-    DELIVERED
+    DELIVERED,
+    DRAFT,
+    BLOCKED,
+    DONE,
+    PLANNED,
+    CANCELLED
 }
 
-enum class VisitType(
-    val route: String,
-    val titleRes: Int,
-    val resultTitleRes: Int,
-    val resultHintRes: Int,
-    val showFields: Boolean
-) {
-
-    PHONE(
-        route = "phone",
-        titleRes = R.string.label_register_visit_phone,
-        resultTitleRes = R.string.label_visit_phone_result,
-        resultHintRes = R.string.hint_visit_phone_result,
-        showFields = false
-    ),
-
-    PHYSICAL(
-        route = "physical",
-        titleRes = R.string.label_register_visit_physical,
-        resultTitleRes = R.string.label_visit_physical_result,
-        resultHintRes = R.string.hint_visit_physical_result,
-        showFields = true
-    );
-
-    companion object {
-
-        fun fromRoute(value: String?): VisitType {
-            return entries.firstOrNull { it.route == value } ?: PHYSICAL
-        }
-    }
+enum class VisitType {
+    SCHEDULED_IN_PERSON
 }
-
 
 enum class CardStatusFilter(
     @StringRes val titleRes: Int,
@@ -72,12 +53,6 @@ enum class CardStatusFilter(
         titleRes = R.string.label_delivered,
         icon = Icons.Default.LocalShipping
     )
-}
-
-enum class AdvertisingFilterTab(@StringRes val titleRes: Int) {
-    All(R.string.label_all),
-    Active(R.string.label_active),
-    OutOfStock(R.string.label_out_of_stock)
 }
 
 enum class AllocationFilterTab(val titleRes: Int) {

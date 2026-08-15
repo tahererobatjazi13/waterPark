@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,7 +34,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CardMenuItem
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDialog
@@ -46,9 +49,20 @@ fun ProfileScreen(
     onEditInfoClick: () -> Unit,
     onChangePasswordClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onLogoutConfirm: () -> Unit,
-    modifier: Modifier = Modifier
+    onLogoutSuccess: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SessionViewModel = hiltViewModel()
 ) {
+    val username by viewModel.userName.collectAsState(initial = "")
+    val role by viewModel.userRole.collectAsState(initial = "")
+    // val phoneNumber by viewModel.phoneNumber.collectAsState(initial = "")
+    val roleTitle = remember(role) {
+        when (role) {
+            "SUPERVISOR" -> "سرپرست"
+            "VISITOR" -> "ویزیتور"
+            else -> ""
+        }
+    }
     var showLogoutDialog by remember { mutableStateOf(false) }
     val appColors = LocalPartnerManagementColors.current
 
@@ -118,7 +132,10 @@ fun ProfileScreen(
         confirmColor = RedContent,
         onConfirm = {
             showLogoutDialog = false
-            onLogoutConfirm()
+
+            viewModel.logout {
+                onLogoutSuccess()
+            }
         },
         onDismiss = {
             showLogoutDialog = false
@@ -127,7 +144,8 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun UserInfoCard() {
+private fun UserInfoCard(
+) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
@@ -242,7 +260,7 @@ private fun ProfileScreenPreview() {
             onEditInfoClick = {},
             onChangePasswordClick = {},
             onSettingsClick = {},
-            onLogoutConfirm = {}
+            onLogoutSuccess = {}
         )
     }
 }

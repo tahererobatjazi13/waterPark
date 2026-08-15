@@ -18,7 +18,7 @@ sealed class BottomNavItem(
 
     data object Collections : BottomNavItem(
         route = "collections",
-        title = R.string.nav_collaborative_collections,
+        title = R.string.nav_organizations,
         icon = R.drawable.ic_collaborative_collections
     )
 

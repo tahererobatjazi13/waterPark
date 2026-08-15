@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,27 +17,35 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.theme.ThemeViewModel
 import ir.kitgroup.partnerManagement.core.ui.util.VisitType
-import ir.kitgroup.partnerManagement.feature.advertising.ui.item.AddAdvertisingItemScreen
-import ir.kitgroup.partnerManagement.feature.advertising.ui.item.AdvertisingItemsScreen
-import ir.kitgroup.partnerManagement.feature.advertising.ui.AdvertisingMenuScreen
-import ir.kitgroup.partnerManagement.feature.advertising.ui.collection.AddAdvertisingAllocationCollectionScreen
-import ir.kitgroup.partnerManagement.feature.advertising.ui.collection.AdvertisingAllocateCollectionScreen
-import ir.kitgroup.partnerManagement.feature.advertising.ui.visitor.AddAdvertisingAllocationVisitorScreen
-import ir.kitgroup.partnerManagement.feature.advertising.ui.visitor.AdvertisingAllocateVisitorScreen
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand.AdvertisingStandsListScreen
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.AdvertisingStandMenuScreen
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand.AddAdvertisingStandScreen
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_organization.AddAdvertisingStandAssignmentOrganizationScreen
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_organization.AdvertisingStandAssignmentOrganizationListScreen
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_visitor.AddAdvertisingStandAssignmentVisitorScreen
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_visitor.AdvertisingStandAssignmentVisitorListScreen
+import ir.kitgroup.partnerManagement.feature.report.ui.visitor.VisitorListScreen
 import ir.kitgroup.partnerManagement.feature.card.ui.AddCardScreen
 import ir.kitgroup.partnerManagement.feature.card.ui.CardsScreen
-import ir.kitgroup.partnerManagement.feature.collaborative_collection.ui.AddCollectionScreen
-import ir.kitgroup.partnerManagement.feature.collaborative_collection.ui.CollaborativeCollectionsScreen
-import ir.kitgroup.partnerManagement.feature.collaborative_collection.ui.CollectionDetailScreen
 import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardScreen
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavigationBar
 import ir.kitgroup.partnerManagement.feature.login.ui.LoginScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.AddOrganizationScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.AssignVisitorScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationDetailScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationsListScreen
 import ir.kitgroup.partnerManagement.feature.profile.ui.ProfileScreen
 import ir.kitgroup.partnerManagement.feature.profile.ui.SettingsScreen
 import ir.kitgroup.partnerManagement.feature.profile.ui.ThemeModeScreen
+import ir.kitgroup.partnerManagement.feature.report.ui.ReportMenuScreen
+import ir.kitgroup.partnerManagement.feature.report.ui.collection.CollectionPerformanceScreen
+import ir.kitgroup.partnerManagement.feature.report.ui.collection.ReportContractScreen
+import ir.kitgroup.partnerManagement.feature.report.ui.visitor.VisitorAnalysisScreen
+import ir.kitgroup.partnerManagement.feature.report.ui.visitor.VisitorsPerformanceDashboardScreen
 import ir.kitgroup.partnerManagement.feature.visits.ui.RegisterVisitScreen
 import ir.kitgroup.partnerManagement.feature.visits.ui.VisitDetailScreen
 import ir.kitgroup.partnerManagement.feature.visits.ui.VisitsScreen
@@ -48,6 +57,8 @@ fun AppNavigation() {
     val currentRoute = backStackEntry?.destination?.route
 
     val themeViewModel: ThemeViewModel = viewModel()
+    val sessionViewModel: SessionViewModel = hiltViewModel()
+
 
     val bottomBarRoutes = setOf(
         BottomNavItem.Dashboard.route,
@@ -66,11 +77,17 @@ fun AppNavigation() {
             }
         }
     ) { paddingValues ->
+        val isLoggedIn by sessionViewModel.isLoggedIn.collectAsState()
 
+        val startDestination = if (isLoggedIn) {
+            BottomNavItem.Dashboard.route
+        } else {
+            "login"
+        }
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             NavHost(
                 navController = navController,
-                startDestination = BottomNavItem.Dashboard.route,
+                startDestination = startDestination,
                 modifier = Modifier.padding(paddingValues)
             ) {
 
@@ -82,11 +99,22 @@ fun AppNavigation() {
                     DashboardScreen(navController)
                 }
                 composable(BottomNavItem.Collections.route) {
-                    CollaborativeCollectionsScreen(
-                        onCollectionClick = { collectionId ->
+                    OrganizationsListScreen(
+                        onOrganizationClick = { organizationId ->
                             navController.navigate(
-                                Screen.CollectionDetail.createRoute(collectionId)
+                                Screen.OrganizationDetail.createRoute(organizationId)
                             )
+                        }, onAssignVisitorClick = {
+                            navController.navigate(Screen.AssignVisitor.route)
+                        }
+                    )
+                }
+
+
+                composable(Screen.AssignVisitor.route) {
+                    AssignVisitorScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onSaveClick = {
                         }
                     )
                 }
@@ -95,6 +123,8 @@ fun AppNavigation() {
                     VisitsScreen(
                         onVisitClick = { visitId ->
                             navController.navigate(Screen.VisitDetail.createRoute(visitId))
+                        }, onEditVisitClick = { visitId ->
+                            navController.navigate(Screen.RegisterVisit.createRoute(visitId))
                         }
                     )
                 }
@@ -112,25 +142,32 @@ fun AppNavigation() {
                     )
                 }
 
-
                 composable(
-                    route = "register_visit/{visitType}",
+                    route = Screen.RegisterVisit.route,
                     arguments = listOf(
-                        navArgument("visitType") { type = NavType.StringType }
+                        navArgument("visitId") {
+                            type = NavType.IntType
+                            defaultValue = -1
+                        }
                     )
-                ) { backStack ->
-                    val visitType = VisitType.fromRoute(
-                        backStack.arguments?.getString("visitType")
-                    )
+                ) { backStackEntry ->
+
+                    val visitId = backStackEntry.arguments?.getInt("visitId") ?: -1
 
                     RegisterVisitScreen(
-                        onBackClick = { navController.popBackStack() },
-                        visitType = visitType
+                        visitId = visitId,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        onSubmitClick = {
+                            navController.popBackStack()
+                        }
                     )
                 }
 
+
                 composable(Screen.AddCollection.route) {
-                    AddCollectionScreen(
+                    AddOrganizationScreen(
                         onBackClick = { navController.popBackStack() },
                         onCancel = { navController.popBackStack() },
                         onSaveClick = { navController.popBackStack() },
@@ -144,59 +181,106 @@ fun AppNavigation() {
                 }
 
                 composable(
-                    route = Screen.CollectionDetail.route,
+                    route = Screen.OrganizationDetail.route,
                     arguments = listOf(
-                        navArgument("collectionId") { type = NavType.IntType }
+                        navArgument("organizationId") { type = NavType.IntType }
                     )
                 ) { backStack ->
-                    val collectionId = backStack.arguments?.getInt("collectionId") ?: 0
-                    CollectionDetailScreen(
-                        collectionId = collectionId,
+                    val organizationId = backStack.arguments?.getInt("organizationId") ?: 0
+                    OrganizationDetailScreen(
+                        organizationId = organizationId,
                         onBackClick = { navController.popBackStack() },
                         onEditClick = { /* عملیات ویرایش */ },
                         onDisableClick = { /* عملیات غیرفعال‌سازی */ }
                     )
                 }
 
-                composable(Screen.AdvertisingMenu.route) {
-                    AdvertisingMenuScreen(
+                // Advertising Stand
+                composable(Screen.AdvertisingStandMenu.route) {
+                    AdvertisingStandMenuScreen(
                         onBackClick = { navController.popBackStack() },
                         onManageItemsClick = {
-                            navController.navigate(Screen.AdvertisingItems.route)
+                            navController.navigate(Screen.AdvertisingStandsList.route)
                         },
-                        onAllocateVisitorClick = {
-                            navController.navigate(Screen.AdvertisingAllocationVisitor.route)
+                        onStandAssignmentVisitorClick = {
+                            navController.navigate(Screen.AdvertisingStandAssignmentVisitorList.route)
                         },
-                        onAllocateCollectionClick = {
-                            navController.navigate(Screen.AdvertisingAllocationCollection.route)
+                        onStandAssignmentOrganizationClick = {
+                            navController.navigate(Screen.AdvertisingStandAssignmentOrganizationList.route)
                         }
                     )
                 }
 
                 composable(
-                    route = Screen.AdvertisingItems.route
+                    route = Screen.AdvertisingStandsList.route
                 ) {
-                    AdvertisingItemsScreen(
+                    AdvertisingStandsListScreen(
                         onBackClick = {
                             navController.popBackStack()
                         },
                         onAddItemClick = {
                             navController.navigate(
-                                Screen.AdvertisingDetail.createRoute()
+                                Screen.AdvertisingStandDetail.createRoute(
+                                    Screen.AdvertisingStandDetail.NEW_ITEM_ID
+                                )
                             )
                         },
                         onEditItemClick = { item ->
                             navController.navigate(
-                                Screen.AdvertisingDetail.createRoute(
+                                Screen.AdvertisingStandDetail.createRoute(
                                     itemId = item.id
                                 )
                             )
+                        },
+                        onDeleteItemClick = { item ->
+                            //    standToDelete = item
                         }
                     )
                 }
 
-                composable(Screen.AddAdvertisingAllocationVisitor.route) {
-                    AddAdvertisingAllocationVisitorScreen(
+                composable(
+                    route = Screen.AdvertisingStandDetail.route,
+                    arguments = listOf(
+                        navArgument(Screen.AdvertisingStandDetail.ITEM_ID_ARGUMENT) {
+                            type = NavType.StringType
+                            nullable = false
+                        }
+                    )
+                ) { backStackEntry ->
+
+                    val itemId = backStackEntry.arguments?.getString(
+                        Screen.AdvertisingStandDetail.ITEM_ID_ARGUMENT
+                    ) ?: Screen.AdvertisingStandDetail.NEW_ITEM_ID
+
+                    AddAdvertisingStandScreen(
+                        itemId = itemId,
+                        onBackClick = {
+                            navController.popBackStack()
+                        },
+                        onSaveClick = { savedItem ->
+                            /*
+                             * اینجا باید در ViewModel:
+                             * - اگر itemId == "new" بود -> ثبت آیتم جدید
+                             * - در غیر این صورت -> ویرایش آیتم با همان id
+                             */
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+
+                composable(Screen.AdvertisingStandAssignmentVisitorList.route) {
+                    AdvertisingStandAssignmentVisitorListScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onNewAssignmentVisitorClick = {
+                            navController.navigate(Screen.AddAdvertisingStandAssignmentVisitor.route)
+                        },
+                        onViewItemDetailsClick = { }
+                    )
+                }
+
+                composable(Screen.AddAdvertisingStandAssignmentVisitor.route) {
+                    AddAdvertisingStandAssignmentVisitorScreen(
                         onBackClick = {
                             navController.popBackStack()
                         },
@@ -206,65 +290,85 @@ fun AppNavigation() {
                     )
                 }
 
-
-
-                composable(Screen.AdvertisingAllocationVisitor.route) {
-                    AdvertisingAllocateVisitorScreen(
+                composable(Screen.AdvertisingStandAssignmentOrganizationList.route) {
+                    AdvertisingStandAssignmentOrganizationListScreen(
                         onBackClick = { navController.popBackStack() },
-                        onNewAllocationClick = {
-                            navController.navigate(Screen.AddAdvertisingAllocationVisitor.route)
+                        onNewAssignmentOrganizationClick = {
+                            navController.navigate(Screen.AddAdvertisingStandAssignmentOrganization.route)
                         },
                         onViewItemDetailsClick = { }
                     )
                 }
 
-                composable(Screen.AddAdvertisingAllocationCollection.route) {
-                    AddAdvertisingAllocationCollectionScreen(
+                composable(Screen.AddAdvertisingStandAssignmentOrganization.route) {
+                    AddAdvertisingStandAssignmentOrganizationScreen(
                         onBackClick = { navController.popBackStack() },
                         onSaveClick = { navController.popBackStack() }
                     )
                 }
 
-
-                composable(Screen.AdvertisingAllocationCollection.route) {
-                    AdvertisingAllocateCollectionScreen(
+                // Report
+                composable(Screen.ReportMenu.route) {
+                    ReportMenuScreen(
                         onBackClick = { navController.popBackStack() },
-                        onNewAllocationClick = {
-                            navController.navigate(Screen.AddAdvertisingAllocationCollection.route)
+                        onVisitorClick = {
+                            navController.navigate(Screen.VisitorList.route)
                         },
-                        onViewItemDetailsClick = {  }
+                        onReportContractClick = {
+                            navController.navigate(Screen.ReportContract.route)
+                        },
+                        onCollectionPerformanceClick = {
+                            navController.navigate(Screen.CollectionPerformance.route)
+                        }
                     )
                 }
+                composable(
+                    route = Screen.VisitorList.route
+                ) {
+                    VisitorListScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onReportItemClick = {
+                            navController.navigate(Screen.VisitorsPerformance.route)
+                        },
+                        onViewItemDetailsClick = { visitor ->
+                            navController.navigate("visitor_analysis/${visitor.id}")
+                        })
+                }
 
+
+                composable(route = Screen.VisitorsPerformance.route) {
+                    VisitorsPerformanceDashboardScreen(
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
 
                 composable(
-                    route = Screen.AdvertisingDetail.route,
-                    arguments = listOf(
-                        navArgument(Screen.AdvertisingDetail.ITEM_ID_ARGUMENT) {
-                            type = NavType.StringType
-                        }
-                    )
+                    route = "visitor_analysis/{visitorId}",
+                    arguments = listOf(navArgument("visitorId") { type = NavType.StringType })
                 ) { backStackEntry ->
-
-                    val itemId = backStackEntry.arguments
-                        ?.getString(Screen.AdvertisingDetail.ITEM_ID_ARGUMENT)
-                        ?: Screen.AdvertisingDetail.NEW_ITEM_ID
-
-                    AddAdvertisingItemScreen(
-                        itemId = itemId,
-                        onBackClick = {
-                            navController.popBackStack()
-                        },
-                        onSaveClick = { savedItem ->
-                            // TODO:
-                            // اگر itemId == "new" بود، آیتم جدید ثبت شود.
-                            // در غیر این صورت، آیتم موجود ویرایش شود.
-
-                            navController.popBackStack()
+                    val visitorId = backStackEntry.arguments?.getString("visitorId") ?: ""
+                    VisitorAnalysisScreen(
+                        visitorId = visitorId,
+                        onBackClick = { navController.popBackStack() },
+                        onCallClick = { phone ->
+                            // لانچ کردن Intent تماس سیستمی با ویزیتور
                         }
                     )
                 }
 
+                composable(
+                    route = Screen.ReportContract.route
+                ) {
+                    ReportContractScreen(
+                        onBackClick = { navController.popBackStack() })
+                }
+
+                composable(
+                    route = Screen.CollectionPerformance.route
+                ) {
+                    CollectionPerformanceScreen(
+                        onBackClick = { navController.popBackStack() })
+                }
                 composable(BottomNavItem.Cards.route) {
                     CardsScreen(
                         onRegisterCardClick = {
@@ -276,14 +380,22 @@ fun AppNavigation() {
 
                 composable(BottomNavItem.Profile.route) {
                     ProfileScreen(
-                        onEditInfoClick = { /* ناوبری به ویرایش اطلاعات */ },
-                        onChangePasswordClick = { /* ناوبری به تغییر رمز عبور */ },
-                        onSettingsClick = { navController.navigate("settings") },
-                        onLogoutConfirm = {
-                            // منطق خروج از حساب کاربری مانند پاک کردن توکن‌ها و بازگشت به صفحه لاگین
+                        onEditInfoClick = { },
+                        onChangePasswordClick = { },
+                        onSettingsClick = {
+                            navController.navigate("settings")
+                        },
+                        onLogoutSuccess = {
+                            navController.navigate("login") {
+                                popUpTo(0) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
+
 
                 composable("settings") {
                     val themeMode by themeViewModel.themeMode.collectAsState()

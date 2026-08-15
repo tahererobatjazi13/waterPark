@@ -20,24 +20,29 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
+import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 
 @Composable
 fun LoginScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     var usernameError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+    var loginError by remember { mutableStateOf<String?>(null) }
 
     val usernameRequiredError = stringResource(R.string.error_username_required)
     val passwordRequiredError = stringResource(R.string.error_password_required)
+    val invalidLoginError = stringResource(R.string.error_invalid_login)
 
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
@@ -93,7 +98,15 @@ fun LoginScreen(
             isPasswordField = true,
             errorMessage = passwordError
         )
-
+        if (loginError != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = loginError!!,
+                color = MaterialTheme.colorScheme.error,
+                style = typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+        }
         Spacer(modifier = Modifier.height(40.dp))
 
         TextButton(
@@ -118,6 +131,7 @@ fun LoginScreen(
 
                 usernameError = null
                 passwordError = null
+                loginError = null
 
                 var isValid = true
 
@@ -130,13 +144,43 @@ fun LoginScreen(
                     passwordError = passwordRequiredError
                     isValid = false
                 }
+                if (!isValid) return@CustomButton
 
-                if (isValid) {
+                when {
+                    username == "s" && password == "123" -> {
+                        viewModel.login(
+                            username = username,
+                            role = UserRole.SUPERVISOR
+                        ) {
+                            navController.navigate(BottomNavItem.Dashboard.route) {
+                                popUpTo("login") { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+
+                    username == "v" && password == "123" -> {
+                        viewModel.login(
+                            username = username,
+                            role = UserRole.VISITOR
+                        ) {
+                            navController.navigate(BottomNavItem.Dashboard.route) {
+                                popUpTo("login") { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+
+                    else -> {
+                        loginError = invalidLoginError
+                    }
+                }
+                /*if (isValid) {
                     navController.navigate(BottomNavItem.Dashboard.route) {
                         popUpTo("login") { inclusive = true }
                         launchSingleTop = true
                     }
-                }
+                }*/
             },
             icon = painterResource(R.drawable.ic_login_arrow)
         )
