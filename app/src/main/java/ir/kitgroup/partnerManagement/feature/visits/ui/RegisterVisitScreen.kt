@@ -112,7 +112,7 @@ fun RegisterVisitScreen(
         ),
         OrganizationModel(
             2,
-            " مجموعه پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4
+            "سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4
         ),
         OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
         OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),

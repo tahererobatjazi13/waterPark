@@ -9,7 +9,6 @@
     <string name="label_cards_list">لیست کارت ها</string>
     <string name="label_visit_details">جزییات بازدید</string>
     <string name="label_details">جزییات</string>
-    <string name="label_collections_details">جزییات مجموعه</string>
     <string name="label_contact_number">شماره تماس</string>
     <string name="label_user_role">نقش کاربری</string>
     <string name="label_change_password">تغییر رمز عبور</string>
@@ -32,9 +31,8 @@
     <string name="label_all_status">همه وضعیت‌ها</string>
     <string name="label_search">جستجو ...</string>
     <string name="label_filters">فیلترها</string>
-    <string name="label_collection">مجموعه</string>
-    <string name="label_active_collections">مجموعه های فعال</string>
-    <string name="label_inactive_collections">مجموعه های غیر فعال</string>
+    <string name="label_active_organizations">سازمان های فعال</string>
+    <string name="label_inactive_organizations">سازمان های غیر فعال</string>
     <string name="label_logout_title">خروج از حساب</string>
     <string name="label_logout">خروج</string>
     <string name="label_cancellation">انصراف</string>
@@ -47,8 +45,6 @@
     <string name="label_organization_receiving_name">نام سازمان تحویل گیرنده</string>
     <string name="label_organization_type">نوع سازمان</string>
     <string name="label_organization_level">سطح سازمان</string>
-    <string name="label_name_collaborative">نام مجموعه</string>
-    <string name="label_name_group_manager">نام مدیر مجموعه</string>
     <string name="label_owner_name">مالک یا مدیر ارشد</string>
     <string name="label_english_name">نام انگلیسی</string>
     <string name="label_name_recipient">نام پذیرش کننده</string>
@@ -118,9 +114,8 @@
     <string name="label_delete_visit">حذف بازدید</string>
     <string name="label_pick_date">انتخاب تاریخ</string>
     <string name="label_image_gallery">گالری تصویر</string>
-    <string name="label_rating_evaluation">امتیاز و ارزیابی</string>
     <string name="label_deactivation">غیرفعال‌سازی</string>
-    <string name="label_edit_collection">ویرایش مجموعه</string>
+    <string name="label_edit_organization">ویرایش سازمان</string>
     <string name="label_quick_access">دسترسی سریع</string>
     <string name="label_map">نقشه</string>
     <string name="label_reports">گزارشات</string>
@@ -149,14 +144,19 @@
     <string name="label_edit_save_item">ذخیره تغییرات</string>
     <string name="label_add_edit_view_advertising_items">افزودن، ویرایش و مشاهده استندهای تبلیغاتی</string>
     <string name="label_assignment_advertising_stand">تخصیص استندهای تبلیغاتی</string>
-    <string name="label_assignment_stands_to_visitor">تخصیص استندها به ویزیتورها</string>
+    <string name="label_assignment_stands_to_visitor">تخصیص استندها به بازاریاب ها</string>
     <string name="label_assignment_stands_to_organization">تخصیص استندها به سازمان ها</string>
+    <string name="label_assignment_stands_to_organization_list">لیست استند های اختصاص داده شده
+</string>
+    <string name="label_assignment_visitor_to_organization_list">لیست ویزیتورهای مرتبط با سازمان
+
+</string>
     <string name="label_advertising_allocation">تخصیص آیتم‌های تبلیغاتی</string>
     <string name="label_advertising">آیتم‌های تبلیغاتی</string>
-    <string name="label_assigning_visitor_organization">انتساب ویزیتور به سازمان</string>
+    <string name="label_assigning_visitor_organization">انتساب بازاریاب به سازمان</string>
     <string name="label_new_allocation">تخصیص جدید</string>
     <string name="label_allocation_record">ثبت تخصیص</string>
-    <string name="label_choose_visitor">انتخاب ویزیتور</string>
+    <string name="label_choose_visitor">انتخاب بازاریاب</string>
     <string name="label_choose_visitor_recipient">نام بازاریاب تحویل گیرنده</string>
     <string name="label_all">همه</string>
     <string name="label_allocated_count">تعداد</string>
@@ -165,71 +165,85 @@
     <string name="label_unit_count">عدد</string>
     <string name="label_cooperation_agreement">قرارداد همکاری ها</string>
     <string name="label_report_cooperation_agreement"> گزارش لیست قرارداد همکاری ها</string>
-    <string name="label_visitor_list">لیست ویزیتورها</string>
-    <string name="label_report_view_visitor">مشاهده گزارشات عملکرد همه ویزیتورها و یک ویزیتور</string>
-    <string name="label_visitor_performance_report">گزارش عملکرد ویزیتورها</string>
+    <string name="label_visitor_list">لیست بازاریاب ها</string>
+    <string name="label_report_view_visitor">مشاهده گزارشات عملکرد همه بازاریاب ها و یک بازاریاب</string>
+    <string name="label_visitor_performance_report">گزارش عملکرد بازاریاب ها</string>
     <string name="label_today_performance">عملکرد امروز</string>
     <string name="label_card_given">کارت داده شده</string>
-    <string name="label_visited_collection">مجموعه بازدید شده</string>
-    <string name="label_visitor_performance_analysis">تحلیل عملکرد ویزیتور</string>
+    <string name="label_visited_organization">سازمان بازدید شده</string>
+    <string name="label_visitor_performance_analysis">تحلیل عملکرد بازاریاب</string>
     <string name="label_how_cooperate">نحوه همکاری</string>
     <string name="label_contract_date">تاریخ قرارداد</string>
     <string name="label_call">تماس</string>
-    <string name="label_visitor_code">کد ویزیتور:</string>
+    <string name="label_visitor_code">کد بازاریاب:</string>
     <string name="label_total_visits">کل ویزیت‌ها</string>
     <string name="label_average_score">میانگین امتیاز</string>
     <string name="label_assigned_cards">کارت‌های محول شده</string>
     <string name="label_out_of_five">از ۵</string>
     <string name="label_date_range_selection">انتخاب بازه تاریخی</string>
     <string name="label_select_location">انتخاب موقعیت</string>
-    <string name="label_visitors_performance_analysis">تحلیل عملکرد ویزیتورها</string>
+    <string name="label_visitors_performance_analysis">تحلیل عملکرد بازاریاب ها</string>
     <string name="label_select_date_range">انتخاب بازه زمانی</string>
     <string name="label_total_contracts_count">جمع کل قراردادها</string>
     <string name="label_total_active_contracts_count">قراردادهای فعال</string>
     <string name="label_total_inactive_contracts_count">قراردادهای غیر فعال</string>
-    <string name="label_collaborative_collections_report">گزارش مجموعه‌های همکار</string>
-    <string name="label_collections_report_low_high_selling">گزارش مجموعه های همکارکم فروش/
+    <string name="label_organizations_report">گزارش سازمان ها</string>
+    <string name="label_organizations_report_low_high_selling">گزارش سازمان های کم فروش/
 پرفروش</string>
+    <string name="label_related_persons_list">لیست اشخاص مرتبط با سازمان</string>
     <string name="label_related_persons">اشخاص مرتبط با سازمان</string>
     <string name="label_add_related_person">افزودن شخص مرتبط</string>
     <string name="label_organization_person">شخص مرتبط با سازمان</string>
     <string name="label_add_person">افزودن شخص</string>
     <string name="label_person_status">وضعیت شخص</string>
     <string name="label_person_description">توضیحات شخص</string>
-    <string name="hint_choose_status">وضعیت را انتخاب کنید</string>
     <string name="label_delete">حذف</string>
     <string name="label_no_person_added">هنوز شخصی اضافه نشده است</string>
     <string name="label_persons_count">%1$d شخص اضافه شده است</string>
     <string name="label_person_full_name">نام و نام خانوادگی</string>
-    <string name="hint_enter_person_full_name">نام و نام خانوادگی را وارد کنید</string>
     <string name="label_gender">جنسیت</string>
-    <string name="hint_choose_gender">جنسیت را انتخاب کنید</string>
-
+    <string name="splash_loading">در حال آماده‌سازی...</string>
     <!-- KPI -->
-    <string name="label_count_visitor">تعداد ویزیتورها</string>
+    <string name="label_count_visitor">تعداد بازاریاب ها</string>
     <string name="label_count_visit">تعداد بازدیدها</string>
     <string name="label_count_calls">تعداد تماس ها</string>
     <string name="label_count_cooperation_requests">تعداد درخواست همکاری</string>
     <string name="label_avg_visits_score">میانگین بازدید</string>
     <string name="label_count_discount_cards_visitors">تعداد کارت های تخفیف اختصاص داده به
-ویزیتورها </string>
+بازاریاب ها </string>
     <string name="label_count_stands_visitors">تعداد استندهای اختصاص داده به
-ویزیتورها </string>
-    <string name="label_count_discount_cards_collection">تعداد کارت های تخفیف اختصاص داده به
-مجموعه ها</string>
-    <string name="label_count_stands_collections">تعداد استندهای اختصاص داده به
-مجموعه ها </string>
-    <string name="label_visitors_activity_comparison">مقایسه فعالیت ویزیتورها</string>
+بازاریاب ها </string>
+    <string name="label_count_discount_cards_organizations">تعداد کارت های تخفیف اختصاص داده به
+سازمان ها</string>
+    <string name="label_count_stands_organizations">تعداد استندهای اختصاص داده به
+سازمان ها </string>
+    <string name="label_visitors_activity_comparison">مقایسه فعالیت بازاریاب ها</string>
     <string name="label_low_selling">کم‌فروش</string>
     <string name="label_best_selling">پرفروش</string>
     <string name="label_name">نام</string>
     <string name="label_consumed_offer_cards_count">تعداد کارت‌های آفر مصرفی</string>
     <string name="label_consumption_comparison">مقایسه مصرف</string>
     <string name="label_delete_title">حذف %1$s</string>
+    <string name="label_register_organization_notice">ثبت امتیاز و تذکر برای سازمان</string>
+    <string name="label_notice_description">شرح تذکر</string>
+    <string name="label_register_notice">ثبت تذکر</string>
+    <string name="label_warnings_type">نوع تذکر</string>
+    <string name="label_warnings_organization">تذکرات سازمان</string>
+    <string name="label_score">امتیاز</string>
+    <string name="label_description_notice_score">امتیاز %1$d</string>
+    <string name="label_notice_score_level_1">خیلی کم</string>
+    <string name="label_notice_score_level_2">کم</string>
+    <string name="label_notice_score_level_3">متوسط</string>
+    <string name="label_notice_score_level_4">زیاد</string>
+    <string name="label_notice_score_level_5">خیلی زیاد</string>
+    <string name="label_choose_score">امتیاز را انتخاب کنید</string>
+    <string name="label_no_notice_added">تذکری برای این سازمان ثبت نشده است</string>
+
 
     //status
     <string name="label_done">انجام شد</string>
     <string name="label_cancelled">لغو شده</string>
+    <string name="label_returned">عودت شده</string>
     <string name="label_planned">برنامه‌ریزی شده</string>
     <string name="label_used">استفاده شده</string>
     <string name="label_out_of_stock">ناموجود</string>
@@ -253,6 +267,9 @@
     <string name="msg_select_one_of_options">یکی از گزینه‌های زیر را انتخاب کنید</string>
     <string name="msg_delete_message">
     آیا از حذف «%1$s» مطمئن هستید؟ این عملیات قابل بازگشت نیست.</string>
+
+    <string name="msg_dialog_deactivate_organization">آیا از غیرفعال‌سازی این سازمان اطمینان دارید؟</string>
+
     // sample
     <string name="greeting_text">رضا، خوش آمدی</string>
     <string name="gps_address_sample">تهران، سعادت آباد، خیابان سرو شرقی</string>
@@ -293,7 +310,11 @@
     <string name="hint_visit_phone_result">نتیجه تماس را وارد کنید</string>
     <string name="hint_description">توضیحات خود را وارد کنید…</string>
     <string name="hint_search_card_number">جستجو بر اساس شماره کارت ...</string>
-
+    <string name="hint_choose_warnings_type">نوع تذکر را انتخاب کنید</string>
+    <string name="hint_notice_description">توضیحات تکمیلی را وارد کنید...</string>
+    <string name="hint_choose_gender">جنسیت را انتخاب کنید</string>
+    <string name="hint_choose_status">وضعیت را انتخاب کنید</string>
+    <string name="hint_enter_person_full_name">نام و نام خانوادگی را وارد کنید</string>
 
     // error
     <string name="error_username_required">نام کاربری را وارد کنید</string>

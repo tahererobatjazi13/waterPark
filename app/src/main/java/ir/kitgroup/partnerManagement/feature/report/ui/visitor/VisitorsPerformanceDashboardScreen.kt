@@ -302,13 +302,13 @@ private fun VisitorsTable(
                     center = true
                 )
                 TableCell(
-                    text = stringResource(R.string.label_count_discount_cards_collection),
+                    text = stringResource(R.string.label_count_discount_cards_organizations),
                     width = 140.dp,
                     bold = true,
                     center = true
                 )
                 TableCell(
-                    text = stringResource(R.string.label_count_stands_collections),
+                    text = stringResource(R.string.label_count_stands_organizations),
                     width = 130.dp,
                     bold = true,
                     center = true
@@ -587,7 +587,7 @@ private fun demoVisitorsDashboardUi(): VisitorsDashboardUi {
                 Icons.Default.CoPresent
             ),
             KpiUi(
-                stringResource(R.string.label_count_discount_cards_collection),
+                stringResource(R.string.label_count_discount_cards_organizations),
                 "۸.۶",
                 Icons.Default.Business
             ),

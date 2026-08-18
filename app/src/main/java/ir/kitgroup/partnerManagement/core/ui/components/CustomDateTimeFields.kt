@@ -35,17 +35,30 @@ fun CustomDateTimeFields(
     time: String = "",
     onTimeClick: () -> Unit = {},
     showTime: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isRequired: Boolean = true // اضافه شدن فیلد اجباری به صورت پیش‌فرض فعال
 ) {
     val colors = MaterialTheme.colorScheme
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            style = typography.titleMedium,
-            color = colors.onSurface
-        )
-        Spacer(modifier = Modifier.height(6.dp))
+        // هدر فیلد با کنترل وضعیت اجباری بودن
+        Row(
+            modifier = Modifier.padding(bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = typography.titleMedium,
+                color = colors.onSurface
+            )
+            if (isRequired) {
+                Text(
+                    text = " *",
+                    color = colors.error,
+                    style = typography.labelMedium
+                )
+            }
+        }
 
         if (showTime) {
             Row(

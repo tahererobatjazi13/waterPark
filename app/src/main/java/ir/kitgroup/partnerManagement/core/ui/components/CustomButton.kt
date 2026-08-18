@@ -9,14 +9,15 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+
 @Composable
 fun CustomButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    icon: Painter? = null,
+    icon: ImageVector? = null,
     colors: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -51,19 +52,19 @@ fun CustomButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
             Text(
                 text = text,
                 style = textStyle
             )
-
-            if (icon != null) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    painter = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
         }
     }
 }

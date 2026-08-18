@@ -81,7 +81,7 @@ class MainPreferences @Inject constructor(
             prefs.remove(KEY_ID)
             prefs.remove(KEY_FIRST_NAME)
             prefs.remove(KEY_LAST_NAME)
-            prefs.remove(KEY_IS_LOGGED)
+            prefs[KEY_IS_LOGGED] = false
             prefs.remove(KEY_USERNAME)
             prefs.remove(KEY_USER_ROLE)
         }

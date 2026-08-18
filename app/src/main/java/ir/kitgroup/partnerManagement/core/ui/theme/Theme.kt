@@ -73,9 +73,20 @@ fun PartnerManagementTheme(
         ThemeMode.LIGHT -> false
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
+    val colorScheme = if (darkTheme) {
+        DarkColorScheme
+    } else {
+        LightColorScheme
+    }
 
+    val partnerColors = if (darkTheme) {
+        DarkPartnerManagementColors
+    } else {
+        LightPartnerManagementColors
+    }
     val context = LocalContext.current
 
+/*
     val materialColorScheme: ColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -86,14 +97,16 @@ fun PartnerManagementTheme(
     }
 
     val appColors = if (darkTheme) DarkPartnerManagementColors else LightPartnerManagementColors
+*/
+
 
     CompositionLocalProvider(
-        LocalPartnerManagementColors provides appColors
+        LocalPartnerManagementColors provides partnerColors
     ) {
         MaterialTheme(
-            colorScheme = materialColorScheme,
+            colorScheme = colorScheme,
+            content = content,
             typography = AppTypography,
-            content = content
         )
     }
 }

@@ -19,24 +19,23 @@ class ThemeViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
-    val themeMode: StateFlow<ThemeMode> = _themeMode
+    private val _themeMode = MutableStateFlow<ThemeMode?>(null)
+    val themeMode: StateFlow<ThemeMode?> = _themeMode
 
     init {
         viewModelScope.launch {
             context.settingsDataStore.data.collect { pref ->
-                val mode = ThemePreferences.fromString(
+                _themeMode.value = ThemePreferences.fromString(
                     pref[ThemePreferences.THEME_MODE]
                 )
-                _themeMode.value = mode
             }
         }
     }
 
     fun setTheme(mode: ThemeMode) {
         viewModelScope.launch {
-            context.settingsDataStore.edit {
-                it[ThemePreferences.THEME_MODE] = mode.name
+            context.settingsDataStore.edit { preferences ->
+                preferences[ThemePreferences.THEME_MODE] = mode.name
             }
         }
     }

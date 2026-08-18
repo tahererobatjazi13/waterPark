@@ -48,7 +48,6 @@ fun FilterSection(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        //  CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         TextField(
             value = value,
             onValueChange = onValueChange,
@@ -97,5 +96,4 @@ fun FilterSection(
             )
         )
     }
-    //  }
 }

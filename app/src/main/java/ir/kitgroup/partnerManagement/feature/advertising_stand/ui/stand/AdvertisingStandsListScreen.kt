@@ -127,7 +127,8 @@ private fun AdvertisingItemsContent(
                 .padding(top = 10.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = appColors.success,
-                contentColor = Color.White
+                contentColor = MaterialTheme.colorScheme.onPrimary
+
             ),
         )
         Spacer(modifier = Modifier.height(16.dp))

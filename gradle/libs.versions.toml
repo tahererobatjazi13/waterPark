@@ -11,7 +11,6 @@ espressoCore = "3.6.1"
 androidxJunit = "1.2.1"
 hilt = "2.51.1"
 hiltNavigationCompose = "1.2.0"
-kapt = "1.9.22"
 navigation = "2.8.0"
 serialization = "1.7.3"
 room = "2.7.0"
@@ -66,5 +65,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kapt" }
+kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

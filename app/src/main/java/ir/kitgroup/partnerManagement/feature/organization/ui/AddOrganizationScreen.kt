@@ -35,7 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.R.string.label_mobile
+import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
@@ -51,6 +51,7 @@ import ir.kitgroup.partnerManagement.feature.organization.model.PersonOrganizati
 
 @Composable
 fun AddOrganizationScreen(
+    organizationId: Int,
     onBackClick: () -> Unit,
     onCancel: () -> Unit,
     onSaveClick: () -> Unit,
@@ -58,6 +59,7 @@ fun AddOrganizationScreen(
     onAddImage: () -> Unit,
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val isEditMode = organizationId > 0
 
     val formState = rememberAddOrganizationFormState()
     val personState = rememberAddPersonFormState()
@@ -68,7 +70,11 @@ fun AddOrganizationScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             CustomHeader(
-                title = R.string.label_add_new_organization,
+                title = if (isEditMode) {
+                    R.string.label_edit_organization
+                } else {
+                    R.string.label_add_new_organization
+                },
                 showBackButton = true,
                 onBackClick = onBackClick
             )
@@ -786,7 +792,7 @@ private fun OrganizationPersonCard(
             }
 
             PersonInfoRow(
-                title = stringResource(label_mobile),
+                title = stringResource(R.string.label_mobile),
                 value = person.mobile
             )
 
@@ -961,7 +967,7 @@ private fun CollectionImagesSection(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = null,
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -1040,9 +1046,9 @@ private fun PersonInfoRow(
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun AddOrganizationScreenPreview() {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        MaterialTheme {
+        AppScreenPreview {
             AddOrganizationScreen(
+                organizationId = 0,
                 onBackClick = {},
                 onCancel = {},
                 onSaveClick = {},
@@ -1050,5 +1056,4 @@ private fun AddOrganizationScreenPreview() {
                 onAddImage = {}
             )
         }
-    }
 }

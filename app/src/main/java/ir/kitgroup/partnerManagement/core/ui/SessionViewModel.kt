@@ -3,9 +3,8 @@ package ir.kitgroup.partnerManagement.core.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ir.kitgroup.partnerManagement.core.ui.util.UserRole
-import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
-import kotlinx.coroutines.flow.Flow
+import ir.kitgroup.partnerManagement.feature.login.domain.AuthRepository
+import ir.kitgroup.partnerManagement.feature.login.domain.UserSession
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -15,31 +14,89 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
-    private val mainPreferences: MainPreferences
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    val isLoggedIn: StateFlow<Boolean> = mainPreferences.isLoggedIn
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = false
-        )
-    val userName = mainPreferences.username
+    /**
+     * Session واقعی کاربر
+     */
+    val session: StateFlow<UserSession?> =
+        authRepository.session
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = null
+            )
 
-    val userRole: StateFlow<String?> = mainPreferences.userRole
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
+    /**
+     * وضعیت Session
+     *
+     * نکته مهم:
+     * مستقیماً از authRepository.session ساخته می‌شود
+     * تا مقدار اولیه null در session باعث LoggedOut شدن
+     * زودهنگام نشود.
+     */
+    val sessionStatus: StateFlow<SessionStatus> =
+        authRepository.session
+            .map { userSession ->
+                if (userSession != null) {
+                    SessionStatus.LoggedIn(userSession)
+                } else {
+                    SessionStatus.LoggedOut
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = SessionStatus.Checking
+            )
 
-    val isSupervisorFlow: Flow<Boolean> = mainPreferences.userRole.map { role ->
-        role == UserRole.SUPERVISOR.name
-    }
+    /**
+     * وضعیت ورود
+     */
+    val isLoggedIn: StateFlow<Boolean> =
+        session
+            .map { it != null }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = false
+            )
 
-    fun logout(onComplete: () -> Unit) {
+    /**
+     * نام کاربری
+     */
+    val userName: StateFlow<String> =
+        session
+            .map { it?.username.orEmpty() }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = ""
+            )
+
+    /**
+     * نقش کاربر
+     */
+    val userRole: StateFlow<String> =
+        session
+            .map { it?.role?.name.orEmpty() }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = ""
+            )
+
+    /**
+     * Logout
+     */
+    fun logout(
+        onComplete: () -> Unit
+    ) {
         viewModelScope.launch {
-            mainPreferences.clearUserInfo()
+
+            authRepository.logout()
+
             onComplete()
         }
     }

@@ -74,6 +74,11 @@ fun StatusBadge(
             contentColor = PartnerManagementTheme.colors.onErrorContainer
             text = stringResource(R.string.label_cancelled)
         }
+        Status.RETURNED -> {
+            containerColor = PartnerManagementTheme.colors.errorContainer
+            contentColor = PartnerManagementTheme.colors.onErrorContainer
+            text = stringResource(R.string.label_returned)
+        }
     }
 
     Badge(

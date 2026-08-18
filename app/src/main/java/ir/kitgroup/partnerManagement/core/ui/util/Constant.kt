@@ -30,7 +30,8 @@ enum class Status {
     BLOCKED,
     DONE,
     PLANNED,
-    CANCELLED
+    CANCELLED,
+    RETURNED
 }
 
 enum class VisitType {
@@ -57,31 +58,19 @@ enum class CardStatusFilter(
 
 enum class AllocationFilterTab(val titleRes: Int) {
     All(R.string.label_all),
-    Delivered(R.string.label_delivered),
-    Pending(R.string.label_pending)
+    Active(R.string.label_active),
+    Draft(R.string.label_draft),
+    Returned(R.string.label_returned),
+    Cancelled(R.string.label_cancelled)
 }
 
 
-enum class AllocationStatus(
-    val labelRes: Int,
-    val icon: ImageVector
-) {
-    Delivered(
-        R.string.label_delivered,
-        Icons.Filled.Check
-    ),
-    Pending(
-        R.string.label_pending,
-        Icons.Filled.MoreHoriz
-    ),
-    Active(
-        R.string.label_active,
-        Icons.Filled.Check
-    ),
-    OutOfStock(
-        R.string.label_out_of_stock,
-        Icons.Filled.MoreHoriz
-    )
+
+enum class OrganizationDetailTab(val titleRes: Int) {
+    INFO(R.string.label_organization_basic_information),
+    PERSONS(R.string.label_related_persons_list),
+    VISITOR(R.string.label_assignment_visitor_to_organization_list),
+    STANDS(R.string.label_assignment_stands_to_organization_list),
+    NOTICES(R.string.label_warnings_organization),
+
 }
-
-

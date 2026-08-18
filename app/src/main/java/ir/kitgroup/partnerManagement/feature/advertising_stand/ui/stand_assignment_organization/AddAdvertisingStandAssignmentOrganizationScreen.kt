@@ -107,7 +107,7 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
     val organizationList = remember {
         listOf(
             OrganizationModel(1, "هتل پارسیان آزادی", "مشهد، یوسفی", Status.ACTIVE, 5),
-            OrganizationModel(2, "مجموعه پالاس", "مشهد، قاسم آباد", Status.ACTIVE, 4),
+            OrganizationModel(2, "سازمان پالاس", "مشهد، قاسم آباد", Status.ACTIVE, 4),
             OrganizationModel(3, "سازمان نوید", "مشهد، پیروزی", Status.ACTIVE, 3),
             OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
             OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3),

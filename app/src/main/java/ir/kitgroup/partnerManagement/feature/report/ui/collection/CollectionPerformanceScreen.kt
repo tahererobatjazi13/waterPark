@@ -42,7 +42,7 @@ fun CollectionPerformanceScreen(
     Scaffold(
         topBar = {
             CustomHeader(
-                title = R.string.label_collaborative_collections_report,
+                title = R.string.label_organizations_report,
                 showBackButton = true,
                 onBackClick = onBackClick
             )

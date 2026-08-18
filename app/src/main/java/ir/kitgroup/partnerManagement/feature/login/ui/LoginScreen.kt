@@ -6,8 +6,11 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -25,32 +28,63 @@ import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
-import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
+import androidx.compose.ui.tooling.preview.Preview
+import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 
 @Composable
 fun LoginScreen(
     navController: NavController,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
 
-    var usernameError by remember { mutableStateOf<String?>(null) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
-    var loginError by remember { mutableStateOf<String?>(null) }
 
-    val usernameRequiredError = stringResource(R.string.error_username_required)
-    val passwordRequiredError = stringResource(R.string.error_password_required)
-    val invalidLoginError = stringResource(R.string.error_invalid_login)
+    LaunchedEffect(Unit) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                LoginEffect.NavigateToDashboard -> {
+                    navController.navigate(
+                        BottomNavItem.Dashboard.route
+                    ) {
+                        popUpTo("login") {
+                            inclusive = true
+                        }
 
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+    }
+    LoginContent(
+        uiState = uiState,
+        onUsernameChange = viewModel::onUsernameChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onLoginClick = viewModel::onLoginClick,
+        onForgotPasswordClick = {
+            // navController.navigate("forgot_password")
+        }
+    )
+}
+@Composable
+private fun LoginContent(
+    uiState: LoginUiState,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onForgotPasswordClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
+    val appColors = LocalPartnerManagementColors.current
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(appColors.appBackground)
             .imePadding()
             .pointerInput(Unit) {
                 detectTapGestures {
@@ -73,50 +107,47 @@ fun LoginScreen(
         )
 
         CustomEditTextField(
-            value = username,
-            onValueChange = {
-                username = it
-                usernameError = null
-            },
-            label = stringResource(id = R.string.label_username),
-            placeholder = stringResource(id = R.string.hint_enter_your_username),
-            leadingIcon = painterResource(id = R.drawable.ic_user_name),
-            errorMessage = usernameError
+            value = uiState.username,
+            onValueChange = onUsernameChange,
+            label = stringResource(R.string.label_username),
+            placeholder = stringResource(R.string.hint_enter_your_username),
+            leadingIcon = painterResource(R.drawable.ic_user_name),
+            errorMessage = uiState.usernameErrorRes?.let { stringResource(it) }
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         CustomEditTextField(
-            value = password,
-            onValueChange = {
-                password = it
-                passwordError = null
-            },
-            label = stringResource(id = R.string.label_password),
-            placeholder = stringResource(id = R.string.hint_enter_your_password),
-            leadingIcon = painterResource(id = R.drawable.ic_lock),
+            value = uiState.password,
+            onValueChange = onPasswordChange,
+            label = stringResource(R.string.label_password),
+            placeholder = stringResource(R.string.hint_enter_your_password),
+            leadingIcon = painterResource(R.drawable.ic_lock),
             isPasswordField = true,
-            errorMessage = passwordError
+            errorMessage = uiState.passwordErrorRes?.let { stringResource(it) }
         )
-        if (loginError != null) {
+
+        uiState.loginErrorRes?.let { errorRes ->
             Spacer(modifier = Modifier.height(12.dp))
+
             Text(
-                text = loginError!!,
+                text = stringResource(errorRes),
                 color = MaterialTheme.colorScheme.error,
-                style = typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center
             )
         }
+
         Spacer(modifier = Modifier.height(40.dp))
 
         TextButton(
-            onClick = { /* ناوبری به بازیابی رمز */ },
+            onClick = onForgotPasswordClick,
             contentPadding = PaddingValues(10.dp),
             modifier = Modifier.wrapContentWidth()
         ) {
             Text(
-                text = stringResource(id = R.string.label_forgot_password),
-                style = typography.titleMedium,
+                text = stringResource(R.string.label_forgot_password),
+                style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Start,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -128,63 +159,28 @@ fun LoginScreen(
             text = stringResource(R.string.label_login),
             onClick = {
                 focusManager.clearFocus()
-
-                usernameError = null
-                passwordError = null
-                loginError = null
-
-                var isValid = true
-
-                if (username.isBlank()) {
-                    usernameError = usernameRequiredError
-                    isValid = false
-                }
-
-                if (password.isBlank()) {
-                    passwordError = passwordRequiredError
-                    isValid = false
-                }
-                if (!isValid) return@CustomButton
-
-                when {
-                    username == "s" && password == "123" -> {
-                        viewModel.login(
-                            username = username,
-                            role = UserRole.SUPERVISOR
-                        ) {
-                            navController.navigate(BottomNavItem.Dashboard.route) {
-                                popUpTo("login") { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        }
-                    }
-
-                    username == "v" && password == "123" -> {
-                        viewModel.login(
-                            username = username,
-                            role = UserRole.VISITOR
-                        ) {
-                            navController.navigate(BottomNavItem.Dashboard.route) {
-                                popUpTo("login") { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        }
-                    }
-
-                    else -> {
-                        loginError = invalidLoginError
-                    }
-                }
-                /*if (isValid) {
-                    navController.navigate(BottomNavItem.Dashboard.route) {
-                        popUpTo("login") { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }*/
+                onLoginClick()
             },
-            icon = painterResource(R.drawable.ic_login_arrow)
+            icon = Icons.AutoMirrored.Filled.Login,
         )
 
         Spacer(modifier = Modifier.height(60.dp))
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412, heightDp = 915)
+@Composable
+private fun LoginContentPreview() {
+    AppScreenPreview {
+        LoginContent(
+            uiState = LoginUiState(
+                username = "s",
+                password = "123"
+            ),
+            onUsernameChange = {},
+            onPasswordChange = {},
+            onLoginClick = {},
+            onForgotPasswordClick = {}
+        )
     }
 }

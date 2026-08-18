@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
@@ -50,9 +51,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
@@ -69,13 +72,14 @@ import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
+import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 
 @Composable
 fun OrganizationsListScreen(
     onOrganizationClick: (Int) -> Unit,
     onAssignVisitorClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel:SessionViewModel = hiltViewModel()
+    viewModel: SessionViewModel = hiltViewModel()
 ) {
 
     var selectedTab by remember { mutableStateOf(true) }
@@ -90,7 +94,7 @@ fun OrganizationsListScreen(
         ),
         OrganizationModel(
             2,
-            " مجموعه پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4
+            " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4
         ),
         OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
         OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
@@ -128,7 +132,13 @@ fun OrganizationsListScreen(
             color = MaterialTheme.colorScheme.background
         ) {
             Column(
-                modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 12.dp
+                    )
             ) {
                 if (isSupervisor) {
                     AssigningHeader(
@@ -159,7 +169,7 @@ fun OrganizationsListScreen(
                 Spacer(modifier.height(8.dp))
 
                 LazyColumn(
-                    modifier = modifier.weight(1f),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
@@ -193,24 +203,21 @@ private fun AssigningHeader(
         Text(
             text = stringResource(R.string.label_assigning_visitor_organization),
             style = typography.titleMedium,
-            color = appColors.textPrimary,
+            color = appColors.textPrimary
         )
-        Button(
+        CustomButton(
+            text = stringResource(R.string.label_new_allocation),
             onClick = onAssignVisitorClick,
-            shape = RoundedCornerShape(12.dp),
+            fillMaxWidth = false,
+            height = 38.dp,
+            textStyle = typography.titleLarge,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            icon = Icons.Default.Add,
             colors = ButtonDefaults.buttonColors(
                 containerColor = appColors.success,
-                contentColor = Color.White
-            ),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = stringResource(R.string.label_new_allocation),
-                style = typography.labelLarge
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
-        }
+        )
     }
 }
 
@@ -286,14 +293,14 @@ fun OrganizationsTabSwitcher(
             .padding(4.dp)
     ) {
         TabItem(
-            title = R.string.label_active_collections,
+            title = R.string.label_active_organizations,
             count = activeCount.toString(),
             isSelected = selectedTab,
             modifier = Modifier.weight(1f),
             onClick = { onTabChange(true) }
         )
         TabItem(
-            title = R.string.label_inactive_collections,
+            title = R.string.label_inactive_organizations,
             count = inactiveCount.toString(),
             isSelected = !selectedTab,
             modifier = Modifier.weight(1f),

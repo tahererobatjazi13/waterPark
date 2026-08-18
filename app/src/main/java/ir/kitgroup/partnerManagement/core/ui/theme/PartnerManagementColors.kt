@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 
 @Immutable
 data class PartnerManagementColors(
+    val appBackground: Color,
     val screenBackground: Color,
     val cardBackground: Color,
     val cardBackgroundAlt: Color,
@@ -54,6 +55,7 @@ data class PartnerManagementColors(
 )
 
 val LightPartnerManagementColors = PartnerManagementColors(
+    appBackground = White,
     screenBackground = LightBackground,
     cardBackground = LightSurface,
     cardBackgroundAlt = LightSurfaceVariant,
@@ -102,6 +104,7 @@ val LightPartnerManagementColors = PartnerManagementColors(
 )
 
 val DarkPartnerManagementColors = PartnerManagementColors(
+    appBackground = Black,
     screenBackground = DarkBackground,
     cardBackground = DarkSurface,
     cardBackgroundAlt = DarkSurfaceVariant,

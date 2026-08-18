@@ -24,10 +24,9 @@ val LightBackground = Color(0xFFF5F8FA)
 val LightSurface = Color(0xFFFFFFFF)
 val LightSurfaceVariant = Color(0xFFF1F4F8)
 
-val LightTextPrimary = Color(0xFF111827)
+val LightTextPrimary = Color(0xFF1F2937)
 val LightTextSecondary = Color(0xFF6B7280)
-val LightTextTertiary = Color(0xFF8E9298)
-
+val LightTextTertiary = Color(0xFF9CA3AF)
 val LightBorder = Color(0xFFE5E7EB)
 
 /*
@@ -42,8 +41,7 @@ val DarkSurfaceVariant = Color(0xFF252525)
 val DarkTextPrimary = Color(0xFFF9FAFB)
 val DarkTextSecondary = Color(0xFFD1D5DB)
 val DarkTextTertiary = Color(0xFF9CA3AF)
-
-val DarkBorder = Color(0xFF2F2F2F)
+val DarkBorder = Color(0xFF374151)
 
 /*
 --------------------------------
@@ -127,7 +125,6 @@ val RedContent = Error
 val DashboardBlue = BrandBlue
 val DashboardBlueDark = BrandBlueDark
 val ScreenBg = LightBackground
-val TextDark = LightTextPrimary
 val TextGray = LightTextSecondary
 val BorderGray = LightBorder
 

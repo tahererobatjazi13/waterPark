@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -19,7 +20,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.theme.ThemeViewModel
-import ir.kitgroup.partnerManagement.core.ui.util.VisitType
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand.AdvertisingStandsListScreen
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.AdvertisingStandMenuScreen
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand.AddAdvertisingStandScreen
@@ -49,14 +49,18 @@ import ir.kitgroup.partnerManagement.feature.report.ui.visitor.VisitorsPerforman
 import ir.kitgroup.partnerManagement.feature.visits.ui.RegisterVisitScreen
 import ir.kitgroup.partnerManagement.feature.visits.ui.VisitDetailScreen
 import ir.kitgroup.partnerManagement.feature.visits.ui.VisitsScreen
+import ir.kitgroup.partnerManagement.core.ui.SessionStatus
+import ir.kitgroup.partnerManagement.core.ui.util.ThemeMode
+import ir.kitgroup.partnerManagement.feature.login.ui.SplashScreen
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
+
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    val themeViewModel: ThemeViewModel = viewModel()
     val sessionViewModel: SessionViewModel = hiltViewModel()
 
 
@@ -77,24 +81,63 @@ fun AppNavigation() {
             }
         }
     ) { paddingValues ->
-        val isLoggedIn by sessionViewModel.isLoggedIn.collectAsState()
 
-        val startDestination = if (isLoggedIn) {
-            BottomNavItem.Dashboard.route
-        } else {
-            "login"
-        }
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             NavHost(
                 navController = navController,
-                startDestination = startDestination,
+                startDestination = "splash",
                 modifier = Modifier.padding(paddingValues)
             ) {
+
+                composable("splash") {
+
+                    val sessionStatus by sessionViewModel.sessionStatus.collectAsState()
+
+                    LaunchedEffect(sessionStatus) {
+                        if (sessionStatus == SessionStatus.Checking) {
+                            return@LaunchedEffect
+                        }
+
+                        kotlinx.coroutines.delay(2000)
+
+                        when (sessionStatus) {
+
+                            SessionStatus.Checking -> {
+                                // هنوز DataStore در حال خواندن است
+                            }
+
+                            is SessionStatus.LoggedIn -> {
+
+                                navController.navigate(
+                                    BottomNavItem.Dashboard.route
+                                ) {
+                                    popUpTo("splash") {
+                                        inclusive = true
+                                    }
+
+                                    launchSingleTop = true
+                                }
+                            }
+
+                            SessionStatus.LoggedOut -> {
+
+                                navController.navigate("login") {
+
+                                    popUpTo("splash") {
+                                        inclusive = true
+                                    }
+
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+                    }
+                    SplashScreen()
+                }
 
                 composable("login") {
                     LoginScreen(navController)
                 }
-
                 composable(BottomNavItem.Dashboard.route) {
                     DashboardScreen(navController)
                 }
@@ -166,8 +209,15 @@ fun AppNavigation() {
                 }
 
 
-                composable(Screen.AddCollection.route) {
+
+
+                composable(Screen.RegisterCard.route) {
+                    AddCardScreen(onBackClick = { navController.popBackStack() })
+                }
+
+                composable(Screen.AddOrganization.route) {
                     AddOrganizationScreen(
+                        organizationId = 0,
                         onBackClick = { navController.popBackStack() },
                         onCancel = { navController.popBackStack() },
                         onSaveClick = { navController.popBackStack() },
@@ -176,9 +226,21 @@ fun AppNavigation() {
                     )
                 }
 
-                composable(Screen.RegisterCard.route) {
-                    AddCardScreen(onBackClick = { navController.popBackStack() })
+                composable(
+                    route = Screen.EditOrganization.route,
+                    arguments = listOf(navArgument("organizationId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val organizationId = backStackEntry.arguments?.getInt("organizationId") ?: 0
+                    AddOrganizationScreen(
+                        organizationId = organizationId,
+                        onBackClick = { navController.popBackStack() },
+                        onCancel = { navController.popBackStack() },
+                        onSaveClick = { navController.popBackStack() },
+                        onSelectLocation = {},
+                        onAddImage = {}
+                    )
                 }
+
 
                 composable(
                     route = Screen.OrganizationDetail.route,
@@ -187,13 +249,17 @@ fun AppNavigation() {
                     )
                 ) { backStack ->
                     val organizationId = backStack.arguments?.getInt("organizationId") ?: 0
+
                     OrganizationDetailScreen(
                         organizationId = organizationId,
                         onBackClick = { navController.popBackStack() },
-                        onEditClick = { /* عملیات ویرایش */ },
+                        onEditClick = {
+                            navController.navigate(Screen.EditOrganization.createRoute(organizationId))
+                        },
                         onDisableClick = { /* عملیات غیرفعال‌سازی */ }
                     )
                 }
+
 
                 // Advertising Stand
                 composable(Screen.AdvertisingStandMenu.route) {
@@ -351,7 +417,7 @@ fun AppNavigation() {
                         visitorId = visitorId,
                         onBackClick = { navController.popBackStack() },
                         onCallClick = { phone ->
-                            // لانچ کردن Intent تماس سیستمی با ویزیتور
+                            // لانچ کردن Intent تماس سیستمی با بازاریاب
                         }
                     )
                 }
@@ -387,21 +453,26 @@ fun AppNavigation() {
                         },
                         onLogoutSuccess = {
                             navController.navigate("login") {
+
                                 popUpTo(0) {
                                     inclusive = true
                                 }
+
                                 launchSingleTop = true
                             }
-                        }
+                        },
+                        viewModel = sessionViewModel
                     )
                 }
+
 
 
                 composable("settings") {
                     val themeMode by themeViewModel.themeMode.collectAsState()
 
+
                     SettingsScreen(
-                        themeMode = themeMode,
+                        themeMode = themeMode ?: ThemeMode.SYSTEM,
                         onBackClick = { navController.popBackStack() },
                         onDisplayModeClick = { navController.navigate("theme_mode") }
                     )
@@ -411,7 +482,7 @@ fun AppNavigation() {
                 composable("theme_mode") {
                     val themeMode by themeViewModel.themeMode.collectAsState()
                     ThemeModeScreen(
-                        themeMode = themeMode,
+                        themeMode = themeMode ?: ThemeMode.SYSTEM,
                         onThemeSelected = { mode -> themeViewModel.setTheme(mode) },
                         onBackClick = { navController.popBackStack() }
                     )

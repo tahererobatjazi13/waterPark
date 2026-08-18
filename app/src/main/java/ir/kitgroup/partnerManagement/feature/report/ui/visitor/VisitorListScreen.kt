@@ -99,7 +99,7 @@ fun VisitorListScreen(
                         .padding(top = 10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = appColors.success,
-                        contentColor = Color.White
+                        contentColor =MaterialTheme.colorScheme.onPrimary
                     ),
                 )
 
@@ -200,7 +200,7 @@ fun VisitorCard(
 
                 VisitorStatItem(
                     count = visitor.collectionVisited,
-                    label = stringResource(R.string.label_visited_collection),
+                    label = stringResource(R.string.label_visited_organization),
                     icon = Icons.Default.Business,
                     modifier = Modifier.weight(1f)
                 )

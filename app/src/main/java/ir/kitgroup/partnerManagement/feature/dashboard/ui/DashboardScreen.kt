@@ -100,7 +100,7 @@ fun DashboardScreen(
         VisitItem(
             id = 2,
             time = "۱۴۰۳/۰۲/۱۸",
-            collectionName = "مجموعه پالاس",
+            collectionName = "سازمان پالاس",
             city = "مشهد",
             district = "احمد آباد",
             rating = 4,
@@ -142,7 +142,7 @@ fun DashboardScreen(
                 item {
                     QuickActionsSection(
                         onQuickVisitClick = { navController.navigate(Screen.RegisterVisit.createRoute()) },
-                        onQuickCollectionClick = { navController.navigate(Screen.AddCollection.route) },
+                        onQuickOrganizationClick = { navController.navigate(Screen.AddOrganization.route) },
                         onQuickCardClick = { navController.navigate(Screen.RegisterCard.route) }
                     )
                 }
@@ -329,7 +329,7 @@ private fun SummaryCard(data: SummaryCardData, modifier: Modifier) {
 @Composable
 private fun QuickActionsSection(
     onQuickVisitClick: () -> Unit,
-    onQuickCollectionClick: () -> Unit,
+    onQuickOrganizationClick: () -> Unit,
     onQuickCardClick: () -> Unit,
 ) {
 
@@ -350,7 +350,7 @@ private fun QuickActionsSection(
             QuickActionCard(
                 stringResource(R.string.label_add_new_organization),
                 Icons.Filled.LibraryAdd,
-                onQuickCollectionClick,
+                onQuickOrganizationClick,
                 Modifier.weight(1f)
             )
 

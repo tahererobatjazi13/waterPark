@@ -22,7 +22,6 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object AddCollection : Screen("register_collection")
     data object RegisterCard : Screen("register_card")
 
     data object VisitDetail : Screen("visit_detail/{visitId}") {
@@ -31,11 +30,27 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object OrganizationDetail : Screen("organization_detail/{organizationId}") {
-        fun createRoute(organizationId: Int): String {
-            return "organization_detail/$organizationId"
+    /*
+        data object AddOrganization : Screen("register_organization")
+        data object OrganizationDetail : Screen("organization_detail/{organizationId}") {
+            fun createRoute(organizationId: Int): String {
+                return "organization_detail/$organizationId"
+            }
         }
+    */
+    data object AddOrganization : Screen("add_organization")
+
+    data object EditOrganization : Screen("add_organization/{organizationId}") {
+        fun createRoute(organizationId: Int) = "add_organization/$organizationId"
     }
+
+    data object OrganizationDetail : Screen("organization_detail/{organizationId}") {
+        fun createRoute(organizationId: Int) = "organization_detail/$organizationId"
+    }
+
+    /*    data object AddOrganization : Screen("add_organization/{organizationId}") {
+            fun createRoute(organizationId: Int) = "add_organization/$organizationId"
+        }*/
 
     data object AssignVisitor :
         Screen("assign_visitor")

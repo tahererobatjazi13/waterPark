@@ -56,7 +56,6 @@ fun VisitorAnalysisScreen(
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // کارت اطلاعات ویزیتور
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),

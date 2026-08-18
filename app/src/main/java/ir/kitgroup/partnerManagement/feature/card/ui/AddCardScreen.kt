@@ -67,7 +67,7 @@ fun AddCardScreen(
     val collaborativelist = remember {
         listOf(
             OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5),
-            OrganizationModel(2, " مجموعه پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4),
+            OrganizationModel(2, " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4),
             OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
             OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
             OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3),
@@ -204,12 +204,10 @@ fun AddCardScreen(
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun AddCardScreenPreview() {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        MaterialTheme {
+        AppScreenPreview {
             AddCardScreen(
                 onBackClick = {},
                 onSaveClick = {}
             )
         }
-    }
 }

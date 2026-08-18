@@ -1,6 +1,6 @@
 package ir.kitgroup.partnerManagement.feature.advertising_stand.model
 
-import ir.kitgroup.partnerManagement.core.ui.util.AllocationStatus
+import ir.kitgroup.partnerManagement.core.ui.util.Status
 
 data class AdvertisingStandAssignment(
     val id: String,
@@ -10,6 +10,6 @@ data class AdvertisingStandAssignment(
     val itemIconName: String,
     val count: Int,
     val allocatedDate: String,
-    val status: AllocationStatus
+    val status: Status
 )
 

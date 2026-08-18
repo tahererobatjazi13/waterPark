@@ -37,12 +37,11 @@ import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.components.StatusImageBadge
+import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
-import ir.kitgroup.partnerManagement.core.ui.util.AllocationStatus
-import ir.kitgroup.partnerManagement.core.ui.util.extensions.style
+import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignment
 
 private val demoAdvertisingStandAssignments = listOf(
@@ -54,7 +53,7 @@ private val demoAdvertisingStandAssignments = listOf(
         "stand",
         5,
         "۱۴۰۳/۰۳/۲۲",
-        AllocationStatus.Delivered
+        Status.ACTIVE
     ),
     AdvertisingStandAssignment(
         "2",
@@ -64,7 +63,7 @@ private val demoAdvertisingStandAssignments = listOf(
         "wall",
         3,
         "۱۴۰۳/۰۳/۲۴",
-        AllocationStatus.Pending
+        Status.DRAFT
     ),
     AdvertisingStandAssignment(
         "3",
@@ -74,7 +73,7 @@ private val demoAdvertisingStandAssignments = listOf(
         "kiosk",
         2,
         "۱۴۰۳/۰۳/۲۰",
-        AllocationStatus.Delivered
+        Status.CANCELLED
     ),
     AdvertisingStandAssignment(
         "4",
@@ -84,7 +83,27 @@ private val demoAdvertisingStandAssignments = listOf(
         "stand",
         4,
         "۱۴۰۳/۰۳/۲۵",
-        AllocationStatus.Pending
+        Status.RETURNED
+    ),
+    AdvertisingStandAssignment(
+        "3",
+        "علی رضایی",
+        "هتل هما",
+        "کیوسک",
+        "kiosk",
+        2,
+        "۱۴۰۳/۰۳/۲۰",
+        Status.ACTIVE
+    ),
+    AdvertisingStandAssignment(
+        "4",
+        "نازنین کریمی",
+        "هتل بزرگ تهران",
+        "رومیزی",
+        "stand",
+        4,
+        "۱۴۰۳/۰۳/۲۵",
+        Status.DRAFT
     )
 )
 
@@ -102,8 +121,10 @@ fun AdvertisingStandAssignmentVisitorListScreen(
     val filteredAllocations = remember(selectedTab, advertisingStandAssignments) {
         when (selectedTab) {
             AllocationFilterTab.All -> advertisingStandAssignments
-            AllocationFilterTab.Delivered -> advertisingStandAssignments.filter { it.status == AllocationStatus.Delivered }
-            AllocationFilterTab.Pending -> advertisingStandAssignments.filter { it.status == AllocationStatus.Pending }
+            AllocationFilterTab.Active -> advertisingStandAssignments.filter { it.status == Status.ACTIVE }
+            AllocationFilterTab.Draft -> advertisingStandAssignments.filter { it.status == Status.DRAFT }
+            AllocationFilterTab.Returned -> advertisingStandAssignments.filter { it.status == Status.RETURNED }
+            AllocationFilterTab.Cancelled -> advertisingStandAssignments.filter { it.status == Status.CANCELLED }
         }
     }
 
@@ -185,7 +206,7 @@ private fun AllocationHeader(
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = PartnerManagementTheme.colors.success,
-                contentColor = Color.White
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ),
             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
         ) {
@@ -315,11 +336,7 @@ private fun AllocationCard(
                     modifier = Modifier.weight(1f)
                 )
 
-                StatusImageBadge(
-                    text = stringResource(advertisingStandAssignment.status.labelRes),
-                    style = advertisingStandAssignment.status.style(),
-                    icon = advertisingStandAssignment.status.icon
-                )
+                StatusBadge(advertisingStandAssignment.status)
             }
 
             HorizontalDivider(
@@ -371,7 +388,7 @@ private fun AllocationCard(
 }
 
 @Composable
-private fun InfoLine(
+ fun InfoLine(
     label: String,
     value: String,
     leadingIcon: ImageVector,
@@ -409,7 +426,7 @@ private fun InfoLine(
 }
 
 @Composable
-private fun DetailLine(
+ fun DetailLine(
     label: String,
     value: String,
     icon: ImageVector
@@ -474,7 +491,7 @@ private fun AllocationEmptyState(
     }
 }
 
-private fun allocationItemIcon(name: String): ImageVector {
+ fun allocationItemIcon(name: String): ImageVector {
     return when (name.lowercase()) {
         "stand" -> Icons.Default.Devices
         "wall" -> Icons.Default.Home

@@ -53,13 +53,15 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     viewModel: SessionViewModel = hiltViewModel()
 ) {
-    val username by viewModel.userName.collectAsState(initial = "")
-    val role by viewModel.userRole.collectAsState(initial = "")
-    // val phoneNumber by viewModel.phoneNumber.collectAsState(initial = "")
+
+
+    val username by viewModel.userName.collectAsState()
+    val role by viewModel.userRole.collectAsState()
+
     val roleTitle = remember(role) {
         when (role) {
             "SUPERVISOR" -> "سرپرست"
-            "VISITOR" -> "ویزیتور"
+            "VISITOR" -> "بازاریاب"
             else -> ""
         }
     }

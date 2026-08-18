@@ -18,9 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Assessment       // بهینه‌سازی شده برای گزارش عملکرد
-import androidx.compose.material.icons.filled.Description      // بهینه‌سازی شده برای قراردادها
-import androidx.compose.material.icons.filled.People           // بهینه‌سازی شده برای ویزیتورها/افراد
+import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -109,7 +109,7 @@ private fun AdvertisingMenuContent(
             AdvertisingMenuCard(
                 titleRes = R.string.label_visitor_list,
                 subtitleRes = R.string.label_report_view_visitor,
-                icon = Icons.Filled.People, // آیکون افراد به جای جعبه انبار
+                icon = Icons.Filled.People,
                 iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 onClick = onVisitorClick
@@ -120,7 +120,7 @@ private fun AdvertisingMenuContent(
             AdvertisingMenuCard(
                 titleRes = R.string.label_cooperation_agreement,
                 subtitleRes = R.string.label_report_cooperation_agreement,
-                icon = Icons.Filled.Description, // آیکون سند/توضیحات به جای ثبت‌نام
+                icon = Icons.Filled.Description,
                 iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                 iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 onClick = onReportContractClick
@@ -129,9 +129,9 @@ private fun AdvertisingMenuContent(
 
         item {
             AdvertisingMenuCard(
-                titleRes = R.string.label_collaborative_collections_report,
-                subtitleRes = R.string.label_collections_report_low_high_selling,
-                icon = Icons.Filled.Assessment, // آیکون آنالیز و نمودار عملکرد به جای ساختمان
+                titleRes = R.string.label_organizations_report,
+                subtitleRes = R.string.label_organizations_report_low_high_selling,
+                icon = Icons.Filled.Assessment,
                 iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 onClick = onCollectionPerformanceClick

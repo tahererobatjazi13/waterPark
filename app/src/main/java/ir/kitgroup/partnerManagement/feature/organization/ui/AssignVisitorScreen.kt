@@ -42,7 +42,7 @@ fun AssignVisitorScreen(
         ),
         OrganizationModel(
             2,
-            " مجموعه پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4
+            " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4
         ),
         OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
         OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
@@ -163,7 +163,8 @@ fun AssignVisitorScreen(
                     label = stringResource(R.string.label_start_date),
                     date = startDate,
                     onDateClick = { showStartDatePicker = true },
-                    showTime = false
+                    showTime = false,
+                    isRequired=true
                 )
 
                 CustomDateTimeFields(
