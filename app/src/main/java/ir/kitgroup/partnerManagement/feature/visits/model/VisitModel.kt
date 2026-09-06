@@ -5,15 +5,15 @@ import ir.kitgroup.partnerManagement.core.ui.util.Status
 
 data class VisitModel(
     val id: Int,
-    val title: String,
-    val type: String,
-    val person: String,
+    val organizationName: String,
+    val visitType: String,
+    val visitorName: String,
     val date: String,
+    val city: String,
+    val district: String,
     val icon: ImageVector,
     val status: Status,
 )
-
-
 
 
 

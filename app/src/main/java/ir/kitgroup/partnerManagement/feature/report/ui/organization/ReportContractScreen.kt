@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.report.ui.collection
+package ir.kitgroup.partnerManagement.feature.report.ui.organization
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -17,8 +17,8 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.components.JalaliRangeCalendar
-import ir.kitgroup.partnerManagement.feature.report.ui.collection.model.ReportDashboardUi
-import ir.kitgroup.partnerManagement.feature.report.ui.collection.model.ReportRowUi
+import ir.kitgroup.partnerManagement.feature.report.ui.organization.model.ReportDashboardUi
+import ir.kitgroup.partnerManagement.feature.report.ui.organization.model.ReportRowUi
 import ir.kitgroup.partnerManagement.core.ui.components.DateRangeChip
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.Status
@@ -73,7 +73,6 @@ fun ReportContractScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // حذف Modifier.weight(1f) از اینجا
                 ReportTable(
                     rows = ui.rows,
                     modifier = Modifier.fillMaxWidth()
@@ -150,23 +149,27 @@ private fun ReportTable(
             ) {
                 TableCellHeader(
                     text = stringResource(R.string.label_organization_name),
-                    modifier = Modifier.weight(3f)
+                    modifier = Modifier.weight(2.5f)
                 )
+
                 TableCellHeader(
-                    text = stringResource(R.string.label_contract_date),
-                    modifier = Modifier.weight(2f),
+                    text = stringResource(R.string.label_start_date),
+                    modifier = Modifier.weight(1.6f),
                     center = true
                 )
+
                 TableCellHeader(
-                    text = stringResource(R.string.label_how_cooperate),
-                    modifier = Modifier.weight(2f),
+                    text = stringResource(R.string.label_cooperation_model),
+                    modifier = Modifier.weight(2.4f),
                     center = true
                 )
+
                 TableCellHeader(
                     text = stringResource(R.string.label_status),
                     modifier = Modifier.weight(1.5f),
                     center = true
                 )
+
             }
             HorizontalDivider(color = appColors.border)
 
@@ -181,26 +184,28 @@ private fun ReportTable(
                 ) {
                     TableCell(
                         text = row.collectionName,
-                        modifier = Modifier.weight(3f)
+                        modifier = Modifier.weight(2.5f)
                     )
+
                     TableCell(
                         text = row.contractDate,
-                        modifier = Modifier.weight(2f),
-                        center = true
-                    )
-                    TableCell(
-                        text = row.cooperate,
-                        modifier = Modifier.weight(2f),
+                        modifier = Modifier.weight(1.6f),
                         center = true
                     )
 
-                    // اعمال وزن روی کانتینر وضعیت جهت هم‌ترازی با هدر
+                    TableCell(
+                        text = row.cooperate,
+                        modifier = Modifier.weight(2.4f),
+                        center = true
+                    )
+
                     Column(
                         modifier = Modifier.weight(1.5f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         StatusBadge(row.status)
                     }
+
                 }
                 HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
             }
@@ -291,35 +296,35 @@ fun demoReportDashboardUi(): ReportDashboardUi {
             id = "1",
             collectionName = "هتل اسپیناس پالاس",
             contractDate = "1405/02/25",
-            cooperate = "نقدی",
+            cooperate = "پورسانت و تخفیف",
             status = Status.ACTIVE
         ),
         ReportRowUi(
             id = "2",
             collectionName = "هتل پارسیان آزادی",
             contractDate = "1405/02/25",
-            cooperate = "درصدی",
+            cooperate = "پورسانتی",
             status = Status.ACTIVE
         ),
         ReportRowUi(
             id = "3",
             collectionName = "هتل هما شیراز",
             contractDate = "1405/02/25",
-            cooperate = "درصدی",
+            cooperate = "پورسانت و تخفیف",
             status = Status.ACTIVE
         ),
         ReportRowUi(
             id = "4",
             collectionName = "هتل بزرگ تهران",
             contractDate = "1405/02/25",
-            cooperate = "نقدی",
+            cooperate = "بلیط تخفیف دار",
             status = Status.INACTIVE
         ),
         ReportRowUi(
             id = "5",
             collectionName = "هتل پردیس کیش",
             contractDate = "1405/02/25",
-            cooperate = "درصدی",
+            cooperate = "پورسانتی",
             status = Status.INACTIVE
         ),
         ReportRowUi(
@@ -333,14 +338,14 @@ fun demoReportDashboardUi(): ReportDashboardUi {
             id = "7",
             collectionName = "هتل المپیک تهران",
             contractDate = "1405/02/25",
-            cooperate = "درصدی",
+            cooperate = "بلیط تخفیف دار",
             status = Status.ACTIVE
         ),
         ReportRowUi(
             id = "8",
             collectionName = "هتل آرامیس مشهد",
             contractDate = "1405/02/25",
-            cooperate = "درصدی",
+            cooperate = "بلیط تخفیف دار",
             status = Status.INACTIVE
         )
     )

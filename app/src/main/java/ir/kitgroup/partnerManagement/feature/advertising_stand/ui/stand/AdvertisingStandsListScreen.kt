@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
@@ -226,7 +227,7 @@ private fun AdvertisingItemCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                StandActionIconButton(
+                ActionIconButton(
                     icon = Icons.Default.Edit,
                     contentDescription = stringResource(R.string.label_edit),
                     onClick = onEditClick,
@@ -236,7 +237,7 @@ private fun AdvertisingItemCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                StandActionIconButton(
+                ActionIconButton(
                     icon = Icons.Default.DeleteOutline,
                     contentDescription = stringResource(R.string.label_delete),
                     onClick = onDeleteClick,
@@ -299,37 +300,7 @@ private fun AdvertisingItemCard(
     }
 }
 
-@Composable
-private fun StandActionIconButton(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    tint: Color,
-    backgroundColor: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.size(40.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = backgroundColor,
-        border = BorderStroke(
-            width = 0.7.dp,
-            color = tint.copy(alpha = 0.35f)
-        )
-    ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                modifier = Modifier.size(20.dp),
-                tint = tint
-            )
-        }
-    }
-}
+
 
 @Composable
 private fun InfoBlockWithIcon(

@@ -7,8 +7,10 @@ data class OrganizationModel(
     val name: String,
     val address: String,
     val status: Status,
-    val grade: Int
+    val grade: Int,
+    val warningCount: Int = 0
 )
+
 /*
 organizationtype
 level

@@ -67,7 +67,7 @@ fun AddAdvertisingStandScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             CustomHeader(
-                title = if (isEditMode) R.string.label_edit_item else R.string.label_add_new_items,
+                title = if (isEditMode) R.string.label_edit_stand else R.string.label_add_new_stand,
                 showBackButton = true,
                 onBackClick = onBackClick
             )
@@ -239,7 +239,7 @@ fun AddAdvertisingStandScreen(
                 }
 
                 CustomButton(
-                    text = if (isEditMode) stringResource(R.string.label_edit_save_item) else stringResource(
+                    text = if (isEditMode) stringResource(R.string.label_save) else stringResource(
                         R.string.label_submit_stand
                     ),
                     enabled = true,

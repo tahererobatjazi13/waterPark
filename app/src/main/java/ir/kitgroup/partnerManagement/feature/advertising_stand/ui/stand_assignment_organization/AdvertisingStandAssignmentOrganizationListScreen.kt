@@ -31,6 +31,7 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
 import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignment
 import androidx.compose.material3.MaterialTheme.typography
+import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.Status
 
@@ -39,60 +40,62 @@ private val demoAdvertisingStandAssignments = listOf(
         "1",
         "محمد احمدی",
         "هتل پارسیان آزادی",
-        "رومیزی",
+        "تخصیص به بازاریاب",
         "stand",
         5,
-        "۱۴۰۳/۰۳/۲۲",
+        "۱۴۰۳/۰۳/۲۲", "تبلیغاتی",
         Status.ACTIVE
     ),
     AdvertisingStandAssignment(
         "2",
         "سارا مرادی",
         "هتل اسپیناس پالاس",
-        "دیواری",
+        "عودت",
         "wall",
         3,
-        "۱۴۰۳/۰۳/۲۴",
+        "۱۴۰۳/۰۳/۲۴", "امانی",
         Status.DRAFT
     ),
     AdvertisingStandAssignment(
         "3",
         "علی رضایی",
         "هتل هما",
-        "کیوسک",
+        "جمع آوری",
         "kiosk",
         2,
-        "۱۴۰۳/۰۳/۲۰",
+        "۱۴۰۳/۰۳/۲۰", "اجاره ای",
         Status.CANCELLED
     ),
     AdvertisingStandAssignment(
         "4",
         "نازنین کریمی",
         "هتل بزرگ تهران",
-        "رومیزی",
+        "خاتمه",
         "stand",
         4,
-        "۱۴۰۳/۰۳/۲۵",
+        "۱۴۰۳/۰۳/۲۵", "اجاره ای",
         Status.RETURNED
     ),
     AdvertisingStandAssignment(
-        "3",
+        "5",
         "علی رضایی",
         "هتل هما",
-        "کیوسک",
+        "تخصیص به بازاریاب",
         "kiosk",
         2,
-        "۱۴۰۳/۰۳/۲۰",
+        "۱۴۰۳/۰۳/۲۰", "امانی",
+
         Status.ACTIVE
     ),
     AdvertisingStandAssignment(
-        "4",
+        "6",
         "نازنین کریمی",
         "هتل بزرگ تهران",
-        "رومیزی",
+        "تخصیص به بازاریاب",
         "stand",
         4,
         "۱۴۰۳/۰۳/۲۵",
+        "تبلیغاتی",
         Status.DRAFT
     )
 )
@@ -123,7 +126,7 @@ fun AdvertisingStandAssignmentOrganizationListScreen(
         containerColor = MaterialTheme.colorScheme.primary,
         topBar = {
             CustomHeader(
-                title = R.string.label_advertising_allocation,
+                title = R.string.label_assignment_advertising_stand,
                 showBackButton = true,
                 onBackClick = onBackClick
             )
@@ -180,27 +183,24 @@ private fun AllocationHeader(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = stringResource(R.string.label_assignment_stands_to_organization),
+            text = stringResource(R.string.label_assignment_stands_to_organizations),
             style = typography.titleMedium,
             color = appColors.textPrimary,
         )
-        Button(
+
+        CustomButton(
+            text = stringResource(R.string.label_new_allocation),
             onClick = onNewAssignmentOrganizationClick,
-            shape = RoundedCornerShape(12.dp),
+            fillMaxWidth = false,
+            height = 38.dp,
+            textStyle = typography.titleLarge,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            icon = Icons.Default.Add,
             colors = ButtonDefaults.buttonColors(
                 containerColor = appColors.success,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-
-            ),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = stringResource(R.string.label_new_allocation),
-                style = typography.labelLarge
             )
-        }
+        )
     }
 }
 
@@ -293,9 +293,9 @@ private fun AllocationCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 InfoItem(
-                    label = stringResource(R.string.label_visitor_name),
-                    value = advertisingStandAssignment.visitorName,
-                    icon = Icons.Default.PersonOutline
+                    label = stringResource(R.string.label_organization_receiving_name),
+                    value = advertisingStandAssignment.organizationName,
+                    icon = Icons.Default.Business
                 )
                 StatusBadge(advertisingStandAssignment.status)
 
@@ -313,12 +313,12 @@ private fun AllocationCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     DetailItem(
-                        stringResource(R.string.label_organization_name),
-                        advertisingStandAssignment.organizationName,
-                        Icons.Default.Business
+                        label = stringResource(R.string.label_assignment_type),
+                        value = advertisingStandAssignment.assignmentType,
+                        icon = Icons.Default.Category
                     )
                     DetailItem(
-                        stringResource(R.string.label_allocated_date),
+                        stringResource(R.string.label_delivery_organization_date),
                         advertisingStandAssignment.allocatedDate,
                         Icons.Default.CalendarMonth
                     )
@@ -328,9 +328,9 @@ private fun AllocationCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     DetailItem(
-                        stringResource(R.string.label_item_type),
-                        advertisingStandAssignment.itemType,
-                        itemIcon
+                        label = stringResource(R.string.label_assignment_mode),
+                        value = advertisingStandAssignment.assignmentMode,
+                        icon = Icons.Default.AssignmentInd
                     )
                     DetailItem(
                         stringResource(R.string.label_allocated_count),
@@ -344,7 +344,7 @@ private fun AllocationCard(
 }
 
 @Composable
-private fun InfoItem(label: String, value: String, icon: ImageVector) {
+ fun InfoItem(label: String, value: String, icon: ImageVector) {
     val appColors = LocalPartnerManagementColors.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -359,7 +359,7 @@ private fun InfoItem(label: String, value: String, icon: ImageVector) {
             )
             Text(
                 value,
-                style = typography.bodyLarge,
+                style = typography.titleLarge,
                 color = appColors.textPrimary,
             )
         }
@@ -367,7 +367,7 @@ private fun InfoItem(label: String, value: String, icon: ImageVector) {
 }
 
 @Composable
-private fun DetailItem(label: String, value: String, icon: ImageVector) {
+fun DetailItem(label: String, value: String, icon: ImageVector) {
     val appColors = LocalPartnerManagementColors.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -408,7 +408,7 @@ private fun AllocationEmptyState(modifier: Modifier = Modifier) {
     }
 }
 
-private fun allocationItemIcon(name: String): ImageVector {
+ fun allocationItemIcon(name: String): ImageVector {
     return when (name.lowercase()) {
         "stand" -> Icons.Default.Devices
         "wall" -> Icons.Default.Home

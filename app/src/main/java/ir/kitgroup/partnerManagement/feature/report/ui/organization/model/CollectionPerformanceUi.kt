@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.report.ui.collection.model
+package ir.kitgroup.partnerManagement.feature.report.ui.organization.model
 
 data class CollectionPerformanceUi(
     val id: String,

@@ -78,7 +78,7 @@ fun CardMenuItem(
 
                 Text(
                     text = stringResource(title),
-                    style = typography.titleMedium,
+                    style = typography.titleLarge,
                     color = contentColor
                 )
 
@@ -88,7 +88,7 @@ fun CardMenuItem(
 
                     Text(
                         text = subtitle,
-                        style = typography.bodySmall,
+                        style = typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }

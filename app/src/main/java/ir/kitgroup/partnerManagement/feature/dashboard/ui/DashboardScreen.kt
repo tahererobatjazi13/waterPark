@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.feature.dashboard.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,10 +30,8 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
-import ir.kitgroup.partnerManagement.core.ui.components.Rating
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,7 +39,8 @@ import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
-import ir.kitgroup.partnerManagement.core.ui.util.VisitType
+import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
+import ir.kitgroup.partnerManagement.feature.visits.ui.VisitTypeChip
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 @Composable
@@ -58,8 +56,15 @@ fun DashboardScreen(
             Icons.Filled.Domain,
             Orange,
             "34",
-            stringResource(R.string.label_received_visits),
+            stringResource(R.string.label_total_views_today),
             Orange
+        ),
+        SummaryCardData(
+            Icons.Filled.Person,
+            Green,
+            "18",
+            stringResource(R.string.label_in_person_visits),
+            Green
         ),
         SummaryCardData(
             Icons.Filled.Call,
@@ -67,58 +72,54 @@ fun DashboardScreen(
             "27",
             stringResource(R.string.label_phone_calls),
             Blue
-        ),
-        SummaryCardData(
-            Icons.Filled.CreditCard,
-            Purple,
-            "12",
-            stringResource(R.string.label_delivered_referrals),
-            Purple
-        ),
-
-        SummaryCardData(
-            Icons.Filled.Person,
-            Green,
-            "18",
-            stringResource(R.string.label_in_person_visits),
-            Green
         )
     )
 
     val visits = listOf(
-        VisitItem(
+        VisitModel(
             id = 1,
-            time = "۱۴۰۳/۰۲/۱۷",
-            collectionName = "هتل آزادی",
+            organizationName = "هتل قصر طلایی",
+            visitType = "بازدید حضوری برنامه‌ریزی شده",
+            visitorName = "علی محمدی",
+            date = "۱۴۰۳/۰۲/۱۵ , 11:30",
             city = "مشهد",
             district = "خیابان آزادی",
-            rating = 4,
-            status = Status.DONE,
-            visitType = VisitType.SCHEDULED_IN_PERSON
+            icon = Icons.Default.DirectionsWalk,
+            status = Status.PLANNED
         ),
-
-        VisitItem(
+        VisitModel(
             id = 2,
-            time = "۱۴۰۳/۰۲/۱۸",
-            collectionName = "سازمان پالاس",
+            organizationName = "سازمان پالاس",
+            visitType = "بازدید تلفنی",
+            visitorName = "علی رضایی",
+            date = "۱۴۰۳/۰۲/۱۷ , 10:30", city = "مشهد",
+            district = "خیابان آزادی",
+            icon = Icons.Default.Phone,
+            status = Status.DONE
+        ),
+        VisitModel(
+            id = 3,
+            organizationName = "هتل پردیسان",
+            visitType = "بازدید حضوری غیربرنامه‌ریزی شده",
+            visitorName = "مریم رضایی",
+            date = "۱۴۰۳/۰۲/۱۶ , 02:30",
             city = "مشهد",
             district = "احمد آباد",
-            rating = 4,
-            status = Status.CANCELLED,
-            visitType = VisitType.SCHEDULED_IN_PERSON
+            icon = Icons.Default.DirectionsWalk,
+            status = Status.CANCELLED
         ),
-
-        VisitItem(
-            id = 3,
-            time = "۱۴۰۳/۰۲/۱۹",
-            collectionName = "هتل پردیسان",
-            city = "مشهد",
+        VisitModel(
+            id = 4,
+            organizationName = "سازمان برق",
+            visitType = "بازدید تلفنی",
+            visitorName = "مریم مفرد",
+            date = "۱۴۰۳/۰۲/۱۸ , 10:30", city = "مشهد",
             district = "پاسداران",
-            rating = 3,
-            status = Status.PLANNED,
-            visitType = VisitType.SCHEDULED_IN_PERSON
+            icon = Icons.Default.Phone,
+            status = Status.PLANNED
         )
     )
+
 
     Column(
         modifier = Modifier
@@ -141,16 +142,18 @@ fun DashboardScreen(
                 item { Spacer(Modifier.width(6.dp)) }
                 item {
                     QuickActionsSection(
-                        onQuickVisitClick = { navController.navigate(Screen.RegisterVisit.createRoute()) },
+                        onQuickContractClick = { navController.navigate(Screen.AddContract.route) },
                         onQuickOrganizationClick = { navController.navigate(Screen.AddOrganization.route) },
-                        onQuickCardClick = { navController.navigate(Screen.RegisterCard.route) }
+                        onQuickVisitClick = { navController.navigate(Screen.RegisterVisit.createRoute()) },
+                        onQuickCardClick = { navController.navigate(Screen.RegisterCard.route) },
+                        onQuickContractOfferClick = { navController.navigate(Screen.AddContractOffer.route) },
+                        onQuickOfferTicketPlanClick = { navController.navigate(Screen.OfferTicketPlanList.route) }
                     )
                 }
                 item { Spacer(Modifier.width(6.dp)) }
                 item {
                     QuickAccessSection(
-                        onMapClick = {/* navController.navigate("register_visit/physical")*/ },
-                        onReportClick = { navController.navigate(Screen.ReportMenu.route) },
+                        onContractClick = { navController.navigate(Screen.ContractsList.route) },
                         onAdvertisingClick = {
                             if (isSupervisor) {
                                 navController.navigate(Screen.AdvertisingStandMenu.route)
@@ -159,9 +162,12 @@ fun DashboardScreen(
                                     Screen.AdvertisingStandAssignmentOrganizationList.route
                                 )
                             }
-                        }
+                        },
+                        onReportClick = { navController.navigate(Screen.ReportMenu.route) },
+                        onMapClick = {/* navController.navigate("register_visit/physical")*/ }
                     )
                 }
+                item { Spacer(Modifier.width(6.dp)) }
                 item {
                     SectionTitle(
                         stringResource(R.string.label_schedule_title),
@@ -172,15 +178,12 @@ fun DashboardScreen(
                     items = visits,
                     key = { it.id }
                 ) { item ->
-
                     val isEditableScheduledPhysicalVisit =
-                        item.visitType == VisitType.SCHEDULED_IN_PERSON &&
-                                item.status == Status.PLANNED
+                        item.status == Status.PLANNED
 
                     VisitCard(
                         item = item,
-
-                        // فقط ویزیت حضوری برنامه‌ریزی‌شده با کلیک روی کارت باز می‌شود.
+                        isSupervisor = isSupervisor,
                         onClick = {
                             if (isEditableScheduledPhysicalVisit) {
                                 navController.navigate(
@@ -190,16 +193,14 @@ fun DashboardScreen(
                                 )
                             } else {
                                 navController.navigate(
-                                    Screen.RegisterVisit.createRoute(
+                                    Screen.VisitDetail.createRoute(
                                         visitId = item.id
                                     )
                                 )
                             }
                         }
-
                     )
                 }
-
             }
         }
     }
@@ -310,7 +311,7 @@ private fun SummaryCard(data: SummaryCardData, modifier: Modifier) {
                 data.title,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                style = typography.labelSmall,
+                style = typography.labelMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -326,41 +327,74 @@ private fun SummaryCard(data: SummaryCardData, modifier: Modifier) {
     }
 }
 
+
 @Composable
 private fun QuickActionsSection(
-    onQuickVisitClick: () -> Unit,
+    onQuickContractClick: () -> Unit,
     onQuickOrganizationClick: () -> Unit,
+    onQuickVisitClick: () -> Unit,
     onQuickCardClick: () -> Unit,
+    onQuickContractOfferClick: () -> Unit,
+    onQuickOfferTicketPlanClick: () -> Unit,
 ) {
-
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
         SectionTitle(stringResource(R.string.label_shortcut_title))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             QuickActionCard(
-                stringResource(R.string.label_register_visit),
-                Icons.Filled.CalendarViewDay,
-                onQuickVisitClick,
-                Modifier.weight(1f)
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-
-            QuickActionCard(
-                stringResource(R.string.label_add_new_organization),
-                Icons.Filled.LibraryAdd,
-                onQuickOrganizationClick,
-                Modifier.weight(1f)
+                title = stringResource(R.string.label_contract),
+                icon = Icons.Filled.AssignmentTurnedIn,
+                onClick = onQuickContractClick,
+                modifier = Modifier.weight(1f)
             )
 
             QuickActionCard(
-                stringResource(R.string.label_issuing_new_card),
-                Icons.Outlined.Badge,
-                onQuickCardClick,
-                Modifier.weight(1f)
+                title = stringResource(R.string.label_add_new_organization),
+                icon = Icons.Filled.AddBusiness,
+                onClick = onQuickOrganizationClick,
+                modifier = Modifier.weight(1f)
             )
         }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            QuickActionCard(
+                title = stringResource(R.string.label_register_visit),
+                icon = Icons.Filled.FactCheck,
+                onClick = onQuickVisitClick,
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionCard(
+                title = stringResource(R.string.label_contract_offer),
+                icon = Icons.Filled.FactCheck,
+                onClick = onQuickContractOfferClick,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        /*  Row(
+              horizontalArrangement = Arrangement.spacedBy(10.dp)
+          ) {
+  
+              QuickActionCard(
+                  title = stringResource(R.string.label_issuing_new_card),
+                  icon = Icons.Outlined.Badge,
+                  onClick = onQuickCardClick,
+                  modifier = Modifier.weight(1f)
+              )
+              QuickActionCard(
+                  title = stringResource(R.string.label_offer_ticket_plan),
+                  icon = Icons.Filled.FactCheck,
+                  onClick = onQuickOfferTicketPlanClick,
+                  modifier = Modifier.weight(1f)
+              )
+  
+          }*/
     }
 }
 
@@ -414,17 +448,14 @@ private fun QuickActionCard(
 
 @Composable
 fun QuickAccessSection(
-    onMapClick: () -> Unit,
+    onContractClick: () -> Unit,
+    onAdvertisingClick: () -> Unit,
     onReportClick: () -> Unit,
-    onAdvertisingClick: () -> Unit
+    onMapClick: () -> Unit
 ) {
     Column {
-        Text(
-            text = stringResource(R.string.label_quick_access),
-            style = typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.fillMaxWidth()
-        )
+
+        SectionTitle(stringResource(R.string.label_quick_access))
 
         Spacer(Modifier.height(12.dp))
 
@@ -433,6 +464,14 @@ fun QuickAccessSection(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             QuickAccessCard(
+                title = stringResource(R.string.label_contract_organization),
+                icon = Icons.Filled.Inventory2,
+                backgroundColor = PartnerManagementTheme.colors.successContainer,
+                iconTint = PartnerManagementTheme.colors.onSuccessContainer,
+                onClick = onContractClick,
+                modifier = Modifier.weight(1f)
+            )
+            QuickAccessCard(
                 title = stringResource(R.string.label_advertising_stands),
                 icon = Icons.Filled.Inventory2,
                 backgroundColor = PartnerManagementTheme.colors.warningContainer,
@@ -440,6 +479,12 @@ fun QuickAccessSection(
                 onClick = onAdvertisingClick,
                 modifier = Modifier.weight(1f)
             )
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             QuickAccessCard(
                 title = stringResource(R.string.label_reports),
                 icon = Icons.Filled.Assessment,
@@ -471,86 +516,206 @@ private fun QuickAccessCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.aspectRatio(1f),
+        modifier = modifier.height(104.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    )
-    {
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = iconTint.copy(alpha = 0.10f)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 2.dp
+        )
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 10.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Box(
-                modifier = Modifier.size(25.dp),
+                modifier = Modifier.size(24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(23.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(7.dp))
 
             Text(
                 text = title,
                 style = typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
 }
 
+/*
 @Composable
-private fun VisitCard(
-    item: VisitItem, onClick: () -> Unit,
+fun VisitCard(
+    item: VisitModel,
+    isSupervisor: Boolean,
+    onClick: () -> Unit,
 ) {
+    val appColors = LocalPartnerManagementColors.current
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        onClick = onClick,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = appColors.cardBackground
         ),
         border = BorderStroke(
             width = 0.7.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.90f)
+            color = appColors.border
         )
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(68.dp)
-                    .clip(RoundedCornerShape(12.dp))
-            )
 
             Column(
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 10.dp)
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.organizationName,
+                        style = typography.titleLarge,
+                        color = appColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    StatusBadge(item.status)
+
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                VisitTypeChip(
+                    text = item.visitType,
+                    icon = item.icon
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // نمایش نام بازاریاب صرفاً در صورتی که نقش سرپرست باشد و مقدار داشته باشد
+                if (isSupervisor && !item.visitorName.isNullOrBlank()) {
+                    DetailRow(
+                        icon = Icons.Default.Person,
+                        text = item.visitorName
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+
+                DetailRow(
+                    icon = Icons.Default.DateRange,
+                    text = item.date
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                LocationRow(
+                    location = "${item.city}، ${item.district}"
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+            }
+        }
+    }
+}
+*/
+
+
+
+@Composable
+private fun VisitCard(
+    item: VisitModel,
+    isSupervisor: Boolean,
+    onClick: () -> Unit
+) {
+    val appColors = LocalPartnerManagementColors.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = appColors.cardBackground
+        ),
+        border = BorderStroke(
+            width = 0.7.dp,
+            color = appColors.border
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = item.collectionName,
-                    style = typography.titleMedium
+                    text = item.organizationName,
+                    style = typography.titleLarge
                 )
+                Spacer(modifier = Modifier.height(6.dp))
 
-                Rating(item.rating)
+                VisitTypeChip(
+                    text = item.visitType,
+                    icon = item.icon
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // نمایش نام بازاریاب صرفاً در صورتی که نقش سرپرست باشد و مقدار داشته باشد
+                if (isSupervisor && item.visitorName.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = LocalPartnerManagementColors.current.textSecondary
+                        )
+                        Text(
+                            text = item.visitorName,
+                            style = typography.labelMedium,
+                            color = LocalPartnerManagementColors.current.textSecondary
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
 
                 LocationRow(
                     location = "${item.city}، ${item.district}"
@@ -558,23 +723,23 @@ private fun VisitCard(
             }
 
             VisitTimeAndStatus(item)
-
         }
     }
 }
 
 
 @Composable
-fun VisitTimeAndStatus(item: VisitItem) {
+fun VisitTimeAndStatus(item: VisitModel) {
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(
-            text = item.time,
-            style = typography.labelMedium,
+            text = item.date,
+            style = typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
         StatusBadge(item.status)
     }
 }

@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 
 @Composable
 fun CustomSelectorField(
@@ -66,7 +68,10 @@ fun CustomSelectorField(
                 placeholder = {
                     Text(
                         text = placeholder,
-                        style = typography.bodySmall,
+                        style = typography.labelSmall.copy(
+                            textAlign = TextAlign.Start,
+                            textDirection = TextDirection.Rtl
+                        ),
                         color = PartnerManagementTheme.colors.textSecondary,
                         modifier = Modifier.fillMaxWidth(),
                     )

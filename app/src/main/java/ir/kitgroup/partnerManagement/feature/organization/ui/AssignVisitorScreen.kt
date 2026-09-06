@@ -24,9 +24,11 @@ import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationMode
 import saman.zamani.persiandate.PersianDate
 import java.util.Locale
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
+import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 
 @Composable
 fun AssignVisitorScreen(
+    organizationId: Int? = null,
     onBackClick: () -> Unit, onSaveClick: () -> Unit,
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -85,6 +87,11 @@ fun AssignVisitorScreen(
                 )
             }"
         )
+    }
+    var status by rememberSaveable { mutableStateOf("فعال") }
+
+    val statusList = remember {
+        listOf("فعال", "غیر فعال", "ثبت متوقف")
     }
     Scaffold(
         topBar = {
@@ -164,20 +171,30 @@ fun AssignVisitorScreen(
                     date = startDate,
                     onDateClick = { showStartDatePicker = true },
                     showTime = false,
-                    isRequired=true
+                    isRequired = false
                 )
 
-                CustomDateTimeFields(
-                    label = stringResource(R.string.label_end_date),
-                    date = endDate,
-                    onDateClick = { showEndDatePicker = true },
-                    showTime = false
+                /*   CustomDateTimeFields(
+                      label = stringResource(R.string.label_end_date),
+                      date = endDate,
+                      onDateClick = { showEndDatePicker = true },
+                      showTime = false
+                  )*/
+
+                // وضعیت
+                DropdownSelectorField(
+                    value = status,
+                    label = stringResource(R.string.label_status),
+                    placeholder = "",
+                    items = statusList,
+                    isRequired = false,
+                    onItemSelected = { status = it }
                 )
 
                 Spacer(Modifier.weight(1f))
 
                 CustomButton(
-                    text = stringResource(R.string.label_allocation_record),
+                    text = stringResource(R.string.label_registration),
                     onClick = onSaveClick,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -231,6 +248,7 @@ fun AssignVisitorScreen(
 private fun RegisterVisitScreenPreview() {
     AppScreenPreview {
         AssignVisitorScreen(
+            organizationId = 0,
             onBackClick = {},
             onSaveClick = {})
     }

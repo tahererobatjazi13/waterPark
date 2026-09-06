@@ -1,11 +1,19 @@
 package ir.kitgroup.partnerManagement.core.ui.util.extensions
 
+import ir.kitgroup.partnerManagement.core.ui.util.Status
+
+fun Status.toDisplayName(): String = when (this) {
+    Status.PLANNED -> "برنامه‌ریزی شده"
+    Status.DONE -> "انجام شده"
+    Status.CANCELLED -> "لغو شده"
+    else -> "نامشخص"
+}
 
 
 
 /*
 git add .
-git commit -m "change organization detail screens"
+git commit -m "change all screen app"
 git push -u origin master
 git push
 */

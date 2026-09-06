@@ -1,7 +1,9 @@
 package ir.kitgroup.partnerManagement.feature.visits.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -137,24 +139,30 @@ private fun OrganizationInfoCard(visit: VisitDetailModel) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = appColors.cardBackground
+        ),
+        border = BorderStroke(
+            width = 0.7.dp,
+            color = appColors.border
+        )
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(110.dp)
-                    .clip(RoundedCornerShape(14.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(Modifier.width(12.dp))
+            /*  Image(
+                  painter = painterResource(R.drawable.ic_logo),
+                  contentDescription = null,
+                  modifier = Modifier
+                      .size(110.dp)
+                      .clip(RoundedCornerShape(14.dp)),
+                  contentScale = ContentScale.Crop
+              )
+              Spacer(Modifier.width(12.dp))*/
 
             Column(
                 modifier = Modifier
@@ -185,13 +193,15 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = appColors.cardBackground
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+        border = BorderStroke(
+            width = 0.7.dp,
+            color = appColors.border
         )
     ) {
         Column {
@@ -309,10 +319,16 @@ private fun LocationCard() {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = appColors.cardBackground
+        ),
+        border = BorderStroke(
+            width = 0.7.dp,
+            color = appColors.border
+        )
     ) {
         Box(
             modifier = Modifier
@@ -343,24 +359,35 @@ private fun LocationCard() {
     }
 }
 
+
 @Composable
-private fun DescriptionCard(text: String) {
+private fun DescriptionCard(
+    description: String
+) {
     val appColors = LocalPartnerManagementColors.current
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(appColors.cardBackground)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.fillMaxWidth(),
-            style = typography.bodySmall,
-            color = appColors.textPrimary,
-            textAlign = TextAlign.Right
-        )
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = appColors.cardBackground
+        ),
+        border = BorderStroke(
+            width = 0.7.dp,
+            color = appColors.border
+        )    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = description.ifBlank { "-" },
+                style = typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Start
+            )
+        }
     }
 }
 

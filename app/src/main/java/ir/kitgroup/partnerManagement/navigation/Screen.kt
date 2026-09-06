@@ -30,14 +30,7 @@ sealed class Screen(val route: String) {
         }
     }
 
-    /*
-        data object AddOrganization : Screen("register_organization")
-        data object OrganizationDetail : Screen("organization_detail/{organizationId}") {
-            fun createRoute(organizationId: Int): String {
-                return "organization_detail/$organizationId"
-            }
-        }
-    */
+
     data object AddOrganization : Screen("add_organization")
 
     data object EditOrganization : Screen("add_organization/{organizationId}") {
@@ -52,9 +45,8 @@ sealed class Screen(val route: String) {
             fun createRoute(organizationId: Int) = "add_organization/$organizationId"
         }*/
 
-    data object AssignVisitor :
-        Screen("assign_visitor")
-
+    object AssignVisitor :
+        Screen("assign_visitor/{organizationId}")
     // Advertising Stand
     data object AdvertisingStandMenu : Screen("advertising_stand_menu")
 
@@ -87,6 +79,14 @@ sealed class Screen(val route: String) {
     data object AddAdvertisingStandAssignmentOrganization :
         Screen("add_advertising_stand_assignment_organization")
 
+    data object AdvertisingStandAssignmentVisitorDetail : Screen(
+        route = "advertising_stand_assignment_visitor_detail/{assignmentId}"
+    ) {
+        fun createRoute(assignmentId: String): String {
+            return "advertising_stand_assignment_visitor_detail/$assignmentId"
+        }
+    }
+
     //report
     data object ReportMenu : Screen("report_menu")
     data object VisitorList : Screen("visitor_list")
@@ -94,5 +94,34 @@ sealed class Screen(val route: String) {
     data object ReportContract : Screen("report_contract")
     data object CollectionPerformance : Screen("collection_performance")
 
+    data object AddContract :
+        Screen("add_contract")
 
+    data object ContractsList : Screen("contract_list")
+
+    data object ContractDetail : Screen("contract_detail/{contractId}") {
+        fun createRoute(contractId: String) = "contract_detail/$contractId"
+    }
+
+    data object AddContractOffer : Screen("add_contract_Offer")
+
+    // plan_list
+    data object OfferTicketPlanList : Screen("offer_ticket_Plan_list")
+    data object AddOfferTicketPlan : Screen("add_Offer_ticket_plan")
+
+    // plan_line
+    data object OfferTicketPlanLineList : Screen("offer_ticket_Plan_line_list/{offerId}") {
+        fun createRoute(offerId: String) = "offer_ticket_Plan_line_list/$offerId"
+    }
+
+    data object AddOfferTicketPlanLineDetail :
+        Screen("add_offer_ticket_plan_line_detail?planName={planName}") {
+        fun createRoute(planName: String = "") =
+            "add_offer_ticket_plan_line_detail?planName=$planName"
+    }
+
+    // plan_detail
+    object OfferTicketPlanLineDetail : Screen("offer_ticket_plan_line_detail/{lineId}") {
+        fun createRoute(lineId: String) = "offer_ticket_plan_line_detail/$lineId"
+    }
 }

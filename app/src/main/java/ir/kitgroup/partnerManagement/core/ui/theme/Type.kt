@@ -17,17 +17,17 @@ val AppTypography = Typography(
     titleSmall = TextStyle(
         fontFamily = IranSans,
         fontWeight = FontWeight.Bold,
-        fontSize = 12.sp
+        fontSize = 11.sp
     ),
     titleMedium = TextStyle(
         fontFamily = IranSans,
         fontWeight = FontWeight.Bold,
-        fontSize = 14.sp
+        fontSize = 13.sp
     ),
     titleLarge = TextStyle(
         fontFamily = IranSans,
         fontWeight = FontWeight.Bold,
-        fontSize = 16.sp
+        fontSize = 15.sp
     ),
     labelSmall = TextStyle(
         fontFamily = IranSans,
@@ -58,5 +58,20 @@ val AppTypography = Typography(
         fontFamily = IranSans,
         fontWeight = FontWeight.Normal,
         fontSize = 18.sp
+    ),
+    displaySmall = TextStyle(
+        fontFamily = IranSans,
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp
+    ),
+    displayMedium = TextStyle(
+        fontFamily = IranSans,
+        fontWeight = FontWeight.Bold,
+        fontSize = 20.sp
+    ),
+    displayLarge = TextStyle(
+        fontFamily = IranSans,
+        fontWeight = FontWeight.Bold,
+        fontSize = 22.sp
     )
 )

@@ -31,7 +31,9 @@ enum class Status {
     DONE,
     PLANNED,
     CANCELLED,
-    RETURNED
+    RETURNED,
+    ORANGE,
+    CLOSED
 }
 
 enum class VisitType {
@@ -47,30 +49,66 @@ enum class CardStatusFilter(
         icon = Icons.Default.List
     ),
     Used(
-        titleRes = R.string.label_used,
+        titleRes = R.string.status_used,
         icon = Icons.Default.CheckCircle
     ),
     Delivered(
-        titleRes = R.string.label_delivered,
+        titleRes = R.string.status_delivered,
         icon = Icons.Default.LocalShipping
     )
 }
 
 enum class AllocationFilterTab(val titleRes: Int) {
     All(R.string.label_all),
-    Active(R.string.label_active),
-    Draft(R.string.label_draft),
-    Returned(R.string.label_returned),
-    Cancelled(R.string.label_cancelled)
+    Active(R.string.status_active),
+    Draft(R.string.status_draft),
+    Returned(R.string.status_returned),
+    Cancelled(R.string.status_cancelled)
 }
 
 
+enum class OrganizationDetailTab(
+    @StringRes val titleRes: Int
+) {
+    INFO(
+        titleRes = R.string.tab_organization_info
+    ),
 
-enum class OrganizationDetailTab(val titleRes: Int) {
-    INFO(R.string.label_organization_basic_information),
-    PERSONS(R.string.label_related_persons_list),
-    VISITOR(R.string.label_assignment_visitor_to_organization_list),
-    STANDS(R.string.label_assignment_stands_to_organization_list),
-    NOTICES(R.string.label_warnings_organization),
+    PERSONS(
+        titleRes = R.string.tab_organization_persons
+    ),
 
+    VISITOR(
+        titleRes = R.string.tab_organization_visitor
+    ),
+
+    STANDS(
+        titleRes = R.string.tab_organization_stands
+    ),
+
+    CONTRACTS(
+        titleRes = R.string.tab_organization_contracts
+    ),
+
+    NOTICES(
+        titleRes = R.string.tab_organization_notices
+    )
+}
+
+
+enum class OrganizationStatus(
+    val id: Int,
+    @StringRes val titleRes: Int
+) {
+    INITIAL_REGISTRATION(1, R.string.status_initial_registration),
+    ACTIVE(2, R.string.status_active),
+    ORANGE(3, R.string.status_orange),
+    INACTIVE(4, R.string.status_inactive),
+    SUSPENDED(5, R.string.status_suspended),
+    CLOSED(6, R.string.status_closed);
+
+    companion object {
+        fun fromId(id: Int?): OrganizationStatus =
+            entries.find { it.id == id } ?: INITIAL_REGISTRATION
+    }
 }

@@ -26,58 +26,68 @@ fun StatusBadge(
         Status.ACTIVE -> {
             containerColor = PartnerManagementTheme.colors.successContainer
             contentColor = PartnerManagementTheme.colors.onSuccessContainer
-            text = stringResource(R.string.label_active)
+            text = stringResource(R.string.status_active)
         }
 
         Status.INACTIVE -> {
             containerColor = PartnerManagementTheme.colors.errorContainer
             contentColor = PartnerManagementTheme.colors.onErrorContainer
-            text = stringResource(R.string.label_inactive)
+            text = stringResource(R.string.status_inactive)
         }
 
         Status.USED -> {
             containerColor = PartnerManagementTheme.colors.successContainer
             contentColor = PartnerManagementTheme.colors.onSuccessContainer
-            text = stringResource(R.string.label_used)
+            text = stringResource(R.string.status_used)
         }
 
         Status.DELIVERED -> {
             containerColor = PartnerManagementTheme.colors.infoContainer
             contentColor = PartnerManagementTheme.colors.onInfoContainer
-            text = stringResource(R.string.label_delivered)
+            text = stringResource(R.string.status_delivered)
         }
 
         Status.DRAFT -> {
             containerColor = PartnerManagementTheme.colors.warningContainer
             contentColor = PartnerManagementTheme.colors.onWarningContainer
-            text = stringResource(R.string.label_draft)
+            text = stringResource(R.string.status_draft)
         }
 
         Status.BLOCKED -> {
             containerColor = PartnerManagementTheme.colors.errorContainer
             contentColor = PartnerManagementTheme.colors.onErrorContainer
-            text = stringResource(R.string.label_blocked)
+            text = stringResource(R.string.status_blocked)
         }
         Status.DONE -> {
             containerColor = PartnerManagementTheme.colors.successContainer
             contentColor = PartnerManagementTheme.colors.onSuccessContainer
-            text = stringResource(R.string.label_done)
+            text = stringResource(R.string.status_done)
         }
 
         Status.PLANNED -> {
             containerColor = PartnerManagementTheme.colors.warningContainer
             contentColor = PartnerManagementTheme.colors.onWarningContainer
-            text = stringResource(R.string.label_planned)
+            text = stringResource(R.string.status_cancelled)
         }
         Status.CANCELLED -> {
             containerColor = PartnerManagementTheme.colors.errorContainer
             contentColor = PartnerManagementTheme.colors.onErrorContainer
-            text = stringResource(R.string.label_cancelled)
+            text = stringResource(R.string.status_cancelled)
         }
         Status.RETURNED -> {
             containerColor = PartnerManagementTheme.colors.errorContainer
             contentColor = PartnerManagementTheme.colors.onErrorContainer
-            text = stringResource(R.string.label_returned)
+            text = stringResource(R.string.status_returned)
+        }
+        Status.ORANGE -> {
+            containerColor = PartnerManagementTheme.colors.warningContainer
+            contentColor = PartnerManagementTheme.colors.onWarningContainer
+            text = stringResource(R.string.status_orange)
+        }
+        Status.CLOSED-> {
+            containerColor = PartnerManagementTheme.colors.errorContainer
+            contentColor = PartnerManagementTheme.colors.onErrorContainer
+            text = stringResource(R.string.status_closed)
         }
     }
 

@@ -38,6 +38,7 @@ data class PartnerManagementColors(
     val iconBlueContainer: Color,
     val iconGreenContainer: Color,
     val iconPurpleContainer: Color,
+    val iconOrangeContainer: Color,
 
     val ratingActive: Color,
     val ratingInactive: Color,
@@ -53,99 +54,147 @@ data class PartnerManagementColors(
     val chartPurple: Color
 
 )
-
 val LightPartnerManagementColors = PartnerManagementColors(
     appBackground = White,
     screenBackground = LightBackground,
     cardBackground = LightSurface,
     cardBackgroundAlt = LightSurfaceVariant,
+
     textPrimary = LightTextPrimary,
     textSecondary = LightTextSecondary,
     textTertiary = LightTextTertiary,
     border = LightBorder,
 
+    /*
+     * موفقیت
+     */
     success = Success,
-    successContainer = Color(0xFFE8F5E9),
-    onSuccessContainer = Color(0xFF1B8B4A),
+    successContainer = Color(0xFFDCFCE7),
+    onSuccessContainer = Color(0xFF14532D),
 
+    /*
+     * هشدار
+     */
     warning = Warning,
-    warningContainer = Color(0xFFFFF3E0),
-    onWarningContainer = Color(0xFFF57C00),
+    warningContainer = Color(0xFFFFEDD5),
+    onWarningContainer = Color(0xFF7C2D12),
 
+    /*
+     * خطا
+     */
     error = Error,
-    errorContainer = Color(0xFFFFEBEE),
-    onErrorContainer = Color(0xFFD32F2F),
+    errorContainer = Color(0xFFFEE2E2),
+    onErrorContainer = Color(0xFF7F1D1D),
 
+    /*
+     * اطلاعات
+     */
     info = Info,
-    infoContainer = Color(0xFFE3F2FD),
-    onInfoContainer = Color(0xFF1976D2),
+    infoContainer = Color(0xFFDBEAFE),
+    onInfoContainer = Color(0xFF1E3A8A),
 
+    /*
+     * بنفش
+     */
     purple = Purple,
-    purpleContainer = Color(0xFFF3E5F5),
-    onPurpleContainer = Color(0xFF7B1FA2),
+    purpleContainer = Color(0xFFEDE9FE),
+    onPurpleContainer = Color(0xFF4C1D95),
 
-    iconBlueContainer = Color(0xFFE3F2FD),
-    iconGreenContainer = Color(0xFFE8F5E9),
-    iconPurpleContainer = Color(0xFFF3E5F5),
+    /*
+     * پس‌زمینه آیکن‌ها
+     */
+    iconBlueContainer = Color(0xFFDBEAFE),
+    iconGreenContainer = Color(0xFFDCFCE7),
+    iconPurpleContainer = Color(0xFFEDE9FE),
+     iconOrangeContainer = Color(0xFFFFEDD5),
 
-    ratingActive = Color(0xFFFFC107),
-    ratingInactive = Color(0xFFE0E0E0),
+    ratingActive = Color(0xFFF59E0B),
+    ratingInactive = Color(0xFFD1D5DB),
     badge = BadgeRed,
 
-    // NEW
-    tableHeaderBackground = Color(0xFFF3F6FA),
+    /*
+     * جدول
+     */
+    tableHeaderBackground = Color(0xFFE2E8F0),
     tableRowEven = Color(0xFFFFFFFF),
-    tableRowOdd = Color(0xFFF8FAFC),
+    tableRowOdd = Color(0xFFF1F5F9),
 
-    chartBlue = Color(0xFF1976D2),
-    chartTeal = Color(0xFF00897B),
-    chartOrange = Color(0xFFF57C00),
-    chartPurple = Color(0xFF7B1FA2)
+    /*
+     * نمودار
+     */
+    chartBlue = Color(0xFF1D4ED8),
+    chartTeal = Color(0xFF0F766E),
+    chartOrange = Color(0xFFC2410C),
+    chartPurple = Color(0xFF6D28D9)
 )
-
 val DarkPartnerManagementColors = PartnerManagementColors(
     appBackground = Black,
     screenBackground = DarkBackground,
     cardBackground = DarkSurface,
     cardBackgroundAlt = DarkSurfaceVariant,
+
     textPrimary = DarkTextPrimary,
     textSecondary = DarkTextSecondary,
     textTertiary = DarkTextTertiary,
     border = DarkBorder,
 
+    /*
+     * موفقیت
+     */
     success = SuccessDark,
-    successContainer = Color(0xFF063D2A),
-    onSuccessContainer = Color(0xFF86EFAC),
+    successContainer = Color(0xFF064E3B),
+    onSuccessContainer = Color(0xFFA7F3D0),
 
+    /*
+     * هشدار
+     */
     warning = WarningDark,
-    warningContainer = Color(0xFF442A05),
+    warningContainer = Color(0xFF4A2B05),
     onWarningContainer = Color(0xFFFDE68A),
 
+    /*
+     * خطا
+     */
     error = ErrorDark,
-    errorContainer = Color(0xFF4A1515),
-    onErrorContainer = Color(0xFFFCA5A5),
+    errorContainer = Color(0xFF5A1A1A),
+    onErrorContainer = Color(0xFFFECACA),
 
+    /*
+     * اطلاعات
+     */
     info = InfoDark,
-    infoContainer = Color(0xFF0B2A4A),
-    onInfoContainer = Color(0xFF93C5FD),
+    infoContainer = Color(0xFF123B63),
+    onInfoContainer = Color(0xFFBFDBFE),
 
+    /*
+     * بنفش
+     */
     purple = PurpleDark,
-    purpleContainer = Color(0xFF2E1A47),
-    onPurpleContainer = Color(0xFFC4B5FD),
+    purpleContainer = Color(0xFF3B1D5C),
+    onPurpleContainer = Color(0xFFDDD6FE),
 
-    iconBlueContainer = Color(0xFF0B2A4A),
-    iconGreenContainer = Color(0xFF063D2A),
-    iconPurpleContainer = Color(0xFF2E1A47),
+    /*
+     * پس‌زمینه آیکن‌ها
+     */
+    iconBlueContainer = Color(0xFF123B63),
+    iconGreenContainer = Color(0xFF064E3B),
+    iconPurpleContainer = Color(0xFF3B1D5C),
+    iconOrangeContainer = Color(0xFF4A2B05),
 
     ratingActive = Color(0xFFFBBF24),
-    ratingInactive = Color(0xFF3F3F46),
-    badge = BadgeRed,
+    ratingInactive = Color(0xFF52525B),
+    badge = Color(0xFFFB7185),
 
-    // NEW
-    tableHeaderBackground = Color(0xFF1F2937),
-    tableRowEven = Color(0xFF111827),
-    tableRowOdd = Color(0xFF0F172A),
+    /*
+     * جدول
+     */
+    tableHeaderBackground = Color(0xFF303844),
+    tableRowEven = Color(0xFF1C2128),
+    tableRowOdd = Color(0xFF252B34),
 
+    /*
+     * نمودار
+     */
     chartBlue = Color(0xFF60A5FA),
     chartTeal = Color(0xFF2DD4BF),
     chartOrange = Color(0xFFFBBF24),

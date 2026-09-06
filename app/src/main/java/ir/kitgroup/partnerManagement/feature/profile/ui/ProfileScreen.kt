@@ -1,7 +1,9 @@
 package ir.kitgroup.partnerManagement.feature.profile.ui
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,25 +49,25 @@ import ir.kitgroup.partnerManagement.core.ui.theme.RedContent
 
 @Composable
 fun ProfileScreen(
-    onEditInfoClick: () -> Unit,
-    onChangePasswordClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onLogoutSuccess: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SessionViewModel = hiltViewModel()
 ) {
-
-
     val username by viewModel.userName.collectAsState()
     val role by viewModel.userRole.collectAsState()
 
     val roleTitle = remember(role) {
         when (role) {
-            "SUPERVISOR" -> "سرپرست"
-            "VISITOR" -> "بازاریاب"
+            "0" -> "بازاریاب"
+            "1" -> "سرپرست"
+            "2" -> "پذیرش"
+            "3" -> "مالی"
+            "4" -> "سایر"
             else -> ""
         }
     }
+
     var showLogoutDialog by remember { mutableStateOf(false) }
     val appColors = LocalPartnerManagementColors.current
 
@@ -85,26 +88,9 @@ fun ProfileScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 UserInfoCard()
-
-                CardMenuItem(
-                    icon = R.drawable.ic_edit,
-                    title = R.string.label_edit_information,
-                    containerColor = appColors.infoContainer,
-                    contentColor = appColors.onInfoContainer,
-                    onClick = onEditInfoClick
-                )
-
-                CardMenuItem(
-                    icon = R.drawable.ic_lock,
-                    title = R.string.label_change_password,
-                    containerColor = appColors.warningContainer,
-                    contentColor = appColors.onWarningContainer,
-                    onClick = onChangePasswordClick
-                )
 
                 CardMenuItem(
                     icon = R.drawable.ic_setting,
@@ -146,37 +132,51 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun UserInfoCard(
-) {
+private fun UserInfoCard() {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = appColors.cardBackground
         ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(
+            width = 0.8.dp,
+            color = appColors.border.copy(alpha = 0.8f)
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             UserInfoRow(
-                label = stringResource(R.string.label_username),
+                label = stringResource(R.string.label_person_full_name),
                 value = "علی رضایی",
                 icon = R.drawable.ic_user_name,
                 iconColor = appColors.iconBlueContainer,
                 tint = appColors.info
             )
+
             ProfileDivider()
+
             UserInfoRow(
-                label = stringResource(R.string.label_contact_number),
-                value = "0915 123 4567",
+                label = stringResource(R.string.label_personal_code),
+                value = "4567",
+                icon = R.drawable.ic_badge,
+                iconColor = appColors.iconOrangeContainer,
+                tint = appColors.warning
+            )
+            ProfileDivider()
+
+            UserInfoRow(
+                label = stringResource(R.string.label_mobile),
+                value = "09151234567",
                 icon = R.drawable.ic_call,
                 iconColor = appColors.iconGreenContainer,
                 tint = appColors.success
             )
             ProfileDivider()
+
             UserInfoRow(
                 label = stringResource(R.string.label_user_role),
                 value = "مدیر سیستم",
@@ -187,6 +187,7 @@ private fun UserInfoCard(
         }
     }
 }
+
 
 @Composable
 private fun ProfileDivider() {
@@ -230,7 +231,7 @@ private fun UserInfoRow(
 
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            style = typography.labelMedium,
             color = appColors.textSecondary
         )
 
@@ -238,7 +239,7 @@ private fun UserInfoRow(
 
         Text(
             text = "|",
-            style = MaterialTheme.typography.labelSmall,
+            style = typography.labelMedium,
             color = appColors.textSecondary
         )
 
@@ -246,7 +247,7 @@ private fun UserInfoRow(
 
         Text(
             text = value,
-            style = MaterialTheme.typography.labelMedium,
+            style = typography.labelLarge,
             color = appColors.textPrimary,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Start
@@ -259,8 +260,6 @@ private fun UserInfoRow(
 private fun ProfileScreenPreview() {
     AppScreenPreview {
         ProfileScreen(
-            onEditInfoClick = {},
-            onChangePasswordClick = {},
             onSettingsClick = {},
             onLogoutSuccess = {}
         )

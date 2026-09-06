@@ -13,7 +13,6 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
-import ir.kitgroup.partnerManagement.core.ui.components.NoticeScoreSelector
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 
 @Composable
@@ -21,7 +20,6 @@ fun AddOrganizationNoticeDialog(
     onDismiss: () -> Unit,
     onConfirm: (
         noticeType: String,
-        score: Int,
         description: String
     ) -> Unit
 ) {
@@ -39,11 +37,8 @@ fun AddOrganizationNoticeDialog(
         )
     }
 
-    var score by rememberSaveable { mutableStateOf(0) }
 
     var description by rememberSaveable { mutableStateOf("") }
-
-    val isFormValid = selectedType.isNotBlank() && score > 0
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -64,13 +59,6 @@ fun AddOrganizationNoticeDialog(
                     onItemSelected = { selectedType = it }
                 )
 
-                NoticeScoreSelector(
-                    score = score,
-                    onScoreChange = { newScore ->
-                        score = newScore
-                    }
-                )
-
                 CustomDescriptionField(
                     label = stringResource(R.string.label_notice_description),
                     value = description,
@@ -87,11 +75,10 @@ fun AddOrganizationNoticeDialog(
                 onClick = {
                     onConfirm(
                         selectedType,
-                        score,
                         description.trim()
                     )
                 },
-                enabled = isFormValid, fillMaxWidth = false,
+              fillMaxWidth = false,
                 height = 38.dp,
                 cornerRadius = 12.dp,
                 textStyle = typography.titleMedium,

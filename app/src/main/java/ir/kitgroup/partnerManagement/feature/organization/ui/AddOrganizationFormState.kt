@@ -2,6 +2,7 @@ package ir.kitgroup.partnerManagement.feature.organization.ui
 
 import androidx.compose.runtime.*
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.feature.organization.model.PersonOrganization
 
 
@@ -10,7 +11,8 @@ class AddOrganizationFormState {
     var organizationName by mutableStateOf("")
     var organizationType by mutableStateOf("")
     var organizationLevel by mutableStateOf("معمولی")
-    var organizationStatus by mutableStateOf("ثبت اولیه")
+    var organizationStatus by mutableStateOf(OrganizationStatus.INITIAL_REGISTRATION)
+    var inactiveReason by mutableStateOf("")
 
     var ownerName by mutableStateOf("")
     var englishName by mutableStateOf("")

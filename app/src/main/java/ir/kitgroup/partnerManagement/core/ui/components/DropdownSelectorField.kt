@@ -7,6 +7,10 @@ import androidx.compose.ui.Modifier
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.foundation.background
 import androidx.compose.runtime.*
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun DropdownSelectorField(
@@ -20,8 +24,15 @@ fun DropdownSelectorField(
 ) {
     val appColors = LocalPartnerManagementColors.current
     var expanded by remember { mutableStateOf(false) }
+    var fieldWidth by remember { mutableIntStateOf(0) }
 
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .onGloballyPositioned { coordinates ->
+                fieldWidth = coordinates.size.width
+            }
+    ) {
         CustomSelectorField(
             value = value,
             label = label,
@@ -39,7 +50,7 @@ fun DropdownSelectorField(
                 expanded = false
             },
             modifier = Modifier
-                .fillMaxWidth(0.9f)
+                .width(with(LocalDensity.current) { fieldWidth.toDp() })
                 .background(appColors.cardBackground)
         ) {
             items.forEachIndexed { index, item ->
@@ -59,7 +70,10 @@ fun DropdownSelectorField(
                             Text(
                                 text = item,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = appColors.textPrimary
+                                color = appColors.textPrimary,
+                                maxLines = 1,
+                                textAlign = TextAlign.Right,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         },
                         onClick = {

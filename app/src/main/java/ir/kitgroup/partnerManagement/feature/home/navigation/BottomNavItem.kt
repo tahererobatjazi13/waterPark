@@ -13,13 +13,13 @@ sealed class BottomNavItem(
     data object Dashboard : BottomNavItem(
         route = "dashboard",
         title = R.string.nav_dashboard,
-        icon = R.drawable.ic_home
+        icon = R.drawable.ic_dashboard
     )
 
-    data object Collections : BottomNavItem(
-        route = "collections",
+    data object Organizations : BottomNavItem(
+        route = "organizations",
         title = R.string.nav_organizations,
-        icon = R.drawable.ic_collaborative_collections
+        icon = R.drawable.ic_organizations
     )
 
     data object Visits : BottomNavItem(
@@ -28,10 +28,10 @@ sealed class BottomNavItem(
         icon = R.drawable.ic_visits
     )
 
-    data object Cards : BottomNavItem(
-        route = "cards",
-        title = R.string.nav_cards,
-        icon = R.drawable.ic_cards
+    data object PlanOffer : BottomNavItem(
+        route = "planOffer",
+        title = R.string.nav_plan_offer,
+        icon = R.drawable.ic_plan_offer
     )
 
     data object Profile : BottomNavItem(

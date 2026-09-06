@@ -47,6 +47,7 @@ fun CustomEditTextField(
     placeholder: String,
     leadingIcon: Painter? = null,
     isPasswordField: Boolean = false,
+    readOnly: Boolean = false,
     isRequired: Boolean = true,
     errorMessage: String? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -72,10 +73,10 @@ fun CustomEditTextField(
     val borderColor =
         if (isError) MaterialTheme.colorScheme.error
         else MaterialTheme.colorScheme.outline
+
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -102,6 +103,7 @@ fun CustomEditTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
+            readOnly = readOnly,
             interactionSource = interactionSource,
             isError = isError,
             placeholder = {

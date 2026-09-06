@@ -84,7 +84,7 @@ fun SplashScreen(
                     text = stringResource(
                         R.string.app_name
                     ),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.displayLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
 

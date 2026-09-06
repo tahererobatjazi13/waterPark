@@ -1,7 +1,6 @@
 package ir.kitgroup.partnerManagement.feature.visits.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,9 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DirectionsWalk
@@ -50,7 +51,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -69,16 +69,24 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
 import saman.zamani.persiandate.PersianDate
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.EditNote
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
+
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Scaffold
+import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
+import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.Status
+import ir.kitgroup.partnerManagement.core.ui.util.extensions.toDisplayName
 
 @Composable
 fun VisitsScreen(
     onVisitClick: (Int) -> Unit,
+    onAddVisitClick: () -> Unit,
     onEditVisitClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -89,6 +97,7 @@ fun VisitsScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedVisitor by remember { mutableStateOf(allVisitorsLabel) }
     var selectedStartDate by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedStatus by rememberSaveable { mutableStateOf<Status?>(null) } // <-- استیت وضعیت
     var showDatePicker by remember { mutableStateOf(false) }
     var visitPendingDelete by remember { mutableStateOf<VisitModel?>(null) }
 
@@ -100,42 +109,51 @@ fun VisitsScreen(
             }"
         )
     }
+
     var items by remember {
         mutableStateOf(
             listOf(
                 VisitModel(
                     id = 1,
-                    title = "هتل قصر طلایی",
-                    type = "بازدید حضوری برنامه‌ریزی شده",
-                    person = "علی محمدی",
+                    organizationName = "هتل قصر طلایی",
+                    visitType = "بازدید حضوری برنامه‌ریزی شده",
+                    visitorName = "علی محمدی",
                     date = "۱۴۰۳/۰۲/۱۵ , 11:30",
+                    city = "مشهد",
+                    district = "خیابان آزادی",
                     icon = Icons.Default.DirectionsWalk,
                     status = Status.PLANNED
                 ),
                 VisitModel(
                     id = 2,
-                    title = "هتل الماس",
-                    type = "بازدید تلفنی",
-                    person = "علی رضایی",
+                    organizationName = "هتل الماس",
+                    visitType = "بازدید تلفنی",
+                    visitorName = "علی رضایی",
                     date = "۱۴۰۳/۰۲/۱۷ , 10:30",
+                    city = "مشهد",
+                    district = "خیابان آزادی",
                     icon = Icons.Default.Phone,
                     status = Status.DONE
                 ),
                 VisitModel(
                     id = 3,
-                    title = "هتل پارسیان آزادی",
-                    type = "بازدید حضوری غیربرنامه‌ریزی شده",
-                    person = "مریم رضایی",
+                    organizationName = "هتل پارسیان",
+                    visitType = "بازدید حضوری غیربرنامه‌ریزی شده",
+                    visitorName = "مریم رضایی",
                     date = "۱۴۰۳/۰۲/۱۶ , 02:30",
+                    city = "مشهد",
+                    district = "احمد آباد",
                     icon = Icons.Default.DirectionsWalk,
                     status = Status.CANCELLED
                 ),
                 VisitModel(
                     id = 4,
-                    title = "هتل پارسیان",
-                    type = "بازدید تلفنی",
-                    person = "مریم مفرد",
+                    organizationName = "سازمان برق",
+                    visitType = "بازدید تلفنی",
+                    visitorName = "مریم مفرد",
                     date = "۱۴۰۳/۰۲/۱۸ , 10:30",
+                    city = "مشهد",
+                    district = "پاسداران",
                     icon = Icons.Default.Phone,
                     status = Status.PLANNED
                 )
@@ -144,25 +162,34 @@ fun VisitsScreen(
     }
 
     val visitorOptions = remember(items, allVisitorsLabel) {
-        listOf(allVisitorsLabel) + items.map { it.person }.distinct()
+        listOf(allVisitorsLabel) + items.map { it.visitorName }.distinct()
     }
 
+    // لیست وضعیت‌های قابل انتخاب
+    val statusOptions = remember {
+        listOf(Status.PLANNED, Status.DONE, Status.CANCELLED)
+    }
+
+    // اعمال فیلتر وضعیت در جستجو
     val filteredItems = remember(
         items,
         searchQuery,
         selectedVisitor,
         selectedStartDate,
+        selectedStatus,
         todayDate,
         allVisitorsLabel
     ) {
         items.filter { item ->
             val matchesSearch = searchQuery.isBlank() ||
-                    item.title.contains(searchQuery, ignoreCase = true) ||
-                    item.person.contains(searchQuery, ignoreCase = true) ||
+                    item.organizationName.contains(searchQuery, ignoreCase = true) ||
+                    item.visitorName.contains(searchQuery, ignoreCase = true) ||
                     item.date.contains(searchQuery, ignoreCase = true)
 
             val matchesVisitor =
-                selectedVisitor == allVisitorsLabel || item.person == selectedVisitor
+                selectedVisitor == allVisitorsLabel || item.visitorName == selectedVisitor
+
+            val matchesStatus = selectedStatus == null || item.status == selectedStatus
 
             val matchesDateRange = selectedStartDate == null || run {
                 val itemDate = normalizeDate(item.date)
@@ -170,97 +197,127 @@ fun VisitsScreen(
                 itemDate in startDate..todayDate
             }
 
-            matchesSearch && matchesVisitor && matchesDateRange
+            matchesSearch && matchesVisitor && matchesStatus && matchesDateRange
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
-    ) {
-        CustomHeader(
-            title = R.string.label_visits_list,
-            showBackButton = false
-        )
-
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
-        ) {
-            Column(
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onAddVisitClick,
+                containerColor = LocalPartnerManagementColors.current.success,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                    .fillMaxWidth(0.5f)
+                    .height(52.dp)
             ) {
-                FilterSection(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    hint = stringResource(R.string.label_search)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.label_register_visit),
+                        style = typography.titleLarge
+                    )
+                }
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center
+    ) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primary)
+        ) {
+            CustomHeader(
+                title = R.string.label_visits_list,
+                showBackButton = false
+            )
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = appColors.screenBackground
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                ) {
+                    FilterSection(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        hint = stringResource(R.string.label_search)
+                    )
 
-                VisitFiltersRow(
-                    selectedVisitor = selectedVisitor,
-                    visitorOptions = visitorOptions,
-                    selectedDate = selectedStartDate ?: pickDateLabel,
-                    onVisitorSelected = { selectedVisitor = it },
-                    onDateClick = { showDatePicker = true },
-                    onClearDate = { selectedStartDate = null },
-                    isDateFiltered = selectedStartDate != null
-                )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    VisitFiltersRow(
+                        selectedVisitor = selectedVisitor,
+                        visitorOptions = visitorOptions,
+                        selectedDate = selectedStartDate ?: pickDateLabel,
+                        selectedStatus = selectedStatus,
+                        statusOptions = statusOptions,
+                        onVisitorSelected = { selectedVisitor = it },
+                        onDateClick = { showDatePicker = true },
+                        onClearDate = { selectedStartDate = null },
+                        onStatusSelected = { selectedStatus = it },
+                        onClearStatus = { selectedStatus = null },
+                        isDateFiltered = selectedStartDate != null
+                    )
 
-                if (filteredItems.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.SearchOff,
-                                contentDescription = null,
-                                tint = appColors.textSecondary,
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.msg_no_item_found),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = appColors.textSecondary
-                            )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (filteredItems.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.SearchOff,
+                                    contentDescription = null,
+                                    tint = appColors.textSecondary,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.msg_no_item_found),
+                                    style = typography.bodyMedium,
+                                    color = appColors.textSecondary
+                                )
+                            }
                         }
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                    ) {
-                        items(
-                            items = filteredItems,
-                            key = { it.id }
-                        ) { item ->
-                            VisitCard(
-                                item = item,
-                                onClick = {
-                                    onVisitClick(item.id)
-                                },
-                                onEditClick = {
-                                    onEditVisitClick(item.id)
-                                },
-                                onDeleteClick = {
-                                    visitPendingDelete = item
-                                }
-                            )
-                        }
-                        item {
-                            Spacer(modifier = Modifier.height(80.dp))
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                        ) {
+                            items(
+                                items = filteredItems,
+                                key = { it.id }
+                            ) { item ->
+                                VisitCard(
+                                    item = item,
+                                    onClick = { onVisitClick(item.id) },
+                                    onEditClick = { onEditVisitClick(item.id) },
+                                    onDeleteClick = { visitPendingDelete = item }
+                                )
+                            }
+                            item {
+                                Spacer(modifier = Modifier.height(80.dp))
+                            }
                         }
                     }
                 }
@@ -285,7 +342,7 @@ fun VisitsScreen(
     visitPendingDelete?.let { visit ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_visit),
-            itemName = visit.title,
+            itemName = visit.organizationName,
             onConfirm = {
                 items = items.filter { it.id != visit.id }
                 visitPendingDelete = null
@@ -295,8 +352,8 @@ fun VisitsScreen(
             }
         )
     }
-
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -304,152 +361,236 @@ private fun VisitFiltersRow(
     selectedVisitor: String,
     visitorOptions: List<String>,
     selectedDate: String,
+    selectedStatus: Status?,
+    statusOptions: List<Status>,
     onVisitorSelected: (String) -> Unit,
     onDateClick: () -> Unit,
     onClearDate: () -> Unit,
+    onStatusSelected: (Status) -> Unit,
+    onClearStatus: () -> Unit,
     isDateFiltered: Boolean
 ) {
     val appColors = LocalPartnerManagementColors.current
     var visitorExpanded by remember { mutableStateOf(false) }
+    var statusExpanded by remember { mutableStateOf(false) }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        Row(
+        LazyRow(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
-                onClick = { },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PartnerManagementTheme.colors.infoContainer,
-                    contentColor = PartnerManagementTheme.colors.onInfoContainer
-                ),
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                modifier = Modifier
-                    .height(40.dp)
-                    .wrapContentWidth()
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_filter),
-                    contentDescription = null,
-                    tint = PartnerManagementTheme.colors.info,
-                    modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = stringResource(R.string.label_filters),
-                    color = PartnerManagementTheme.colors.onInfoContainer,
-                    style = MaterialTheme.typography.labelSmall
-                )
+            // برچسب فیلترها
+            item {
+                Row(
+                    modifier = Modifier
+                        .height(40.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_filter),
+                        contentDescription = null,
+                        tint = appColors.textSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.label_filters),
+                        color = appColors.textSecondary,
+                        style = typography.titleSmall
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            // فیلتر وضعیت
+            item {
+                ExposedDropdownMenuBox(
+                    expanded = statusExpanded,
+                    onExpandedChange = { statusExpanded = !statusExpanded }
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = appColors.cardBackground,
+                        border = BorderStroke(
+                            1.dp,
+                            if (selectedStatus != null) MaterialTheme.colorScheme.primary else appColors.border
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FilterAlt,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = selectedStatus?.toDisplayName() ?: "وضعیت",
+                                style = typography.labelSmall,
+                                color = if (selectedStatus != null) MaterialTheme.colorScheme.primary else appColors.textPrimary,
+                                maxLines = 1,
+                                modifier = Modifier.clickable { statusExpanded = true }
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = if (selectedStatus != null) Icons.Default.Close else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = appColors.textSecondary,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clickable {
+                                        if (selectedStatus != null) {
+                                            onClearStatus()
+                                        } else {
+                                            statusExpanded = !statusExpanded
+                                        }
+                                    }
+                            )
+                        }
+                    }
 
-            ExposedDropdownMenuBox(
-                expanded = visitorExpanded,
-                onExpandedChange = { visitorExpanded = !visitorExpanded }
-            ) {
+                    ExposedDropdownMenu(
+                        expanded = statusExpanded,
+                        onDismissRequest = { statusExpanded = false }
+                    ) {
+                        statusOptions.forEach { status ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = status.toDisplayName(),
+                                        style = typography.labelMedium
+                                    )
+                                },
+                                onClick = {
+                                    onStatusSelected(status)
+                                    statusExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // فیلتر تاریخ
+            item {
                 Surface(
                     modifier = Modifier
                         .height(40.dp),
                     shape = RoundedCornerShape(8.dp),
                     color = appColors.cardBackground,
-                    border = BorderStroke(1.dp, appColors.border)
+                    border = BorderStroke(
+                        1.dp,
+                        if (isDateFiltered) MaterialTheme.colorScheme.primary else appColors.border
+                    )
                 ) {
                     Row(
-                        modifier = Modifier
-                            .clickable { visitorExpanded = true }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Person,
+                            imageVector = Icons.Default.DateRange,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = selectedVisitor,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = appColors.textPrimary,
-                            maxLines = 1
+                            text = selectedDate,
+                            style = typography.labelSmall,
+                            color = if (isDateFiltered) MaterialTheme.colorScheme.primary else appColors.textPrimary,
+                            maxLines = 1,
+                            modifier = Modifier.clickable { onDateClick() }
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
+                            imageVector = if (isDateFiltered) Icons.Default.Close else Icons.Default.KeyboardArrowDown,
                             contentDescription = null,
                             tint = appColors.textSecondary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-
-                ExposedDropdownMenu(
-                    expanded = visitorExpanded,
-                    onDismissRequest = { visitorExpanded = false }
-                ) {
-                    visitorOptions.forEach { visitor ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = visitor,
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            },
-                            onClick = {
-                                onVisitorSelected(visitor)
-                                visitorExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Surface(
-                modifier = Modifier
-                    .height(40.dp)
-                    .clickable { onDateClick() },
-                shape = RoundedCornerShape(8.dp),
-                color = appColors.cardBackground,
-                border = BorderStroke(1.dp, appColors.border)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = selectedDate,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = appColors.textPrimary,
-                        maxLines = 1
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = if (isDateFiltered) Icons.Default.Close else Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = appColors.textSecondary,
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clickable {
-                                if (isDateFiltered) {
-                                    onClearDate()
-                                } else {
-                                    onDateClick()
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable {
+                                    if (isDateFiltered) {
+                                        onClearDate()
+                                    } else {
+                                        onDateClick()
+                                    }
                                 }
-                            }
-                    )
+                        )
+                    }
                 }
             }
+/*
+            // فیلتر بازاریاب
+            item {
+                ExposedDropdownMenuBox(
+                    expanded = visitorExpanded,
+                    onExpandedChange = { visitorExpanded = !visitorExpanded }
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = appColors.cardBackground,
+                        border = BorderStroke(1.dp, appColors.border)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .clickable { visitorExpanded = true }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = selectedVisitor,
+                                style = typography.labelSmall,
+                                color = appColors.textPrimary,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = appColors.textSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    ExposedDropdownMenu(
+                        expanded = visitorExpanded,
+                        onDismissRequest = { visitorExpanded = false }
+                    ) {
+                        visitorOptions.forEach { visitor ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = visitor,
+                                        style = typography.labelMedium
+                                    )
+                                },
+                                onClick = {
+                                    onVisitorSelected(visitor)
+                                    visitorExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }*/
         }
     }
 }
@@ -480,16 +621,6 @@ fun VisitCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
 
             Column(
                 modifier = Modifier.weight(1f)
@@ -499,8 +630,8 @@ fun VisitCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = item.title,
-                        style = MaterialTheme.typography.titleMedium,
+                        text = item.organizationName,
+                        style = typography.titleLarge,
                         color = appColors.textPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -509,13 +640,12 @@ fun VisitCard(
 
                     Spacer(modifier = Modifier.width(6.dp))
                     StatusBadge(item.status)
-
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 VisitTypeChip(
-                    text = item.type,
+                    text = item.visitType,
                     icon = item.icon
                 )
 
@@ -523,7 +653,7 @@ fun VisitCard(
 
                 DetailRow(
                     icon = Icons.Default.Person,
-                    text = item.person
+                    text = item.visitorName
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -532,8 +662,12 @@ fun VisitCard(
                     icon = Icons.Default.DateRange,
                     text = item.date
                 )
+                Spacer(modifier = Modifier.height(6.dp))
 
-                Spacer(modifier = Modifier.height(8.dp))
+                LocationRow(
+                    location = "${item.city}، ${item.district}"
+                )
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -543,35 +677,23 @@ fun VisitCard(
                     ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = onEditClick,
-                        modifier = Modifier.size(38.dp),
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.EditNote,
-                            contentDescription = stringResource(R.string.label_edit_visit_item),
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
 
-                    IconButton(
+                    ActionIconButton(
+                        icon = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.label_edit),
+                        onClick = onEditClick,
+                        tint = MaterialTheme.colorScheme.primary,
+                        backgroundColor = appColors.cardBackgroundAlt
+                    )
+
+                    ActionIconButton(
+                        icon = Icons.Default.DeleteOutline,
+                        contentDescription = stringResource(R.string.label_delete),
                         onClick = onDeleteClick,
-                        modifier = Modifier.size(38.dp),
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = stringResource(R.string.label_delete_visit),
-                            modifier = Modifier.size(21.dp)
-                        )
-                    }
+                        tint = MaterialTheme.colorScheme.error,
+                        backgroundColor = MaterialTheme.colorScheme.errorContainer
+                    )
+
                 }
 
             }
@@ -594,7 +716,7 @@ fun DetailRow(icon: ImageVector, text: String) {
             text = text,
             textAlign = TextAlign.End,
             color = appColors.textSecondary,
-            style = MaterialTheme.typography.labelSmall
+            style = typography.labelMedium
         )
     }
 }
@@ -629,7 +751,7 @@ fun VisitTypeChip(
         Text(
             text = text,
             color = appColors.textPrimary,
-            style = MaterialTheme.typography.labelMedium,
+            style = typography.labelMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -673,6 +795,7 @@ private fun VisitScreenPreview() {
     AppScreenPreview {
         VisitsScreen(
             onVisitClick = {},
+            onAddVisitClick = {},
             onEditVisitClick = {}
         )
     }

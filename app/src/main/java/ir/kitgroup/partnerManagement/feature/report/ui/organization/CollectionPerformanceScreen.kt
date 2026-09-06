@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.report.ui.collection
+package ir.kitgroup.partnerManagement.feature.report.ui.organization
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,7 +20,7 @@ import ir.kitgroup.partnerManagement.core.ui.components.DateRangeChip
 import ir.kitgroup.partnerManagement.core.ui.components.JalaliRangeCalendar
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
-import ir.kitgroup.partnerManagement.feature.report.ui.collection.model.CollectionPerformanceUi
+import ir.kitgroup.partnerManagement.feature.report.ui.organization.model.CollectionPerformanceUi
 
 @Composable
 fun CollectionPerformanceScreen(

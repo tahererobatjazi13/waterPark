@@ -11,9 +11,11 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Home
@@ -21,7 +23,9 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -36,9 +40,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
+import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
 import ir.kitgroup.partnerManagement.core.ui.util.Status
@@ -49,60 +53,62 @@ private val demoAdvertisingStandAssignments = listOf(
         "1",
         "محمد احمدی",
         "هتل پارسیان آزادی",
-        "رومیزی",
+        "تخصیص به بازاریاب",
         "stand",
         5,
-        "۱۴۰۳/۰۳/۲۲",
+        "۱۴۰۳/۰۳/۲۲", "تبلیغاتی",
         Status.ACTIVE
     ),
     AdvertisingStandAssignment(
         "2",
         "سارا مرادی",
         "هتل اسپیناس پالاس",
-        "دیواری",
+        "عودت",
         "wall",
         3,
-        "۱۴۰۳/۰۳/۲۴",
+        "۱۴۰۳/۰۳/۲۴", "امانی",
         Status.DRAFT
     ),
     AdvertisingStandAssignment(
         "3",
         "علی رضایی",
         "هتل هما",
-        "کیوسک",
+        "جمع آوری",
         "kiosk",
         2,
-        "۱۴۰۳/۰۳/۲۰",
+        "۱۴۰۳/۰۳/۲۰", "اجاره ای",
         Status.CANCELLED
     ),
     AdvertisingStandAssignment(
         "4",
         "نازنین کریمی",
         "هتل بزرگ تهران",
-        "رومیزی",
+        "خاتمه",
         "stand",
         4,
-        "۱۴۰۳/۰۳/۲۵",
+        "۱۴۰۳/۰۳/۲۵", "اجاره ای",
         Status.RETURNED
     ),
     AdvertisingStandAssignment(
-        "3",
+        "5",
         "علی رضایی",
         "هتل هما",
-        "کیوسک",
+        "تخصیص به بازاریاب",
         "kiosk",
         2,
-        "۱۴۰۳/۰۳/۲۰",
+        "۱۴۰۳/۰۳/۲۰", "امانی",
+
         Status.ACTIVE
     ),
     AdvertisingStandAssignment(
-        "4",
+        "6",
         "نازنین کریمی",
         "هتل بزرگ تهران",
-        "رومیزی",
+        "تخصیص به بازاریاب",
         "stand",
         4,
         "۱۴۰۳/۰۳/۲۵",
+        "تبلیغاتی",
         Status.DRAFT
     )
 )
@@ -133,7 +139,7 @@ fun AdvertisingStandAssignmentVisitorListScreen(
         containerColor = MaterialTheme.colorScheme.primary,
         topBar = {
             CustomHeader(
-                title = R.string.label_advertising_allocation,
+                title = R.string.label_assignment_advertising_stand,
                 showBackButton = true,
                 onBackClick = onBackClick
             )
@@ -200,29 +206,19 @@ private fun AllocationHeader(
             color = appColors.textPrimary,
             modifier = Modifier.weight(1f)
         )
-
-        Button(
+        CustomButton(
+            text = stringResource(R.string.label_new_allocation),
             onClick = onNewAssignmentVisitorClick,
-            shape = RoundedCornerShape(14.dp),
+            fillMaxWidth = false,
+            height = 38.dp,
+            textStyle = typography.titleLarge,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            icon = Icons.Default.Add,
             colors = ButtonDefaults.buttonColors(
-                containerColor = PartnerManagementTheme.colors.success,
+                containerColor = appColors.success,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-            ),
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
             )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = stringResource(R.string.label_new_allocation),
-                style = MaterialTheme.typography.labelLarge,
-            )
-        }
+        )
     }
 }
 
@@ -330,7 +326,7 @@ private fun AllocationCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 InfoLine(
-                    label = stringResource(R.string.label_visitor_name),
+                    label = stringResource(R.string.label_choose_visitor_recipient),
                     value = advertisingStandAssignment.visitorName,
                     leadingIcon = Icons.Default.PersonOutline,
                     modifier = Modifier.weight(1f)
@@ -353,14 +349,14 @@ private fun AllocationCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DetailLine(
-                        label = stringResource(R.string.label_organization_name),
-                        value = advertisingStandAssignment.organizationName,
-                        icon = Icons.Default.Business
+                    DetailItem(
+                        label = stringResource(R.string.label_assignment_type),
+                        value = advertisingStandAssignment.assignmentType,
+                        icon = Icons.Default.Category
                     )
 
-                    DetailLine(
-                        label = stringResource(R.string.label_allocated_date),
+                    DetailItem(
+                        label = stringResource(R.string.label_delivery_visitor_date),
                         value = advertisingStandAssignment.allocatedDate,
                         icon = Icons.Default.CalendarMonth
                     )
@@ -370,13 +366,13 @@ private fun AllocationCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DetailLine(
-                        label = stringResource(R.string.label_item_type),
-                        value = advertisingStandAssignment.itemType,
-                        icon = itemIcon
+                    DetailItem(
+                        label = stringResource(R.string.label_assignment_mode),
+                        value = advertisingStandAssignment.assignmentMode,
+                        icon = Icons.Default.AssignmentInd
                     )
 
-                    DetailLine(
+                    DetailItem(
                         label = stringResource(R.string.label_allocated_count),
                         value = "${advertisingStandAssignment.count} ${stringResource(R.string.label_unit_count)}",
                         icon = Icons.Default.Inventory2
@@ -388,7 +384,7 @@ private fun AllocationCard(
 }
 
 @Composable
- fun InfoLine(
+fun InfoLine(
     label: String,
     value: String,
     leadingIcon: ImageVector,
@@ -426,33 +422,22 @@ private fun AllocationCard(
 }
 
 @Composable
- fun DetailLine(
-    label: String,
-    value: String,
-    icon: ImageVector
-) {
+private fun DetailItem(label: String, value: String, icon: ImageVector) {
     val appColors = LocalPartnerManagementColors.current
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp)
-        )
-
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
         Column {
             Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
+                label,
+                style = typography.labelSmall,
                 color = appColors.textSecondary
             )
             Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
+                value,
+                style = typography.bodyMedium,
                 color = appColors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -491,7 +476,7 @@ private fun AllocationEmptyState(
     }
 }
 
- fun allocationItemIcon(name: String): ImageVector {
+fun allocationItemIcon(name: String): ImageVector {
     return when (name.lowercase()) {
         "stand" -> Icons.Default.Devices
         "wall" -> Icons.Default.Home

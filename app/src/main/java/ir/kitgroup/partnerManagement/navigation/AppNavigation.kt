@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,7 +28,6 @@ import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignme
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_visitor.AdvertisingStandAssignmentVisitorListScreen
 import ir.kitgroup.partnerManagement.feature.report.ui.visitor.VisitorListScreen
 import ir.kitgroup.partnerManagement.feature.card.ui.AddCardScreen
-import ir.kitgroup.partnerManagement.feature.card.ui.CardsScreen
 import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardScreen
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavigationBar
@@ -42,8 +40,8 @@ import ir.kitgroup.partnerManagement.feature.profile.ui.ProfileScreen
 import ir.kitgroup.partnerManagement.feature.profile.ui.SettingsScreen
 import ir.kitgroup.partnerManagement.feature.profile.ui.ThemeModeScreen
 import ir.kitgroup.partnerManagement.feature.report.ui.ReportMenuScreen
-import ir.kitgroup.partnerManagement.feature.report.ui.collection.CollectionPerformanceScreen
-import ir.kitgroup.partnerManagement.feature.report.ui.collection.ReportContractScreen
+import ir.kitgroup.partnerManagement.feature.report.ui.organization.CollectionPerformanceScreen
+import ir.kitgroup.partnerManagement.feature.report.ui.organization.ReportContractScreen
 import ir.kitgroup.partnerManagement.feature.report.ui.visitor.VisitorAnalysisScreen
 import ir.kitgroup.partnerManagement.feature.report.ui.visitor.VisitorsPerformanceDashboardScreen
 import ir.kitgroup.partnerManagement.feature.visits.ui.RegisterVisitScreen
@@ -51,10 +49,25 @@ import ir.kitgroup.partnerManagement.feature.visits.ui.VisitDetailScreen
 import ir.kitgroup.partnerManagement.feature.visits.ui.VisitsScreen
 import ir.kitgroup.partnerManagement.core.ui.SessionStatus
 import ir.kitgroup.partnerManagement.core.ui.util.ThemeMode
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.detail.AdvertisingStandAssignmentVisitorDetailScreen
+import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.detail.demoAssignmentDetail
+import ir.kitgroup.partnerManagement.feature.contract.ui.ContractsListScreen
 import ir.kitgroup.partnerManagement.feature.login.ui.SplashScreen
+import ir.kitgroup.partnerManagement.feature.contract.ui.AddContractScreen
+import ir.kitgroup.partnerManagement.feature.contract.ui.ContractDetailScreen
+import ir.kitgroup.partnerManagement.feature.contract.ui.demoContracts
+import ir.kitgroup.partnerManagement.feature.offer.ui.AddContractOfferScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferTicketPlanLineDetailScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferTicketPlanScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanLineDetailScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanLineListScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanListScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.demoOfferLinePlans
+import ir.kitgroup.partnerManagement.feature.offer.ui.demoOfferPlans
 
 @Composable
-fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
+fun AppNavigation(
+    themeViewModel: ThemeViewModel = hiltViewModel()
 
 ) {
     val navController = rememberNavController()
@@ -66,9 +79,9 @@ fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
 
     val bottomBarRoutes = setOf(
         BottomNavItem.Dashboard.route,
-        BottomNavItem.Collections.route,
+        BottomNavItem.Organizations.route,
         BottomNavItem.Visits.route,
-        BottomNavItem.Cards.route,
+        BottomNavItem.PlanOffer.route,
         BottomNavItem.Profile.route
     )
 
@@ -81,14 +94,12 @@ fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
             }
         }
     ) { paddingValues ->
-
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             NavHost(
                 navController = navController,
                 startDestination = "splash",
                 modifier = Modifier.padding(paddingValues)
             ) {
-
                 composable("splash") {
 
                     val sessionStatus by sessionViewModel.sessionStatus.collectAsState()
@@ -141,32 +152,45 @@ fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
                 composable(BottomNavItem.Dashboard.route) {
                     DashboardScreen(navController)
                 }
-                composable(BottomNavItem.Collections.route) {
+                composable(BottomNavItem.Organizations.route) {
                     OrganizationsListScreen(
                         onOrganizationClick = { organizationId ->
                             navController.navigate(
                                 Screen.OrganizationDetail.createRoute(organizationId)
                             )
-                        }, onAssignVisitorClick = {
-                            navController.navigate(Screen.AssignVisitor.route)
+                        }, onAddOrganizationClick = {
+                            navController.navigate(Screen.AddOrganization.route)
                         }
                     )
                 }
-
-
-                composable(Screen.AssignVisitor.route) {
+                composable(
+                    route = "assign_visitor/{organizationId}",
+                    arguments = listOf(
+                        navArgument("organizationId") {
+                            type = NavType.IntType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val organizationId = backStackEntry.arguments?.getInt("organizationId") ?: 0
                     AssignVisitorScreen(
+                        organizationId = organizationId,
                         onBackClick = { navController.popBackStack() },
                         onSaveClick = {
+                            // عملیات ثبت
                         }
                     )
                 }
+
 
                 composable(BottomNavItem.Visits.route) {
                     VisitsScreen(
                         onVisitClick = { visitId ->
                             navController.navigate(Screen.VisitDetail.createRoute(visitId))
-                        }, onEditVisitClick = { visitId ->
+                        },
+                        onAddVisitClick = {
+                            navController.navigate(Screen.RegisterVisit.createRoute())
+                        },
+                        onEditVisitClick = { visitId ->
                             navController.navigate(Screen.RegisterVisit.createRoute(visitId))
                         }
                     )
@@ -254,7 +278,32 @@ fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
                         organizationId = organizationId,
                         onBackClick = { navController.popBackStack() },
                         onEditClick = {
-                            navController.navigate(Screen.EditOrganization.createRoute(organizationId))
+                            navController.navigate(
+                                Screen.EditOrganization.createRoute(
+                                    organizationId
+                                )
+                            )
+                        },
+
+                        onAssignVisitorClick = {
+                            navController.navigate("assign_visitor/$id")
+                        },
+                        onEditVisitorClick = {
+                        },
+                        onDeleteVisitorClick = {
+                        },
+                        onAssignStandsClick = {
+                            navController.navigate(Screen.AddAdvertisingStandAssignmentOrganization.route)
+                        },
+                        onAssignContractClick = {
+                            navController.navigate(Screen.AddContract.route)
+                        },
+                        onViewItemDetailsClick = { allocation ->
+                            navController.navigate(
+                                Screen.AdvertisingStandAssignmentVisitorDetail.createRoute(
+                                    assignmentId = allocation.id
+                                )
+                            )
                         },
                         onDisableClick = { /* عملیات غیرفعال‌سازی */ }
                     )
@@ -341,7 +390,32 @@ fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
                         onNewAssignmentVisitorClick = {
                             navController.navigate(Screen.AddAdvertisingStandAssignmentVisitor.route)
                         },
-                        onViewItemDetailsClick = { }
+                        onViewItemDetailsClick = { allocation ->
+                            navController.navigate(
+                                Screen.AdvertisingStandAssignmentVisitorDetail.createRoute(
+                                    assignmentId = allocation.id
+                                )
+                            )
+                        })
+                }
+                composable(
+                    route = Screen.AdvertisingStandAssignmentVisitorDetail.route,
+                    arguments = listOf(
+                        navArgument("assignmentId") {
+                            type = NavType.StringType
+                        }
+                    )
+                ) { backStackEntry ->
+
+                    val assignmentId = backStackEntry.arguments
+                        ?.getString("assignmentId")
+                        .orEmpty()
+
+                    AdvertisingStandAssignmentVisitorDetailScreen(
+                        allocation = demoAssignmentDetail,
+                        onBackClick = {
+                            navController.popBackStack()
+                        }
                     )
                 }
 
@@ -428,6 +502,153 @@ fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
                     ReportContractScreen(
                         onBackClick = { navController.popBackStack() })
                 }
+                composable(Screen.ContractsList.route) {
+                    val contracts = demoContracts()
+
+                    ContractsListScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onAddClick = {
+                            navController.navigate(Screen.AddContract.route)
+                        },
+                        onContractClick = { contract ->
+                            navController.navigate(
+                                Screen.ContractDetail.createRoute(contract.id)
+                            )
+                        },
+                        contracts = contracts
+                    )
+                }
+
+                composable(
+                    route = Screen.ContractDetail.route,
+                    arguments = listOf(
+                        navArgument("contractId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val contractId = backStackEntry.arguments?.getString("contractId") ?: ""
+                    val contract = demoContracts().firstOrNull { it.id == contractId }
+
+                    if (contract != null) {
+                        ContractDetailScreen(
+                            contract = contract,
+                            onBackClick = { navController.popBackStack() }
+                        )
+                    }
+                }
+
+
+                composable(Screen.AddContract.route) {
+                    AddContractScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onSaveClick = {
+                        }
+                    )
+                }
+
+
+                composable(Screen.AddContractOffer.route) {
+                    AddContractOfferScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onSaveClick = {
+                        }
+                    )
+                }
+                //  لیست کلی طرح‌ها
+                composable(BottomNavItem.PlanOffer.route) {
+
+                    val plans = demoOfferPlans()
+
+                    OfferTicketPlanListScreen(
+                        onAddClick = {
+                            navController.navigate(Screen.AddOfferTicketPlan.route)
+                        },
+                        onPlanClick = { plan ->
+                            navController.navigate(
+                                Screen.OfferTicketPlanLineList.createRoute(plan.id)
+                            )
+                        },
+                        plans = plans
+                    )
+                }
+
+                // افزودن  طرح جدید
+                composable(Screen.AddOfferTicketPlan.route) {
+                    AddOfferTicketPlanScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onSaveClick = {
+                        }
+                    )
+                }
+
+                // لیست جزییات و لاین‌های طرح انتخاب‌شده
+                composable(
+                    route = Screen.OfferTicketPlanLineList.route,
+                    arguments = listOf(
+                        navArgument("offerId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val offerId = backStackEntry.arguments?.getString("offerId").orEmpty()
+                    val selectedPlan = demoOfferPlans().firstOrNull { it.id == offerId }
+                    val planLines = demoOfferLinePlans()
+
+                    OfferTicketPlanLineListScreen(
+                        headerPlan = selectedPlan,
+                        plans = planLines,
+                        onBackClick = { navController.popBackStack() },
+                        onAddClick = {
+                            navController.navigate(
+                                Screen.AddOfferTicketPlanLineDetail.createRoute(
+                                    selectedPlan?.planName ?: ""
+                                )
+                            )
+                        },
+                        onPlanClick = { planLine ->
+                            navController.navigate(
+                                Screen.OfferTicketPlanLineDetail.createRoute(planLine.id)
+                            )
+                        }
+                    )
+                }
+
+                // ثبت جزییات طرح جدید با دریافت نام طرح
+                composable(
+                    route = Screen.AddOfferTicketPlanLineDetail.route,
+                    arguments = listOf(
+                        navArgument("planName") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        }
+                    )
+                ) { backStackEntry ->
+                    val planName = backStackEntry.arguments?.getString("planName").orEmpty()
+                    AddOfferTicketPlanLineDetailScreen(
+                        initialPlanHeader = planName,
+                        onBackClick = { navController.popBackStack() },
+                        onSaveClick = { navController.popBackStack() }
+                    )
+                }
+
+                // صفحه جزئیات طرح
+                composable(
+                    route = Screen.OfferTicketPlanLineDetail.route,
+                    arguments = listOf(
+                        navArgument("lineId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val lineId = backStackEntry.arguments?.getString("lineId").orEmpty()
+                    val planLine = demoOfferLinePlans().firstOrNull { it.id == lineId }
+
+                    if (planLine != null) {
+                        OfferTicketPlanLineDetailScreen(
+                            plan = planLine,
+                            onBackClick = { navController.popBackStack() }
+                        )
+                    } else {
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack()
+                        }
+                    }
+                }
 
                 composable(
                     route = Screen.CollectionPerformance.route
@@ -435,19 +656,9 @@ fun AppNavigation(    themeViewModel: ThemeViewModel = hiltViewModel()
                     CollectionPerformanceScreen(
                         onBackClick = { navController.popBackStack() })
                 }
-                composable(BottomNavItem.Cards.route) {
-                    CardsScreen(
-                        onRegisterCardClick = {
-                            navController.navigate(Screen.RegisterCard.route)
-                        }
-                    )
-                }
-
 
                 composable(BottomNavItem.Profile.route) {
                     ProfileScreen(
-                        onEditInfoClick = { },
-                        onChangePasswordClick = { },
                         onSettingsClick = {
                             navController.navigate("settings")
                         },

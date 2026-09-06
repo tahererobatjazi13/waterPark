@@ -16,8 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
@@ -27,13 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
@@ -42,10 +39,12 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.CustomOutlinedButton
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
+import ir.kitgroup.partnerManagement.core.ui.components.GradeSelector
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.components.YesNoSwitchRow
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.feature.organization.model.PersonOrganization
 
@@ -190,6 +189,7 @@ private fun AddOrganizationContent(
     }
 }
 
+
 @Composable
 private fun OrganizationBasicInfoSection(
     state: AddOrganizationFormState
@@ -201,12 +201,16 @@ private fun OrganizationBasicInfoSection(
     val organizationLevelList = remember {
         listOf("معمولی", "متوسط", "متوسط رو به بالا", "عالی")
     }
+    val statusEntries = remember { OrganizationStatus.entries }
+    val statusTitles = statusEntries.map { stringResource(it.titleRes) }
 
-    val organizationStatusList = remember {
-        listOf("ثبت اولیه", "فعال", "غیرفعال", "معلق")
-    }
+    var showInactiveReasonDialog by remember { mutableStateOf(false) }
+    var previousStatus by remember { mutableStateOf(state.organizationStatus) }
 
-    SectionTitle(stringResource(R.string.label_organization_basic_information))
+    SectionTitle(
+        title = stringResource(R.string.label_organization_basic_information),
+        titleColor = MaterialTheme.colorScheme.primary
+    )
 
     CustomEditTextField(
         value = state.organizationName,
@@ -269,22 +273,165 @@ private fun OrganizationBasicInfoSection(
         },
         end = {
             DropdownSelectorField(
-                value = state.organizationStatus,
+                value = stringResource(state.organizationStatus.titleRes),
                 label = stringResource(R.string.label_status),
                 placeholder = "",
-                items = organizationStatusList,
+                items = statusTitles,
                 isRequired = false,
-                onItemSelected = { state.organizationStatus = it }
+                onItemSelected = { selectedTitle ->
+                    val selectedIndex = statusTitles.indexOf(selectedTitle)
+                    val selectedEnum = if (selectedIndex != -1) statusEntries[selectedIndex] else OrganizationStatus.INITIAL_REGISTRATION
+
+                    if (selectedEnum == OrganizationStatus.INACTIVE) {
+                        previousStatus = state.organizationStatus
+                        showInactiveReasonDialog = true
+                    } else {
+                        state.organizationStatus = selectedEnum
+                        state.inactiveReason = ""
+                    }
+                }
             )
         }
     )
+
+    // نمایش علت غیرفعال‌سازی فقط در وضعیت INACTIVE
+    if (state.organizationStatus == OrganizationStatus.INACTIVE && state.inactiveReason.isNotBlank()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+            ),
+            border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) {
+                Text(
+                    text = stringResource(R.string.label_recorded_inactive_reason),
+                    style = typography.labelMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = state.inactiveReason,
+                    style = typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+    if (showInactiveReasonDialog) {
+        InactivationReasonDialog(
+            initialReason = state.inactiveReason,
+            onDismiss = {
+                showInactiveReasonDialog = false
+                if (state.inactiveReason.isBlank()) {
+                    state.organizationStatus = previousStatus
+                }
+            },
+            onConfirm = { reason ->
+                state.organizationStatus = OrganizationStatus.INACTIVE
+                state.inactiveReason = reason
+                showInactiveReasonDialog = false
+            }
+        )
+    }
 }
+
+@Composable
+ fun InactivationReasonDialog(
+    initialReason: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var reasonText by rememberSaveable { mutableStateOf(initialReason) }
+    var isError by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.label_inactivation_reason_title),
+                    style = typography.titleLarge,
+                    color = MaterialTheme.colorScheme.error
+                )
+
+                Text(
+                    text = stringResource(R.string.label_inactivation_reason_description),
+                    style = typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                CustomDescriptionField(
+                    label = stringResource(R.string.label_inactivation_reason_field),
+                    value = reasonText,
+                    onValueChange = {
+                        reasonText = it
+                        if (it.isNotBlank()) isError = false
+                    },
+                    placeholder = stringResource(R.string.hint_enter_inactivation_reason)
+                )
+
+                if (isError) {
+                    Text(
+                        text = stringResource(R.string.error_inactivation_reason_required),
+                        style = typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CustomOutlinedButton(
+                        text = stringResource(R.string.label_cancel),
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    CustomButton(
+                        text = stringResource(R.string.label_registration),
+                        onClick = {
+                            if (reasonText.trim().isNotBlank()) {
+                                onConfirm(reasonText.trim())
+                            } else {
+                                isError = true
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun OrganizationContactSection(
     state: AddOrganizationFormState
 ) {
-    SectionTitle(stringResource(R.string.label_contact_information))
+    SectionTitle(
+        title = stringResource(R.string.label_contact_information),
+        titleColor = MaterialTheme.colorScheme.primary
+    )
 
     TwoColumnRow(
         start = {
@@ -339,8 +486,10 @@ private fun OrganizationLocationSection(
     onAddressChange: (String) -> Unit,
     onSelectLocation: () -> Unit
 ) {
-    SectionTitle(stringResource(R.string.label_location))
-
+    SectionTitle(
+        title = stringResource(R.string.label_location),
+        titleColor = MaterialTheme.colorScheme.primary
+    )
     CustomEditTextField(
         value = address,
         onValueChange = onAddressChange,
@@ -359,8 +508,10 @@ private fun OrganizationLocationSection(
 private fun OrganizationAnalysisSection(
     state: AddOrganizationFormState
 ) {
-    SectionTitle(stringResource(R.string.label_analytical_information))
-
+    SectionTitle(
+        title = stringResource(R.string.label_analytical_information),
+        titleColor = MaterialTheme.colorScheme.primary
+    )
     GradeSelector(
         grade = state.organizationGrade,
         onGradeChange = { state.organizationGrade = it }
@@ -394,8 +545,10 @@ private fun OrganizationAnalysisSection(
 private fun OrganizationStatusSection(
     state: AddOrganizationFormState
 ) {
-    SectionTitle(stringResource(R.string.label_statuses))
-
+    SectionTitle(
+        title = stringResource(R.string.label_statuses),
+        titleColor = MaterialTheme.colorScheme.primary
+    )
     YesNoSwitchRow(
         title = stringResource(R.string.label_foreign_guest_reception),
         checked = state.statusExtenalCutomer,
@@ -415,8 +568,10 @@ private fun OrganizationRelatedPersonsSection(
     onAddPersonClick: () -> Unit,
     onRemovePerson: (Int) -> Unit
 ) {
-    SectionTitle(stringResource(R.string.label_related_persons))
-
+    SectionTitle(
+        title = stringResource(R.string.label_related_persons),
+        titleColor = MaterialTheme.colorScheme.primary
+    )
     OrganizationPersonsSummarySection(
         persons = persons,
         onAddPersonClick = onAddPersonClick,
@@ -442,8 +597,10 @@ private fun OrganizationImagesSection(
     onAddImage: () -> Unit,
     onRemoveImage: (Int) -> Unit
 ) {
-    SectionTitle(stringResource(R.string.label_images))
-
+    SectionTitle(
+        title = stringResource(R.string.label_images),
+        titleColor = MaterialTheme.colorScheme.primary
+    )
     CollectionImagesSection(
         images = images,
         onAddImage = onAddImage,
@@ -491,7 +648,7 @@ private fun AddPersonBottomSheet(
     }
 
     val statusList = remember {
-        listOf("پیش‌نویس", "فعال", "غیرفعال", "مسدود شده")
+        listOf("ثبت اولیه", "فعال", "نارنجی", "غیرفعال", "معلق", "بسته شده")
     }
 
     val sheetState = rememberModalBottomSheetState(
@@ -536,20 +693,20 @@ private fun AddPersonBottomSheet(
             TwoColumnRow(
                 start = {
                     CustomEditTextField(
-                        value = personState.phone,
-                        onValueChange = { personState.phone = it },
-                        label = stringResource(R.string.label_phone),
-                        placeholder = stringResource(R.string.hint_enter_phone),
+                        value = personState.mobile,
+                        onValueChange = { personState.mobile = it },
+                        label = stringResource(R.string.label_mobile),
+                        placeholder = stringResource(R.string.hint_enter_mobile),
                         isRequired = true,
                         leadingIcon = null
                     )
                 },
                 end = {
                     CustomEditTextField(
-                        value = personState.mobile,
-                        onValueChange = { personState.mobile = it },
-                        label = stringResource(R.string.label_mobile),
-                        placeholder = stringResource(R.string.hint_enter_mobile),
+                        value = personState.phone,
+                        onValueChange = { personState.phone = it },
+                        label = stringResource(R.string.label_phone),
+                        placeholder = stringResource(R.string.hint_enter_phone),
                         isRequired = false,
                         leadingIcon = null
                     )
@@ -836,59 +993,6 @@ private fun TwoColumnRow(
     }
 }
 
-@Composable
-private fun GradeSelector(
-    grade: Int,
-    onGradeChange: (Int) -> Unit
-) {
-    val appColors = LocalPartnerManagementColors.current
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.label_organization_grade),
-                style = typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .border(1.dp, appColors.border, RoundedCornerShape(12.dp))
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            for (i in 5 downTo 1) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onGradeChange(i) },
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = if (i <= grade) Icons.Default.Star else Icons.Outlined.StarBorder,
-                        contentDescription = null,
-                        tint = if (i <= grade) Color(0xFFFFC107) else appColors.border
-                    )
-                    Text(
-                        text = i.toString(),
-                        style = typography.labelSmall,
-                        color = appColors.border
-                    )
-                }
-            }
-        }
-    }
-}
-
 
 @Composable
 private fun MapCard(
@@ -1046,14 +1150,14 @@ private fun PersonInfoRow(
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun AddOrganizationScreenPreview() {
-        AppScreenPreview {
-            AddOrganizationScreen(
-                organizationId = 0,
-                onBackClick = {},
-                onCancel = {},
-                onSaveClick = {},
-                onSelectLocation = {},
-                onAddImage = {}
-            )
-        }
+    AppScreenPreview {
+        AddOrganizationScreen(
+            organizationId = 0,
+            onBackClick = {},
+            onCancel = {},
+            onSaveClick = {},
+            onSelectLocation = {},
+            onAddImage = {}
+        )
+    }
 }

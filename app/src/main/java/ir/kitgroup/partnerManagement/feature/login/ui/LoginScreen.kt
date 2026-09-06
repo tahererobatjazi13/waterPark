@@ -68,6 +68,7 @@ fun LoginScreen(
         }
     )
 }
+
 @Composable
 private fun LoginContent(
     uiState: LoginUiState,
@@ -138,22 +139,7 @@ private fun LoginContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
-
-        TextButton(
-            onClick = onForgotPasswordClick,
-            contentPadding = PaddingValues(10.dp),
-            modifier = Modifier.wrapContentWidth()
-        ) {
-            Text(
-                text = stringResource(R.string.label_forgot_password),
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Start,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(50.dp))
 
         CustomButton(
             text = stringResource(R.string.label_login),
