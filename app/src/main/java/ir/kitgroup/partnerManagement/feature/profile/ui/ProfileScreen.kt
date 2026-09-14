@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -64,12 +66,13 @@ fun ProfileScreen(
             "2" -> "پذیرش"
             "3" -> "مالی"
             "4" -> "سایر"
-            else -> ""
+            else -> "مدیر سیستم"
         }
     }
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     val appColors = LocalPartnerManagementColors.current
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = modifier
@@ -85,12 +88,17 @@ fun ProfileScreen(
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             color = appColors.screenBackground
         ) {
+            // اعمال verticalScroll و مقداری padding در انتهای محتوا
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                UserInfoCard()
+                UserInfoCard(
+                    fullName = username ?: "علی رضایی",
+                    roleTitle = roleTitle
+                )
 
                 CardMenuItem(
                     icon = R.drawable.ic_setting,
@@ -107,6 +115,8 @@ fun ProfileScreen(
                     contentColor = appColors.onErrorContainer,
                     onClick = { showLogoutDialog = true }
                 )
+
+                Spacer(modifier = Modifier.size(16.dp))
             }
         }
     }
@@ -120,7 +130,6 @@ fun ProfileScreen(
         confirmColor = RedContent,
         onConfirm = {
             showLogoutDialog = false
-
             viewModel.logout {
                 onLogoutSuccess()
             }
@@ -131,8 +140,13 @@ fun ProfileScreen(
     )
 }
 
+
+
 @Composable
-private fun UserInfoCard() {
+private fun UserInfoCard(
+    fullName: String,
+    roleTitle: String
+) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
@@ -151,7 +165,7 @@ private fun UserInfoCard() {
         Column(modifier = Modifier.padding(16.dp)) {
             UserInfoRow(
                 label = stringResource(R.string.label_person_full_name),
-                value = "علی رضایی",
+                value = fullName,
                 icon = R.drawable.ic_user_name,
                 iconColor = appColors.iconBlueContainer,
                 tint = appColors.info
@@ -179,7 +193,7 @@ private fun UserInfoCard() {
 
             UserInfoRow(
                 label = stringResource(R.string.label_user_role),
-                value = "مدیر سیستم",
+                value = roleTitle,
                 icon = R.drawable.ic_user_role,
                 iconColor = appColors.iconPurpleContainer,
                 tint = appColors.purple
@@ -187,7 +201,6 @@ private fun UserInfoCard() {
         }
     }
 }
-
 
 @Composable
 private fun ProfileDivider() {

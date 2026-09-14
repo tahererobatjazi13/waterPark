@@ -202,7 +202,7 @@ private fun AllocationHeader(
     ) {
         Text(
             text = stringResource(R.string.label_assignment_stands_to_visitor),
-            style = MaterialTheme.typography.titleMedium,
+            style = typography.titleMedium,
             color = appColors.textPrimary,
             modifier = Modifier.weight(1f)
         )
@@ -299,7 +299,6 @@ private fun AllocationCard(
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
-    val itemIcon = allocationItemIcon(advertisingStandAssignment.itemIconName)
 
     Card(
         modifier = modifier

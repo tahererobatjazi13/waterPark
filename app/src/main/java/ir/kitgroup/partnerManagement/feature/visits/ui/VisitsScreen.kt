@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -29,8 +28,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.SearchOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -64,7 +61,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.components.FilterSection
-import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
 import saman.zamani.persiandate.PersianDate
@@ -111,54 +107,7 @@ fun VisitsScreen(
     }
 
     var items by remember {
-        mutableStateOf(
-            listOf(
-                VisitModel(
-                    id = 1,
-                    organizationName = "هتل قصر طلایی",
-                    visitType = "بازدید حضوری برنامه‌ریزی شده",
-                    visitorName = "علی محمدی",
-                    date = "۱۴۰۳/۰۲/۱۵ , 11:30",
-                    city = "مشهد",
-                    district = "خیابان آزادی",
-                    icon = Icons.Default.DirectionsWalk,
-                    status = Status.PLANNED
-                ),
-                VisitModel(
-                    id = 2,
-                    organizationName = "هتل الماس",
-                    visitType = "بازدید تلفنی",
-                    visitorName = "علی رضایی",
-                    date = "۱۴۰۳/۰۲/۱۷ , 10:30",
-                    city = "مشهد",
-                    district = "خیابان آزادی",
-                    icon = Icons.Default.Phone,
-                    status = Status.DONE
-                ),
-                VisitModel(
-                    id = 3,
-                    organizationName = "هتل پارسیان",
-                    visitType = "بازدید حضوری غیربرنامه‌ریزی شده",
-                    visitorName = "مریم رضایی",
-                    date = "۱۴۰۳/۰۲/۱۶ , 02:30",
-                    city = "مشهد",
-                    district = "احمد آباد",
-                    icon = Icons.Default.DirectionsWalk,
-                    status = Status.CANCELLED
-                ),
-                VisitModel(
-                    id = 4,
-                    organizationName = "سازمان برق",
-                    visitType = "بازدید تلفنی",
-                    visitorName = "مریم مفرد",
-                    date = "۱۴۰۳/۰۲/۱۸ , 10:30",
-                    city = "مشهد",
-                    district = "پاسداران",
-                    icon = Icons.Default.Phone,
-                    status = Status.PLANNED
-                )
-            )
-        )
+        mutableStateOf(demoVisitItems)
     }
 
     val visitorOptions = remember(items, allVisitorsLabel) {
@@ -410,8 +359,7 @@ private fun VisitFiltersRow(
                 ) {
                     Surface(
                         modifier = Modifier
-                            .height(40.dp)
-                            .menuAnchor(),
+                            .height(40.dp),
                         shape = RoundedCornerShape(8.dp),
                         color = appColors.cardBackground,
                         border = BorderStroke(

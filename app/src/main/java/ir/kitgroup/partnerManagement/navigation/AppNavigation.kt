@@ -56,6 +56,7 @@ import ir.kitgroup.partnerManagement.feature.login.ui.SplashScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.AddContractScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractDetailScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.demoContracts
+import ir.kitgroup.partnerManagement.feature.dashboard.ui.MapScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddContractOfferScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferTicketPlanLineDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferTicketPlanScreen
@@ -64,6 +65,7 @@ import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanLineListScr
 import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanListScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.demoOfferLinePlans
 import ir.kitgroup.partnerManagement.feature.offer.ui.demoOfferPlans
+import ir.kitgroup.partnerManagement.feature.organization.ui.demoOrganizations
 
 @Composable
 fun AppNavigation(
@@ -152,6 +154,17 @@ fun AppNavigation(
                 composable(BottomNavItem.Dashboard.route) {
                     DashboardScreen(navController)
                 }
+
+                composable(
+                    route = "map",
+                    arguments = listOf()
+                ) { backStackEntry ->
+                    MapScreen(
+                        organizations = demoOrganizations,   // ← از همان منبع داده مشترک لیست
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+
                 composable(BottomNavItem.Organizations.route) {
                     OrganizationsListScreen(
                         onOrganizationClick = { organizationId ->
@@ -288,6 +301,7 @@ fun AppNavigation(
                         onAssignVisitorClick = {
                             navController.navigate("assign_visitor/$id")
                         },
+
                         onEditVisitorClick = {
                         },
                         onDeleteVisitorClick = {
@@ -304,6 +318,12 @@ fun AppNavigation(
                                     assignmentId = allocation.id
                                 )
                             )
+                        }, onContractClick = { contract ->
+                            navController.navigate(
+                                Screen.ContractDetail.createRoute(contract.id)
+                            )
+                        }, onAddTicketOfferClick = {
+                            navController.navigate(Screen.AddContractOffer.route)
                         },
                         onDisableClick = { /* عملیات غیرفعال‌سازی */ }
                     )
@@ -436,7 +456,13 @@ fun AppNavigation(
                         onNewAssignmentOrganizationClick = {
                             navController.navigate(Screen.AddAdvertisingStandAssignmentOrganization.route)
                         },
-                        onViewItemDetailsClick = { }
+                        onViewItemDetailsClick = { allocation ->
+                            navController.navigate(
+                                Screen.AdvertisingStandAssignmentVisitorDetail.createRoute(
+                                    assignmentId = allocation.id
+                                )
+                            )
+                        }
                     )
                 }
 

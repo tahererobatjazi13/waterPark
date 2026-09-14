@@ -17,10 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,12 +28,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationCity
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -74,14 +69,12 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.components.FilterChip
 import ir.kitgroup.partnerManagement.core.ui.components.FilterSection
 import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
 import ir.kitgroup.partnerManagement.core.ui.components.Rating
 import ir.kitgroup.partnerManagement.core.ui.model.FilterItem
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
-import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -102,63 +95,8 @@ fun OrganizationsListScreen(
     // استیت فیلتر دارای تذکر
     var isWarningOnly by rememberSaveable { mutableStateOf(false) }
 
-    val rawOrganizations = remember {
-        listOf(
-            OrganizationModel(
-                1,
-                "هتل پارسیان آزادی",
-                "مشهد، یوسفی",
-                Status.ACTIVE,
-                5,
-                warningCount = 2
-            ),
-            OrganizationModel(
-                2,
-                "سازمان پالاس",
-                "مشهد، قاسم آباد",
-                Status.ORANGE,
-                4,
-                warningCount = 0
-            ),
-            OrganizationModel(3, "سازمان نوید", "مشهد، پیروزی", Status.ACTIVE, 3, warningCount = 1),
-            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.CLOSED, 5, warningCount = 0),
-            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3, warningCount = 3),
-            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.INACTIVE, 2, warningCount = 0),
-            OrganizationModel(
-                7,
-                "هتل وفا",
-                "مشهد، وکیل آباد",
-                Status.INACTIVE,
-                3,
-                warningCount = 1
-            ),
-            OrganizationModel(
-                8,
-                "سازمان مهندسی",
-                "مشهد، فاطمی",
-                Status.ACTIVE,
-                4,
-                warningCount = 0
-            ),
-            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2, warningCount = 4),
-            OrganizationModel(
-                10,
-                "آپارتمان ملل",
-                "مشهد، ستاری",
-                Status.ACTIVE,
-                3,
-                warningCount = 0
-            ),
-            OrganizationModel(
-                11,
-                "مهمانسرا اسپیناس",
-                "مشهد، مرکزی",
-                Status.INACTIVE,
-                5,
-                warningCount = 0
-            ),
-            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.ORANGE, 2, warningCount = 1)
-        )
+    var rawOrganizations by remember {
+        mutableStateOf(demoOrganizations)
     }
 
     val statusOptions = remember { OrganizationStatus.entries }
@@ -350,7 +288,7 @@ fun OrganizationsFiltersRow(
                 }
             }
 
-            // ۲. فیلتر وضعیت
+            // فیلتر وضعیت
             item {
                 ExposedDropdownMenuBox(
                     expanded = statusExpanded,
@@ -426,7 +364,7 @@ fun OrganizationsFiltersRow(
                 }
             }
 
-            // ۳. فیلتر دارای تذکر (Toggle Chip)
+            // فیلتر دارای تذکر (Toggle Chip)
             item {
                 val warningBorderColor = if (isWarningOnly) appColors.warning else appColors.border
                 val warningBgColor =

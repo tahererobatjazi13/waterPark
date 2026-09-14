@@ -31,7 +31,7 @@ fun AddContractOfferScreen(
 
     var contract by rememberSaveable { mutableStateOf("") }
     var isContractExpanded by remember { mutableStateOf(false) }
-    val contractList = remember { listOf("قراداد همکاری", "قرارداد تابستانه") }
+    val contractList = remember { listOf("قراداد همکاری سلازمان ..", "قرارداد تابستانه هتل ..") }
 
 
     var serialPrefix by rememberSaveable { mutableStateOf("") }
@@ -183,7 +183,7 @@ fun AddContractOfferScreen(
                         )
                     )
 
-                    CustomEditTextField(
+        /*            CustomEditTextField(
                         value = serialTo,
                         onValueChange = { input ->
                             serialTo = input.filter { it.isDigit() }
@@ -195,15 +195,15 @@ fun AddContractOfferScreen(
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number
                         )
-                    )
+                    )*/
 
-                    CustomEditTextField(
+                  /*  CustomEditTextField(
                         value = title,
                         onValueChange = { title = it },
                         label = stringResource(R.string.label_title),
                         placeholder = stringResource(R.string.hint_enter_title),
                         leadingIcon = null, isRequired = false
-                    )
+                    )*/
 
                     Spacer(modifier = Modifier.height(10.dp))
                 }

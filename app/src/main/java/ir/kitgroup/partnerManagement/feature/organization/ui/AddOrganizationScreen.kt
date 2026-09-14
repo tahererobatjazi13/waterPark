@@ -636,7 +636,7 @@ private fun OrganizationFormActionButtons(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddPersonBottomSheet(
+ fun AddPersonBottomSheet(
     personState: AddPersonFormState,
     onDismiss: () -> Unit,
     onSavePerson: () -> Unit
@@ -824,7 +824,7 @@ private fun OrganizationPersonsSummarySection(
 
                     Text(
                         text = if (persons.isEmpty()) {
-                            stringResource(R.string.label_no_person_added)
+                            stringResource(R.string.msg_no_person_found)
                         } else {
                             stringResource(
                                 R.string.label_persons_count,

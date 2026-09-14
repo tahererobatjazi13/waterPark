@@ -16,7 +16,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -41,10 +40,10 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
@@ -52,7 +51,6 @@ import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Smartphone
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -108,18 +106,150 @@ import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignment
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_organization.DetailItem
-import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_visitor.allocationItemIcon
 import ir.kitgroup.partnerManagement.feature.contract.model.ContractUi
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationNotice
 import ir.kitgroup.partnerManagement.feature.organization.model.VisitorOrganization
-import ir.kitgroup.partnerManagement.feature.report.ui.visitor.VerticalDivider
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractListItem
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.outlined.ConfirmationNumber
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Storefront
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_organization.InfoItem
+import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
+import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationOfferTicketModel
+import ir.kitgroup.partnerManagement.feature.organization.model.TicketSerialStatus
+
+
+val demoOrganizations = listOf(
+    OrganizationModel(
+        1,
+        "هتل پارسیان آزادی",
+        "مشهد، یوسفی",
+        Status.ACTIVE,
+        5, 0,
+        36.2845,
+        59.5892
+    ),
+
+    OrganizationModel(
+        2,
+        name = "سازمان پالاس",
+        address = "مشهد، قاسم آباد",
+        Status.ACTIVE,
+        4, 4,
+        36.3562,
+        59.5084
+    ),
+
+    OrganizationModel(
+        3,
+        name = "سازمان نوید",
+        address = "مشهد، پیروزی",
+        status = Status.ACTIVE,
+        3, 3,
+        latitude = 36.3015,
+        longitude = 59.5289
+    ),
+
+    OrganizationModel(
+        4,
+        name = "هتل مرکزی",
+        address = "مشهد، امام رضا",
+        status = Status.ACTIVE,
+        5, 5,
+        latitude = 36.2820,
+        longitude = 59.6190
+    ),
+
+    OrganizationModel(
+        5,
+        name = "کیوسک اطلس",
+        address = "مشهد، کوهسنگی",
+        status = Status.ACTIVE,
+        3, 3,
+        latitude = 36.2736,
+        longitude = 59.5694
+    ),
+
+    OrganizationModel(
+        6,
+        name = "هتل الماس",
+        address = "مشهد، پاستور",
+        status = Status.ACTIVE,
+        2, 2,
+        latitude = 36.2994,
+        longitude = 59.5772
+    ),
+
+    OrganizationModel(
+        7,
+        name = "هتل وفا",
+        address = "مشهد، وکیل آباد",
+        status = Status.ACTIVE,
+        3, 3,
+        latitude = 36.3312,
+        longitude = 59.4851
+    ),
+
+    OrganizationModel(
+        8,
+        name = "سازمان مهندسی",
+        address = "مشهد، فاطمی",
+        status = Status.ACTIVE,
+        4, 4,
+        latitude = 36.3078,
+        longitude = 59.5935
+    ),
+
+    OrganizationModel(
+        9,
+        name = "هتل امیر",
+        address = "مشهد، رضاییه",
+        status = Status.ACTIVE,
+        2, 2,
+        latitude = 36.2768,
+        longitude = 59.6385
+    ),
+
+    OrganizationModel(
+        10,
+        name = "آپارتمان ملل",
+        address = "مشهد، ستاری",
+        status = Status.ACTIVE,
+        3, 3,
+        latitude = 36.3421,
+        longitude = 59.5208
+    ),
+
+    OrganizationModel(
+        11,
+        name = "مهمانسرا اسپیناس",
+        address = "مشهد، مرکزی",
+        status = Status.INACTIVE,
+        5, 5,
+        latitude = 36.3051,
+        longitude = 59.6059
+    ),
+
+    OrganizationModel(
+        12,
+        name = "چالیدره",
+        address = "مشهد، طرقبه",
+        status = Status.INACTIVE,
+        2, 2,
+        latitude = 36.3198,
+        longitude = 59.3482
+    )
+)
+
 
 @Composable
 fun OrganizationDetailScreen(
@@ -133,11 +263,22 @@ fun OrganizationDetailScreen(
     onAssignStandsClick: (Int) -> Unit,
     onAssignContractClick: (Int) -> Unit,
     onViewItemDetailsClick: (AdvertisingStandAssignment) -> Unit,
+    onContractClick: (ContractUi) -> Unit,
+    onAddTicketOfferClick: () -> Unit,
     viewModel: SessionViewModel = hiltViewModel()
 ) {
+    val organization = remember(organizationId) {
+        demoOrganizations.find { it.receationcenterid == organizationId }
+    }
+
     val appColors = LocalPartnerManagementColors.current
     val role by viewModel.userRole.collectAsState()
     val isSupervisor = role == UserRole.SUPERVISOR.name
+
+    val formState = rememberAddOrganizationFormState()
+    val personState = rememberAddPersonFormState()
+
+    var showAddPersonSheet by rememberSaveable { mutableStateOf(false) }
 
     var selectedTab by rememberSaveable { mutableStateOf(OrganizationDetailTab.INFO) }
     val visibleTabs = remember(isSupervisor) {
@@ -149,9 +290,6 @@ fun OrganizationDetailScreen(
 
     // متغیرهای وضعیت برای کنترل دیالوگ‌ها
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
-    val organizationStatusList = remember {
-        listOf("ثبت اولیه", "فعال", "نارنجی", "غیرفعال", "معلق", "بسته شده")
-    }
     var showInactiveReasonDialog by rememberSaveable { mutableStateOf(false) }
     var currentOrganizationStatus by rememberSaveable { mutableStateOf(OrganizationStatus.ACTIVE) }
     var currentInactiveReason by rememberSaveable { mutableStateOf("") }
@@ -302,62 +440,43 @@ fun OrganizationDetailScreen(
             settlementPeriodType = "روزانه",
             startDate = "1405/03/01",
             endDate = "1405/05/31",
-            status = Status.ACTIVE,
+            status = Status.INACTIVE,
             defaultDiscountPercent = 15.0,
             defaultCommissionPercent = 7.5,
             description = "پورسانت بر اساس درصد فروش هر فصل محاسبه و تسویه می‌شود."
-        ),
-        ContractUi(
-            id = "3",
-            organizationName = "هتل هما شیراز",
-            contractTitle = "قرارداد همکاری شش‌ماهه",
-            cooperationModel = "پورسانت و تخفیف",
-            settlementPeriodType = "روزانه",
-            startDate = "1404/10/01",
-            endDate = "1405/03/31",
-            status = Status.ACTIVE,
-            defaultDiscountPercent = 12.0,
-            defaultCommissionPercent = 6.0,
-            description = "تمدید خودکار قرارداد در صورت تحقق سقف فروش تعیین‌شده."
-        ),
-        ContractUi(
-            id = "4",
-            organizationName = "هتل بزرگ تهران",
-            contractTitle = "قرارداد همکاری سالانه",
+        )
+    )
+
+    val demoOrganizationOfferTickets = listOf(
+        OrganizationOfferTicketModel(
+            id = 1,
+            offerPlanName = "فروش بلیط تابستانه",
+            contractName = "قرارداد فروش مهمانپذیر شبنم",
+            organizationName = "مهمانپذیر شبنم",
             cooperationModel = "بلیط تخفیف دار",
-            settlementPeriodType = "ماهانه",
-            startDate = "1404/06/01",
-            endDate = "1405/05/31",
-            status = Status.INACTIVE,
-            defaultDiscountPercent = 8.0,
-            defaultCommissionPercent = 4.0,
-            description = "قرارداد به‌دلیل عدم تمدید در پایان دوره، غیرفعال شده است."
+            serialPrefix = "DC",
+            serialCount = 7,
+            startSerial = 100L,
+            endSerial = 106L,
+            status = TicketSerialStatus.DRAFT,
+            lastUsedSerial = null,
+            title = "DC - قرارداد فروش مهمانپذیر شبنم - فروش بلیط تابستانه -سریال 100 - 106",
+            ownerName = "مدیر سیستم"
         ),
-        ContractUi(
-            id = "5",
-            organizationName = "هتل پردیس کیش",
-            contractTitle = "قرارداد همکاری نوروز ۱۴۰۵",
-            cooperationModel = "پورسانت و تخفیف",
-            settlementPeriodType = "ماهانه",
-            startDate = "1404/12/15",
-            endDate = "1405/02/15",
-            status = Status.INACTIVE,
-            defaultDiscountPercent = 20.0,
-            defaultCommissionPercent = 10.0,
-            description = "پروژه ویژه نوروز با تخفیف پلکانی برای رزروهای گروهی."
-        ),
-        ContractUi(
-            id = "6",
-            organizationName = "هتل آسمان اصفهان",
-            contractTitle = "قرارداد همکاری تابستانه",
+        OrganizationOfferTicketModel(
+            id = 2,
+            offerPlanName = "طرح تخفیف پاییزه",
+            contractName = "قرارداد فروش مهمانپذیر شبنم",
+            organizationName = "مهمانپذیر شبنم",
             cooperationModel = "بلیط تخفیف دار",
-            settlementPeriodType = "هفتگی",
-            startDate = "1405/04/01",
-            endDate = "1405/06/31",
-            status = Status.ACTIVE,
-            defaultDiscountPercent = 10.0,
-            defaultCommissionPercent = 5.0,
-            description = "تخفیف ۱۰٪ برای رزروهای بالای ۵ شب."
+            serialPrefix = "DC",
+            serialCount = 10,
+            startSerial = 107L,
+            endSerial = 116L,
+            status = TicketSerialStatus.ACTIVE,
+            lastUsedSerial = 109L,
+            title = "DC - قرارداد فروش مهمانپذیر شبنم - طرح تخفیف پاییزه -سریال 107 - 116",
+            ownerName = "کاربر بازاریاب"
         )
     )
 
@@ -383,6 +502,7 @@ fun OrganizationDetailScreen(
             description = "مغایرت جزئی در اطلاعات ثبت‌شده حساب کاربری", createdAt = "1405/05/02"
         )
     )
+    val organizationOfferTickets = remember { demoOrganizationOfferTickets }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -429,7 +549,6 @@ fun OrganizationDetailScreen(
                 CompositionLocalProvider(
                     LocalLayoutDirection provides LayoutDirection.Rtl
                 ) {
-
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -458,11 +577,18 @@ fun OrganizationDetailScreen(
 
                 when (selectedTab) {
                     OrganizationDetailTab.INFO -> {
-                        OrganizationBasicInfoTabContent()
+                        OrganizationBasicInfoTabContent(organization = organization!!)
                     }
 
                     OrganizationDetailTab.PERSONS -> {
-                        OrganizationPersonsTabContent(persons = persons)
+                        OrganizationPersonsTabContent(
+                            persons = persons,
+                            onAddPersonClick = {
+
+                                formState.resetPersonFields(personState)
+                                showAddPersonSheet = true
+                            },
+                        )
                     }
 
                     OrganizationDetailTab.VISITOR -> {
@@ -489,7 +615,23 @@ fun OrganizationDetailScreen(
 
                     OrganizationDetailTab.CONTRACTS -> {
                         OrganizationContractsTabContent(contracts = contracts,
-                            onAssignContractClick = { onAssignContractClick(organizationId) })
+                            onAssignContractClick = { onAssignContractClick(organizationId) },
+                            onContractClick = { contract ->
+                                onContractClick(contract)
+                            })
+                    }
+
+                    OrganizationDetailTab.TICKETS -> {
+                        OrganizationTicketsTabContent(
+                            tickets = organizationOfferTickets, // لیست آفرها پاس داده شود
+                            onAddTicketClick = {
+                                onAddTicketOfferClick()
+                            },
+                            onTicketClick = { ticket ->
+                                // اکشن در صورت نیاز به روت خارجی یا کار با دیتای آیتم انتخابی
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
 
                     OrganizationDetailTab.NOTICES -> {
@@ -516,7 +658,7 @@ fun OrganizationDetailScreen(
         )
     }
 
-    // دیالوگ تأیید حذف در انتهای اسکرین
+    // دیالوگ تأیید حذف
     noticePendingDelete?.let { notice ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_warnings),
@@ -553,6 +695,31 @@ fun OrganizationDetailScreen(
     }
 
 
+    if (showAddPersonSheet) {
+        AddPersonBottomSheet(
+            personState = personState,
+            onDismiss = {
+                showAddPersonSheet = false
+            },
+            onSavePerson = {
+                if (personState.name.isNotBlank() && personState.phone.isNotBlank()) {
+                    formState.organizationPersons.add(
+                        PersonOrganization(
+                            name = personState.name.trim(),
+                            mobile = personState.mobile.trim(),
+                            phone = personState.phone.trim(),
+                            status = personState.status,
+                            gender = personState.gender,
+                            description = personState.description.trim()
+                        )
+                    )
+
+                    formState.resetPersonFields(personState)
+                    showAddPersonSheet = false
+                }
+            }
+        )
+    }
     visitorToDelete?.let { visitor ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_visitor),
@@ -672,7 +839,7 @@ fun ChangeOrganizationStatusDialog(
     var inactiveReason by rememberSaveable { mutableStateOf(initialReason) }
     var isError by remember { mutableStateOf(false) }
 
-    // دریافت لیست Enum و متن‌های ترجمه‌شده در اسکوپ Composable
+    // دریافت لیست Enum
     val statusEntries = remember { OrganizationStatus.entries }
     val statusTitles = statusEntries.map { stringResource(it.titleRes) }
 
@@ -698,7 +865,7 @@ fun ChangeOrganizationStatusDialog(
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                // دراپ‌داون انتخاب وضعیت
+                // انتخاب وضعیت
                 DropdownSelectorField(
                     modifier = Modifier.fillMaxWidth(),
                     value = stringResource(selectedStatus.titleRes),
@@ -789,7 +956,7 @@ fun ChangeOrganizationStatusDialog(
 
 
 @Composable
-private fun OrganizationBasicInfoTabContent() {
+private fun OrganizationBasicInfoTabContent(organization: OrganizationModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -798,16 +965,16 @@ private fun OrganizationBasicInfoTabContent() {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         SectionTitle(stringResource(R.string.label_organization_statistical_information))
-        BasicInfoSection()
+        BasicInfoSection(organization)
 
         SectionTitle(stringResource(R.string.label_contact_information))
         ContactInfoSection()
 
         SectionTitle(stringResource(R.string.label_location))
-        AddressMapCard(address = "تهران، بلوار آبشار، پارک آبی")
+        AddressMapCard(address = organization.address)
 
         SectionTitle(stringResource(R.string.label_analytical_information))
-        AnalysisInfoSection()
+        AnalysisInfoSection(grade = organization.grade)
 
         SectionTitle(stringResource(R.string.label_statuses))
         StatusInfoSection()
@@ -824,25 +991,129 @@ private fun OrganizationBasicInfoTabContent() {
 
 @Composable
 private fun OrganizationPersonsTabContent(
-    persons: List<PersonOrganization> = emptyList()
+    persons: List<PersonOrganization> = emptyList(),
+    onAddPersonClick: () -> Unit = {},
 ) {
+    val appColors = LocalPartnerManagementColors.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SectionTitle(stringResource(R.string.label_related_persons_list))
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
 
-            itemsIndexed(persons) { index, person ->
-                RelatedPersonDetailCard(index = index, person = person)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                SectionTitle(title = stringResource(R.string.label_related_persons_list))
+            }
+            FilledTonalButton(
+                onClick = onAddPersonClick,
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = appColors.success,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.label_add_person),
+                    style = typography.titleLarge
+                )
+            }
+        }
+        if (persons.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Filled.WorkspacePremium,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.msg_no_person_found),
+                        style = typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                itemsIndexed(persons) { index, person ->
+                    RelatedPersonDetailCard(index = index, person = person)
+                }
             }
         }
     }
+    /*    Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        )
+       {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    SectionTitle(title = stringResource(R.string.label_related_persons_list))
+                }
+                FilledTonalButton(
+                    onClick = onAddPersonClick,
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = appColors.success,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.label_add_person),
+                        style = typography.titleLarge
+                    )
+                }
+            }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+
+                itemsIndexed(persons) { index, person ->
+                    RelatedPersonDetailCard(index = index, person = person)
+                }
+            }
+        }*/
 }
 
 @Composable
@@ -936,33 +1207,7 @@ private fun OrganizationVisitorTabContent(
                 }
             }
         }
-//        AssignVisitor(
-//            onAssignVisitorClick = onAssignVisitorClick
-//        )
     }
-}
-
-@Composable
-private fun AssignVisitor(
-    onAssignVisitorClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    CustomButton(
-        text = stringResource(R.string.label_assigning_visitor_organization),
-        onClick = onAssignVisitorClick,
-        fillMaxWidth = true,
-        height = 46.dp,
-        cornerRadius = 12.dp,
-        textStyle = typography.titleLarge,
-        icon = Icons.Default.Add,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = appColors.success,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        modifier = modifier
-    )
 }
 
 @Composable
@@ -1090,7 +1335,7 @@ private fun OrganizationNoticeCard(
 
                     Text(
                         text = "تذکر ${index + 1}: ${notice.type}",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -1130,12 +1375,12 @@ private fun OrganizationNoticeCard(
             ) {
                 Text(
                     text = "توضیحات:",
-                    style = MaterialTheme.typography.labelMedium,
+                    style = typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = notice.description.ifBlank { "-" },
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -1278,33 +1523,8 @@ private fun OrganizationStandsTabContent(
             }
         }
 
-        // AssignStands(onAssignStandsClick = onAssignStandsClick)
     }
 }
-
-/*
-@Composable
-private fun AssignStands(
-    onAssignStandsClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    CustomButton(
-        text = stringResource(R.string.label_assignment_stands_to_organization),
-        onClick = onAssignStandsClick,
-        fillMaxWidth = true,
-        height = 46.dp,
-        cornerRadius = 12.dp,
-        textStyle = typography.titleLarge,
-        icon = Icons.Default.Add,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = appColors.success,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        modifier = modifier
-    )
-}*/
 
 @Composable
 private fun AdvertisingStandAssignmentCard(
@@ -1314,9 +1534,6 @@ private fun AdvertisingStandAssignmentCard(
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
-    val itemIcon = allocationItemIcon(
-        advertisingStandAssignment.itemIconName
-    )
 
     Card(
         modifier = modifier
@@ -1386,8 +1603,10 @@ private fun AdvertisingStandAssignmentCard(
 @Composable
 private fun OrganizationContractsTabContent(
     contracts: List<ContractUi>,
-    onAssignContractClick: () -> Unit = {}
-) {
+    onAssignContractClick: () -> Unit = {},
+    onContractClick: (ContractUi) -> Unit,
+
+    ) {
     val appColors = LocalPartnerManagementColors.current
 
     Column(
@@ -1464,7 +1683,7 @@ private fun OrganizationContractsTabContent(
                 ) { _, contract ->
                     ContractListItem(
                         contract = contract,
-                        onClick = { /* onContractClick(contract) */ }
+                        onClick = { onContractClick(contract) }
                     )
                 }
             }
@@ -1472,18 +1691,305 @@ private fun OrganizationContractsTabContent(
     }
 }
 
+@Composable
+fun OrganizationTicketsTabContent(
+    tickets: List<OrganizationOfferTicketModel>,
+    onAddTicketClick: () -> Unit,
+    onTicketClick: (OrganizationOfferTicketModel) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var selectedTicketForDetail by remember { mutableStateOf<OrganizationOfferTicketModel?>(null) }
+    val appColors = LocalPartnerManagementColors.current
+
+    Column(modifier = modifier.fillMaxSize()) {
+        // هدر تب شامل عنوان و دکمه افزودن
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Box(modifier = Modifier.weight(1f)) {
+                SectionTitle(title = stringResource(R.string.label_tickets_offers_list))
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            FilledTonalButton(
+                onClick = onAddTicketClick,
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = appColors.success,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.label_contract_offer),
+                    style = typography.titleLarge
+                )
+            }
+        }
+
+        if (tickets.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.ConfirmationNumber,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.msg_no_tickets_offers_found),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(tickets, key = { it.id }) { ticket ->
+                    TicketOfferCard(
+                        ticket = ticket,
+                        onClick = {
+                            selectedTicketForDetail = ticket
+                            onTicketClick(ticket)
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    // دیالوگ نمایش جزئیات کامل آفر با کلیک روی کارت
+    selectedTicketForDetail?.let { ticket ->
+        TicketOfferDetailDialog(
+            ticket = ticket,
+            onDismiss = { selectedTicketForDetail = null }
+        )
+    }
+}
+
+@Composable
+fun TicketOfferCard(
+    ticket: OrganizationOfferTicketModel,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val appColors = LocalPartnerManagementColors.current
+
+    Card(
+        onClick = onClick,
+
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
+        border = BorderStroke(0.5.dp, appColors.border)
+    )
+    {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = ticket.offerPlanName,
+                    style = typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                StatusBadge(status = Status.ACTIVE)
+
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = ticket.title,
+                style = typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 10.dp),
+                thickness = 0.6.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.label_serial_range),
+                        style = typography.labelSmall,
+                        color = appColors.textSecondary
+                    )
+                    Text(
+                        text = "${ticket.serialPrefix} : ${ticket.startSerial} - ${ticket.endSerial}",
+                        style = typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = stringResource(R.string.label_serial_count),
+                        style = typography.labelSmall,
+                        color = appColors.textSecondary
+                    )
+                    Text(
+                        text = "${ticket.serialCount} عدد",
+                        style = typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TicketOfferDetailDialog(
+    ticket: OrganizationOfferTicketModel,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.action_close))
+            }
+        },
+        title = {
+            Text(
+                text = stringResource(R.string.label_ticket_offer_detail),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                DetailItemRow(
+                    label = stringResource(R.string.label_offer_plan),
+                    value = ticket.offerPlanName
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_contract),
+                    value = ticket.contractName
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_org_name),
+                    value = ticket.organizationName
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_cooperation_model),
+                    value = ticket.cooperationModel
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_serial_prefix),
+                    value = ticket.serialPrefix
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_serial_count),
+                    value = ticket.serialCount.toString()
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_start_serial),
+                    value = ticket.startSerial.toString()
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_end_serial),
+                    value = ticket.endSerial.toString()
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_serial_status),
+                    value = stringResource(ticket.status.labelRes)
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_last_used_serial),
+                    value = ticket.lastUsedSerial?.toString() ?: "---"
+                )
+                DetailItemRow(
+                    label = stringResource(R.string.label_owner),
+                    value = ticket.ownerName.ifEmpty { "---" })
+                DetailItemRow(label = stringResource(R.string.label_title), value = ticket.title)
+            }
+        }
+    )
+}
+
+@Composable
+private fun DetailItemRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = "$label:",
+            style = MaterialTheme.typography.bodySmall,
+            color = LocalPartnerManagementColors.current.textSecondary,
+            modifier = Modifier.weight(0.4f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(0.6f)
+        )
+    }
+}
+
 
 @Composable
 private fun BasicInfoSection(
+    organization: OrganizationModel,
     totalNoticesCount: Int = 3,
-    assignedStandsCount: Int = 5
+    assignedStandsCount: Int = 5,
+    totalTicketsCount: Int = 500,
+    usedTicketsCount: Int = 320
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
+    val remainingTicketsCount = (totalTicketsCount - usedTicketsCount).coerceAtLeast(0)
+    val usageProgress =
+        if (totalTicketsCount > 0) usedTicketsCount.toFloat() / totalTicketsCount else 0f
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-        // ۱. کارت‌های متریک آماری بالا (بدون تغییر)
+        // کارت‌های متریک ردیف اول: اخطارها و استندها
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -1509,9 +2015,143 @@ private fun BasicInfoSection(
             )
         }
 
+        // کارت اختصاصی وضعیت بلیط‌ها / آفرها
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = colors.primary.copy(alpha = 0.04f)
+            ),
+            border = BorderStroke(1.dp, colors.primary.copy(alpha = 0.2f))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // هدر کارت: عنوان و کل بلیط‌ها
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(colors.primary.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ConfirmationNumber,
+                                contentDescription = null,
+                                tint = colors.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Text(
+                            text = stringResource(R.string.label_assigned_tickets),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.onSurface
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "$totalTicketsCount",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = colors.primary
+                        )
+                        Text(
+                            text = stringResource(R.string.label_unit_count),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = appColors.textSecondary,
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        )
+                    }
+                }
+
+                // نوار پیشرفت درصد استفاده
+                LinearProgressIndicator(
+                    progress = { usageProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = colors.primary,
+                    trackColor = colors.outlineVariant.copy(alpha = 0.3f)
+                )
+
+                // ردیف جزئیات: تعداد استفاده‌شده و باقی‌مانده
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // استفاده شده
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(colors.primary)
+                        )
+                        Text(
+                            text = stringResource(R.string.label_used_count),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = appColors.textSecondary
+                        )
+                        Text(
+                            text = "$usedTicketsCount عدد",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.onSurface
+                        )
+                    }
+
+                    // باقی‌مانده
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(appColors.success)
+                        )
+                        Text(
+                            text = stringResource(R.string.label_remaining_count),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = appColors.textSecondary
+                        )
+                        Text(
+                            text = "$remainingTicketsCount عدد",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = appColors.success
+                        )
+                    }
+                }
+            }
+        }
+
         SectionTitle(stringResource(R.string.label_organization_basic_information))
 
-        // ۲. کادر یکپارچه اطلاعات پایه سازمان
+        // کادر یکپارچه اطلاعات پایه سازمان
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
@@ -1521,7 +2161,7 @@ private fun BasicInfoSection(
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
                 InfoRowItem(
                     title = stringResource(R.string.label_organization_name),
-                    value = "هتل آبی پارسیان",
+                    value = organization.name,
                     icon = Icons.Filled.Business,
                     isHighlighted = true
                 )
@@ -1596,13 +2236,12 @@ private fun BasicInfoSection(
                 ) {
                     Text(
                         text = stringResource(R.string.label_status),
-                        style = typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = appColors.textSecondary
                     )
 
                     StatusBadge(status = Status.ACTIVE)
                 }
-
             }
         }
     }
@@ -1665,50 +2304,115 @@ private fun ContactInfoSection() {
 }
 
 @Composable
-private fun AnalysisInfoSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+private fun AnalysisInfoSection(
+    grade: Int,
+    ticketSaleCount: String = "1250",
+    customerCapacity: String = "350 نفر",
+    modifier: Modifier = Modifier
+) {
+    val colors = MaterialTheme.colorScheme
 
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        // ── بخش درجه‌بندی ──
         GradeSelector(
-            grade = 4
+            grade = grade
         )
 
-        TwoColumnInfoRow(
-            start = {
-                InfoCard(
+        // ── کارت یکپارچه اطلاعات آماری/تحلیلی ──
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = colors.surface
+            ),
+            border = BorderStroke(1.dp, colors.outlineVariant)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                // سابقه تعداد فروش بلیت
+                InfoRowItem(
                     title = stringResource(R.string.label_ticket_sale_count_history),
-                    value = "1250",
-                    icon = Icons.Filled.Star
+                    value = ticketSaleCount,
+                    icon = Icons.Outlined.ConfirmationNumber,
+                    isHighlighted = false
                 )
-            },
-            end = {
-                InfoCard(
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 14.dp),
+                    thickness = 0.8.dp,
+                    color = colors.outlineVariant.copy(alpha = 0.5f)
+                )
+
+                // ظرفیت مشتریان
+                InfoRowItem(
                     title = stringResource(R.string.label_customer_capacity),
-                    value = "350 نفر",
-                    icon = Icons.Filled.Groups
+                    value = customerCapacity,
+                    icon = Icons.Outlined.Groups,
+                    isHighlighted = false
                 )
             }
-        )
+        }
     }
 }
 
-@Composable
-private fun StatusInfoSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
-        TwoColumnInfoRow(
-            start = {
-                BooleanStatusCard(
-                    title = stringResource(R.string.label_foreign_guest_reception),
-                    enabled = true
-                )
-            },
-            end = {
-                BooleanStatusCard(
-                    title = stringResource(R.string.label_desire_receive_advertising_stands),
-                    enabled = false
-                )
-            }
-        )
+@Composable
+private fun StatusInfoSection(
+    hasForeignGuests: Boolean = false,
+    wantsAdvertisingStands: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    val colors = MaterialTheme.colorScheme
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colors.surface
+        ),
+        border = BorderStroke(1.dp, colors.outlineVariant)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+        ) {
+            // ── پذیرش مهمان خارجی ──
+            InfoRowItem(
+                title = stringResource(R.string.label_foreign_guest_reception),
+                value = if (hasForeignGuests) {
+                    stringResource(R.string.label_has)
+                } else {
+                    stringResource(R.string.label_has_not)
+                },
+                icon = Icons.Outlined.Public,
+                isHighlighted = hasForeignGuests
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 14.dp),
+                thickness = 0.8.dp,
+                color = colors.outlineVariant.copy(alpha = 0.5f)
+            )
+
+            // ── تمایل به دریافت استند تبلیغاتی ──
+            InfoRowItem(
+                title = stringResource(R.string.label_desire_receive_advertising_stands),
+                value = if (wantsAdvertisingStands) {
+                    stringResource(R.string.label_has)
+                } else {
+                    stringResource(R.string.label_has_not)
+                },
+                icon = Icons.Outlined.Storefront,
+                isHighlighted = wantsAdvertisingStands
+            )
+        }
     }
 }
 
@@ -1736,7 +2440,6 @@ fun StatMetricCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // آیکون در کانتینر مربعی با گوشه‌های گرد و پس‌زمینه محو رنگ اصلی
             Box(
                 modifier = Modifier
                     .size(42.dp)
@@ -1754,14 +2457,13 @@ fun StatMetricCard(
 
             Spacer(Modifier.width(10.dp))
 
-            // بخش متنی و عدد برجسته
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
                     text = title,
-                    style = typography.labelSmall,
+                    style = typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
@@ -1818,102 +2520,16 @@ private fun InfoRowItem(
             )
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = typography.labelMedium,
                 color = colors.onSurfaceVariant
             )
         }
 
         Text(
             text = value.ifBlank { "—" },
-            style = if (isHighlighted) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isHighlighted) FontWeight.ExtraBold else FontWeight.Medium,
+            style = if (isHighlighted) typography.titleLarge else typography.labelLarge,
             color = if (isHighlighted) colors.primary else colors.onSurface
         )
-    }
-}
-
-@Composable
-private fun InfoCard(
-    modifier: Modifier = Modifier,
-    title: String,
-    value: String,
-    icon: ImageVector,
-    isMainTitle: Boolean = false
-) {
-    val colors = MaterialTheme.colorScheme
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.surface
-        ),
-        border = BorderStroke(1.dp, colors.outlineVariant)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = if (isMainTitle) 14.dp else 12.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(if (isMainTitle) 38.dp else 30.dp)
-                    .background(colors.primaryContainer, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = colors.primary,
-                    modifier = Modifier.size(if (isMainTitle) 20.dp else 15.dp)
-                )
-            }
-
-            Spacer(Modifier.width(10.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = title,
-                    style = typography.labelSmall,
-                    color = colors.onSurfaceVariant,
-                    maxLines = 1
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                Text(
-                    text = value.ifBlank { "-" },
-                    style = if (isMainTitle) typography.titleMedium else typography.titleSmall,
-                    color = colors.onSurface,
-                    maxLines = if (isMainTitle) 2 else 1
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TwoColumnInfoRow(
-    start: @Composable () -> Unit,
-    end: @Composable () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Box(modifier = Modifier.weight(1f)) {
-            start()
-        }
-
-        Box(modifier = Modifier.weight(1f)) {
-            end()
-        }
     }
 }
 
@@ -1974,42 +2590,6 @@ private fun AddressMapCard(
         }
     }
 }
-
-@Composable
-private fun BooleanStatusCard(
-    title: String,
-    enabled: Boolean
-) {
-    val colors = MaterialTheme.colorScheme
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.surface
-        ),
-        border = BorderStroke(1.dp, colors.outlineVariant)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Text(
-                text = title,
-                style = typography.labelSmall,
-                color = colors.onSurfaceVariant
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = if (enabled) stringResource(R.string.label_has) else stringResource(R.string.label_has_not),
-                style = typography.titleSmall,
-                color = colors.onSurface
-            )
-        }
-    }
-}
-
 
 @Composable
 private fun RelatedPersonDetailCard(
@@ -2105,49 +2685,37 @@ private fun RelatedVisitorCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // ── ردیف اول: شماره + نام | StatusBadge | دکمه‌های اکشن ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // شماره و نام به سمت راست (شروع)
                 Text(
                     text = "${index + 1}. ${visitor.name}".trim(),
-                    style = typography.titleMedium,
+                    style = typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
-
-                // بج وضعیت
                 StatusBadge(visitor.status)
-
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // ── تاریخ شروع و پایان ──
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalAlignment = Alignment.Start
             ) {
+                // تاریخ شروع
                 VisitorStatItem(
-                    date = visitor.startDate,
                     label = stringResource(R.string.label_start_date),
-                    icon = Icons.Default.CalendarMonth,
-                    modifier = Modifier.weight(1f)
+                    date = visitor.startDate,
+                    icon = Icons.Default.CalendarMonth
                 )
 
-                VerticalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    thickness = 1.dp
-                )
-
+                // تاریخ خاتمه
                 VisitorStatItem(
-                    date = visitor.endDate,
                     label = stringResource(R.string.label_end_date),
-                    icon = Icons.Default.CalendarMonth,
-                    modifier = Modifier.weight(1f)
+                    date = visitor.endDate,
+                    icon = Icons.Default.CalendarMonth
                 )
             }
 
@@ -2161,7 +2729,6 @@ private fun RelatedVisitorCard(
                 ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 ActionIconButton(
                     icon = Icons.Default.Edit,
                     contentDescription = stringResource(R.string.label_edit),
@@ -2177,7 +2744,6 @@ private fun RelatedVisitorCard(
                     tint = MaterialTheme.colorScheme.error,
                     backgroundColor = MaterialTheme.colorScheme.errorContainer
                 )
-
             }
         }
     }
@@ -2185,47 +2751,42 @@ private fun RelatedVisitorCard(
 
 
 @Composable
-fun VisitorStatItem(
-    date: String,
+private fun VisitorStatItem(
     label: String,
+    date: String,
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.height(IntrinsicSize.Min),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    val colors = MaterialTheme.colorScheme
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                text = label,
-                style = typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = colors.onSurfaceVariant
+        )
 
-        }
+        // عنوان (مثلاً: تاریخ شروع:)
+        Text(
+            text = "$label:",
+            style = typography.labelMedium,
+            color = colors.onSurfaceVariant
+        )
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = date,
-                style = typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
+        // مقدار تاریخ
+        Text(
+            text = date.ifBlank { "—" },
+            style = typography.labelLarge,
+            color = colors.onSurface
+        )
     }
 }
+
 
 @Composable
 private fun DescriptionCard(
@@ -2301,7 +2862,6 @@ private fun ActionButtons(
     onEdit: () -> Unit,
     onDetermination: () -> Unit
 ) {
-    val colors = MaterialTheme.colorScheme
 
     Row(
         modifier = Modifier.fillMaxWidth(),

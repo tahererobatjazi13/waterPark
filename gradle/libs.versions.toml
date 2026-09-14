@@ -21,7 +21,8 @@ datastore = "1.1.1"
 persianDate = "1.7.1"
 vico = "1.14.0"
 constraintlayout = "2.2.1"
-
+osmdroid = "6.1.20"
+preference = "1.2.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -60,6 +61,10 @@ vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 vico-core = { group = "com.patrykandpatrick.vico", name = "core", version.ref = "vico" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+
+osmdroid = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroid" }
+androidx-preference = { group = "androidx.preference", name = "preference-ktx", version.ref = "preference" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

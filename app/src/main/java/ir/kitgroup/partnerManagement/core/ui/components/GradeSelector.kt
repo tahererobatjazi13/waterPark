@@ -1,5 +1,6 @@
 package ir.kitgroup.partnerManagement.core.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.SideCurvedHeaderShape
 
 @Composable
 fun GradeSelector(
@@ -50,10 +52,19 @@ fun GradeSelector(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .border(1.dp, appColors.border, RoundedCornerShape(12.dp))
+                .background(
+                    color = colors.surface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = appColors.border,
+                    shape = RoundedCornerShape(12.dp)
+                )
                 .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+            verticalAlignment = Alignment.CenterVertically
+        )
+        {
             for (i in 5 downTo 1) {
                 val isSelected = i <= normalizedGrade
 

@@ -69,7 +69,7 @@ fun DashboardScreen(
         SummaryCardData(
             Icons.Filled.Call,
             Blue,
-            "27",
+            "16",
             stringResource(R.string.label_phone_calls),
             Blue
         )
@@ -164,7 +164,9 @@ fun DashboardScreen(
                             }
                         },
                         onReportClick = { navController.navigate(Screen.ReportMenu.route) },
-                        onMapClick = {/* navController.navigate("register_visit/physical")*/ }
+                        onMapClick = { navController.navigate(
+                            Screen.Map.route
+                        ) }
                     )
                 }
                 item { Spacer(Modifier.width(6.dp)) }
@@ -226,7 +228,7 @@ private fun DashboardHeader() {
             color = MaterialTheme.colorScheme.onPrimary,
             style = typography.titleLarge
         )
-        NotificationIcon()
+     //   NotificationIcon()
     }
 }
 
@@ -304,7 +306,7 @@ private fun SummaryCard(data: SummaryCardData, modifier: Modifier) {
             Text(
                 data.value,
                 color = MaterialTheme.colorScheme.onSurface,
-                style = typography.titleLarge
+                style = typography.displayMedium
             )
 
             Text(

@@ -1,9 +1,8 @@
 package ir.kitgroup.partnerManagement.feature.visits.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,12 +18,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Subject
@@ -42,8 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,6 +55,54 @@ import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.feature.visits.model.VisitDetailModel
+import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
+
+val demoVisitItems = listOf(
+    VisitModel(
+        id = 1,
+        organizationName = "هتل قصر طلایی",
+        visitType = "بازدید حضوری برنامه‌ریزی شده",
+        visitorName = "علی محمدی",
+        date = "۱۴۰۳/۰۲/۱۵ , 11:30",
+        city = "مشهد",
+        district = "خیابان آزادی",
+        icon = Icons.Default.DirectionsWalk,
+        status = Status.PLANNED
+    ),
+    VisitModel(
+        id = 2,
+        organizationName = "هتل الماس",
+        visitType = "بازدید تلفنی",
+        visitorName = "علی رضایی",
+        date = "۱۴۰۳/۰۲/۱۷ , 10:30",
+        city = "مشهد",
+        district = "خیابان آزادی",
+        icon = Icons.Default.Phone,
+        status = Status.DONE
+    ),
+    VisitModel(
+        id = 3,
+        organizationName = "هتل پارسیان",
+        visitType = "بازدید حضوری غیربرنامه‌ریزی شده",
+        visitorName = "مریم رضایی",
+        date = "۱۴۰۳/۰۲/۱۶ , 02:30",
+        city = "مشهد",
+        district = "احمد آباد",
+        icon = Icons.Default.DirectionsWalk,
+        status = Status.CANCELLED
+    ),
+    VisitModel(
+        id = 4,
+        organizationName = "سازمان برق",
+        visitType = "بازدید تلفنی",
+        visitorName = "مریم مفرد",
+        date = "۱۴۰۳/۰۲/۱۸ , 10:30",
+        city = "مشهد",
+        district = "پاسداران",
+        icon = Icons.Default.Phone,
+        status = Status.PLANNED
+    )
+)
 
 @Composable
 fun VisitDetailScreen(
@@ -67,21 +111,27 @@ fun VisitDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+
     val visit = remember(visitId) {
+        val selected = demoVisitItems.find { it.id == visitId } ?: demoVisitItems.first()
+        val dateParts = selected.date.split(",")
+        val pureDate = dateParts.getOrNull(0)?.trim() ?: selected.date
+        val pureTime = dateParts.getOrNull(1)?.trim() ?: "۱۰:۰۰"
+
         VisitDetailModel(
-            id = visitId,
-            title = "هتل اسپیناس پالاس",
-            type = "حضوری غیر برنامه ریزی شده",
-            subject = "وصول مطالبات",
-            rating = 3,
-            person = "محمد رضایی",
-            scheduledDate = "۱۴۰۳/۰۳/10",
-            date = "۱۴۰۳/۰۳/۲۴",
-            time = "۱۰:۳۰",
-            status = Status.DONE,
-            icon = Icons.Default.DirectionsWalk,
-            location = "تهران سعادت آباد",
-            description = "جلسه با مسئول بازاریابی هتل برگزار شد"
+            id = selected.id,
+            title = selected.organizationName,
+            type = selected.visitType,
+            subject = if (selected.visitType.contains("تلفنی")) "پیگیری و مذاکره تلفنی" else "بررسی استند و عقد قرارداد",
+            rating = 4,
+            person = selected.visitorName,
+            scheduledDate = pureDate,
+            date = pureDate,
+            time = pureTime,
+            status = selected.status,
+            icon = selected.icon,
+            location = "${selected.city}، ${selected.district}",
+            description = "گزارش ثبت شده برای ${selected.organizationName} توسط ${selected.visitorName}."
         )
     }
 
@@ -139,8 +189,7 @@ private fun OrganizationInfoCard(visit: VisitDetailModel) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = appColors.cardBackground
@@ -154,28 +203,22 @@ private fun OrganizationInfoCard(visit: VisitDetailModel) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            /*  Image(
-                  painter = painterResource(R.drawable.ic_logo),
-                  contentDescription = null,
-                  modifier = Modifier
-                      .size(110.dp)
-                      .clip(RoundedCornerShape(14.dp)),
-                  contentScale = ContentScale.Crop
-              )
-              Spacer(Modifier.width(12.dp))*/
-
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 12.dp),
-                horizontalAlignment = Alignment.End
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.Start
             ) {
-                Text(
-                    text = visit.title,
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    style = typography.titleLarge,
-                    color = appColors.textPrimary
-                )
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = visit.title,
+                        style = typography.titleLarge,
+                        color = appColors.textPrimary
+                    )
+                    StatusBadge(visit.status)
+                }
 
                 Spacer(Modifier.height(6.dp))
                 LocationRow(
@@ -193,8 +236,7 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = appColors.cardBackground
@@ -208,10 +250,10 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
             InfoRow(
                 label = stringResource(R.string.label_visit_type),
                 value = visit.type,
-                icon = Icons.Default.Category
+                icon = visit.icon
             )
 
-            HorizontalDivider(color = appColors.border)
+            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
 
             InfoRow(
                 label = stringResource(R.string.label_visit_subject),
@@ -219,7 +261,7 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
                 icon = Icons.Default.Subject
             )
 
-            HorizontalDivider(color = appColors.border)
+            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
 
             InfoRow(
                 label = stringResource(R.string.label_visitor_name),
@@ -227,15 +269,15 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
                 icon = Icons.Default.Badge
             )
 
-            HorizontalDivider(color = appColors.border)
+            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
 
             InfoRow(
                 label = stringResource(R.string.label_visit_Scheduled_date),
-                value = visit.date,
+                value = visit.scheduledDate,
                 icon = Icons.Default.Event
             )
 
-            HorizontalDivider(color = appColors.border)
+            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
 
             InfoRow(
                 label = stringResource(R.string.label_visit_real_date),
@@ -243,20 +285,12 @@ private fun VisitorInfoCard(visit: VisitDetailModel) {
                 icon = Icons.Default.EventAvailable
             )
 
-            HorizontalDivider(color = appColors.border)
+            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
 
             InfoRow(
                 label = stringResource(R.string.label_visit_time),
                 value = visit.time,
                 icon = Icons.Default.Schedule
-            )
-
-            HorizontalDivider(color = appColors.border)
-
-            InfoRow(
-                label = stringResource(R.string.label_status),
-                icon = Icons.Default.CheckCircle,
-                status = visit.status
             )
         }
     }
@@ -300,10 +334,9 @@ private fun InfoRow(
 
         if (status != null) {
             StatusBadge(status)
-
         } else {
             Text(
-                text = value!!,
+                text = value ?: "-",
                 style = typography.labelMedium,
                 color = appColors.textPrimary,
                 maxLines = 1,
@@ -319,8 +352,7 @@ private fun LocationCard() {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = appColors.cardBackground
@@ -359,7 +391,6 @@ private fun LocationCard() {
     }
 }
 
-
 @Composable
 private fun DescriptionCard(
     description: String
@@ -375,7 +406,8 @@ private fun DescriptionCard(
         border = BorderStroke(
             width = 0.7.dp,
             color = appColors.border
-        )    ) {
+        )
+    ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.Top

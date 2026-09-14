@@ -8,18 +8,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.*
-import saman.zamani.persiandate.PersianDate
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationBottomSheet
+import saman.zamani.persiandate.PersianDate
 import java.util.Calendar
 import java.util.Locale
 
@@ -66,18 +64,18 @@ fun AddCardScreen(
 
     val collaborativelist = remember {
         listOf(
-            OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5),
-            OrganizationModel(2, " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4),
-            OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
-            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
-            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3),
-            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2),
-            OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3),
-            OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4),
-            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2),
-            OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3),
-            OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5),
-            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2)
+            OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(2, " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4  , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2 , latitude =36.3109,longitude =59.5492)
         )
     }
 

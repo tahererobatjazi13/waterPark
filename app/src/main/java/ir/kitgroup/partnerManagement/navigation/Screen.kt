@@ -10,6 +10,7 @@ sealed class Screen(val route: String) {
     data object Profile : Screen("profile")
 
     data object Login : Screen("login")
+    data object Map : Screen("map")
 
     data object RegisterVisit : Screen("register_visit?visitId={visitId}") {
 

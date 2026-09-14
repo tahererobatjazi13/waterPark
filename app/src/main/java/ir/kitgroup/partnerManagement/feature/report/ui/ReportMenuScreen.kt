@@ -59,13 +59,10 @@ fun ReportMenuScreen(
         },
         containerColor = MaterialTheme.colorScheme.primary
     ) { innerPadding ->
-
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding()
-                ),
+                .padding(innerPadding),
             shape = RoundedCornerShape(
                 topStart = 24.dp,
                 topEnd = 24.dp
@@ -92,8 +89,10 @@ private fun AdvertisingMenuContent(
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(
-            horizontal = 16.dp,
-            vertical = 16.dp
+            start = 16.dp,
+            end = 16.dp,
+            top = 16.dp,
+            bottom = 24.dp
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -161,7 +160,7 @@ private fun AdvertisingMenuCard(
         ),
         border = BorderStroke(
             width = 0.7.dp,
-            color = colorScheme.outline.copy(alpha = 0.15f) // اصلاح شفافیت بوردر برای ظاهر تمیزتر
+            color = colorScheme.outline.copy(alpha = 0.15f)
         )
     ) {
         Row(
@@ -184,7 +183,7 @@ private fun AdvertisingMenuCard(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconColor,
-                        modifier = Modifier.size(26.dp) // سایز بهینه آیکون داخلی
+                        modifier = Modifier.size(26.dp)
                     )
                 }
             }
@@ -221,9 +220,9 @@ private fun AdvertisingMenuCard(
     }
 }
 
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
+@Preview(showBackground = true, widthDp = 800, heightDp = 360)
 @Composable
-private fun ReportMenuScreenPreview() {
+private fun ReportMenuScreenLandscapePreview() {
     AppScreenPreview {
         ReportMenuScreen(
             onBackClick = {},

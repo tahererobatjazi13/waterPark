@@ -276,7 +276,6 @@ private fun AllocationCard(
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
-    val itemIcon = allocationItemIcon(advertisingStandAssignment.itemIconName)
 
     Card(
         modifier = modifier

@@ -34,29 +34,21 @@ fun AssignVisitorScreen(
     val appColors = LocalPartnerManagementColors.current
     var selectedOrganization by rememberSaveable { mutableStateOf<OrganizationModel?>(null) }
     var showOrganizationSheet by remember { mutableStateOf(false) }
-
-    val organizationList = listOf(
-
-        OrganizationModel(
-            1,
-            "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE,
-            5
-        ),
-        OrganizationModel(
-            2,
-            " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4
-        ),
-        OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
-        OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
-        OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3),
-        OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2),
-        OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3),
-        OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4),
-        OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2),
-        OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3),
-        OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5),
-        OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2)
-    )
+    val organizationList =
+        listOf(
+            OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(2, " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4  , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2 , latitude =36.3109,longitude =59.5492)
+        )
 
     var visitor by rememberSaveable { mutableStateOf("") }
     var isVisitorExpanded by remember { mutableStateOf(false) }

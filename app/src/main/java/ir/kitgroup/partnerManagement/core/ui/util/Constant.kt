@@ -89,10 +89,12 @@ enum class OrganizationDetailTab(
     CONTRACTS(
         titleRes = R.string.tab_organization_contracts
     ),
+    TICKETS(titleRes =R.string.tab_tickets_offers),
 
     NOTICES(
         titleRes = R.string.tab_organization_notices
     )
+
 }
 
 

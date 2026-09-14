@@ -1,6 +1,7 @@
 package ir.kitgroup.partnerManagement.feature.offer.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,9 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
@@ -42,7 +44,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
-import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -63,33 +64,67 @@ fun OfferTicketPlanListScreen(
     val isSupervisor = role == UserRole.SUPERVISOR.name
 
     Scaffold(
-        topBar = {
+        containerColor = MaterialTheme.colorScheme.background, // رنگ زمینه منطبق با هدر
+        floatingActionButton = {
+            if (isSupervisor) {
+                ExtendedFloatingActionButton(
+                    onClick = onAddClick,
+                    containerColor = LocalPartnerManagementColors.current.success,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(52.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.label_new_plan),
+                            style = typography.titleLarge
+                        )
+                    }
+                }
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primary)
+        ) {
+            // هدر بالای صفحه بدون پدینگ ناخواسته
             CustomHeader(
                 title = R.string.label_offer_ticket_plans,
                 showBackButton = false
             )
-        },
-        containerColor = MaterialTheme.colorScheme.primary
-    ) { innerPadding ->
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                if (isSupervisor) {
-                    OfferPlansHeader(onAddClick = onAddClick)
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
 
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = appColors.screenBackground
+            ) {
+                // تمام پدینگ‌ها و فاصله FAB مستقیماً درون LazyColumn مدیریت می‌شوند
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 16.dp,
+                        bottom = if (isSupervisor) {
+                            paddingValues.calculateBottomPadding() + 16.dp
+                        } else {
+                            16.dp
+                        }
+                    ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(
@@ -101,11 +136,15 @@ fun OfferTicketPlanListScreen(
                             onClick = { onPlanClick(plan) }
                         )
                     }
+                    item {
+                        Spacer(modifier = Modifier.height(60.dp))
+                    }
                 }
             }
         }
     }
 }
+
 
 @Composable
 private fun OfferPlanListItem(
@@ -245,40 +284,6 @@ private fun PlanDateRangeDisplay(
 }
 
 
-@Composable
-private fun OfferPlansHeader(
-    onAddClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = stringResource(R.string.label_create_plan_offer),
-            style = typography.titleLarge,
-            color = appColors.textPrimary
-        )
-
-        CustomButton(
-            text = stringResource(R.string.label_new_plan),
-            onClick = onAddClick,
-            fillMaxWidth = false,
-            height = 38.dp,
-            textStyle = typography.titleLarge,
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-            icon = Icons.Default.Add,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = appColors.success,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        )
-    }
-}
-
 fun demoOfferPlans(): List<OfferPlanUi> = listOf(
     OfferPlanUi(
         id = "1",
@@ -311,6 +316,14 @@ fun demoOfferPlans(): List<OfferPlanUi> = listOf(
         startDate = "1404/07/01",
         endDate = "1404/12/29",
         status = Status.DRAFT
+    ),
+    OfferPlanUi(
+        id = "5",
+        planCode = "OFF-105",
+        planName = "طرح مشتریان ممتاز",
+        startDate = "1404/05/04",
+        endDate = "1404/10/20",
+        status = Status.ACTIVE
     )
 )
 

@@ -17,6 +17,7 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.ui.tooling.preview.Preview
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.Status
+import ir.kitgroup.partnerManagement.core.ui.util.extensions.toDisplayName
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationBottomSheet
 import java.util.Calendar
@@ -54,7 +55,7 @@ fun RegisterVisitScreen(
         )
     }
     var showOrganizationSheet by remember { mutableStateOf(false) }
-    var selectedOrganization by rememberSaveable { mutableStateOf<OrganizationModel?>(null) }
+    var selectedOrganization by remember { mutableStateOf<OrganizationModel?>(null) }
 
     var showVisitRealDatePicker by remember { mutableStateOf(false) }
     var showVisitRealTimePicker by remember { mutableStateOf(false) }
@@ -79,7 +80,7 @@ fun RegisterVisitScreen(
     var visitRealTime by rememberSaveable {
         mutableStateOf(String.format(Locale.US, "%02d:%02d", currentHour, currentMinute))
     }
-    val visitScheduledTime by rememberSaveable {
+    var visitScheduledTime by rememberSaveable {
         mutableStateOf(String.format(Locale.US, "%02d:%02d", currentHour, currentMinute))
     }
     val timePickerState = rememberTimePickerState(
@@ -102,31 +103,70 @@ fun RegisterVisitScreen(
     var description by rememberSaveable { mutableStateOf("") }
 
     val appColors = LocalPartnerManagementColors.current
-
-    val organizationList = listOf(
-
-        OrganizationModel(
-            1,
-            "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE,
-            5
-        ),
-        OrganizationModel(
-            2,
-            "سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4
-        ),
-        OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3),
-        OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5),
-        OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3),
-        OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2),
-        OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3),
-        OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4),
-        OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2),
-        OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3),
-        OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5),
-        OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2)
-    )
+    val organizationList =
+        listOf(
+            OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(2, " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4  , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2,latitude =36.2972,longitude =59.6067),
+            OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5 , latitude =36.3109,longitude =59.5492),
+            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2 , latitude =36.3109,longitude =59.5492)
+        )
 
 
+    LaunchedEffect(visitId) {
+        if (isEditMode) {
+            val existingItem = demoVisitItems.find { it.id == visitId }
+            existingItem?.let { visit ->
+                // نوع بازدید
+                visitType = when {
+                    visit.visitType.contains("غیربرنامه‌ریزی") || visit.visitType.contains("غیر برنامه ریزی") -> "حضوری غیر برنامه ریزی شده"
+                    visit.visitType.contains("حضوری") -> "حضوری برنامه ریزی شده"
+                    else -> "تلفنی"
+                }
+
+                // سازمان
+                selectedOrganization = organizationList.find { it.name == visit.organizationName }
+                    ?: OrganizationModel(
+                        receationcenterid = visit.id,
+                        name = visit.organizationName,
+                        address = "${visit.city}، ${visit.district}",
+                        status = Status.ACTIVE,
+                        grade = 4,
+                         latitude= 0.0,
+                 longitude = 0.0
+                    )
+
+                // نام بازاریاب / مسئول
+                visitorName = visit.visitorName
+                person = visit.visitorName
+
+                // تفکیک تاریخ و زمان
+                val dateParts = visit.date.split(",")
+                val extractedDate = dateParts.getOrNull(0)?.trim() ?: visit.date
+                val extractedTime = dateParts.getOrNull(1)?.trim() ?: "10:00"
+
+                visitRealDate = extractedDate
+                visitScheduledDate = extractedDate
+                visitRealTime = extractedTime
+                visitScheduledTime = extractedTime
+
+                // وضعیت
+                status = visit.status.toDisplayName()
+
+                // موضوع و توضیحات
+                visitSubject = if (visitType == "تلفنی") "ثبت نام" else "بررسی استند و عقد قرارداد"
+                description =
+                    "گزارش ثبت شده برای ${visit.organizationName} توسط ${visit.visitorName}."
+            }
+        }
+    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {

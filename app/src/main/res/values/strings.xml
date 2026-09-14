@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">مدیریت شریک</string>
+    <string name="app_name">مدیریت شریک های تجاری</string>
     <string name="label_username">نام کاربری</string>
     <string name="label_password">رمز عبور</string>
     <string name="label_login">ورود</string>
@@ -101,8 +101,8 @@
     <string name="label_contact_information">اطلاعات تماس</string>
     <string name="label_analytical_information">اطلاعات تحلیلی</string>
     <string name="label_statuses">وضعیت‌ها</string>
-    <string name="label_foreign_guest_reception">پذیرش مشتری خارجی:</string>
-    <string name="label_desire_receive_advertising_stands">تمایل به دریافت استند تبلیغاتی:</string>
+    <string name="label_foreign_guest_reception">پذیرش مشتری خارجی</string>
+    <string name="label_desire_receive_advertising_stands">تمایل به دریافت استند تبلیغاتی</string>
     <string name="label_has">دارد</string>
     <string name="label_has_not">ندارد</string>
     <string name="label_organization_status">وضعیت: </string>
@@ -206,7 +206,6 @@
     <string name="label_person_status">وضعیت شخص</string>
     <string name="label_person_description">توضیحات شخص</string>
     <string name="label_delete">حذف</string>
-    <string name="label_no_person_added">هنوز شخصی اضافه نشده است</string>
     <string name="label_persons_count">%1$d شخص اضافه شده است</string>
     <string name="label_person_full_name">نام و نام خانوادگی</string>
     <string name="label_gender">جنسیت</string>
@@ -265,6 +264,31 @@
     <string name="label_validity_period">دوره اعتبار</string>
 
 
+    <!-- تب و لیست بلیط‌ها / آفرها -->
+    <string name="tab_tickets_offers_1">آفرها و بلیط‌ها</string>
+    <string name="label_tickets_offers_list">لیست طرح‌ها و آفرها</string>
+    <string name="label_new_ticket_offer">افزودن آفر جدید</string>
+    <string name="msg_no_tickets_offers_found_1">هیچ طرح یا آفری برای این سازمان ثبت نشده است</string>
+
+    <!-- عناوین فیلدهای جزئیات آفر -->
+    <string name="label_ticket_offer_detail">جزئیات طرح و آفر</string>
+    <string name="label_offer_plan_1">طرح / آفر</string>
+    <string name="label_contract_1">قرارداد</string>
+    <string name="label_org_name">نام سازمان</string>
+    <string name="label_serial_count">تعداد سریال</string>
+    <string name="label_start_serial">شروع سریال</string>
+    <string name="label_end_serial">پایان سریال</string>
+    <string name="label_serial_range">بازه سریال</string>
+    <string name="label_serial_status">وضعیت سریال‌ها</string>
+    <string name="label_last_used_serial">آخرین سریال استفاده شده</string>
+    <string name="label_owner">مالک</string>
+    <string name="action_close">بستن</string>
+
+    <string name="label_assigned_tickets">بلیط‌های اختصاص‌یافته</string>
+    <string name="label_used_count">استفاده‌شده:</string>
+    <string name="label_remaining_count">باقی‌مانده:</string>
+
+
     <!-- Common formatted values -->
     <string name="value_not_available">---</string>
     <string name="value_percent">%1$s٪</string>
@@ -283,8 +307,10 @@
     <string name="status_draft">پیش‌نویس</string>
     <string name="status_delivered">تحویل شده</string>
     <string name="status_used">استفاده شده</string>
-    <string name="status_active">فعال</string>
     <string name="status_inactive">غیرفعال</string>
+    <string name="status_active">فعال</string>
+    <string name="status_completed">تکمیل شده</string>
+    <string name="status_expired">منقضی شده</string>
 
     //tab
     <string name="tab_organization_info">اطلاعات</string>
@@ -292,6 +318,7 @@
     <string name="tab_organization_visitor">بازاریاب</string>
     <string name="tab_organization_stands">استندها</string>
     <string name="tab_organization_contracts">قراردادها</string>
+    <string name="tab_tickets_offers">بلیط ها</string>
     <string name="tab_organization_notices">تذکرات</string>
 
     <!-- KPI -->
@@ -358,9 +385,11 @@
 
 
     // message
+    <string name="msg_no_person_found">هنوز شخصی اضافه نشده است</string>
     <string name="msg_no_visitor_found">هیچ بازاریابی انتساب داده نشده است</string>
     <string name="msg_no_stand_found">هیچ استندی تخصیص داده نشده است</string>
     <string name="msg_no_contract_found">قرداداد همکاری برای این سازمان ثبت نشده است</string>
+    <string name="msg_no_tickets_offers_found">بلیط آفری برای این سازمان ثبت نشده است</string>
     <string name="msg_no_item_found">آیتمی برای نمایش یافت نشد</string>
     <string name="msg_select_one_of_options">یکی از گزینه‌های زیر را انتخاب کنید</string>
     <string name="msg_delete_message">

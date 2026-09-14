@@ -8,7 +8,9 @@ data class OrganizationModel(
     val address: String,
     val status: Status,
     val grade: Int,
-    val warningCount: Int = 0
+    val warningCount: Int = 0,
+    val latitude: Double,
+    val longitude: Double
 )
 
 /*
