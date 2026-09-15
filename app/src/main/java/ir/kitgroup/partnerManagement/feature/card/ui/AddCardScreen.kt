@@ -62,22 +62,136 @@ fun AddCardScreen(
 
     var description by rememberSaveable { mutableStateOf("") }
 
-    val collaborativelist = remember {
-        listOf(
-            OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(2, " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4  , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2 , latitude =36.3109,longitude =59.5492)
+    val organizationList = listOf(
+        OrganizationModel(
+            1,
+            "هتل پارسیان آزادی",
+            city = "مشهد",
+            region = "منطقه 2",
+            "یوسفی",
+            Status.ACTIVE,
+            5, 0,
+            36.2845,
+            59.5892
+        ),
+
+        OrganizationModel(
+            2,
+            name = "سازمان پالاس",
+            city = "مشهد",
+            region = "منطقه 2",
+            address = "قاسم آباد",
+            Status.ACTIVE,
+            4, 4,
+            36.3562,
+            59.5084
+        ),
+
+        OrganizationModel(
+            3,
+            name = "سازمان نوید",
+            city = "مشهد",
+            region = "منطقه 2",
+            address = "پیروزی",
+            status = Status.ACTIVE,
+            3, 3,
+            latitude = 36.3015,
+            longitude = 59.5289
+        ),
+
+        OrganizationModel(
+            4,
+            name = "هتل مرکزی",
+            city = "مشهد",
+            region = "منطقه 2",
+            address = "امام رضا",
+            status = Status.ACTIVE,
+            5, 5,
+            latitude = 36.2820,
+            longitude = 59.6190
+        ),
+
+        OrganizationModel(
+            5,
+            name = "کیوسک اطلس", city = "مشهد",
+            region = "منطقه 2",
+            address = "کوهسنگی",
+            status = Status.ACTIVE,
+            3, 3,
+            latitude = 36.2736,
+            longitude = 59.5694
+        ),
+
+        OrganizationModel(
+            6,
+            name = "هتل الماس", city = "مشهد",
+            region = "منطقه 2",
+            address = "پاستور",
+            status = Status.ACTIVE,
+            2, 2,
+            latitude = 36.2994,
+            longitude = 59.5772
+        ),
+
+        OrganizationModel(
+            7,
+            name = "هتل وفا", city = "مشهد",
+            region = "منطقه 2",
+            address = "وکیل آباد",
+            status = Status.ACTIVE,
+            3, 3,
+            latitude = 36.3312,
+            longitude = 59.4851
+        ),
+
+        OrganizationModel(
+            8,
+            name = "سازمان مهندسی", city = "مشهد",
+            region = "منطقه 2",
+            address = "فاطمی",
+            status = Status.ACTIVE,
+            4, 4,
+            latitude = 36.3078,
+            longitude = 59.5935
+        ),
+
+        OrganizationModel(
+            9,
+            name = "هتل امیر", city = "مشهد",
+            region = "منطقه 2",
+            address = " رضاییه",
+            status = Status.ACTIVE,
+            2, 2,
+            latitude = 36.2768,
+            longitude = 59.6385
+        ),
+
+        OrganizationModel(
+            10,
+            name = "آپارتمان ملل", city = "مشهد",
+            region = "منطقه 2",
+            address = " ستاری",
+            status = Status.ACTIVE,
+            3, 3,
+            latitude = 36.3421,
+            longitude = 59.5208
+        ),
+
+        OrganizationModel(
+            11, "مهمانسرا اسپیناس", "مشهد", "منطقه 2", "مرکزی", Status.INACTIVE, 5, 5, 36.3051, 59.6059
+        ),
+
+        OrganizationModel(
+            12,
+            name = "چالیدره",     city = "مشهد",
+            region = "منطقه 2",
+            address = "طرقبه",
+            status = Status.INACTIVE,
+            2, 2,
+            latitude = 36.3198,
+            longitude = 59.3482
         )
-    }
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -189,7 +303,7 @@ fun AddCardScreen(
 
     if (showCollaborativeSheet) {
         OrganizationBottomSheet(
-            list = collaborativelist,
+            list = organizationList,
             onDismiss = { showCollaborativeSheet = false },
             onItemSelected = { item ->
                 selectedCollaborative = item

@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.Badge
@@ -41,13 +42,16 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.ManageAccounts
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Smartphone
@@ -112,10 +116,14 @@ import ir.kitgroup.partnerManagement.feature.organization.model.VisitorOrganizat
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractListItem
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ConfirmationNumber
+import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Stars
 import androidx.compose.material.icons.outlined.Storefront
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -126,13 +134,18 @@ import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignme
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationOfferTicketModel
 import ir.kitgroup.partnerManagement.feature.organization.model.TicketSerialStatus
+import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
+import ir.kitgroup.partnerManagement.feature.visits.ui.DetailRow
+import ir.kitgroup.partnerManagement.feature.visits.ui.VisitTypeChip
 
 
 val demoOrganizations = listOf(
     OrganizationModel(
         1,
         "هتل پارسیان آزادی",
-        "مشهد، یوسفی",
+        city = "مشهد",
+        region = "منطقه 2",
+        "یوسفی",
         Status.ACTIVE,
         5, 0,
         36.2845,
@@ -142,7 +155,9 @@ val demoOrganizations = listOf(
     OrganizationModel(
         2,
         name = "سازمان پالاس",
-        address = "مشهد، قاسم آباد",
+        city = "مشهد",
+        region = "منطقه 2",
+        address = "قاسم آباد",
         Status.ACTIVE,
         4, 4,
         36.3562,
@@ -152,7 +167,9 @@ val demoOrganizations = listOf(
     OrganizationModel(
         3,
         name = "سازمان نوید",
-        address = "مشهد، پیروزی",
+        city = "مشهد",
+        region = "منطقه 2",
+        address = "پیروزی",
         status = Status.ACTIVE,
         3, 3,
         latitude = 36.3015,
@@ -162,7 +179,9 @@ val demoOrganizations = listOf(
     OrganizationModel(
         4,
         name = "هتل مرکزی",
-        address = "مشهد، امام رضا",
+        city = "مشهد",
+        region = "منطقه 2",
+        address = "امام رضا",
         status = Status.ACTIVE,
         5, 5,
         latitude = 36.2820,
@@ -171,8 +190,9 @@ val demoOrganizations = listOf(
 
     OrganizationModel(
         5,
-        name = "کیوسک اطلس",
-        address = "مشهد، کوهسنگی",
+        name = "کیوسک اطلس", city = "مشهد",
+        region = "منطقه 2",
+        address = "کوهسنگی",
         status = Status.ACTIVE,
         3, 3,
         latitude = 36.2736,
@@ -181,8 +201,9 @@ val demoOrganizations = listOf(
 
     OrganizationModel(
         6,
-        name = "هتل الماس",
-        address = "مشهد، پاستور",
+        name = "هتل الماس", city = "مشهد",
+        region = "منطقه 2",
+        address = "پاستور",
         status = Status.ACTIVE,
         2, 2,
         latitude = 36.2994,
@@ -191,8 +212,9 @@ val demoOrganizations = listOf(
 
     OrganizationModel(
         7,
-        name = "هتل وفا",
-        address = "مشهد، وکیل آباد",
+        name = "هتل وفا", city = "مشهد",
+        region = "منطقه 2",
+        address = "وکیل آباد",
         status = Status.ACTIVE,
         3, 3,
         latitude = 36.3312,
@@ -201,8 +223,9 @@ val demoOrganizations = listOf(
 
     OrganizationModel(
         8,
-        name = "سازمان مهندسی",
-        address = "مشهد، فاطمی",
+        name = "سازمان مهندسی", city = "مشهد",
+        region = "منطقه 2",
+        address = "فاطمی",
         status = Status.ACTIVE,
         4, 4,
         latitude = 36.3078,
@@ -211,8 +234,9 @@ val demoOrganizations = listOf(
 
     OrganizationModel(
         9,
-        name = "هتل امیر",
-        address = "مشهد، رضاییه",
+        name = "هتل امیر", city = "مشهد",
+        region = "منطقه 2",
+        address = " رضاییه",
         status = Status.ACTIVE,
         2, 2,
         latitude = 36.2768,
@@ -221,8 +245,9 @@ val demoOrganizations = listOf(
 
     OrganizationModel(
         10,
-        name = "آپارتمان ملل",
-        address = "مشهد، ستاری",
+        name = "آپارتمان ملل", city = "مشهد",
+        region = "منطقه 2",
+        address = " ستاری",
         status = Status.ACTIVE,
         3, 3,
         latitude = 36.3421,
@@ -230,19 +255,14 @@ val demoOrganizations = listOf(
     ),
 
     OrganizationModel(
-        11,
-        name = "مهمانسرا اسپیناس",
-        address = "مشهد، مرکزی",
-        status = Status.INACTIVE,
-        5, 5,
-        latitude = 36.3051,
-        longitude = 59.6059
+        11, "مهمانسرا اسپیناس", "مشهد", "منطقه 2", "مرکزی", Status.INACTIVE, 5, 5, 36.3051, 59.6059
     ),
 
     OrganizationModel(
         12,
-        name = "چالیدره",
-        address = "مشهد، طرقبه",
+        name = "چالیدره", city = "مشهد",
+        region = "منطقه 2",
+        address = "طرقبه",
         status = Status.INACTIVE,
         2, 2,
         latitude = 36.3198,
@@ -257,6 +277,8 @@ fun OrganizationDetailScreen(
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onDisableClick: () -> Unit,
+    onAddVisitClick: () -> Unit,
+    onVisitClick: (Int) -> Unit,
     onAssignVisitorClick: (Int) -> Unit,
     onEditVisitorClick: (Int) -> Unit,
     onDeleteVisitorClick: (Int) -> Unit,
@@ -280,7 +302,7 @@ fun OrganizationDetailScreen(
 
     var showAddPersonSheet by rememberSaveable { mutableStateOf(false) }
 
-    var selectedTab by rememberSaveable { mutableStateOf(OrganizationDetailTab.INFO) }
+    var selectedTab by rememberSaveable { mutableStateOf(OrganizationDetailTab.BASIC_INFO) }
     val visibleTabs = remember(isSupervisor) {
         OrganizationDetailTab.entries.filter { tab ->
             tab != OrganizationDetailTab.VISITOR || isSupervisor
@@ -296,6 +318,53 @@ fun OrganizationDetailScreen(
 
     var noticePendingDelete by remember { mutableStateOf<OrganizationNotice?>(null) }
     var visitorToDelete by remember { mutableStateOf<VisitorOrganization?>(null) }
+    val mockVisits = listOf(
+        VisitModel(
+            id = 1,
+            organizationName = "هتل قصر طلایی",
+            visitType = "بازدید حضوری برنامه‌ریزی شده",
+            visitorName = "علی محمدی",
+            date = "۱۴۰۳/۰۲/۱۵ , 11:30",
+            city = "مشهد",
+            district = "خیابان آزادی",
+            icon = Icons.Default.DirectionsWalk,
+            status = Status.PLANNED
+        ),
+        VisitModel(
+            id = 2,
+            organizationName = "هتل الماس",
+            visitType = "بازدید تلفنی",
+            visitorName = "علی رضایی",
+            date = "۱۴۰۳/۰۲/۱۷ , 10:30",
+            city = "مشهد",
+            district = "خیابان آزادی",
+            icon = Icons.Default.Phone,
+            status = Status.DONE
+        ),
+        VisitModel(
+            id = 3,
+            organizationName = "هتل پارسیان",
+            visitType = "بازدید حضوری غیربرنامه‌ریزی شده",
+            visitorName = "مریم رضایی",
+            date = "۱۴۰۳/۰۲/۱۶ , 02:30",
+            city = "مشهد",
+            district = "احمد آباد",
+            icon = Icons.Default.DirectionsWalk,
+            status = Status.CANCELLED
+        ),
+        VisitModel(
+            id = 4,
+            organizationName = "سازمان برق",
+            visitType = "بازدید تلفنی",
+            visitorName = "مریم مفرد",
+            date = "۱۴۰۳/۰۲/۱۸ , 10:30",
+            city = "مشهد",
+            district = "پاسداران",
+            icon = Icons.Default.Phone,
+            status = Status.PLANNED
+        )
+    )
+
 
     val persons = listOf(
         PersonOrganization(
@@ -486,20 +555,23 @@ fun OrganizationDetailScreen(
             type = "تذکر شفاهی",
             score = 2,
             description = "تاخیر در پاسخ‌گویی به پیگیری‌های واحد بازاریابی",
-            createdAt = "1405/05/02"
+            createdAt = "1405/05/02",
+            registrarName = "احمد شفاهی"
         ),
         OrganizationNotice(
             id = 2,
             type = "تذکر کتبی",
             score = 4,
             description = "عدم رعایت استانداردهای قرارداد همکاری در ارائه استند تبلیغاتی",
-            createdAt = "1405/05/02"
+            createdAt = "1405/05/02",
+            registrarName = "رضا موسوی"
         ),
         OrganizationNotice(
             id = 3,
             type = "تذکر شفاهی",
             score = -3,
-            description = "مغایرت جزئی در اطلاعات ثبت‌شده حساب کاربری", createdAt = "1405/05/02"
+            description = "مغایرت جزئی در اطلاعات ثبت‌شده حساب کاربری", createdAt = "1405/05/02",
+            registrarName = "پرهام شیری"
         )
     )
     val organizationOfferTickets = remember { demoOrganizationOfferTickets }
@@ -543,7 +615,7 @@ fun OrganizationDetailScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 LaunchedEffect(isSupervisor) {
                     if (!isSupervisor && selectedTab == OrganizationDetailTab.VISITOR) {
-                        selectedTab = OrganizationDetailTab.INFO
+                        selectedTab = OrganizationDetailTab.BASIC_INFO
                     }
                 }
                 CompositionLocalProvider(
@@ -576,8 +648,20 @@ fun OrganizationDetailScreen(
                 }
 
                 when (selectedTab) {
-                    OrganizationDetailTab.INFO -> {
+                    OrganizationDetailTab.BASIC_INFO -> {
                         OrganizationBasicInfoTabContent(organization = organization!!)
+                    }
+
+                    OrganizationDetailTab.GENERAL_INFO -> {
+                        OrganizationGeneralInfoTabContent(organization = organization!!)
+                    }
+
+                    OrganizationDetailTab.VISITS -> {
+                        OrganizationVisitsTabContent(
+                            visits = mockVisits,
+                            onAddVisitClick = onAddVisitClick,
+                            onVisitClick = onVisitClick
+                        )
                     }
 
                     OrganizationDetailTab.PERSONS -> {
@@ -816,9 +900,7 @@ private fun OrganizationDetailTabItem(
                 text = stringResource(tab.titleRes),
                 color = contentColor,
                 style = if (selected) {
-                    typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    )
+                    typography.titleLarge
                 } else {
                     typography.labelLarge
                 },
@@ -964,14 +1046,18 @@ private fun OrganizationBasicInfoTabContent(organization: OrganizationModel) {
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        SectionTitle(stringResource(R.string.label_organization_statistical_information))
+        SectionTitle(stringResource(R.string.label_organization_basic_information))
         BasicInfoSection(organization)
 
         SectionTitle(stringResource(R.string.label_contact_information))
         ContactInfoSection()
 
         SectionTitle(stringResource(R.string.label_location))
-        AddressMapCard(address = organization.address)
+        AddressMapCard(
+            city = organization.city,
+            region = organization.region,
+            address = organization.address
+        )
 
         SectionTitle(stringResource(R.string.label_analytical_information))
         AnalysisInfoSection(grade = organization.grade)
@@ -986,6 +1072,198 @@ private fun OrganizationBasicInfoTabContent(organization: OrganizationModel) {
         ImagesSection(images = listOf(R.drawable.ic_logo))
 
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun OrganizationGeneralInfoTabContent(organization: OrganizationModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        SectionTitle(stringResource(R.string.label_organization_statistical_information))
+        BasicGeneralSection(organization)
+    }
+}
+
+
+// ======================= تب اصلی بازدیدها =======================
+@Composable
+fun OrganizationVisitsTabContent(
+    visits: List<VisitModel>,
+    onAddVisitClick: () -> Unit,
+    onVisitClick: ((Int) -> Unit),
+    modifier: Modifier = Modifier
+) {
+    val appColors = LocalPartnerManagementColors.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                SectionTitle(title = stringResource(R.string.label_visits_list))
+            }
+            FilledTonalButton(
+                onClick = onAddVisitClick,
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = appColors.success,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.label_register_visit),
+                    style = typography.titleLarge
+                )
+            }
+        }
+
+
+        if (visits.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Filled.WorkspacePremium,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.msg_no_visit_found),
+                        style = typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                itemsIndexed(visits) { index, visit ->
+                    VisitCard(
+                        item = visit,
+                        onClick = { onVisitClick(visit.id) },
+                        onEditClick = { /*onEditVisitClick(item.id)*/ },
+                        onDeleteClick = { /*visitPendingDelete = item */ }
+                    )
+                }
+
+            }
+        }
+    }
+}
+
+@Composable
+fun VisitCard(
+    item: VisitModel,
+    onClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    val appColors = LocalPartnerManagementColors.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = appColors.cardBackground
+        ),
+        border = BorderStroke(
+            width = 0.7.dp,
+            color = appColors.border
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            // ردیف اول: نوع بازدید (راست/شروع) و بج وضعیت (چپ/پایان)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                VisitTypeChip(
+                    text = item.visitType,
+                    icon = item.icon
+                )
+
+                StatusBadge(status = item.status)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // ردیف نام بازدیدکننده
+            DetailRow(
+                icon = Icons.Default.Person,
+                text = item.visitorName
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // ردیف تاریخ و دکمه‌های اکشن در یک راستا برای کاهش ارتفاع کارت
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                DetailRow(
+                    icon = Icons.Default.DateRange,
+                    text = item.date
+                )
+                /*
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    ActionIconButton(
+                                        icon = Icons.Default.Edit,
+                                        contentDescription = stringResource(R.string.label_edit),
+                                        onClick = onEditClick,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        backgroundColor = appColors.cardBackgroundAlt
+                                    )
+
+                                    ActionIconButton(
+                                        icon = Icons.Default.DeleteOutline,
+                                        contentDescription = stringResource(R.string.label_delete),
+                                        onClick = onDeleteClick,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        backgroundColor = MaterialTheme.colorScheme.errorContainer
+                                    )
+                                }*/
+            }
+        }
     }
 }
 
@@ -1286,7 +1564,6 @@ private fun OrganizationNoticesTabContent(
     }
 }
 
-
 @Composable
 private fun OrganizationNoticeCard(
     index: Int,
@@ -1305,7 +1582,7 @@ private fun OrganizationNoticeCard(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // هدر کارت شامل شماره، نوع تذکر، چیپ امتیاز و دکمه حذف
+            //هدر کارت
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1319,20 +1596,16 @@ private fun OrganizationNoticeCard(
                     Box(
                         modifier = Modifier
                             .size(34.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.tertiaryContainer,
-                                shape = CircleShape
-                            ),
+                            .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.RateReview,
-                            contentDescription = null,
+                            Icons.Default.RateReview,
+                            null,
                             tint = MaterialTheme.colorScheme.onTertiaryContainer,
                             modifier = Modifier.size(18.dp)
                         )
                     }
-
                     Text(
                         text = "تذکر ${index + 1}: ${notice.type}",
                         style = typography.titleMedium,
@@ -1347,10 +1620,6 @@ private fun OrganizationNoticeCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     NoticeScoreChip(score = notice.score)
-
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    // دکمه حذف تذکر فقط برای سرپرست
                     if (isSupervisor) {
                         ActionIconButton(
                             icon = Icons.Default.DeleteOutline,
@@ -1359,14 +1628,11 @@ private fun OrganizationNoticeCard(
                             tint = MaterialTheme.colorScheme.error,
                             backgroundColor = MaterialTheme.colorScheme.errorContainer
                         )
-
                     }
                 }
             }
 
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
             // توضیحات تذکر
             Row(
@@ -1383,6 +1649,53 @@ private fun OrganizationNoticeCard(
                     style = typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+            }
+
+            // --- تاریخ و ثبت‌کننده ---
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // ثبت‌کننده
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = notice.registrarName,
+                        style = typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+
+                }
+                // تاریخ
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = notice.createdAt, // یا تاریخ تبدیل شده
+                        style = typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                // ---------------------------------
             }
         }
     }
@@ -1756,7 +2069,7 @@ fun OrganizationTicketsTabContent(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = stringResource(R.string.msg_no_tickets_offers_found),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -1848,8 +2161,7 @@ fun TicketOfferCard(
                     )
                     Text(
                         text = "${ticket.serialPrefix} : ${ticket.startSerial} - ${ticket.endSerial}",
-                        style = typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        style = typography.titleMedium
                     )
                 }
 
@@ -1861,8 +2173,7 @@ fun TicketOfferCard(
                     )
                     Text(
                         text = "${ticket.serialCount} عدد",
-                        style = typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        style = typography.titleMedium
                     )
                 }
             }
@@ -1885,8 +2196,7 @@ fun TicketOfferDetailDialog(
         title = {
             Text(
                 text = stringResource(R.string.label_ticket_offer_detail),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = typography.titleLarge
             )
         },
         text = {
@@ -1958,14 +2268,13 @@ private fun DetailItemRow(
     ) {
         Text(
             text = "$label:",
-            style = MaterialTheme.typography.bodySmall,
+            style = typography.bodySmall,
             color = LocalPartnerManagementColors.current.textSecondary,
             modifier = Modifier.weight(0.4f)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
+            style = typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(0.6f)
         )
@@ -1975,181 +2284,12 @@ private fun DetailItemRow(
 
 @Composable
 private fun BasicInfoSection(
-    organization: OrganizationModel,
-    totalNoticesCount: Int = 3,
-    assignedStandsCount: Int = 5,
-    totalTicketsCount: Int = 500,
-    usedTicketsCount: Int = 320
+    organization: OrganizationModel
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
-    val remainingTicketsCount = (totalTicketsCount - usedTicketsCount).coerceAtLeast(0)
-    val usageProgress =
-        if (totalTicketsCount > 0) usedTicketsCount.toFloat() / totalTicketsCount else 0f
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-        // کارت‌های متریک ردیف اول: اخطارها و استندها
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            StatMetricCard(
-                modifier = Modifier.weight(1f),
-                title = stringResource(R.string.label_total_warnings),
-                count = totalNoticesCount,
-                unit = stringResource(R.string.label_warnings),
-                icon = Icons.Outlined.WarningAmber,
-                accentColor = if (totalNoticesCount > 0) appColors.warning else appColors.success,
-                containerColor = if (totalNoticesCount > 0) appColors.warning.copy(alpha = 0.06f) else colors.surface
-            )
-
-            StatMetricCard(
-                modifier = Modifier.weight(1f),
-                title = stringResource(R.string.label_assigned_stands),
-                count = assignedStandsCount,
-                unit = stringResource(R.string.label_unit_count),
-                icon = Icons.Filled.Storefront,
-                accentColor = colors.primary,
-                containerColor = colors.primary.copy(alpha = 0.06f)
-            )
-        }
-
-        // کارت اختصاصی وضعیت بلیط‌ها / آفرها
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = colors.primary.copy(alpha = 0.04f)
-            ),
-            border = BorderStroke(1.dp, colors.primary.copy(alpha = 0.2f))
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // هدر کارت: عنوان و کل بلیط‌ها
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(colors.primary.copy(alpha = 0.12f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.ConfirmationNumber,
-                                contentDescription = null,
-                                tint = colors.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.label_assigned_tickets),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.onSurface
-                        )
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "$totalTicketsCount",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = colors.primary
-                        )
-                        Text(
-                            text = stringResource(R.string.label_unit_count),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = appColors.textSecondary,
-                            modifier = Modifier.padding(bottom = 2.dp)
-                        )
-                    }
-                }
-
-                // نوار پیشرفت درصد استفاده
-                LinearProgressIndicator(
-                    progress = { usageProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = colors.primary,
-                    trackColor = colors.outlineVariant.copy(alpha = 0.3f)
-                )
-
-                // ردیف جزئیات: تعداد استفاده‌شده و باقی‌مانده
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // استفاده شده
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(colors.primary)
-                        )
-                        Text(
-                            text = stringResource(R.string.label_used_count),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = appColors.textSecondary
-                        )
-                        Text(
-                            text = "$usedTicketsCount عدد",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.onSurface
-                        )
-                    }
-
-                    // باقی‌مانده
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(appColors.success)
-                        )
-                        Text(
-                            text = stringResource(R.string.label_remaining_count),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = appColors.textSecondary
-                        )
-                        Text(
-                            text = "$remainingTicketsCount عدد",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = appColors.success
-                        )
-                    }
-                }
-            }
-        }
-
-        SectionTitle(stringResource(R.string.label_organization_basic_information))
 
         // کادر یکپارچه اطلاعات پایه سازمان
         Card(
@@ -2236,13 +2376,275 @@ private fun BasicInfoSection(
                 ) {
                     Text(
                         text = stringResource(R.string.label_status),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = typography.bodyMedium,
                         color = appColors.textSecondary
                     )
 
                     StatusBadge(status = Status.ACTIVE)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BasicGeneralSection(
+    organization: OrganizationModel,
+    totalNoticesCount: Int = 3,
+    totalScore: Int = 85,
+    activeMarketersCount: Int = 6,
+    assignedStandsCount: Int = 5,
+    completedVisitsCount: Int = 12,
+    plannedVisitsCount: Int = 4,
+    totalAssignedSerials: Int = 1000,
+    issuedSerialsCount: Int = 800,
+    usedSerialsCount: Int = 620,
+    revokedSerialsCount: Int = 30
+) {
+    val appColors = LocalPartnerManagementColors.current
+    val colors = MaterialTheme.colorScheme
+
+    val remainingSerialsCount =
+        (totalAssignedSerials - usedSerialsCount - revokedSerialsCount).coerceAtLeast(0)
+    val usedProgress =
+        if (totalAssignedSerials > 0) usedSerialsCount.toFloat() / totalAssignedSerials else 0f
+    var showSerialsDetailSheet by rememberSaveable { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+        // ================= ردیف اول: تجمیع تذکرات و تجمیع امتیاز =================
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // تجمیع تذکرات
+            StatMetricCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.label_total_warnings),
+                count = totalNoticesCount,
+                unit = stringResource(R.string.label_warnings_unit),
+                icon = Icons.Outlined.WarningAmber,
+                accentColor = if (totalNoticesCount > 0) appColors.warning else appColors.success,
+                containerColor = if (totalNoticesCount > 0) appColors.warning.copy(alpha = 0.06f) else colors.surface
+            )
+
+            // تجمیع امتیاز
+            StatMetricCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.label_total_score),
+                count = totalScore,
+                unit = stringResource(R.string.label_score_unit),
+                icon = Icons.Outlined.Stars,
+                accentColor = if (totalScore >= 0) appColors.success else colors.error,
+                containerColor = if (totalScore >= 0) appColors.success.copy(alpha = 0.06f) else colors.error.copy(
+                    alpha = 0.06f
+                )
+            )
+        }
+
+        // ================= ردیف دوم: بازاریابان فعال و استندهای اختصاص‌یافته =================
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // بازاریابان فعال
+            StatMetricCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.label_active_marketers),
+                count = activeMarketersCount,
+                unit = stringResource(R.string.label_marketers_unit),
+                icon = Icons.Outlined.Group,
+                accentColor = Color(0xFF0288D1),
+                containerColor = Color(0xFF0288D1).copy(alpha = 0.06f)
+            )
+
+            // استندهای اختصاص‌یافته
+            StatMetricCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.label_assigned_stands),
+                count = assignedStandsCount,
+                unit = stringResource(R.string.label_stands_unit),
+                icon = Icons.Filled.Storefront,
+                accentColor = colors.primary,
+                containerColor = colors.primary.copy(alpha = 0.06f)
+            )
+        }
+
+        // ================= ردیف دوم: استندها + بازدیدهای انجام‌شده + برنامه‌ریزی‌شده =================
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            MiniMetricCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.label_completed_visits),
+                count = completedVisitsCount,
+                unit = stringResource(R.string.label_visits_unit),
+                icon = Icons.Outlined.TaskAlt,
+                accentColor = appColors.success
+            )
+
+            MiniMetricCard(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.label_planned_visits),
+                count = plannedVisitsCount,
+                unit = stringResource(R.string.label_visits_unit),
+                icon = Icons.Outlined.CalendarMonth,
+                accentColor = Color(0xFF0288D1)
+            )
+        }
+
+        Spacer(Modifier.height(4.dp))
+
+        // ================= کادر اصلی اختصاصی سریال‌ها (مینیمال و حرفه‌ای با دکمه جزئیات) =================
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = colors.primary.copy(alpha = 0.04f)
+            ),
+            border = BorderStroke(1.dp, colors.primary.copy(alpha = 0.2f))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // هدر کادر سریال
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(colors.primary.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.ConfirmationNumber,
+                                contentDescription = null,
+                                tint = colors.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = stringResource(R.string.label_assigned_serials),
+                                style = typography.titleMedium,
+                                color = colors.onSurface
+                            )
+                            Text(
+                                text = "$totalAssignedSerials ${stringResource(R.string.label_unit_count)}",
+                                style = typography.labelSmall,
+                                color = colors.primary,
+                            )
+                        }
+                    }
+
+                    // دکمه باز شدن باتم‌شیت
+                    TextButton(
+                        onClick = { showSerialsDetailSheet = true },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.label_action_view_details),
+                            style = typography.titleSmall,
+                            color = colors.primary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = colors.primary
+                        )
+                    }
+                }
+
+                // نوار درصد پیشرفت مصرف سریال‌ها
+                LinearProgressIndicator(
+                    progress = { usedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = colors.primary,
+                    trackColor = colors.outlineVariant.copy(alpha = 0.3f)
+                )
+
+                // ردیف خلاصه: مصرف‌شده و باقی‌مانده
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(colors.primary)
+                        )
+                        Text(
+                            text = stringResource(R.string.label_serials_used) + ":",
+                            style = typography.bodySmall,
+                            color = appColors.textSecondary
+                        )
+                        Text(
+                            text = "$usedSerialsCount",
+                            style = typography.titleSmall,
+                            color = colors.onSurface
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(appColors.warning)
+                        )
+                        Text(
+                            text = stringResource(R.string.label_serials_remaining) + ":",
+                            style = typography.bodySmall,
+                            color = appColors.textSecondary
+                        )
+                        Text(
+                            text = "$remainingSerialsCount",
+                            style = typography.titleSmall,
+                            color = appColors.warning
+                        )
+                    }
+                }
+            }
+        }
+
+
+        // باز شدن باتم‌شیت جزئیات سریال‌ها در صورت کلیک
+        if (showSerialsDetailSheet) {
+            SerialsDetailBottomSheet(
+                totalAssigned = totalAssignedSerials,
+                issuedCount = issuedSerialsCount,
+                usedCount = usedSerialsCount,
+                revokedCount = revokedSerialsCount,
+                remainingCount = remainingSerialsCount,
+                onDismiss = { showSerialsDetailSheet = false }
+            )
         }
     }
 }
@@ -2416,6 +2818,63 @@ private fun StatusInfoSection(
     }
 }
 
+/**
+ * مینی کارت متریک برای نمایش ۳ تایی فشرده و متوازن
+ */
+@Composable
+private fun MiniMetricCard(
+    title: String,
+    count: Int,
+    unit: String,
+    icon: ImageVector,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(accentColor.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Text(
+                text = "$count",
+                style = typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = title,
+                style = typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
 
 @Composable
 fun StatMetricCard(
@@ -2535,7 +2994,9 @@ private fun InfoRowItem(
 
 @Composable
 private fun AddressMapCard(
-    address: String
+    city: String = "",
+    region: String = "",
+    address: String = ""
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -2554,9 +3015,10 @@ private fun AddressMapCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // باکس آیکون موقعیت مکانی / پیش‌نمایش نقشه
             Box(
                 modifier = Modifier
-                    .size(width = 120.dp, height = 92.dp)
+                    .size(width = 110.dp, height = 96.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(colors.primaryContainer),
                 contentAlignment = Alignment.Center
@@ -2569,23 +3031,52 @@ private fun AddressMapCard(
                 )
             }
 
+            // ستون نمایش جزئیات شهر، منطقه و آدرس
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.label_address),
-                    style = typography.labelMedium,
-                    color = colors.onSurfaceVariant
-                )
+                // نمایش شهر و منطقه در صورت وجود
+                val locationScope = listOf(city.trim(), region.trim())
+                    .filter { it.isNotBlank() }
+                    .joinToString("، ")
 
-                Spacer(Modifier.height(6.dp))
+                if (locationScope.isNotBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${stringResource(R.string.label_city)} / ${stringResource(R.string.label_region)}:",
+                            style = typography.labelSmall,
+                            color = colors.onSurfaceVariant
+                        )
+                        Text(
+                            text = locationScope,
+                            style = typography.labelMedium,
+                            color = colors.onSurface
+                        )
+                    }
+                }
 
-                Text(
-                    text = address.ifBlank { "-" },
-                    style = typography.bodyMedium,
-                    color = colors.onSurface,
-                    textAlign = TextAlign.End
-                )
+                // عنوان و متن آدرس
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_address) + ":",
+                        style = typography.labelSmall,
+                        color = colors.onSurfaceVariant
+                    )
+
+                    Text(
+                        text = address.ifBlank { "-" },
+                        style = typography.bodyMedium,
+                        color = colors.onSurface
+                    )
+                }
             }
         }
     }

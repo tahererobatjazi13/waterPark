@@ -5,5 +5,6 @@ data class OrganizationNotice(
     val type: String,
     val score: Int,
     val description: String,
-    val createdAt: String
+    val createdAt: String,
+    val registrarName: String
 )

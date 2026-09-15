@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -474,71 +475,71 @@ private fun VisitFiltersRow(
                     }
                 }
             }
-/*
-            // فیلتر بازاریاب
-            item {
-                ExposedDropdownMenuBox(
-                    expanded = visitorExpanded,
-                    onExpandedChange = { visitorExpanded = !visitorExpanded }
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .menuAnchor(),
-                        shape = RoundedCornerShape(8.dp),
-                        color = appColors.cardBackground,
-                        border = BorderStroke(1.dp, appColors.border)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .clickable { visitorExpanded = true }
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = selectedVisitor,
-                                style = typography.labelSmall,
-                                color = appColors.textPrimary,
-                                maxLines = 1
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
-                                tint = appColors.textSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-
-                    ExposedDropdownMenu(
-                        expanded = visitorExpanded,
-                        onDismissRequest = { visitorExpanded = false }
-                    ) {
-                        visitorOptions.forEach { visitor ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = visitor,
-                                        style = typography.labelMedium
-                                    )
-                                },
-                                onClick = {
-                                    onVisitorSelected(visitor)
-                                    visitorExpanded = false
+            /*
+                        // فیلتر بازاریاب
+                        item {
+                            ExposedDropdownMenuBox(
+                                expanded = visitorExpanded,
+                                onExpandedChange = { visitorExpanded = !visitorExpanded }
+                            ) {
+                                Surface(
+                                    modifier = Modifier
+                                        .height(40.dp)
+                                        .menuAnchor(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = appColors.cardBackground,
+                                    border = BorderStroke(1.dp, appColors.border)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .clickable { visitorExpanded = true }
+                                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = selectedVisitor,
+                                            style = typography.labelSmall,
+                                            color = appColors.textPrimary,
+                                            maxLines = 1
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.KeyboardArrowDown,
+                                            contentDescription = null,
+                                            tint = appColors.textSecondary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 }
-                            )
-                        }
-                    }
-                }
-            }*/
+
+                                ExposedDropdownMenu(
+                                    expanded = visitorExpanded,
+                                    onDismissRequest = { visitorExpanded = false }
+                                ) {
+                                    visitorOptions.forEach { visitor ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = visitor,
+                                                    style = typography.labelMedium
+                                                )
+                                            },
+                                            onClick = {
+                                                onVisitorSelected(visitor)
+                                                visitorExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }*/
         }
     }
 }
@@ -668,22 +669,23 @@ fun DetailRow(icon: ImageVector, text: String) {
         )
     }
 }
-
 @Composable
 fun VisitTypeChip(
     text: String,
-    icon: ImageVector
+    icon: ImageVector,
+    modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .padding(horizontal = 6.dp, vertical = 4.dp),
+                .size(26.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -701,11 +703,12 @@ fun VisitTypeChip(
             color = appColors.textPrimary,
             style = typography.labelMedium,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
+
+
 
 private fun normalizeDate(date: String): String {
     val englishDigits = buildString {

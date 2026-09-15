@@ -159,6 +159,10 @@ private fun AddOrganizationContent(
         OrganizationContactSection(state)
 
         OrganizationLocationSection(
+            city = state.city,
+            onCityChange = { state.city = it },
+            district = state.region,
+            onDistrictChange = { state.region = it },
             address = state.address,
             onAddressChange = { state.address = it },
             onSelectLocation = onSelectLocation
@@ -280,7 +284,8 @@ private fun OrganizationBasicInfoSection(
                 isRequired = false,
                 onItemSelected = { selectedTitle ->
                     val selectedIndex = statusTitles.indexOf(selectedTitle)
-                    val selectedEnum = if (selectedIndex != -1) statusEntries[selectedIndex] else OrganizationStatus.INITIAL_REGISTRATION
+                    val selectedEnum =
+                        if (selectedIndex != -1) statusEntries[selectedIndex] else OrganizationStatus.INITIAL_REGISTRATION
 
                     if (selectedEnum == OrganizationStatus.INACTIVE) {
                         previousStatus = state.organizationStatus
@@ -338,7 +343,7 @@ private fun OrganizationBasicInfoSection(
 }
 
 @Composable
- fun InactivationReasonDialog(
+fun InactivationReasonDialog(
     initialReason: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
@@ -482,14 +487,46 @@ private fun OrganizationContactSection(
 
 @Composable
 private fun OrganizationLocationSection(
+    city: String,
+    onCityChange: (String) -> Unit,
+    district: String,
+    onDistrictChange: (String) -> Unit,
     address: String,
     onAddressChange: (String) -> Unit,
     onSelectLocation: () -> Unit
 ) {
+    // لیست‌های نمونه (این لیست‌ها می‌توانند از ریپوزیتوری یا دیتابیس بیایند)
+    val cityList = remember { listOf("تهران", "مشهد", "اصفهان", "شیراز", "تبریز") }
+    val districtList = remember { listOf("منطقه ۱", "منطقه ۲", "منطقه ۳", "مرکز شهر", "حاشیه شهر") }
+
     SectionTitle(
         title = stringResource(R.string.label_location),
         titleColor = MaterialTheme.colorScheme.primary
     )
+
+    TwoColumnRow(
+        start = {
+            DropdownSelectorField(
+                value = city,
+                label = stringResource(R.string.label_city),
+                placeholder = stringResource(R.string.hint_choose_city),
+                items = cityList,
+                onItemSelected = onCityChange,
+                isRequired = false
+            )
+        },
+        end = {
+            DropdownSelectorField(
+                value = district,
+                label = stringResource(R.string.label_region),
+                placeholder = stringResource(R.string.hint_choose_region),
+                items = districtList,
+                onItemSelected = onDistrictChange,
+                isRequired = false
+            )
+        }
+    )
+
     CustomEditTextField(
         value = address,
         onValueChange = onAddressChange,
@@ -503,6 +540,7 @@ private fun OrganizationLocationSection(
         onSelectLocation = onSelectLocation
     )
 }
+
 
 @Composable
 private fun OrganizationAnalysisSection(
@@ -636,7 +674,7 @@ private fun OrganizationFormActionButtons(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
- fun AddPersonBottomSheet(
+fun AddPersonBottomSheet(
     personState: AddPersonFormState,
     onDismiss: () -> Unit,
     onSavePerson: () -> Unit
@@ -644,11 +682,11 @@ private fun OrganizationFormActionButtons(
     val appColors = LocalPartnerManagementColors.current
 
     val genderList = remember {
-        listOf("آقا", "خانم")
+        listOf("مرد", "زن")
     }
 
     val statusList = remember {
-        listOf("ثبت اولیه", "فعال", "نارنجی", "غیرفعال", "معلق", "بسته شده")
+        listOf("پیش نویس", "فعال", "غیرفعال", "مسدود شده")
     }
 
     val sheetState = rememberModalBottomSheetState(
@@ -726,7 +764,7 @@ private fun OrganizationFormActionButtons(
 
             DropdownSelectorField(
                 value = personState.status,
-                label = stringResource(R.string.label_person_status),
+                label = stringResource(R.string.label_status),
                 placeholder = stringResource(R.string.hint_choose_status),
                 items = statusList,
                 isRequired = false,
@@ -736,7 +774,7 @@ private fun OrganizationFormActionButtons(
             )
 
             CustomDescriptionField(
-                label = stringResource(R.string.label_person_description),
+                label = stringResource(R.string.label_description),
                 value = personState.description,
                 onValueChange = { personState.description = it },
                 placeholder = stringResource(R.string.hint_description)

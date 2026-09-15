@@ -19,8 +19,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomDateTimeFields
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.CustomSelectorField
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 import saman.zamani.persiandate.PersianDate
 import java.util.Locale
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
@@ -32,23 +30,7 @@ fun AssignVisitorScreen(
     onBackClick: () -> Unit, onSaveClick: () -> Unit,
 ) {
     val appColors = LocalPartnerManagementColors.current
-    var selectedOrganization by rememberSaveable { mutableStateOf<OrganizationModel?>(null) }
-    var showOrganizationSheet by remember { mutableStateOf(false) }
-    val organizationList =
-        listOf(
-            OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(2, " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4  , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2 , latitude =36.3109,longitude =59.5492)
-        )
+
 
     var visitor by rememberSaveable { mutableStateOf("") }
     var isVisitorExpanded by remember { mutableStateOf(false) }
@@ -108,13 +90,7 @@ fun AssignVisitorScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                CustomSelectorField(
-                    value = selectedOrganization?.name ?: "",
-                    label = stringResource(R.string.label_organization_name),
-                    placeholder = stringResource(R.string.hint_choose_organization_name),
-                    isExpanded = showOrganizationSheet,
-                    onClick = { showOrganizationSheet = true }
-                )
+
 
                 Box(modifier = Modifier.fillMaxWidth()) {
                     CustomSelectorField(
@@ -194,16 +170,7 @@ fun AssignVisitorScreen(
         }
     }
 
-    if (showOrganizationSheet) {
-        OrganizationBottomSheet(
-            list = organizationList,
-            onDismiss = { showOrganizationSheet = false },
-            onItemSelected = { item ->
-                selectedOrganization = item
-                showOrganizationSheet = false
-            }
-        )
-    }
+
 
     if (showStartDatePicker) {
         DatePickerDialog(

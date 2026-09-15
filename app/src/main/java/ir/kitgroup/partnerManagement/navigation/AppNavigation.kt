@@ -49,8 +49,10 @@ import ir.kitgroup.partnerManagement.feature.visits.ui.VisitDetailScreen
 import ir.kitgroup.partnerManagement.feature.visits.ui.VisitsScreen
 import ir.kitgroup.partnerManagement.core.ui.SessionStatus
 import ir.kitgroup.partnerManagement.core.ui.util.ThemeMode
+import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignment
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.detail.AdvertisingStandAssignmentVisitorDetailScreen
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.detail.demoAssignmentDetail
+import ir.kitgroup.partnerManagement.feature.contract.model.ContractUi
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractsListScreen
 import ir.kitgroup.partnerManagement.feature.login.ui.SplashScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.AddContractScreen
@@ -221,30 +223,29 @@ fun AppNavigation(
                         onBackClick = { navController.popBackStack() }
                     )
                 }
-
                 composable(
                     route = Screen.RegisterVisit.route,
                     arguments = listOf(
                         navArgument("visitId") {
                             type = NavType.IntType
                             defaultValue = -1
+                        },
+                        navArgument("organizationId") {
+                            type = NavType.IntType
+                            defaultValue = -1
                         }
                     )
                 ) { backStackEntry ->
-
-                    val visitId = backStackEntry.arguments?.getInt("visitId") ?: -1
+                    val visitId = backStackEntry.arguments?.getInt("visitId")?.takeIf { it != -1 }
+                    val organizationId = backStackEntry.arguments?.getInt("organizationId")?.takeIf { it != -1 }
 
                     RegisterVisitScreen(
                         visitId = visitId,
-                        onBackClick = {
-                            navController.popBackStack()
-                        },
-                        onSubmitClick = {
-                            navController.popBackStack()
-                        }
+                        preselectedOrganizationId = organizationId,
+                        onBackClick = { navController.popBackStack() },
+                        onSubmitClick = { navController.popBackStack() }
                     )
                 }
-
 
 
 
@@ -297,20 +298,25 @@ fun AppNavigation(
                                 )
                             )
                         },
-
+                        onDisableClick = { /* عملیات غیرفعال‌سازی */ },
+                        onVisitClick = { visitId ->
+                            navController.navigate(Screen.VisitDetail.createRoute(visitId))
+                        },
+                        onAddVisitClick = {
+                            navController.navigate(Screen.RegisterVisit.createRoute(organizationId = organizationId))
+                        },
                         onAssignVisitorClick = {
                             navController.navigate("assign_visitor/$id")
                         },
-
                         onEditVisitorClick = {
                         },
                         onDeleteVisitorClick = {
                         },
                         onAssignStandsClick = {
-                            navController.navigate(Screen.AddAdvertisingStandAssignmentOrganization.route)
+                            navController.navigate(Screen.AddAdvertisingStandAssignmentOrganization.createRoute(organizationId))
                         },
                         onAssignContractClick = {
-                            navController.navigate(Screen.AddContract.route)
+                            navController.navigate(Screen.AddContract.createRoute(organizationId = organizationId))
                         },
                         onViewItemDetailsClick = { allocation ->
                             navController.navigate(
@@ -324,8 +330,7 @@ fun AppNavigation(
                             )
                         }, onAddTicketOfferClick = {
                             navController.navigate(Screen.AddContractOffer.route)
-                        },
-                        onDisableClick = { /* عملیات غیرفعال‌سازی */ }
+                        }
                     )
                 }
 
@@ -465,9 +470,19 @@ fun AppNavigation(
                         }
                     )
                 }
+                composable(
+                    route = Screen.AddAdvertisingStandAssignmentOrganization.route,
+                    arguments = listOf(
+                        navArgument("organizationId") {
+                            type = NavType.IntType
+                            defaultValue = -1 // مقدار پیش‌فرض
+                        }
+                    )
+                ) { backStack ->
+                    val organizationId = backStack.arguments?.getInt("organizationId")?.takeIf { it != -1 }
 
-                composable(Screen.AddAdvertisingStandAssignmentOrganization.route) {
                     AddAdvertisingStandAssignmentOrganizationScreen(
+                        preselectedOrganizationId = organizationId,
                         onBackClick = { navController.popBackStack() },
                         onSaveClick = { navController.popBackStack() }
                     )
@@ -562,11 +577,22 @@ fun AppNavigation(
                     }
                 }
 
+                composable(
+                    route = Screen.AddContract.route,
+                    arguments = listOf(
+                        navArgument("organizationId") {
+                            type = NavType.IntType
+                            defaultValue = -1
+                        }
+                    )
+                ) { backStack ->
+                    val organizationId = backStack.arguments?.getInt("organizationId")?.takeIf { it != -1 }
 
-                composable(Screen.AddContract.route) {
                     AddContractScreen(
+                        preselectedOrganizationId = organizationId,
                         onBackClick = { navController.popBackStack() },
                         onSaveClick = {
+                            // عملیات ذخیره‌سازی
                         }
                     )
                 }

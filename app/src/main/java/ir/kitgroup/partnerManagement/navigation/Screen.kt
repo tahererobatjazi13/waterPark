@@ -12,16 +12,23 @@ sealed class Screen(val route: String) {
     data object Login : Screen("login")
     data object Map : Screen("map")
 
-    data object RegisterVisit : Screen("register_visit?visitId={visitId}") {
-
-        fun createRoute(visitId: Int? = null): String {
-            return if (visitId != null) {
-                "register_visit?visitId=$visitId"
-            } else {
-                "register_visit"
+    object RegisterVisit : Screen("register_visit?visitId={visitId}&organizationId={organizationId}") {
+        fun createRoute(
+            visitId: Int? = null,
+            organizationId: Int? = null
+        ): String {
+            val params = mutableListOf<String>()
+            if (visitId != null && visitId != -1) {
+                params.add("visitId=$visitId")
             }
+            if (organizationId != null && organizationId != -1) {
+                params.add("organizationId=$organizationId")
+            }
+            return if (params.isEmpty()) "register_visit" else "register_visit?${params.joinToString("&")}"
         }
     }
+
+
 
     data object RegisterCard : Screen("register_card")
 
@@ -76,9 +83,15 @@ sealed class Screen(val route: String) {
     data object AdvertisingStandAssignmentOrganizationList :
         Screen("advertising_stand_assignment_organization_list")
 
-
-    data object AddAdvertisingStandAssignmentOrganization :
-        Screen("add_advertising_stand_assignment_organization")
+    data object AddAdvertisingStandAssignmentOrganization : Screen("add_stand_assignment?organizationId={organizationId}") {
+        fun createRoute(organizationId: Int? = null): String {
+            return if (organizationId != null) {
+                "add_stand_assignment?organizationId=$organizationId"
+            } else {
+                "add_stand_assignment"
+            }
+        }
+    }
 
     data object AdvertisingStandAssignmentVisitorDetail : Screen(
         route = "advertising_stand_assignment_visitor_detail/{assignmentId}"
@@ -95,8 +108,15 @@ sealed class Screen(val route: String) {
     data object ReportContract : Screen("report_contract")
     data object CollectionPerformance : Screen("collection_performance")
 
-    data object AddContract :
-        Screen("add_contract")
+    data object AddContract : Screen("add_contract?organizationId={organizationId}") {
+        fun createRoute(organizationId: Int? = null): String {
+            return if (organizationId != null) {
+                "add_contract?organizationId=$organizationId"
+            } else {
+                "add_contract"
+            }
+        }
+    }
 
     data object ContractsList : Screen("contract_list")
 

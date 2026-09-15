@@ -5,6 +5,8 @@ import ir.kitgroup.partnerManagement.core.ui.util.Status
 data class OrganizationModel(
     val receationcenterid: Int,
     val name: String,
+    val city: String,
+    val region: String,
     val address: String,
     val status: Status,
     val grade: Int,

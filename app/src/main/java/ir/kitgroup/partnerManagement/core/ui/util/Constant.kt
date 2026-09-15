@@ -70,31 +70,32 @@ enum class AllocationFilterTab(val titleRes: Int) {
 enum class OrganizationDetailTab(
     @StringRes val titleRes: Int
 ) {
-    INFO(
-        titleRes = R.string.tab_organization_info
+    BASIC_INFO(
+        titleRes = R.string.tab_organization_basic_info
     ),
-
+    GENERAL_INFO(
+        titleRes = R.string.tab_organization_general_info
+    ),
+    VISITS(
+        titleRes = R.string.tab_visits),
     PERSONS(
         titleRes = R.string.tab_organization_persons
     ),
-
     VISITOR(
         titleRes = R.string.tab_organization_visitor
     ),
-
     STANDS(
         titleRes = R.string.tab_organization_stands
     ),
-
     CONTRACTS(
         titleRes = R.string.tab_organization_contracts
     ),
-    TICKETS(titleRes =R.string.tab_tickets_offers),
-
+    TICKETS(
+        titleRes = R.string.tab_tickets_offers
+    ),
     NOTICES(
         titleRes = R.string.tab_organization_notices
     )
-
 }
 
 

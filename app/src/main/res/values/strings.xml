@@ -112,6 +112,9 @@
     <string name="label_card_delivery">تحویل کارت</string>
     <string name="label_card_registration">ثبت کارت </string>
     <string name="label_registration">ثبت</string>
+
+    <string name="label_city">نام شهر</string>
+
     <string name="label_issuing_new_card">صدور کارت جدید</string>
     <string name="label_all_visitors">همه بازدیدکنندگان</string>
     <string name="label_pick_date">انتخاب تاریخ</string>
@@ -135,7 +138,7 @@
     <string name="label_assignment_mode">ماهیت اختصاص</string>
     <string name="label_visit_type">نوع بازدید</string>
     <string name="label_visit_subject">موضوع بازدید</string>
-    <string name="label_visit_Scheduled_date">تاریخ برنامه ریزی شده</string>
+    <string name="label_visit_Scheduled_date">تاریخ برنامه‌ریزی شده</string>
     <string name="label_recipient_name">نام گیرنده</string>
     <string name="label_card_number">شماره کارت</string>
     <string name="label_edit">ویرایش</string>
@@ -203,8 +206,6 @@
     <string name="label_add_related_person">افزودن شخص مرتبط</string>
     <string name="label_organization_person">شخص مرتبط با سازمان</string>
     <string name="label_add_person">افزودن شخص</string>
-    <string name="label_person_status">وضعیت شخص</string>
-    <string name="label_person_description">توضیحات شخص</string>
     <string name="label_delete">حذف</string>
     <string name="label_persons_count">%1$d شخص اضافه شده است</string>
     <string name="label_person_full_name">نام و نام خانوادگی</string>
@@ -251,9 +252,18 @@
     <string name="error_inactivation_reason_required">وارد کردن علت الزامی است</string>
     <string name="label_select_organization_status_desc">وضعیت جدید سازمان را انتخاب نمایید:</string>
     <string name="label_total_warnings">تجمیع تذکرات</string>
-    <string name="label_assigned_stands">استندهای اختصاصی</string>
+    <string name="label_assigned_stands">استندهای اختصاص داده شده</string>
     <string name="format_warnings_count">%d تذکر</string>
     <string name="format_stands_count">%d عدد</string>
+
+
+    <string name="label_visit_code">کد بازدید: %1$s</string>
+    <string name="label_visit_date">تاریخ بازدید: %1$s</string>
+    <string name="label_visit_result">نتیجه / توضیحات: %1$s</string>
+    <string name="label_visit_status_done">انجام‌شده</string>
+    <string name="label_visit_status_planned">برنامه‌ریزی‌شده</string>
+    <string name="label_visit_status_canceled">لغوشده</string>
+
 
 
     <string name="label_has_warnings">دارای تذکر</string>
@@ -289,6 +299,32 @@
     <string name="label_remaining_count">باقی‌مانده:</string>
 
 
+    <!-- متریک‌های ردیف اول -->
+    <string name="label_warnings_unit">تذکر</string>
+    <string name="label_total_score">تجمیع امتیاز</string>
+    <string name="label_score_unit">امتیاز</string>
+
+    <!-- متریک‌های ردیف دوم -->
+    <string name="label_stands_unit">استند</string>
+    <string name="label_completed_visits">بازدیدهای انجام‌شده</string>
+    <string name="label_planned_visits">بازدیدهای برنامه‌ریزی شده</string>
+    <string name="label_visits_unit">بازدید</string>
+
+    <!-- کارت و شیت سریال‌ها -->
+    <string name="label_assigned_serials">سریال‌های اختصاص‌یافته</string>
+    <string name="label_serials_detailed_title">جزئیات آماری سریال‌ها</string>
+    <string name="label_serials_detailed_desc">تفکیک وضعیت سریال‌ها</string>
+    <string name="label_serials_issued">سریال‌های صادر شده</string>
+    <string name="label_serials_used">سریال‌های مصرف شده</string>
+    <string name="label_serials_revoked">سریال‌های ابطال شده</string>
+    <string name="label_serials_remaining">سریال‌های باقی‌مانده</string>
+    <string name="label_action_view_details">جزئیات بیشتر</string>
+    <string name="label_percent">%</string>
+    <string name="label_active_marketers">بازاریابان فعال</string>
+    <string name="label_marketers_unit">نفر</string>
+
+
+
     <!-- Common formatted values -->
     <string name="value_not_available">---</string>
     <string name="value_percent">%1$s٪</string>
@@ -313,7 +349,9 @@
     <string name="status_expired">منقضی شده</string>
 
     //tab
-    <string name="tab_organization_info">اطلاعات</string>
+    <string name="tab_organization_basic_info">اطلاعات پایه</string>
+    <string name="tab_organization_general_info">اطلاعات آماری</string>
+    <string name="tab_visits">بازدیدها</string>
     <string name="tab_organization_persons">اشخاص</string>
     <string name="tab_organization_visitor">بازاریاب</string>
     <string name="tab_organization_stands">استندها</string>
@@ -385,6 +423,7 @@
 
 
     // message
+    <string name="msg_no_visit_found">هیچ بازدیدی برای این سازمان ثبت نشده است</string>
     <string name="msg_no_person_found">هنوز شخصی اضافه نشده است</string>
     <string name="msg_no_visitor_found">هیچ بازاریابی انتساب داده نشده است</string>
     <string name="msg_no_stand_found">هیچ استندی تخصیص داده نشده است</string>
@@ -466,6 +505,10 @@
     <string name="label_choose_discount_type">نوع تخفیف را وارد کنید</string>
     <string name="hint_enter_discount_percent">درصد تخفیف را وارد کنید</string>
     <string name="hint_enter_discount_amount">مبلغ تخفیف را وارد کنید</string>
+
+    <string name="hint_choose_city">انتخاب شهر...</string>
+    <string name="hint_choose_region">انتخاب منطقه...</string>
+
     // error
     <string name="error_username_required">نام کاربری را وارد کنید</string>
     <string name="error_password_required">رمز عبور را وارد کنید</string>

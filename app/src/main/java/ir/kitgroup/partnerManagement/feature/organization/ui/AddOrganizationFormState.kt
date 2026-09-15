@@ -22,6 +22,8 @@ class AddOrganizationFormState {
     var mobile by mutableStateOf("")
     var email by mutableStateOf("")
     var address by mutableStateOf("")
+    var city  by mutableStateOf("")
+    var region by mutableStateOf("")
 
     var organizationGrade by mutableIntStateOf(3)
     var ticketSaleCountHistory by mutableStateOf("")

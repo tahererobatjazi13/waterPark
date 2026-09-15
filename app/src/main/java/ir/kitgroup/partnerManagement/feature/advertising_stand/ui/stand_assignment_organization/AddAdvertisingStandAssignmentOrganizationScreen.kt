@@ -46,6 +46,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
@@ -59,9 +60,9 @@ import java.util.Locale
 
 @Composable
 fun AddAdvertisingStandAssignmentOrganizationScreen(
+    preselectedOrganizationId: Int? = null,
     onBackClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onSaveClick: () -> Unit
 ) {
     var assignmentType by rememberSaveable { mutableStateOf("") }
     val assignmentTypeList =
@@ -70,10 +71,6 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
     var assignmentMode by rememberSaveable { mutableStateOf("") }
     val assignmentModeList =
         remember { listOf("تبلیغاتی ", "امانی", "اجاره ای") }
-
-
-    var showOrganizationSheet by remember { mutableStateOf(false) }
-    var selectedOrganization by rememberSaveable { mutableStateOf<OrganizationModel?>(null) }
 
     var description by rememberSaveable { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -104,22 +101,153 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
         )
     }
     val isTrustMode = assignmentMode.trim() == "امانی"
+    val organizationList = listOf(
+        OrganizationModel(
+            1,
+            "هتل پارسیان آزادی",
+            city = "مشهد",
+            region = "منطقه 2",
+            "یوسفی",
+            Status.ACTIVE,
+            5, 0,
+            36.2845,
+            59.5892
+        ),
 
-    val organizationList = remember {
-        listOf(
-            OrganizationModel(1, "هتل پارسیان آزادی", "مشهد،یوسفی", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(2, " سازمان پالاس", "مشهد،قاسم آباد", Status.ACTIVE, 4  , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(3, "سازمان نوید", "مشهد،پیروزی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(4, "هتل مرکزی", "مشهد، امام رضا", Status.ACTIVE, 5,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(5, "کیوسک اطلس", "مشهد، کوهسنگی", Status.ACTIVE, 3,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(6, "هتل الماس", "مشهد، پاستور", Status.ACTIVE, 2,latitude =36.2972,longitude =59.6067),
-            OrganizationModel(7, "هتل وفا", "مشهد، وکیال آباد", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(8, "سازمان مهندسی", "مشهد، فاطمی", Status.ACTIVE, 4 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(9, "هتل امیر", "مشهد، رضاییه", Status.ACTIVE, 2 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(10, "آپارتمان ملل", "مشهد، ستاری", Status.ACTIVE, 3 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(11, "مهمانسرا اسپیناس", "مشهد، مرکزی", Status.INACTIVE, 5 , latitude =36.3109,longitude =59.5492),
-            OrganizationModel(12, "چالیدره", "مشهد، طرقبه", Status.INACTIVE, 2 , latitude =36.3109,longitude =59.5492)
+        OrganizationModel(
+            2,
+            name = "سازمان پالاس",
+            city = "مشهد",
+            region = "منطقه 2",
+            address = "قاسم آباد",
+            Status.ACTIVE,
+            4, 4,
+            36.3562,
+            59.5084
+        ),
+
+        OrganizationModel(
+            3,
+            name = "سازمان نوید",
+            city = "مشهد",
+            region = "منطقه 2",
+            address = "پیروزی",
+            status = Status.ACTIVE,
+            3, 3,
+            latitude = 36.3015,
+            longitude = 59.5289
+        ),
+
+        OrganizationModel(
+            4,
+            name = "هتل مرکزی",
+            city = "مشهد",
+            region = "منطقه 2",
+            address = "امام رضا",
+            status = Status.ACTIVE,
+            5, 5,
+            latitude = 36.2820,
+            longitude = 59.6190
+        ),
+
+        OrganizationModel(
+            5,
+            name = "کیوسک اطلس", city = "مشهد",
+            region = "منطقه 2",
+            address = "کوهسنگی",
+            status = Status.ACTIVE,
+            3, 3,
+            latitude = 36.2736,
+            longitude = 59.5694
+        ),
+
+        OrganizationModel(
+            6,
+            name = "هتل الماس", city = "مشهد",
+            region = "منطقه 2",
+            address = "پاستور",
+            status = Status.ACTIVE,
+            2, 2,
+            latitude = 36.2994,
+            longitude = 59.5772
+        ),
+
+        OrganizationModel(
+            7,
+            name = "هتل وفا", city = "مشهد",
+            region = "منطقه 2",
+            address = "وکیل آباد",
+            status = Status.ACTIVE,
+            3, 3,
+            latitude = 36.3312,
+            longitude = 59.4851
+        ),
+
+        OrganizationModel(
+            8,
+            name = "سازمان مهندسی", city = "مشهد",
+            region = "منطقه 2",
+            address = "فاطمی",
+            status = Status.ACTIVE,
+            4, 4,
+            latitude = 36.3078,
+            longitude = 59.5935
+        ),
+
+        OrganizationModel(
+            9,
+            name = "هتل امیر", city = "مشهد",
+            region = "منطقه 2",
+            address = " رضاییه",
+            status = Status.ACTIVE,
+            2, 2,
+            latitude = 36.2768,
+            longitude = 59.6385
+        ),
+
+        OrganizationModel(
+            10,
+            name = "آپارتمان ملل", city = "مشهد",
+            region = "منطقه 2",
+            address = " ستاری",
+            status = Status.ACTIVE,
+            3, 3,
+            latitude = 36.3421,
+            longitude = 59.5208
+        ),
+
+        OrganizationModel(
+            11,
+            "مهمانسرا اسپیناس",
+            "مشهد",
+            "منطقه 2",
+            "مرکزی",
+            Status.INACTIVE,
+            5,
+            5,
+            36.3051,
+            59.6059
+        ),
+
+        OrganizationModel(
+            12,
+            name = "چالیدره", city = "مشهد",
+            region = "منطقه 2",
+            address = "طرقبه",
+            status = Status.INACTIVE,
+            2, 2,
+            latitude = 36.3198,
+            longitude = 59.3482
         )
+    )
+
+    var selectedOrganization by remember { mutableStateOf<OrganizationModel?>(null) }
+    var showOrganizationSheet by remember { mutableStateOf(false) }
+    LaunchedEffect(preselectedOrganizationId) {
+        if (preselectedOrganizationId != null && preselectedOrganizationId != -1) {
+            selectedOrganization =
+                organizationList.find { it.receationcenterid == preselectedOrganizationId }
+        }
     }
 
     val items = remember {
@@ -152,7 +280,7 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
     val appColors = LocalPartnerManagementColors.current
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             CustomHeader(
                 title = R.string.label_allocation_record,
@@ -202,16 +330,18 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
                         isRequired = true,
                         onItemSelected = { assignmentMode = it }
                     )
+                    if (preselectedOrganizationId == null) {
 
-                    CustomSelectorField(
-                        value = selectedOrganization?.name ?: "",
-                        label = stringResource(R.string.label_organization_receiving_name),
-                        placeholder = stringResource(R.string.hint_choose_organization_name),
-                        isExpanded = showOrganizationSheet,
-                        onClick = {
-                            showOrganizationSheet = true
-                        }
-                    )
+                        CustomSelectorField(
+                            value = selectedOrganization?.name ?: "",
+                            label = stringResource(R.string.label_organization_receiving_name),
+                            placeholder = stringResource(R.string.hint_choose_organization_name),
+                            isExpanded = showOrganizationSheet,
+                            onClick = {
+                                showOrganizationSheet = true
+                            }
+                        )
+                    }
 
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -321,7 +451,7 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
         )
     }
 
-    if (showOrganizationSheet) {
+    if (showOrganizationSheet && preselectedOrganizationId == null) {
         OrganizationBottomSheet(
             list = organizationList,
             onDismiss = { showOrganizationSheet = false },
