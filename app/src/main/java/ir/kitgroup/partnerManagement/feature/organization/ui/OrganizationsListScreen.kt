@@ -84,8 +84,8 @@ import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 
 @Composable
 fun OrganizationsListScreen(
-    onOrganizationClick: (Int) -> Unit,
-    onAddOrganizationClick: () -> Unit,
+    onNavigateToDetail: (Int) -> Unit,
+    onNavigateToAdd: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SessionViewModel = hiltViewModel()
 ) {
@@ -125,7 +125,7 @@ fun OrganizationsListScreen(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onAddOrganizationClick,
+                onClick = onNavigateToAdd,
                 containerColor = LocalPartnerManagementColors.current.success,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp),
@@ -226,7 +226,7 @@ fun OrganizationsListScreen(
                                     organization = organization,
                                     number = index + 1,
                                     onClick = {
-                                        onOrganizationClick(organization.receationcenterid)
+                                        onNavigateToDetail(organization.receationcenterid)
                                     }
                                 )
                             }
@@ -650,8 +650,8 @@ fun OrganizationsCard(
 private fun OrganizationsListScreenPreview() {
     AppScreenPreview {
         OrganizationsListScreen(
-            onOrganizationClick = {},
-            onAddOrganizationClick = {}
+            onNavigateToDetail = {},
+            onNavigateToAdd = {}
         )
     }
 }

@@ -13,7 +13,7 @@ fun Status.toDisplayName(): String = when (this) {
 
 /*
 git add .
-git commit -m "change organization detail"
+git commit -m "clean App Navigation"
 git push -u origin master
 git push
 */

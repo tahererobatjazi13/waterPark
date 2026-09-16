@@ -51,11 +51,11 @@ import ir.kitgroup.partnerManagement.feature.organization.model.PersonOrganizati
 @Composable
 fun AddOrganizationScreen(
     organizationId: Int,
-    onBackClick: () -> Unit,
-    onCancel: () -> Unit,
-    onSaveClick: () -> Unit,
-    onSelectLocation: () -> Unit,
-    onAddImage: () -> Unit,
+    onBack: () -> Unit,
+    onCancel: () -> Unit = {},
+    onSaveClick: () -> Unit = {},
+    onSelectLocation: () -> Unit = {},
+    onAddImage: () -> Unit = {},
 ) {
     val appColors = LocalPartnerManagementColors.current
     val isEditMode = organizationId > 0
@@ -75,7 +75,7 @@ fun AddOrganizationScreen(
                     R.string.label_add_new_organization
                 },
                 showBackButton = true,
-                onBackClick = onBackClick
+                onBackClick = onBack
             )
         },
         containerColor = MaterialTheme.colorScheme.primary
@@ -1191,7 +1191,7 @@ private fun AddOrganizationScreenPreview() {
     AppScreenPreview {
         AddOrganizationScreen(
             organizationId = 0,
-            onBackClick = {},
+            onBack = {},
             onCancel = {},
             onSaveClick = {},
             onSelectLocation = {},

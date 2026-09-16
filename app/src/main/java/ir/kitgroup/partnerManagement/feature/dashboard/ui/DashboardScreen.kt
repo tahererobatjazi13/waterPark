@@ -145,9 +145,7 @@ fun DashboardScreen(
                         onQuickContractClick = { navController.navigate(Screen.AddContract.route) },
                         onQuickOrganizationClick = { navController.navigate(Screen.AddOrganization.route) },
                         onQuickVisitClick = { navController.navigate(Screen.RegisterVisit.createRoute()) },
-                        onQuickCardClick = { navController.navigate(Screen.RegisterCard.route) },
-                        onQuickContractOfferClick = { navController.navigate(Screen.AddContractOffer.route) },
-                        onQuickOfferTicketPlanClick = { navController.navigate(Screen.OfferTicketPlanList.route) }
+                        onQuickContractOfferClick = { navController.navigate(Screen.AddContractOffer.route) }
                     )
                 }
                 item { Spacer(Modifier.width(6.dp)) }
@@ -164,9 +162,11 @@ fun DashboardScreen(
                             }
                         },
                         onReportClick = { navController.navigate(Screen.ReportMenu.route) },
-                        onMapClick = { navController.navigate(
-                            Screen.Map.route
-                        ) }
+                        onMapClick = {
+                            navController.navigate(
+                                Screen.Map.route
+                            )
+                        }
                     )
                 }
                 item { Spacer(Modifier.width(6.dp)) }
@@ -228,7 +228,7 @@ private fun DashboardHeader() {
             color = MaterialTheme.colorScheme.onPrimary,
             style = typography.titleLarge
         )
-     //   NotificationIcon()
+        //   NotificationIcon()
     }
 }
 
@@ -335,9 +335,7 @@ private fun QuickActionsSection(
     onQuickContractClick: () -> Unit,
     onQuickOrganizationClick: () -> Unit,
     onQuickVisitClick: () -> Unit,
-    onQuickCardClick: () -> Unit,
     onQuickContractOfferClick: () -> Unit,
-    onQuickOfferTicketPlanClick: () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -378,25 +376,6 @@ private fun QuickActionsSection(
                 modifier = Modifier.weight(1f)
             )
         }
-
-        /*  Row(
-              horizontalArrangement = Arrangement.spacedBy(10.dp)
-          ) {
-  
-              QuickActionCard(
-                  title = stringResource(R.string.label_issuing_new_card),
-                  icon = Icons.Outlined.Badge,
-                  onClick = onQuickCardClick,
-                  modifier = Modifier.weight(1f)
-              )
-              QuickActionCard(
-                  title = stringResource(R.string.label_offer_ticket_plan),
-                  icon = Icons.Filled.FactCheck,
-                  onClick = onQuickOfferTicketPlanClick,
-                  modifier = Modifier.weight(1f)
-              )
-  
-          }*/
     }
 }
 

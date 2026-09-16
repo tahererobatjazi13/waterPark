@@ -23,7 +23,7 @@ import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
 import ir.kitgroup.partnerManagement.feature.report.ui.organization.model.CollectionPerformanceUi
 
 @Composable
-fun CollectionPerformanceScreen(
+fun OrganizationPerformanceScreen(
     onBackClick: () -> Unit
 ) {
     val collections = listOf(

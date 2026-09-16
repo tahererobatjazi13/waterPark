@@ -274,7 +274,7 @@ val demoOrganizations = listOf(
 @Composable
 fun OrganizationDetailScreen(
     organizationId: Int,
-    onBackClick: () -> Unit,
+    onBack: () -> Unit,
     onEditClick: () -> Unit,
     onDisableClick: () -> Unit,
     onAddVisitClick: () -> Unit,
@@ -582,7 +582,7 @@ fun OrganizationDetailScreen(
             CustomHeader(
                 title = R.string.label_details,
                 showBackButton = true,
-                onBackClick = onBackClick
+                onBackClick = onBack
             )
         },
         bottomBar = {
