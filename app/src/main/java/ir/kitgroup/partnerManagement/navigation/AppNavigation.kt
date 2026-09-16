@@ -24,8 +24,8 @@ import ir.kitgroup.partnerManagement.feature.dashboard.ui.MapScreen
 import ir.kitgroup.partnerManagement.feature.login.navigation.authNavGraph
 import ir.kitgroup.partnerManagement.feature.offer.navigation.offerNavGraph
 import ir.kitgroup.partnerManagement.feature.organization.navigation.organizationNavGraph
-import ir.kitgroup.partnerManagement.feature.visits.navigation.visitsNavGraph
 import ir.kitgroup.partnerManagement.feature.organization.ui.demoOrganizations
+import ir.kitgroup.partnerManagement.feature.visits.navigation.visitsNavGraph
 import ir.kitgroup.partnerManagement.feature.profile.navigation.profileNavGraph
 import ir.kitgroup.partnerManagement.feature.report.navigation.reportNavGraph
 

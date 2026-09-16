@@ -47,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
+import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionCard
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
 import ir.kitgroup.partnerManagement.core.ui.components.Rating
@@ -176,7 +177,7 @@ fun VisitDetailScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                DescriptionCard(visit.description)
+                CustomDescriptionCard(visit.description)
 
                 Spacer(Modifier.height(80.dp))
             }
@@ -391,37 +392,6 @@ private fun LocationCard() {
     }
 }
 
-@Composable
-private fun DescriptionCard(
-    description: String
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColors.cardBackground
-        ),
-        border = BorderStroke(
-            width = 0.7.dp,
-            color = appColors.border
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Text(
-                text = description.ifBlank { "-" },
-                style = typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.Start
-            )
-        }
-    }
-}
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable

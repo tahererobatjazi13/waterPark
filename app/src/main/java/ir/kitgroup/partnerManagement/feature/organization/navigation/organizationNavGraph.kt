@@ -9,7 +9,7 @@ import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.organization.ui.AddOrganizationScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.AssignVisitorScreen
-import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationDetailScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.OrganizationDetailScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationsListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
