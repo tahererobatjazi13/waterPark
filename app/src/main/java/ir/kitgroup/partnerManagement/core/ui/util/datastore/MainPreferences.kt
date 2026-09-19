@@ -42,8 +42,7 @@ class MainPreferences @Inject constructor(
         val KEY_BASE_URL = stringPreferencesKey("base_url")
         val KEY_USER_ROLE = stringPreferencesKey("key_user_role")
         val KEY_USERNAME = stringPreferencesKey("key_username")
-
-
+        val KEY_LAST_SYNC_TIME = longPreferencesKey("key_last_sync_time")
     }
 
     val id: Flow<Int?> = context.dataStore.data
@@ -99,6 +98,16 @@ class MainPreferences @Inject constructor(
 
     suspend fun getBaseUrl(): String {
         return baseUrlFlow.first() ?: "http://default/api/Android/"
+    }
+
+    suspend fun saveLastSyncTime(timestamp: Long) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_LAST_SYNC_TIME] = timestamp
+        }
+    }
+
+    suspend fun getLastSyncTime(): Long? {
+        return context.dataStore.data.map { it[KEY_LAST_SYNC_TIME] }.first()
     }
 
 }

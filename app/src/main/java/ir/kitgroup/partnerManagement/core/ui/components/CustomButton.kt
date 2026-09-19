@@ -1,4 +1,5 @@
 package ir.kitgroup.partnerManagement.core.ui.components
+
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
@@ -21,7 +22,8 @@ fun CustomButton(
     colors: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary
-    ),
+    ), isLoading: Boolean = false,
+
     enabled: Boolean = true,
     fillMaxWidth: Boolean = true,
     height: Dp? = 50.dp,
@@ -44,27 +46,35 @@ fun CustomButton(
         modifier = finalModifier,
         shape = RoundedCornerShape(cornerRadius),
         colors = colors,
-        enabled = enabled,
+        enabled = enabled && !isLoading,
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
         contentPadding = contentPadding
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-
-            Text(
-                text = text,
-                style = textStyle
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = LocalContentColor.current,
+                strokeWidth = 2.dp
             )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+                Text(
+                    text = text,
+                    style = textStyle
+                )
+            }
         }
     }
 }

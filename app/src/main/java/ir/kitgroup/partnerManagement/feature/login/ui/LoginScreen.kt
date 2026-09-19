@@ -8,8 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.RateReview
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +42,19 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                LoginEffect.NavigateToDashboard -> {
+                    navController.navigate(BottomNavItem.Dashboard.route) {
+                        popUpTo("login") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+    }
+
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -58,23 +73,31 @@ fun LoginScreen(
             }
         }
     }
+    if (uiState.isServerDialogVisible) {
+        ServerAddressDialog(
+            initialAddress = uiState.currentServerAddress,
+            errorMessage = uiState.serverAddressError,
+            isLoading = uiState.isTestingServer,
+            onDismissRequest = viewModel::onDismissServerDialog,
+            onSaveClick = viewModel::onSaveServerAddress
+        )
+    }
     LoginContent(
         uiState = uiState,
         onUsernameChange = viewModel::onUsernameChange,
         onPasswordChange = viewModel::onPasswordChange,
         onLoginClick = viewModel::onLoginClick,
-        onForgotPasswordClick = {
-            // navController.navigate("forgot_password")
-        }
+        onSettingClick = viewModel::onOpenServerDialog,
+        onForgotPasswordClick = { /* Forgot Password */ }
     )
 }
-
 @Composable
 private fun LoginContent(
     uiState: LoginUiState,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit,
+    onSettingClick: () -> Unit,
     onForgotPasswordClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -150,10 +173,28 @@ private fun LoginContent(
             icon = Icons.AutoMirrored.Filled.Login,
         )
 
-        Spacer(modifier = Modifier.height(60.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // دکمه تنظیمات سرور
+        CustomButton(
+            text = stringResource(R.string.label_server_setting),
+            onClick = {
+                focusManager.clearFocus()
+                onSettingClick()
+            },
+            icon = Icons.Default.Dns,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = appColors.tableHeaderBackground,
+                contentColor =appColors.textPrimary
+
+            ),
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
     }
 }
 
+/*
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun LoginContentPreview() {
@@ -169,4 +210,4 @@ private fun LoginContentPreview() {
             onForgotPasswordClick = {}
         )
     }
-}
+}*/

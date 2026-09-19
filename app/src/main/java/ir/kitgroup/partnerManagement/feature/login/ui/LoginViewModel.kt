@@ -1,24 +1,39 @@
 package ir.kitgroup.partnerManagement.feature.login.ui
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.network.BaseUrlProvider
+import ir.kitgroup.partnerManagement.core.network.BaseUrlValidator
+import ir.kitgroup.partnerManagement.core.ui.util.convertNumbersToEnglish
+import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
+import ir.kitgroup.partnerManagement.core.ui.util.fixPersianChars
 import ir.kitgroup.partnerManagement.feature.login.domain.AuthRepository
 import ir.kitgroup.partnerManagement.feature.login.domain.InvalidCredentialsException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
+
+    @Inject
+    lateinit var mainPreferences: MainPreferences
+
+    @Inject
+    lateinit var baseUrlProvider: BaseUrlProvider
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -95,6 +110,70 @@ class LoginViewModel @Inject constructor(
                     }
                 }
             )
+        }
+    }
+
+
+    fun onOpenServerDialog() {
+        viewModelScope.launch {
+            val savedBaseUrl = mainPreferences.baseUrlFlow.firstOrNull().orEmpty()
+            val displayAddress = extractHostAndPort(savedBaseUrl)
+            _uiState.update {
+                it.copy(
+                    isServerDialogVisible = true,
+                    currentServerAddress = displayAddress,
+                    serverAddressError = null
+                )
+            }
+        }
+    }
+
+    fun onDismissServerDialog() {
+        _uiState.update { it.copy(isServerDialogVisible = false, serverAddressError = null) }
+    }
+
+    fun onSaveServerAddress(inputAddress: String) {
+        val cleanAddress = convertNumbersToEnglish(fixPersianChars(inputAddress)).trim()
+
+        if (cleanAddress.isEmpty()) {
+            _uiState.update { it.copy(serverAddressError = R.string.error_enter_address_server) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isTestingServer = true, serverAddressError = null) }
+
+            val validBaseUrl = BaseUrlValidator.buildBaseUrl(cleanAddress)
+            if (validBaseUrl == null) {
+                _uiState.update {
+                    it.copy(
+                        isTestingServer = false,
+                        serverAddressError = R.string.error_unable_connect_server
+                    )
+                }
+                return@launch
+            }
+
+            // ذخیره و به‌روزرسانی زنده در Retrofit/BaseUrlProvider
+            mainPreferences.saveBaseUrl(validBaseUrl)
+            baseUrlProvider.updateBaseUrl(validBaseUrl)
+
+            _uiState.update {
+                it.copy(
+                    isTestingServer = false,
+                    isServerDialogVisible = false,
+                    serverAddressError = null
+                )
+            }
+        }
+    }
+
+    private fun extractHostAndPort(fullUrl: String): String {
+        return try {
+            val uri = fullUrl.toHttpUrl()
+            if (uri.port == 80 || uri.port == 443) uri.host else "${uri.host}:${uri.port}"
+        } catch (e: Exception) {
+            ""
         }
     }
 }

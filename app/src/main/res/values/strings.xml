@@ -322,6 +322,10 @@
     <string name="label_percent">%</string>
     <string name="label_active_marketers">بازاریابان فعال</string>
     <string name="label_marketers_unit">نفر</string>
+    <string name="label_receive_data">دریافت اطلاعات</string>
+    <string name="label_send_data">ارسال اطلاعات</string>
+    <string name="label_transfer_changes">انتقال تغییرات</string>
+    <string name="label_update_data">بروزرسانی داده‌ها</string>
 
 
 
@@ -406,10 +410,10 @@
 
     <string name="label_items_count_summary">%1$d نوع ، %2$d عدد</string>
     <string name="label_item_code">کد استند</string>
+    <string name="label_server_setting">تنظیمات سرور</string>
+    <string name="label_server_address">آدرس سرور (IP:Port)</string>
 
-    <string name="msg_no_allocated_stand_found">
-    هیچ استندی برای این تخصیص ثبت نشده است
-</string>
+
 
 
 
@@ -423,7 +427,10 @@
 
 
     // message
+    <string name="msg_data_sent_successfully">ارسال اطلاعات با موفقیت انجام شد</string>
+    <string name="msg_data_synced_successfully">اطلاعات با موفقیت دریافت شد</string>
     <string name="msg_no_visit_found">هیچ بازدیدی برای این سازمان ثبت نشده است</string>
+    <string name="msg_no_allocated_stand_found">هیچ استندی برای این تخصیص ثبت نشده است</string>
     <string name="msg_no_person_found">هنوز شخصی اضافه نشده است</string>
     <string name="msg_no_visitor_found">هیچ بازاریابی انتساب داده نشده است</string>
     <string name="msg_no_stand_found">هیچ استندی تخصیص داده نشده است</string>
@@ -514,5 +521,8 @@
     <string name="error_password_required">رمز عبور را وارد کنید</string>
     <string name="error_invalid_login">نام کاربری یا رمز عبور صحیح نیست</string>
     <string name="error_logout">آیا مطمئن هستید که می‌خواهید از حساب کاربری خارج شوید؟</string>
+    <string name="error_unknown_error">خطای ناشناخته رخ داد</string>
+    <string name="error_enter_address_server">آدرس سرور را وارد کنید</string>
+    <string name="error_unable_connect_server">امکان برقراری ارتباط با سرور وجود ندارد</string>
 
 </resources>

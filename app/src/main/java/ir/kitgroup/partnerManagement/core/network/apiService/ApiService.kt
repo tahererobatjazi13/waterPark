@@ -1,10 +1,15 @@
 package ir.kitgroup.partnerManagement.core.network.apiService
 
-import ir.kitgroup.partnerManagement.core.database.entity.PartnerManagementEntity
+import ir.kitgroup.partnerManagement.feature.dashboard.model.BaseDataSyncResponse
 import retrofit2.http.GET
+import retrofit2.http.Query
 
-// ApiService.kt
+
+
 interface ApiService {
-    @GET("partnerManagements")
-    suspend fun getPartnerManagements(): List<PartnerManagementEntity>
+    @GET("sync/base-data")
+    suspend fun getBaseData(
+        @Query("lastSyncTime") lastSyncTimestamp: Long? = null
+    ): BaseDataSyncResponse
+
 }

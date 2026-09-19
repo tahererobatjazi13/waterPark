@@ -34,6 +34,8 @@ import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
@@ -42,14 +44,52 @@ import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
 import ir.kitgroup.partnerManagement.feature.visits.ui.VisitTypeChip
 import ir.kitgroup.partnerManagement.navigation.Screen
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun DashboardScreen(
-    navController: NavController, viewModel: SessionViewModel = hiltViewModel()
+    navController: NavController,
+    sessionViewModel: SessionViewModel = hiltViewModel(),
+    dashboardViewModel: DashboardViewModel = hiltViewModel(),
+    onSyncDataClick: () -> Unit = {},
+    onUploadDataClick: () -> Unit = {}
 ) {
 
-    val role by viewModel.userRole.collectAsState()
+    val role by sessionViewModel.userRole.collectAsState()
     val isSupervisor = role == UserRole.SUPERVISOR.name
+
+    val syncState by dashboardViewModel.syncState.collectAsStateWithLifecycle()
+    val isSyncing = syncState is DataState.Loading
+    var isUploading by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+
+    val context = LocalContext.current
+
+    LaunchedEffect(dashboardViewModel.uiEvent) {
+        dashboardViewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> {
+                    val message = event.message.asString(context)
+                    snackbarHostState.showSnackbar(message)
+                }
+
+                is UiEvent.ShowError -> {
+                    val error = event.error.asString(context)
+                    snackbarHostState.showSnackbar(error)
+                }
+            }
+        }
+    }
+
 
     val summaryItems = listOf(
         SummaryCardData(
@@ -138,6 +178,16 @@ fun DashboardScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // بخش عملیات همگام‌سازی و سینک داده‌ها
+                item {
+                    DataSyncSection(
+                        isSyncing = isSyncing,
+                        isUploading = isUploading,
+                        onSyncClick = dashboardViewModel::onReceiveDataClick,
+                        onUploadClick = dashboardViewModel::onSendDataClick
+                    )
+                }
+
                 item { SummarySection(summaryItems) }
                 item { Spacer(Modifier.width(6.dp)) }
                 item {
@@ -209,7 +259,8 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun DashboardHeader() {
+private fun DashboardHeader(
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -218,7 +269,7 @@ private fun DashboardHeader() {
                 shape = SideCurvedHeaderShape(50f)
             )
             .windowInsetsPadding(WindowInsets.statusBars)
-            .height(60.dp)
+            .height(64.dp)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -228,7 +279,132 @@ private fun DashboardHeader() {
             color = MaterialTheme.colorScheme.onPrimary,
             style = typography.titleLarge
         )
-        //   NotificationIcon()
+        //  NotificationIcon()
+    }
+}
+
+
+@Composable
+private fun DataSyncSection(
+    isSyncing: Boolean,
+    isUploading: Boolean,
+    onSyncClick: () -> Unit,
+    onUploadClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SyncActionCardButton(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.label_receive_data),
+                subtitle = stringResource(R.string.label_update_data),
+                icon = Icons.Default.Sync,
+                accentColor = PartnerManagementTheme.colors.infoContainer,
+                iconTint = PartnerManagementTheme.colors.onInfoContainer,
+                isLoading = isSyncing,
+                onClick = onSyncClick
+            )
+
+            SyncActionCardButton(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.label_send_data),
+                subtitle = stringResource(R.string.label_transfer_changes),
+                icon = Icons.Default.CloudUpload,
+                accentColor = PartnerManagementTheme.colors.successContainer,
+                iconTint = PartnerManagementTheme.colors.onSuccessContainer,
+                isLoading = isUploading,
+                onClick = onUploadClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun SyncActionCardButton(
+    modifier: Modifier = Modifier,
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    accentColor: Color,
+    iconTint: Color,
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        enabled = !isLoading,
+        modifier = modifier.height(64.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        shadowElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(accentColor),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = iconTint
+                    )
+                } else {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = iconTint,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = title,
+                    style = typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 }
 
@@ -546,93 +722,6 @@ private fun QuickAccessCard(
         }
     }
 }
-
-/*
-@Composable
-fun VisitCard(
-    item: VisitModel,
-    isSupervisor: Boolean,
-    onClick: () -> Unit,
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColors.cardBackground
-        ),
-        border = BorderStroke(
-            width = 0.7.dp,
-            color = appColors.border
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = item.organizationName,
-                        style = typography.titleLarge,
-                        color = appColors.textPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    StatusBadge(item.status)
-
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                VisitTypeChip(
-                    text = item.visitType,
-                    icon = item.icon
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // نمایش نام بازاریاب صرفاً در صورتی که نقش سرپرست باشد و مقدار داشته باشد
-                if (isSupervisor && !item.visitorName.isNullOrBlank()) {
-                    DetailRow(
-                        icon = Icons.Default.Person,
-                        text = item.visitorName
-                    )
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-
-                DetailRow(
-                    icon = Icons.Default.DateRange,
-                    text = item.date
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                LocationRow(
-                    location = "${item.city}، ${item.district}"
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-
-            }
-        }
-    }
-}
-*/
-
-
 
 @Composable
 private fun VisitCard(
