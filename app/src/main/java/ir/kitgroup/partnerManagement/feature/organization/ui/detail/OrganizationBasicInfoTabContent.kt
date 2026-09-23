@@ -51,16 +51,16 @@ import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.components.GradeSelector
-import ir.kitgroup.partnerManagement.core.ui.util.Status
 import androidx.compose.material.icons.outlined.ConfirmationNumber
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Storefront
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionCard
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 
 @Composable
-fun OrganizationBasicInfoTabContent(organization: OrganizationModel) {
+fun OrganizationBasicInfoTabContent(organization: OrganizationEntity) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,13 +76,13 @@ fun OrganizationBasicInfoTabContent(organization: OrganizationModel) {
 
         SectionTitle(stringResource(R.string.label_location))
         AddressMapCard(
-            city = organization.city,
-            region = organization.region,
-            address = organization.address
+            city = organization.cityId!!,
+            region = organization.regionId!!,
+            address = organization.address!!
         )
 
         SectionTitle(stringResource(R.string.label_analytical_information))
-        AnalysisInfoSection(grade = organization.grade)
+        AnalysisInfoSection(grade = organization.grade!!)
 
         SectionTitle(stringResource(R.string.label_statuses))
         StatusInfoSection()
@@ -99,7 +99,7 @@ fun OrganizationBasicInfoTabContent(organization: OrganizationModel) {
 
 @Composable
 private fun BasicInfoSection(
-    organization: OrganizationModel
+    organization: OrganizationEntity
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
@@ -116,7 +116,7 @@ private fun BasicInfoSection(
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
                 InfoRowItem(
                     title = stringResource(R.string.label_organization_name),
-                    value = organization.name,
+                    value = organization.name!!,
                     icon = Icons.Filled.Business,
                     isHighlighted = true
                 )
@@ -195,7 +195,9 @@ private fun BasicInfoSection(
                         color = appColors.textSecondary
                     )
 
-                    StatusBadge(status = Status.ACTIVE)
+                    StatusBadge(
+                        status = OrganizationStatus.fromId(organization.status)
+                    )
                 }
             }
         }

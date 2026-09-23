@@ -37,14 +37,14 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.text.style.TextAlign
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.feature.organization.model.PersonOrganization
-import ir.kitgroup.partnerManagement.feature.organization.ui.personStatusToStatus
+import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationStatus
 
 
 @Composable
 fun OrganizationPersonsTabContent(
-    persons: List<PersonOrganization> = emptyList(),
+    persons: List<OrganizationPersonEntity> = emptyList(),
     onAddPersonClick: () -> Unit = {},
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -115,7 +115,7 @@ fun OrganizationPersonsTabContent(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 itemsIndexed(persons) { index, person ->
-                    RelatedPersonDetailCard(index = index, person = person)
+                    PersonOrganizationCard(index = index, person = person)
                 }
             }
         }
@@ -124,9 +124,9 @@ fun OrganizationPersonsTabContent(
 }
 
 @Composable
-private fun RelatedPersonDetailCard(
+private fun PersonOrganizationCard(
     index: Int,
-    person: PersonOrganization
+    person: OrganizationPersonEntity
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -164,32 +164,31 @@ private fun RelatedPersonDetailCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        StatusBadge(
-                            status = personStatusToStatus(person.status)
-                        )
 
-                        if (person.gender.isNotBlank()) {
+                        StatusBadge(status = PersonOrganizationStatus.fromId(person.statusRelation))
+
+                       /* if (person.gender.isNotBlank()) {
                             Text(
                                 text = person.gender,
                                 style = typography.labelSmall,
                                 color = appColors.textSecondary
                             )
-                        }
+                        }*/
                     }
                 }
             }
 
             PersonInfoRow(
                 title = stringResource(R.string.label_mobile),
-                value = person.mobile
+                value = person.personId!!
             )
 
             PersonInfoRow(
                 title = stringResource(R.string.label_phone),
-                value = person.phone
+                value = person.personId
             )
 
-            if (person.description.isNotBlank()) {
+            if (person.description!!.isNotBlank()) {
                 PersonInfoRow(
                     title = stringResource(R.string.label_description),
                     value = person.description

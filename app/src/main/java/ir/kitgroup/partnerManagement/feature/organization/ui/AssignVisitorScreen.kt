@@ -26,7 +26,7 @@ import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 
 @Composable
 fun AssignVisitorScreen(
-    organizationId: Int? = null,
+    organizationId: String? = null,
     onBack: () -> Unit,
     onSaveClick: () -> Unit = {},
 ) {
@@ -208,7 +208,7 @@ fun AssignVisitorScreen(
 private fun RegisterVisitScreenPreview() {
     AppScreenPreview {
         AssignVisitorScreen(
-            organizationId = 0,
+            organizationId = "",
             onBack = {},
             onSaveClick = {})
     }

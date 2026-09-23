@@ -31,7 +31,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.PersonEntity
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
@@ -46,11 +49,10 @@ import ir.kitgroup.partnerManagement.core.ui.components.YesNoSwitchRow
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.organization.model.PersonOrganization
 
 @Composable
 fun AddOrganizationScreen(
-    organizationId: Int,
+    organizationId: String?,
     onBack: () -> Unit,
     onCancel: () -> Unit = {},
     onSaveClick: () -> Unit = {},
@@ -58,7 +60,7 @@ fun AddOrganizationScreen(
     onAddImage: () -> Unit = {},
 ) {
     val appColors = LocalPartnerManagementColors.current
-    val isEditMode = organizationId > 0
+    val isEditMode = organizationId != null
 
     val formState = rememberAddOrganizationFormState()
     val personState = rememberAddPersonFormState()
@@ -115,15 +117,16 @@ fun AddOrganizationScreen(
                 showAddPersonSheet = false
             },
             onSavePerson = {
-                if (personState.name.isNotBlank() && personState.phone.isNotBlank()) {
+                if (personState.name.isNotBlank() && personState.phone1.isNotBlank()) {
                     formState.organizationPersons.add(
-                        PersonOrganization(
+                        PersonEntity(
+                            personId = java.util.UUID.randomUUID().toString(),
                             name = personState.name.trim(),
-                            mobile = personState.mobile.trim(),
-                            phone = personState.phone.trim(),
-                            status = personState.status,
+                            description = personState.description.trim(),
                             gender = personState.gender,
-                            description = personState.description.trim()
+                            mobile = personState.mobile.trim(),
+                            phone1 = personState.phone1.trim(),
+                            status = personState.status
                         )
                     )
 
@@ -602,7 +605,7 @@ private fun OrganizationStatusSection(
 
 @Composable
 private fun OrganizationRelatedPersonsSection(
-    persons: List<PersonOrganization>,
+    persons: List<PersonEntity>,
     onAddPersonClick: () -> Unit,
     onRemovePerson: (Int) -> Unit
 ) {
@@ -741,8 +744,8 @@ fun AddPersonBottomSheet(
                 },
                 end = {
                     CustomEditTextField(
-                        value = personState.phone,
-                        onValueChange = { personState.phone = it },
+                        value = personState.phone1,
+                        onValueChange = { personState.phone1 = it },
                         label = stringResource(R.string.label_phone),
                         placeholder = stringResource(R.string.hint_enter_phone),
                         isRequired = false,
@@ -750,26 +753,33 @@ fun AddPersonBottomSheet(
                     )
                 }
             )
-
             DropdownSelectorField(
-                value = personState.gender,
+                value = when (personState.gender) {
+                    1 -> "مرد"
+                    2 -> "زن"
+                    else -> ""
+                },
                 label = stringResource(R.string.label_gender),
                 placeholder = stringResource(R.string.hint_choose_gender),
                 items = genderList,
                 isRequired = false,
-                onItemSelected = {
-                    personState.gender = it
+                onItemSelected = { selectedGender ->
+                    personState.gender = when (selectedGender) {
+                        "مرد" -> 1
+                        "زن" -> 2
+                        else -> 0
+                    }
                 }
             )
 
             DropdownSelectorField(
-                value = personState.status,
+                value = personState.status.toString(),
                 label = stringResource(R.string.label_status),
                 placeholder = stringResource(R.string.hint_choose_status),
                 items = statusList,
                 isRequired = false,
                 onItemSelected = {
-                    personState.status = it
+                    personState.status = 1
                 }
             )
 
@@ -781,7 +791,7 @@ fun AddPersonBottomSheet(
             )
 
             AddPersonBottomSheetActions(
-                enabled = personState.name.isNotBlank() && personState.phone.isNotBlank(),
+                enabled = personState.name.isNotBlank() && personState.phone1.isNotBlank(),
                 onDismiss = onDismiss,
                 onSavePerson = onSavePerson
             )
@@ -826,7 +836,7 @@ private fun AddPersonBottomSheetActions(
 
 @Composable
 private fun OrganizationPersonsSummarySection(
-    persons: List<PersonOrganization>,
+    persons: List<PersonEntity>,
     onAddPersonClick: () -> Unit,
     onRemovePerson: (Int) -> Unit
 ) {
@@ -916,7 +926,7 @@ private fun OrganizationPersonsSummarySection(
 
 @Composable
 private fun OrganizationPersonCard(
-    person: PersonOrganization,
+    person: PersonEntity,
     index: Int,
     onRemoveClick: () -> Unit
 ) {
@@ -960,17 +970,22 @@ private fun OrganizationPersonCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        StatusBadge(
-                            status = personStatusToStatus(person.status)
-                        )
 
-                        if (person.gender.isNotBlank()) {
-                            Text(
-                                text = person.gender,
-                                style = typography.labelSmall,
-                                color = appColors.textSecondary
-                            )
+                        person.gender?.let { genderCode ->
+                            val genderTitle = when (genderCode) {
+                                1 -> "مرد"
+                                2 -> "زن"
+                                else -> ""
+                            }
+                            if (genderTitle.isNotEmpty()) {
+                                Text(
+                                    text = genderTitle,
+                                    style = typography.labelSmall,
+                                    color = appColors.textSecondary
+                                )
+                            }
                         }
+
                     }
                 }
 
@@ -988,15 +1003,15 @@ private fun OrganizationPersonCard(
 
             PersonInfoRow(
                 title = stringResource(R.string.label_mobile),
-                value = person.mobile
+                value = person.mobile!!
             )
 
             PersonInfoRow(
                 title = stringResource(R.string.label_phone),
-                value = person.phone
+                value = person.phone1!!
             )
 
-            if (person.description.isNotBlank()) {
+            if (person.description!!.isNotBlank()) {
                 PersonInfoRow(
                     title = stringResource(R.string.label_description),
                     value = person.description
@@ -1190,7 +1205,7 @@ private fun PersonInfoRow(
 private fun AddOrganizationScreenPreview() {
     AppScreenPreview {
         AddOrganizationScreen(
-            organizationId = 0,
+            organizationId = "",
             onBack = {},
             onCancel = {},
             onSaveClick = {},

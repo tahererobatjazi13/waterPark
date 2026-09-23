@@ -26,16 +26,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.OfferTicketPlanLineEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.feature.offer.model.OfferPlanLineUi
+import ir.kitgroup.partnerManagement.core.ui.util.CommissionType
+import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
+import ir.kitgroup.partnerManagement.core.ui.util.GenderType
+import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanLineStatus
+import ir.kitgroup.partnerManagement.core.ui.util.PersonCategory
 import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
 fun OfferTicketPlanLineDetailScreen(
-    plan: OfferPlanLineUi,
+    plan: OfferTicketPlanLineEntity,
     onBackClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -69,48 +74,32 @@ fun OfferTicketPlanLineDetailScreen(
             ) {
                 // بخش اطلاعات اصلی طرح
                 OfferDetailSection(
-                    title = stringResource(
-                        R.string.label_offer_main_information
-                    )
+                    title = stringResource(R.string.label_offer_main_information)
                 ) {
-
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_offer_plan_header
-                        ),
-                        value = plan.planHeader
+                        label = stringResource(R.string.label_name),
+                        value = plan.name.toDisplayValue()
                     )
 
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_related_product_or_service
-                        ),
-                        value = plan.relatedProductOrService
+                        label = stringResource(R.string.label_related_product_or_service),
+                        value = plan.productServiceId.toDisplayValue()
                     )
 
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_age_category
-                        ),
-                        value = plan.ageCategory.toDisplayValue()
+                        label = stringResource(R.string.label_age_category),
+                        value = stringResource(PersonCategory.fromId(plan.personCategory).titleRes)
                     )
 
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_gender
-                        ),
-                        value = plan.gender.toDisplayValue()
-                    )
-
-                    OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_name
-                        ),
-                        value = plan.name,
+                        label = stringResource(R.string.label_gender),
+                        value = stringResource(GenderType.fromId(plan.gender).titleRes),
                         showDivider = false
                     )
+
                     HorizontalDivider(
-                        color = appColors.border.copy(alpha = 0.6f)
+                        color = appColors.border.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(top = 4.dp)
                     )
 
                     // نمایش وضعیت
@@ -126,35 +115,26 @@ fun OfferTicketPlanLineDetailScreen(
                             style = typography.bodyMedium,
                             color = appColors.textSecondary
                         )
-
-                        StatusBadge(status = plan.status)
+                        StatusBadge(status = OfferPlanLineStatus.fromId(plan.status))
                     }
                 }
 
                 // بخش اطلاعات کمیسیون
                 OfferDetailSection(
-                    title = stringResource(
-                        R.string.label_offer_commission_information
-                    )
+                    title = stringResource(R.string.label_offer_commission_information)
                 ) {
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_commission_type
-                        ),
-                        value = plan.commissionType
+                        label = stringResource(R.string.label_commission_type),
+                        value = stringResource(CommissionType.fromId(plan.commissionType).titleRes)
                     )
 
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_commission_percent
-                        ),
+                        label = stringResource(R.string.label_commission_percent),
                         value = plan.commissionPercent.toPercentDisplay()
                     )
 
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_commission_amount
-                        ),
+                        label = stringResource(R.string.label_commission_amount),
                         value = plan.commissionAmount.toAmountDisplay(),
                         showDivider = false
                     )
@@ -162,28 +142,20 @@ fun OfferTicketPlanLineDetailScreen(
 
                 // بخش اطلاعات تخفیف
                 OfferDetailSection(
-                    title = stringResource(
-                        R.string.label_offer_discount_information
-                    )
+                    title = stringResource(R.string.label_offer_discount_information)
                 ) {
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_discount_type
-                        ),
-                        value = plan.discountType
+                        label = stringResource(R.string.label_discount_type),
+                        value = stringResource(DiscountType.fromId(plan.discountType).titleRes)
                     )
 
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_discount_percent
-                        ),
+                        label = stringResource(R.string.label_discount_percent),
                         value = plan.discountPercent.toPercentDisplay()
                     )
 
                     OfferDetailRow(
-                        label = stringResource(
-                            R.string.label_discount_amount
-                        ),
+                        label = stringResource(R.string.label_discount_amount),
                         value = plan.discountAmount.toAmountDisplay(),
                         showDivider = false
                     )
@@ -280,15 +252,20 @@ private fun String?.toDisplayValue(): String {
 }
 
 @Composable
-private fun Double?.toPercentDisplay(): String {
-    if (this == null) {
+private fun String?.toPercentDisplay(): String {
+    if (isNullOrBlank()) {
         return stringResource(R.string.value_not_available)
     }
 
-    val formattedPercent = if (this % 1.0 == 0.0) {
-        toInt().toString()
+    val doubleValue = this.toDoubleOrNull()
+    val formattedPercent = if (doubleValue != null) {
+        if (doubleValue % 1.0 == 0.0) {
+            doubleValue.toInt().toString()
+        } else {
+            doubleValue.toString()
+        }
     } else {
-        toString()
+        this
     }
 
     return stringResource(
@@ -298,14 +275,17 @@ private fun Double?.toPercentDisplay(): String {
 }
 
 @Composable
-private fun Long?.toAmountDisplay(): String {
-    if (this == null) {
+private fun String?.toAmountDisplay(): String {
+    if (isNullOrBlank()) {
         return stringResource(R.string.value_not_available)
     }
 
-    val formattedAmount = NumberFormat
-        .getNumberInstance(Locale.US)
-        .format(this)
+    val longValue = this.replace(",", "").toDoubleOrNull()?.toLong()
+    val formattedAmount = if (longValue != null) {
+        NumberFormat.getNumberInstance(Locale.US).format(longValue)
+    } else {
+        this
+    }
 
     return stringResource(
         R.string.value_amount_rial,

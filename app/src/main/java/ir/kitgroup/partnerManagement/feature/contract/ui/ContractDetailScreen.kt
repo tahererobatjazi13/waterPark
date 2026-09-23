@@ -13,17 +13,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.feature.contract.model.ContractUi
+import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
+import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
+import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
 
 @Composable
 fun ContractDetailScreen(
-    contract: ContractUi,
+    contract: ContractEntity,
     onBackClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val cooperationModelText = contract.cooperationModel?.let { id ->
+        CooperationModel.fromId(id)?.let { stringResource(it.titleRes) }
+    } ?: "-"
+
+    val settlementPeriodTypeText = contract.settlementPeriodType?.let { id ->
+        SettlementPeriodType.fromId(id)?.let { stringResource(it.titleRes) }
+    } ?: "-"
+
+    val status = ContractStatus.fromId(contract.contractStatus)
 
     Scaffold(
         topBar = {
@@ -66,23 +79,25 @@ fun ContractDetailScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = contract.organizationName,
+                                text = contract.name ?: "-",
                                 style = typography.titleLarge,
                                 color = appColors.textPrimary,
                                 modifier = Modifier.weight(1f)
                             )
-                            StatusBadge(status = contract.status)
+                            StatusBadge(status = status)
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Text(
-                            text = contract.contractTitle,
-                            style = typography.bodyMedium,
-                            color = appColors.textSecondary
-                        )
+                        contract.contractNumber?.let { number ->
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = number,
+                                style = typography.bodyMedium,
+                                color = appColors.textSecondary
+                            )
+                        }
                     }
                 }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -102,49 +117,49 @@ fun ContractDetailScreen(
 
                         DetailRow(
                             label = stringResource(R.string.label_contract_title),
-                            value = contract.contractTitle
+                            value = contract.name ?: "-"
                         )
                         HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
                         DetailRow(
                             label = stringResource(R.string.label_cooperation_model),
-                            value = contract.cooperationModel
+                            value = cooperationModelText
                         )
                         HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
                         DetailRow(
                             label = stringResource(R.string.label_settlement_period_type),
-                            value = contract.settlementPeriodType
+                            value = settlementPeriodTypeText
                         )
                         HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
                         DetailRow(
                             label = stringResource(R.string.label_start_date),
-                            value = contract.startDate
+                            value = contract.startDate ?: "-"
                         )
                         HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
                         DetailRow(
                             label = stringResource(R.string.label_end_date),
-                            value = contract.endDate
+                            value = contract.endDate ?: "-"
                         )
                         HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
                         DetailRow(
                             label = stringResource(R.string.label_default_discount_percent),
-                            value = formatPercent(contract.defaultDiscountPercent)
+                            value = formatPercent(contract.defaultDiscountPercent!!)
                         )
                         HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
                         DetailRow(
                             label = stringResource(R.string.label_default_commission_percent),
-                            value = formatPercent(contract.defaultCommissionPercent)
+                            value = formatPercent(contract.defaultCommissionPercent!!)
                         )
                         HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
                         DetailRow(
                             label = stringResource(R.string.label_description),
-                            value = contract.description
+                            value = contract.description ?: "-"
                         )
                     }
                 }

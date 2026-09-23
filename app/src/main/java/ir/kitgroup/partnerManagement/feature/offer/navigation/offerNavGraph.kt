@@ -6,14 +6,14 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import ir.kitgroup.partnerManagement.core.ui.util.demoOfferTicketPlans
+import ir.kitgroup.partnerManagement.core.ui.util.demoOfferTicketPlanLines
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferTicketPlanLineDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferTicketPlanScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanLineDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanLineListScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanListScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.demoOfferLinePlans
-import ir.kitgroup.partnerManagement.feature.offer.ui.demoOfferPlans
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 
@@ -22,18 +22,16 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
     //  لیست کلی طرح‌ها
     composable(BottomNavItem.PlanOffer.route) {
 
-        val plans = demoOfferPlans()
-
         OfferTicketPlanListScreen(
             onAddClick = {
                 navController.navigate(Screen.AddOfferTicketPlan.route)
             },
-            onPlanClick = { plan ->
+            onOfferTicketPlanClick = { offerTicketPlan ->
                 navController.navigate(
-                    Screen.OfferTicketPlanLineList.createRoute(plan.id)
+                    Screen.OfferTicketPlanLineList.createRoute(offerTicketPlan.offerTicketPlanId)
                 )
             },
-            plans = plans
+            offerTicketPlans = demoOfferTicketPlans()
         )
     }
 
@@ -50,27 +48,27 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
     composable(
         route = Screen.OfferTicketPlanLineList.route,
         arguments = listOf(
-            navArgument("offerId") { type = NavType.StringType }
+            navArgument("offerTicketPlanId") { type = NavType.StringType }
         )
     ) { backStackEntry ->
-        val offerId = backStackEntry.arguments?.getString("offerId").orEmpty()
-        val selectedPlan = demoOfferPlans().firstOrNull { it.id == offerId }
-        val planLines = demoOfferLinePlans()
+        val offerTicketPlanId = backStackEntry.arguments?.getString("offerTicketPlanId").orEmpty()
+        val selectedOfferTicketPlan = demoOfferTicketPlans().firstOrNull { it.offerTicketPlanId == offerTicketPlanId }
+        val offerTicketPlanLines = demoOfferTicketPlanLines()
 
         OfferTicketPlanLineListScreen(
-            headerPlan = selectedPlan,
-            plans = planLines,
+            headerOfferTicketPlan = selectedOfferTicketPlan,
+            offerTicketPlanLines = offerTicketPlanLines,
             onBackClick = { navController.popBackStack() },
             onAddClick = {
                 navController.navigate(
                     Screen.AddOfferTicketPlanLineDetail.createRoute(
-                        selectedPlan?.planName ?: ""
+                        selectedOfferTicketPlan?.name ?: ""
                     )
                 )
             },
-            onPlanClick = { planLine ->
+            onOfferTicketPlanLineClick = { planLine ->
                 navController.navigate(
-                    Screen.OfferTicketPlanLineDetail.createRoute(planLine.id)
+                    Screen.OfferTicketPlanLineDetail.createRoute(planLine.offerTicketPlanLineId)
                 )
             }
         )
@@ -80,15 +78,15 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
     composable(
         route = Screen.AddOfferTicketPlanLineDetail.route,
         arguments = listOf(
-            navArgument("planName") {
+            navArgument("offerTicketPlanLineName") {
                 type = NavType.StringType
                 defaultValue = ""
             }
         )
     ) { backStackEntry ->
-        val planName = backStackEntry.arguments?.getString("planName").orEmpty()
+        val offerTicketPlanLineName = backStackEntry.arguments?.getString("offerTicketPlanLineName").orEmpty()
         AddOfferTicketPlanLineDetailScreen(
-            initialPlanHeader = planName,
+            initialPlanHeader = offerTicketPlanLineName,
             onBackClick = { navController.popBackStack() },
             onSaveClick = { navController.popBackStack() }
         )
@@ -98,11 +96,11 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
     composable(
         route = Screen.OfferTicketPlanLineDetail.route,
         arguments = listOf(
-            navArgument("lineId") { type = NavType.StringType }
+            navArgument("offerTicketPlanLineId") { type = NavType.StringType }
         )
     ) { backStackEntry ->
-        val lineId = backStackEntry.arguments?.getString("lineId").orEmpty()
-        val planLine = demoOfferLinePlans().firstOrNull { it.id == lineId }
+        val offerTicketPlanLineId = backStackEntry.arguments?.getString("offerTicketPlanLineId").orEmpty()
+        val planLine = demoOfferTicketPlanLines().firstOrNull { it.offerTicketPlanLineId == offerTicketPlanLineId }
 
         if (planLine != null) {
             OfferTicketPlanLineDetailScreen(

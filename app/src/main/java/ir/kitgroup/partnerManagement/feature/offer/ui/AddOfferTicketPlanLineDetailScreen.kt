@@ -20,54 +20,71 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.OfferTicketPlanLineEntity
 import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.CommissionType
+import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
+import ir.kitgroup.partnerManagement.core.ui.util.GenderType
+import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanLineStatus
+import ir.kitgroup.partnerManagement.core.ui.util.PersonCategory
+import java.util.UUID
 
 @Composable
 fun AddOfferTicketPlanLineDetailScreen(
-    initialPlanHeader: String = "", // مقدار دریافتی از صفحه قبل
+    initialPlanHeader: String = "",
     onBackClick: () -> Unit,
-    onSaveClick: () -> Unit = {}
+    onSaveClick: (OfferTicketPlanLineEntity) -> Unit = {}
 ) {
     val appColors = LocalPartnerManagementColors.current
 
-    // سربرگ طرح غیرقابل ویرایش است
-    val planHeader = initialPlanHeader
+    val planHeaderName = initialPlanHeader
 
-    var productService by rememberSaveable { mutableStateOf("") }
+    var productServiceId by rememberSaveable { mutableStateOf("") }
+    var productServiceName by rememberSaveable { mutableStateOf("") }
     var isProductServiceExpanded by remember { mutableStateOf(false) }
-    val productServiceList = remember { listOf("بلیط بزرگسال", "بلیط خردسال") }
-
-    var personCategory by rememberSaveable { mutableStateOf("") }
-    var isPersonCategoryExpanded by remember { mutableStateOf(false) }
-    val personCategoryList = remember { listOf("بزرگسال", "خردسال", "نوزاد", "سالمند") }
-
-    var gender by rememberSaveable { mutableStateOf("") }
-    val genderList = remember {
-        listOf("مرد", "زن", "نیاز نیست")
+    val mockProductServiceList = remember {
+        listOf(
+            Pair("1", "بلیط بزرگسال"),
+            Pair("2", "بلیط خردسال")
+        )
     }
 
-    var commissionType by rememberSaveable { mutableStateOf("") }
-    val commissionTypeList = remember {
-        listOf("بدون پورسانت", "درصدی", "مبلغ ثابت")
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+// تعریف لیست‌ها و Map بر مبنای متون ترجمه‌شده
+    val personCategoryMap = remember(context) {
+        PersonCategory.entries.associateBy { context.getString(it.titleRes) }
     }
 
+    val genderMap = remember(context) {
+        GenderType.entries.associateBy { context.getString(it.titleRes) }
+    }
+
+    val commissionTypeMap = remember(context) {
+        CommissionType.entries.associateBy { context.getString(it.titleRes) }
+    }
+
+    val discountTypeMap = remember(context) {
+        DiscountType.entries.associateBy { context.getString(it.titleRes) }
+    }
+
+    val statusMap = remember(context) {
+        OfferPlanLineStatus.entries.associateBy { context.getString(it.titleRes) }
+    }
+
+    var selectedPersonCategory by rememberSaveable { mutableStateOf(PersonCategory.UNASSIGNED) }
+    var selectedGender by rememberSaveable { mutableStateOf(GenderType.NOT_REQUIRED) }
+
+    var selectedCommissionType by rememberSaveable { mutableStateOf(CommissionType.NONE) }
     var commissionPercent by rememberSaveable { mutableStateOf("") }
     var commissionAmount by rememberSaveable { mutableStateOf("") }
 
-    var discountType by rememberSaveable { mutableStateOf("") }
-    val discountTypeList = remember {
-        listOf("بدون تخفیف", "درصدی", "مبلغ ثابت")
-    }
-
+    var selectedDiscountType by rememberSaveable { mutableStateOf(DiscountType.NONE) }
     var discountPercent by rememberSaveable { mutableStateOf("") }
     var discountAmount by rememberSaveable { mutableStateOf("") }
 
-    var status by rememberSaveable { mutableStateOf("فعال") }
-
-    val statusList = remember {
-        listOf("فعال", "موقتا متوقف", "ابطال شده")
-    }
+    var selectedStatus by rememberSaveable { mutableStateOf(OfferPlanLineStatus.ACTIVE) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -99,9 +116,9 @@ fun AddOfferTicketPlanLineDetailScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // سربرگ طرح (فقط خواندنی و غیرقابل ویرایش)
+                    // سربرگ طرح (فقط خواندنی)
                     CustomEditTextField(
-                        value = planHeader,
+                        value = planHeaderName,
                         onValueChange = {},
                         label = stringResource(R.string.label_plan_header),
                         placeholder = "",
@@ -113,7 +130,7 @@ fun AddOfferTicketPlanLineDetailScreen(
                     // کالا / خدمت مرتبط
                     Box(modifier = Modifier.fillMaxWidth()) {
                         CustomSelectorField(
-                            value = productService,
+                            value = productServiceName,
                             label = stringResource(R.string.label_related_product_service),
                             placeholder = stringResource(R.string.hint_choose_related_product_service),
                             isExpanded = isProductServiceExpanded,
@@ -128,7 +145,7 @@ fun AddOfferTicketPlanLineDetailScreen(
                                 .fillMaxWidth(0.9f)
                                 .background(appColors.cardBackground)
                         ) {
-                            productServiceList.forEachIndexed { index, productServiceItem ->
+                            mockProductServiceList.forEachIndexed { index, item ->
                                 val backgroundColor =
                                     if (index % 2 == 0) appColors.cardBackground else appColors.cardBackgroundAlt
                                 Surface(
@@ -138,13 +155,14 @@ fun AddOfferTicketPlanLineDetailScreen(
                                     DropdownMenuItem(
                                         text = {
                                             Text(
-                                                text = productServiceItem,
+                                                text = item.second,
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 color = appColors.textPrimary
                                             )
                                         },
                                         onClick = {
-                                            productService = productServiceItem
+                                            productServiceId = item.first
+                                            productServiceName = item.second
                                             isProductServiceExpanded = false
                                         }
                                     )
@@ -153,79 +171,56 @@ fun AddOfferTicketPlanLineDetailScreen(
                         }
                     }
 
-                    // رده سنی
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        CustomSelectorField(
-                            value = personCategory,
-                            isRequired = false,
-                            label = stringResource(R.string.label_age_category),
-                            placeholder = stringResource(R.string.hint_choose_age_category),
-                            isExpanded = isPersonCategoryExpanded,
-                            onClick = {
-                                isPersonCategoryExpanded = !isPersonCategoryExpanded
-                            }
-                        )
-                        DropdownMenu(
-                            expanded = isPersonCategoryExpanded,
-                            onDismissRequest = { isPersonCategoryExpanded = false },
-                            modifier = Modifier
-                                .fillMaxWidth(0.9f)
-                                .background(appColors.cardBackground)
-                        ) {
-                            personCategoryList.forEachIndexed { index, personCategoryItem ->
-                                val backgroundColor =
-                                    if (index % 2 == 0) appColors.cardBackground else appColors.cardBackgroundAlt
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = backgroundColor
-                                ) {
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                text = personCategoryItem,
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                color = appColors.textPrimary
-                                            )
-                                        },
-                                        onClick = {
-                                            personCategory = personCategoryItem
-                                            isPersonCategoryExpanded = false
-                                        }
-                                    )
-                                }
+                    // رده سنی (PersonCategory)
+                    DropdownSelectorField(
+                        value = stringResource(selectedPersonCategory.titleRes),
+                        label = stringResource(R.string.label_age_category),
+                        placeholder = stringResource(R.string.hint_choose_age_category),
+                        items = remember(personCategoryMap) { personCategoryMap.keys.toList() },
+                        isRequired = false,
+                        onItemSelected = { selectedTitle ->
+                            personCategoryMap[selectedTitle]?.let {
+                                selectedPersonCategory = it
                             }
                         }
-                    }
+                    )
 
-                    // جنسیت
+
+                    // جنسیت (GenderType)
                     DropdownSelectorField(
-                        value = gender,
+                        value = stringResource(selectedGender.titleRes),
                         label = stringResource(R.string.label_gender),
                         placeholder = stringResource(R.string.hint_choose_gender),
-                        items = genderList,
+                        items = remember(genderMap) { genderMap.keys.toList() },
                         isRequired = false,
-                        onItemSelected = {
-                            gender = it
+                        onItemSelected = { selectedTitle ->
+                            genderMap[selectedTitle]?.let {
+                                selectedGender = it
+                            }
                         }
                     )
 
-                    // نوع پورسانت
+
+                    // نوع پورسانت (CommissionType)
                     DropdownSelectorField(
-                        value = commissionType,
+                        value = stringResource(selectedCommissionType.titleRes),
                         label = stringResource(R.string.label_commission_type),
                         placeholder = stringResource(R.string.hint_choose_commission_type),
-                        items = commissionTypeList,
+                        items = remember(commissionTypeMap) { commissionTypeMap.keys.toList() },
                         isRequired = true,
-                        onItemSelected = { selected ->
-                            commissionType = selected
-                            if (selected != "درصدی") commissionPercent = ""
-                            if (selected != "مبلغ ثابت") commissionAmount = ""
+                        onItemSelected = { selectedTitle ->
+                            commissionTypeMap[selectedTitle]?.let {
+                                selectedCommissionType = it
+                                if (it != CommissionType.PERCENTAGE) commissionPercent = ""
+                                if (it != CommissionType.FIXED_AMOUNT) commissionAmount = ""
+                            }
                         }
                     )
+
 
                     // فیلد شرطی درصد پورسانت
                     AnimatedVisibility(
-                        visible = commissionType == "درصدی",
+                        visible = selectedCommissionType == CommissionType.PERCENTAGE,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically()
                     ) {
@@ -242,7 +237,7 @@ fun AddOfferTicketPlanLineDetailScreen(
 
                     // فیلد شرطی مبلغ پورسانت
                     AnimatedVisibility(
-                        visible = commissionType == "مبلغ ثابت",
+                        visible = selectedCommissionType == CommissionType.FIXED_AMOUNT,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically()
                     ) {
@@ -257,23 +252,26 @@ fun AddOfferTicketPlanLineDetailScreen(
                         )
                     }
 
-                    // نوع تخفیف
+                    // نوع تخفیف (DiscountType)
                     DropdownSelectorField(
-                        value = discountType,
+                        value = stringResource(selectedDiscountType.titleRes),
                         label = stringResource(R.string.label_discount_type),
                         placeholder = stringResource(R.string.label_choose_discount_type),
-                        items = discountTypeList,
+                        items = remember(discountTypeMap) { discountTypeMap.keys.toList() },
                         isRequired = true,
-                        onItemSelected = { selected ->
-                            discountType = selected
-                            if (selected != "درصدی") discountPercent = ""
-                            if (selected != "مبلغ ثابت") discountAmount = ""
+                        onItemSelected = { selectedTitle ->
+                            discountTypeMap[selectedTitle]?.let {
+                                selectedDiscountType = it
+                                if (it != DiscountType.PERCENTAGE) discountPercent = ""
+                                if (it != DiscountType.FIXED_AMOUNT) discountAmount = ""
+                            }
                         }
                     )
 
+
                     // فیلد شرطی درصد تخفیف
                     AnimatedVisibility(
-                        visible = discountType == "درصدی",
+                        visible = selectedDiscountType == DiscountType.PERCENTAGE,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically()
                     ) {
@@ -290,7 +288,7 @@ fun AddOfferTicketPlanLineDetailScreen(
 
                     // فیلد شرطی مبلغ تخفیف
                     AnimatedVisibility(
-                        visible = discountType == "مبلغ ثابت",
+                        visible = selectedDiscountType == DiscountType.FIXED_AMOUNT,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically()
                     ) {
@@ -305,15 +303,20 @@ fun AddOfferTicketPlanLineDetailScreen(
                         )
                     }
 
-                    // وضعیت طرح
+                    // وضعیت ردیف طرح (OfferPlanLineStatus)
                     DropdownSelectorField(
-                        value = status,
+                        value = stringResource(selectedStatus.titleRes),
                         label = stringResource(R.string.label_plan_status),
                         placeholder = "",
-                        items = statusList,
+                        items = remember(statusMap) { statusMap.keys.toList() },
                         isRequired = false,
-                        onItemSelected = { status = it }
+                        onItemSelected = { selectedTitle ->
+                            statusMap[selectedTitle]?.let {
+                                selectedStatus = it
+                            }
+                        }
                     )
+
 
                     Spacer(modifier = Modifier.height(10.dp))
                 }
@@ -321,7 +324,24 @@ fun AddOfferTicketPlanLineDetailScreen(
                 // دکمه ثبت
                 CustomButton(
                     text = stringResource(R.string.label_registration),
-                    onClick = onSaveClick,
+                    onClick = {
+                        val lineEntity = OfferTicketPlanLineEntity(
+                            offerTicketPlanLineId = UUID.randomUUID().toString(),
+                            offerTicketPlanId = planHeaderName,
+                            name = productServiceName.ifBlank { planHeaderName },
+                            productServiceId = productServiceId,
+                            personCategory = selectedPersonCategory.id,
+                            gender = selectedGender.id,
+                            commissionType = selectedCommissionType.id,
+                            commissionPercent = if (selectedCommissionType == CommissionType.PERCENTAGE) commissionPercent else null,
+                            commissionAmount = if (selectedCommissionType == CommissionType.FIXED_AMOUNT) commissionAmount else null,
+                            discountType = selectedDiscountType.id,
+                            discountPercent = if (selectedDiscountType == DiscountType.PERCENTAGE) discountPercent else null,
+                            discountAmount = if (selectedDiscountType == DiscountType.FIXED_AMOUNT) discountAmount else null,
+                            status = selectedStatus.id
+                        )
+                        onSaveClick(lineEntity)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp)
@@ -336,7 +356,7 @@ fun AddOfferTicketPlanLineDetailScreen(
 private fun AddOfferTicketPlanLineDetailScreenPreview() {
     AppScreenPreview {
         AddOfferTicketPlanLineDetailScreen(
-            initialPlanHeader = "فروش تابستانه",
+            initialPlanHeader = "طرح تابستانه",
             onBackClick = {},
             onSaveClick = {}
         )

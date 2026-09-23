@@ -3,29 +3,31 @@ package ir.kitgroup.partnerManagement.feature.offer.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.OfferTicketPlanEntity
 import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
+import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanStatus
 import saman.zamani.persiandate.PersianDate
 import java.util.Locale
+import java.util.UUID
 
 @Composable
 fun AddOfferTicketPlanScreen(
     onBackClick: () -> Unit,
-    onSaveClick: () -> Unit = {}
+    onSaveClick: (OfferTicketPlanEntity) -> Unit = {}
 ) {
     val appColors = LocalPartnerManagementColors.current
-
 
     var offerName by rememberSaveable { mutableStateOf("") }
     var offerCode by rememberSaveable { mutableStateOf("") }
@@ -37,30 +39,20 @@ fun AddOfferTicketPlanScreen(
     var validFromDate by rememberSaveable {
         mutableStateOf(
             "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${
-                String.format(
-                    Locale.US,
-                    "%02d",
-                    today.shDay
-                )
+                String.format(Locale.US, "%02d", today.shDay)
             }"
         )
     }
     var validToDate by rememberSaveable {
         mutableStateOf(
             "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${
-                String.format(
-                    Locale.US,
-                    "%02d",
-                    today.shDay
-                )
+                String.format(Locale.US, "%02d", today.shDay)
             }"
         )
     }
-    var status by mutableStateOf("فعال")
 
-    val statusList = remember {
-        listOf("پیش نویس", "فعال", "تعلیق شده", "بسته شده")
-    }
+    var selectedStatus by rememberSaveable { mutableStateOf(OfferPlanStatus.ACTIVE) }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -91,14 +83,15 @@ fun AddOfferTicketPlanScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-
                     CustomEditTextField(
                         value = offerName,
                         onValueChange = { offerName = it },
                         label = stringResource(R.string.label_offer_name),
                         placeholder = stringResource(R.string.hint_enter_offer_name),
-                        leadingIcon = null, isRequired = true
+                        leadingIcon = null,
+                        isRequired = true
                     )
+
                     CustomEditTextField(
                         value = offerCode,
                         onValueChange = { input ->
@@ -130,20 +123,38 @@ fun AddOfferTicketPlanScreen(
                     )
 
                     DropdownSelectorField(
-                        value = status,
+                        value = stringResource(selectedStatus.titleRes),
                         label = stringResource(R.string.label_status),
                         placeholder = "",
-                        items = statusList,
-                        isRequired = false,
-                        onItemSelected = { status = it }
+                        items = OfferPlanStatus.entries.map { stringResource(it.titleRes) },
+                        isRequired = true,
+                        onItemSelected = { selectedTitle ->
+                            OfferPlanStatus.entries.find {
+                                /* تطبیق آیتم انتخاب شده */
+                                false
+                            }
+                        }
                     )
+                    
 
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 CustomButton(
                     text = stringResource(R.string.label_registration),
-                    onClick = onSaveClick,
+                    onClick = {
+                        val newPlan = OfferTicketPlanEntity(
+                            offerTicketPlanId = UUID.randomUUID().toString(),
+                            name = offerName.trim(),
+                            code = offerCode.trim(),
+                            recreationCenterId = null,
+                            validFromDate = validFromDate,
+                            validToDate = validToDate,
+                            status = selectedStatus.id
+                        )
+                        onSaveClick(newPlan)
+                    },
+                    enabled = offerName.isNotBlank() && offerCode.isNotBlank(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp)

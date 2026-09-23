@@ -4,7 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CityDto(
-    val cityId: Int,
-    val name: String
+
+    val cityId: String,
+
+    val name: String? = null
 )
 

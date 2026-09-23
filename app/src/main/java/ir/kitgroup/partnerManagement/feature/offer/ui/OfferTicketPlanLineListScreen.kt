@@ -41,22 +41,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.OfferTicketPlanEntity
+import ir.kitgroup.partnerManagement.core.database.entity.OfferTicketPlanLineEntity
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.offer.model.OfferPlanLineUi
-import ir.kitgroup.partnerManagement.feature.offer.model.OfferPlanUi
+import ir.kitgroup.partnerManagement.core.ui.util.CommissionType
+import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
+import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanLineStatus
+import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanStatus
+import ir.kitgroup.partnerManagement.core.ui.util.demoOfferTicketPlanLines
+import ir.kitgroup.partnerManagement.core.ui.util.demoOfferTicketPlans
 
 @Composable
 fun OfferTicketPlanLineListScreen(
-    headerPlan: OfferPlanUi?,
-    plans: List<OfferPlanLineUi> = emptyList(),
+    headerOfferTicketPlan: OfferTicketPlanEntity?,
+    offerTicketPlanLines: List<OfferTicketPlanLineEntity> = emptyList(),
     onBackClick: () -> Unit,
     onAddClick: () -> Unit,
-    onPlanClick: (OfferPlanLineUi) -> Unit
+    onOfferTicketPlanLineClick: (OfferTicketPlanLineEntity) -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -113,9 +118,9 @@ fun OfferTicketPlanLineListScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // هدر طرح انتخاب‌شده
-                if (headerPlan != null) {
+                if (headerOfferTicketPlan != null) {
                     item {
-                        PlanHeaderSummarySection(plan = headerPlan)
+                        PlanHeaderSummarySection(plan = headerOfferTicketPlan)
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // بخش عنوان لیست همراه با شمارنده
@@ -134,13 +139,13 @@ fun OfferTicketPlanLineListScreen(
 
                 // استفاده از itemsIndexed برای محاسبه شماره ردیف
                 itemsIndexed(
-                    items = plans,
-                    key = { _, plan -> plan.id }
+                    items = offerTicketPlanLines,
+                    key = { _, plan -> plan.offerTicketPlanLineId }
                 ) { index, plan ->
                     OfferPlanLineListItem(
                         rowIndex = index + 1,
                         plan = plan,
-                        onClick = { onPlanClick(plan) }
+                        onClick = { onOfferTicketPlanLineClick(plan) }
                     )
                 }
             }
@@ -150,7 +155,7 @@ fun OfferTicketPlanLineListScreen(
 
 @Composable
 private fun PlanHeaderSummarySection(
-    plan: OfferPlanUi,
+    plan: OfferTicketPlanEntity,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -168,13 +173,13 @@ private fun PlanHeaderSummarySection(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = plan.planName,
+                text = plan.name.orEmpty(),
                 style = typography.titleLarge,
                 color = appColors.textPrimary,
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            StatusBadge(status = plan.status)
+            StatusBadge(status = OfferPlanStatus.fromId(plan.status))
         }
 
         // کد طرح
@@ -189,7 +194,7 @@ private fun PlanHeaderSummarySection(
                 color = appColors.textSecondary
             )
             Text(
-                text = plan.planCode,
+                text = plan.code.orEmpty(),
                 style = typography.labelMedium,
                 color = appColors.textPrimary
             )
@@ -225,7 +230,7 @@ private fun PlanHeaderSummarySection(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = plan.startDate,
+                    text = plan.validFromDate.orEmpty(),
                     style = typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -235,7 +240,7 @@ private fun PlanHeaderSummarySection(
                     color = appColors.textTertiary
                 )
                 Text(
-                    text = plan.endDate,
+                    text = plan.validToDate.orEmpty(),
                     style = typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -253,10 +258,15 @@ private fun PlanHeaderSummarySection(
 @Composable
 private fun OfferPlanLineListItem(
     rowIndex: Int,
-    plan: OfferPlanLineUi,
+    plan: OfferTicketPlanLineEntity,
     onClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
+
+    // نگاشت مقادیر عددی Entity به Enumهای مربوطه
+    val commissionTypeEnum = CommissionType.fromId(plan.commissionType)
+    val discountTypeEnum = DiscountType.fromId(plan.discountType)
+    val lineStatusEnum = OfferPlanLineStatus.fromId(plan.status)
 
     Card(
         modifier = Modifier
@@ -305,20 +315,15 @@ private fun OfferPlanLineListItem(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         Text(
-                            text = plan.planHeader,
+                            text = plan.name.takeIf { !it.isNull_or_blank() } ?: plan.offerTicketPlanLineId,
                             style = typography.titleLarge,
                             color = appColors.textPrimary
-                        )
-
-                        Text(
-                            text = plan.name,
-                            style = typography.bodySmall,
-                            color = appColors.textSecondary
                         )
                     }
                 }
 
-                StatusBadge(status = plan.status)
+                // بج وضعیت خط آفر بر اساس Enum درست
+                StatusBadge(status = lineStatusEnum)
 
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -351,13 +356,13 @@ private fun OfferPlanLineListItem(
                         color = appColors.textSecondary
                     )
                     Text(
-                        text = plan.relatedProductOrService,
+                        text = plan.productServiceId.orEmpty(),
                         style = typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
 
-                // نوع پورسانت
+                // نوع پورسانت (نمایش عنوان از stringResource بر اساس Enum)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -369,13 +374,13 @@ private fun OfferPlanLineListItem(
                         color = appColors.textSecondary
                     )
                     Text(
-                        text = plan.commissionType,
+                        text = stringResource(commissionTypeEnum.titleRes),
                         style = typography.labelLarge,
                         color = appColors.textPrimary
                     )
                 }
 
-                // نوع تخفیف
+                // نوع تخفیف (نمایش عنوان از stringResource بر اساس Enum)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -387,76 +392,29 @@ private fun OfferPlanLineListItem(
                         color = appColors.textSecondary
                     )
                     Text(
-                        text = plan.discountType,
+                        text = stringResource(discountTypeEnum.titleRes),
                         style = typography.labelLarge,
                         color = appColors.textPrimary
                     )
                 }
             }
-
         }
     }
 }
+
+// تابع کمکی کوچک برای بررسی Null یا خالی بودن رشته‌ها
+private fun String?.isNull_or_blank(): Boolean = this == null || this.isBlank()
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun OfferTicketPlanLineListScreenPreview() {
     AppScreenPreview {
         OfferTicketPlanLineListScreen(
-            headerPlan = demoOfferPlans().first(),
-            plans = demoOfferLinePlans(),
+            headerOfferTicketPlan = demoOfferTicketPlans().firstOrNull(),
+            offerTicketPlanLines = demoOfferTicketPlanLines(),
             onBackClick = {},
             onAddClick = {},
-            onPlanClick = {}
+            onOfferTicketPlanLineClick = {}
         )
     }
 }
-
-
-fun demoOfferLinePlans(): List<OfferPlanLineUi> = listOf(
-    OfferPlanLineUi(
-        id = "1",
-        planHeader = "فروش پاییزه",
-        relatedProductOrService = "بلیط موج‌های آبی خردسال",
-        ageCategory = "کودک",
-        gender = "نیاز نیست",
-        name = "آفر بلیط بزرگسال",
-        commissionType = "درصدی",
-        commissionPercent = 5.0,
-        commissionAmount = null,
-        discountType = "بدون تخفیف",
-        discountPercent = null,
-        discountAmount = null,
-        status = Status.ACTIVE
-    ),
-    OfferPlanLineUi(
-        id = "2",
-        planHeader = "فروش زمستانه",
-        relatedProductOrService = "بلیط پارک آبی بزرگسال",
-        ageCategory = "بزرگسال",
-        gender = "آقا و خانم",
-        name = "آفر بلیط خردسال",
-        commissionType = "مبلغ ثابت",
-        commissionPercent = null,
-        commissionAmount = 150_000,
-        discountType = "درصدی",
-        discountPercent = 10.0,
-        discountAmount = null,
-        status = Status.ACTIVE
-    ),
-    OfferPlanLineUi(
-        id = "3",
-        planHeader = "طرح ویژه خانواده",
-        relatedProductOrService = "پکیج خانوادگی مجموعه تفریحی",
-        ageCategory = "همه رده‌های سنی",
-        gender = "نیاز نیست",
-        name = "بلیط",
-        commissionType = "بدون پورسانت",
-        commissionPercent = null,
-        commissionAmount = null,
-        discountType = "مبلغ ثابت",
-        discountPercent = null,
-        discountAmount = 300_000,
-        status = Status.CANCELLED
-    )
-)

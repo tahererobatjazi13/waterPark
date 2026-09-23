@@ -19,12 +19,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PersonOutline
-import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -43,18 +42,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.AdvertisingStandEntity
+import ir.kitgroup.partnerManagement.core.database.entity.StandAssignmentEntity
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignmentDetail
-import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AllocatedStandItem
-import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_visitor.allocationItemIcon
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
+import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
+import ir.kitgroup.partnerManagement.core.ui.util.StandType
 
 @Composable
 fun AdvertisingStandAssignmentVisitorDetailScreen(
-    allocation: AdvertisingStandAssignmentDetail,
+    allocation: StandAssignmentEntity,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -104,7 +105,7 @@ fun AdvertisingStandAssignmentVisitorDetailScreen(
                 item {
                     AllocatedItemsSectionHeader(
                         itemTypesCount = allocation.items.size,
-                        totalCount = allocation.totalCount
+                        totalCount = allocation.count ?: allocation.items.size
                     )
                 }
 
@@ -115,7 +116,7 @@ fun AdvertisingStandAssignmentVisitorDetailScreen(
                 } else {
                     items(
                         items = allocation.items,
-                        key = { item -> item.id }
+                        key = { item -> item.advertisingStandId }
                     ) { item ->
                         AllocatedStandItemCard(item = item)
                     }
@@ -137,10 +138,18 @@ fun AdvertisingStandAssignmentVisitorDetailScreen(
 
 @Composable
 private fun AssignmentHeaderCard(
-    allocation: AdvertisingStandAssignmentDetail,
+    allocation: StandAssignmentEntity,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+
+    val assignmentTypeTitle = AssignmentType.fromId(allocation.assignmentType)?.let {
+        stringResource(it.titleRes)
+    } ?: "-"
+
+    val assignmentModeTitle = AssignmentMode.fromId(allocation.assignmentMode)?.let {
+        stringResource(it.titleRes)
+    } ?: "-"
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -190,7 +199,7 @@ private fun AssignmentHeaderCard(
                 ) {
                     // خط اول: نوع اختصاص (عنوان اصلی)
                     Text(
-                        text = allocation.assignmentType,
+                        text = assignmentTypeTitle,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = appColors.textPrimary,
@@ -200,7 +209,7 @@ private fun AssignmentHeaderCard(
 
                     // خط دوم: ماهیت اختصاص
                     Text(
-                        text = "${stringResource(R.string.label_assignment_mode)}: ${allocation.assignmentMode}",
+                        text = "${stringResource(R.string.label_assignment_mode)}: $assignmentModeTitle",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium,
@@ -209,7 +218,7 @@ private fun AssignmentHeaderCard(
                     )
                 }
 
-                StatusBadge(status = allocation.status)
+                StatusBadge(status = StandAssignmentStatus.fromId(allocation.status))
             }
 
             HorizontalDivider(
@@ -223,13 +232,13 @@ private fun AssignmentHeaderCard(
             ) {
                 AssignmentSummaryItem(
                     title = stringResource(R.string.label_item_types_count),
-                    value = allocation.items.size.toString(),
+                    value = (allocation.count ?: 0).toString(),
                     modifier = Modifier.weight(1f)
                 )
 
                 AssignmentSummaryItem(
                     title = stringResource(R.string.label_total_allocated_count),
-                    value = allocation.totalCount.toString(),
+                    value = (allocation.count ?: 0).toString(),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -275,7 +284,7 @@ private fun AssignmentSummaryItem(
 
 @Composable
 private fun AssignmentInformationCard(
-    allocation: AdvertisingStandAssignmentDetail,
+    allocation: StandAssignmentEntity,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -315,13 +324,13 @@ private fun AssignmentInformationCard(
             AssignmentDetailRow(
                 icon = Icons.Default.PersonOutline,
                 label = stringResource(R.string.label_choose_visitor_recipient),
-                value = allocation.visitorName
+                value = allocation.visitorId ?: "-"
             )
 
             AssignmentDetailRow(
                 icon = Icons.Default.CalendarMonth,
                 label = stringResource(R.string.label_delivery_visitor_date),
-                value = allocation.allocatedDate
+                value = allocation.assignmentDate ?: "-"
             )
         }
     }
@@ -422,11 +431,13 @@ private fun AllocatedItemsSectionHeader(
 
 @Composable
 private fun AllocatedStandItemCard(
-    item: AllocatedStandItem,
+    item: AdvertisingStandEntity,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
-    val itemIcon = allocationItemIcon(item.iconName)
+    val standTypeTitle = StandType.fromId(item.standType)?.let {
+        stringResource(it.titleRes)
+    } ?: item.code.orEmpty()
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -463,7 +474,7 @@ private fun AllocatedStandItemCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = itemIcon,
+                        imageVector = Icons.Default.Storefront,
                         contentDescription = null,
                         tint = appColors.onInfoContainer,
                         modifier = Modifier.size(24.dp)
@@ -475,7 +486,7 @@ private fun AllocatedStandItemCard(
                     verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     Text(
-                        text = item.title,
+                        text = item.name ?: "-",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = appColors.textPrimary,
@@ -484,89 +495,31 @@ private fun AllocatedStandItemCard(
                     )
 
                     Text(
-                        text = item.type,
+                        text = standTypeTitle,
                         style = MaterialTheme.typography.labelMedium,
                         color = appColors.textSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                ItemCountBadge(count = item.count)
+
+                if (!item.code.isNullOrBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = appColors.cardBackgroundAlt,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = item.code,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = appColors.textSecondary
+                        )
+                    }
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun ItemCountBadge(
-    count: Int,
-    modifier: Modifier = Modifier
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Column(
-        modifier = modifier
-            .background(
-                color = appColors.successContainer,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .padding(
-                horizontal = 12.dp,
-                vertical = 7.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = appColors.onSuccessContainer
-        )
-
-        Text(
-            text = stringResource(R.string.label_unit_count),
-            style = MaterialTheme.typography.labelSmall,
-            color = appColors.onSuccessContainer
-        )
-    }
-}
-
-@Composable
-private fun ItemAdditionalInformationRow(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp)
-        )
-
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = appColors.textSecondary
-            )
-
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = appColors.textPrimary
-            )
         }
     }
 }
@@ -671,40 +624,46 @@ private fun EmptyAllocatedItemsCard(
     }
 }
 
-val demoAssignmentDetail = AdvertisingStandAssignmentDetail(
-    id = "AS-1403-0012",
-    visitorName = "محمد احمدی",
-    organizationName = "هتل پارسیان آزادی",
-    assignmentType = "تخصیص به بازاریاب",
-    assignmentMode = "تبلیغاتی",
-    allocatedDate = "۱۴۰۳/۰۳/۲۲",
-    status = Status.ACTIVE,
+val demoAssignmentDetail = StandAssignmentEntity(
+    standAssignmentId = "2",
+    visitorId = "سارا مرادی",
+    organizationId = "هتل اسپیناس پالاس",
+    status = 2,
+    advertisingStandId = "stand_2",
+    count = 3,
+    assignmentDate = "۱۴۰۳/۰۳/۲۴",
+    assignmentType = 2,
+    assignmentMode = 1,
     items = listOf(
-        AllocatedStandItem(
-            id = "1",
-            title = "استند رومیزی معرفی خدمات",
-            type = "رومیزی",
-            iconName = "stand",
-            count = 5,
-            code = "ST-TBL-101",
-            description = "قابل استفاده در میز پذیرش و لابی هتل"
+        AdvertisingStandEntity(
+            advertisingStandId = "1",
+            name = "استند رومیزی",
+            code = "TABLE_STAND",
+            description = "",
+            displayType = 0,
+            installationType = 5,
+            recreationCenterId = "1001",
+            standType = 1
         ),
-        AllocatedStandItem(
-            id = "2",
-            title = "استند دیواری راهنمای گردشگری",
-            type = "دیواری",
-            iconName = "wall",
-            count = 3,
-            code = "ST-WAL-205"
+        AdvertisingStandEntity(
+            advertisingStandId = "2",
+            name = "بروشور معرفی",
+            code = "BROCHURE",
+            description = "توضیحات استند",
+            displayType = 1,
+            installationType = 2,
+            recreationCenterId = "1001",
+            standType = 2
         ),
-        AllocatedStandItem(
-            id = "3",
-            title = "کیوسک تبلیغاتی",
-            type = "کیوسک",
-            iconName = "kiosk",
-            count = 2,
-            code = "ST-KSK-307",
-            description = "جهت نصب در ورودی اصلی مجموعه"
+        AdvertisingStandEntity(
+            advertisingStandId = "3",
+            name = "استند لابی",
+            code = "LOBBY_STAND",
+            description = "",
+            displayType = 2,
+            installationType = 1,
+            recreationCenterId = "1002",
+            standType = 3
         )
     ),
     description = "تحویل استندها با هماهنگی مدیر داخلی هتل انجام شده است."

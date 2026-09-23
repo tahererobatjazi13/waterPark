@@ -76,148 +76,16 @@ import ir.kitgroup.partnerManagement.core.ui.model.FilterItem
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
-import ir.kitgroup.partnerManagement.core.ui.util.Status
-
-
-val demoOrganizations = listOf(
-    OrganizationModel(
-        1,
-        "هتل پارسیان آزادی",
-        city = "مشهد",
-        region = "منطقه 2",
-        "یوسفی",
-        Status.ACTIVE,
-        5, 0,
-        36.2845,
-        59.5892
-    ),
-
-    OrganizationModel(
-        2,
-        name = "سازمان پالاس",
-        city = "مشهد",
-        region = "منطقه 2",
-        address = "قاسم آباد",
-        Status.ACTIVE,
-        4, 4,
-        36.3562,
-        59.5084
-    ),
-
-    OrganizationModel(
-        3,
-        name = "سازمان نوید",
-        city = "مشهد",
-        region = "منطقه 2",
-        address = "پیروزی",
-        status = Status.ACTIVE,
-        3, 3,
-        latitude = 36.3015,
-        longitude = 59.5289
-    ),
-
-    OrganizationModel(
-        4,
-        name = "هتل مرکزی",
-        city = "مشهد",
-        region = "منطقه 2",
-        address = "امام رضا",
-        status = Status.ACTIVE,
-        5, 5,
-        latitude = 36.2820,
-        longitude = 59.6190
-    ),
-
-    OrganizationModel(
-        5,
-        name = "کیوسک اطلس", city = "مشهد",
-        region = "منطقه 2",
-        address = "کوهسنگی",
-        status = Status.ACTIVE,
-        3, 3,
-        latitude = 36.2736,
-        longitude = 59.5694
-    ),
-
-    OrganizationModel(
-        6,
-        name = "هتل الماس", city = "مشهد",
-        region = "منطقه 2",
-        address = "پاستور",
-        status = Status.ACTIVE,
-        2, 2,
-        latitude = 36.2994,
-        longitude = 59.5772
-    ),
-
-    OrganizationModel(
-        7,
-        name = "هتل وفا", city = "مشهد",
-        region = "منطقه 2",
-        address = "وکیل آباد",
-        status = Status.ACTIVE,
-        3, 3,
-        latitude = 36.3312,
-        longitude = 59.4851
-    ),
-
-    OrganizationModel(
-        8,
-        name = "سازمان مهندسی", city = "مشهد",
-        region = "منطقه 2",
-        address = "فاطمی",
-        status = Status.ACTIVE,
-        4, 4,
-        latitude = 36.3078,
-        longitude = 59.5935
-    ),
-
-    OrganizationModel(
-        9,
-        name = "هتل امیر", city = "مشهد",
-        region = "منطقه 2",
-        address = " رضاییه",
-        status = Status.ACTIVE,
-        2, 2,
-        latitude = 36.2768,
-        longitude = 59.6385
-    ),
-
-    OrganizationModel(
-        10,
-        name = "آپارتمان ملل", city = "مشهد",
-        region = "منطقه 2",
-        address = " ستاری",
-        status = Status.ACTIVE,
-        3, 3,
-        latitude = 36.3421,
-        longitude = 59.5208
-    ),
-
-    OrganizationModel(
-        11, "مهمانسرا اسپیناس", "مشهد", "منطقه 2", "مرکزی", Status.INACTIVE, 5, 5, 36.3051, 59.6059
-    ),
-
-    OrganizationModel(
-        12,
-        name = "چالیدره", city = "مشهد",
-        region = "منطقه 2",
-        address = "طرقبه",
-        status = Status.INACTIVE,
-        2, 2,
-        latitude = 36.3198,
-        longitude = 59.3482
-    )
-)
+import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizations
 
 
 @Composable
 fun OrganizationsListScreen(
-    onNavigateToDetail: (Int) -> Unit,
+    onNavigateToDetail: (String) -> Unit,
     onNavigateToAdd: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SessionViewModel = hiltViewModel()
@@ -228,24 +96,27 @@ fun OrganizationsListScreen(
     // استیت فیلتر دارای تذکر
     var isWarningOnly by rememberSaveable { mutableStateOf(false) }
 
-    var rawOrganizations by remember {
+    val rawOrganizations by remember {
         mutableStateOf(demoOrganizations)
     }
 
     val statusOptions = remember { OrganizationStatus.entries }
 
     // فیلتر کردن لیست براساس متن جستجو، وضعیت و شرط تذکر
+
     val filteredOrganizations =
         remember(rawOrganizations, searchQuery, selectedStatus, isWarningOnly) {
             rawOrganizations.filter { org ->
+
                 val matchesSearch = searchQuery.isBlank() ||
-                        org.name.contains(searchQuery, ignoreCase = true) ||
-                        org.address.contains(searchQuery, ignoreCase = true)
+                        org.name.orEmpty().contains(searchQuery, ignoreCase = true) ||
+                        org.address.orEmpty().contains(searchQuery, ignoreCase = true)
 
                 val matchesStatus = selectedStatus == null ||
-                        org.status.name.equals(selectedStatus?.name, ignoreCase = true)
+                        org.status == selectedStatus!!.id
 
-                val matchesWarning = !isWarningOnly || org.warningCount > 0
+                val matchesWarning = !isWarningOnly ||
+                        (org.countWarning ?: 0) > 0
 
                 matchesSearch && matchesStatus && matchesWarning
             }
@@ -353,13 +224,13 @@ fun OrganizationsListScreen(
                         ) {
                             itemsIndexed(
                                 items = filteredOrganizations,
-                                key = { _, organization -> organization.receationcenterid }
+                                key = { _, organization -> organization.organizationId }
                             ) { index, organization ->
                                 OrganizationsCard(
                                     organization = organization,
                                     number = index + 1,
                                     onClick = {
-                                        onNavigateToDetail(organization.receationcenterid)
+                                        onNavigateToDetail(organization.organizationId)
                                     }
                                 )
                             }
@@ -429,8 +300,7 @@ fun OrganizationsFiltersRow(
                 ) {
                     Surface(
                         modifier = Modifier
-                            .height(40.dp)
-                            .menuAnchor(),
+                            .height(40.dp),
                         shape = RoundedCornerShape(8.dp),
                         color = appColors.cardBackground,
                         border = BorderStroke(
@@ -521,7 +391,7 @@ fun OrganizationsFiltersRow(
                         Icon(
                             imageVector = Icons.Outlined.WarningAmber,
                             contentDescription = null,
-                            tint = if (isWarningOnly) appColors.warning else  MaterialTheme.colorScheme.primary,
+                            tint = if (isWarningOnly) appColors.warning else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -654,7 +524,7 @@ fun TabItem(
 
 @Composable
 fun OrganizationsCard(
-    organization: OrganizationModel,
+    organization: OrganizationEntity,
     number: Int,
     onClick: () -> Unit
 ) {
@@ -711,7 +581,7 @@ fun OrganizationsCard(
                         Spacer(modifier = Modifier.width(4.dp))
 
                         Text(
-                            text = organization.name,
+                            text = organization.name!!,
                             style = typography.titleLarge,
                             color = colors.onSurface,
                             maxLines = 1,
@@ -721,7 +591,7 @@ fun OrganizationsCard(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    StatusBadge(organization.status)
+                    StatusBadge(status = OrganizationStatus.fromId(organization.status))
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -731,9 +601,9 @@ fun OrganizationsCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Rating(organization.grade)
+                    Rating(organization.grade!!)
 
-                    if (organization.warningCount > 0) {
+                    if (organization.countWarning!! > 0) {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = appColors.warning.copy(alpha = 0.15f),
@@ -758,7 +628,7 @@ fun OrganizationsCard(
                                 )
 
                                 Text(
-                                    text = "${organization.warningCount} تذکر",
+                                    text = "${organization.countWarning} تذکر",
                                     style = typography.labelSmall,
                                     color = appColors.warning
                                 )
@@ -770,7 +640,7 @@ fun OrganizationsCard(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 LocationRow(
-                    location = organization.address
+                    location = organization.address!!
                 )
             }
         }

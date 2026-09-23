@@ -19,13 +19,13 @@ sealed class BottomNavItem(
     data object Organizations : BottomNavItem(
         route = "organizations",
         title = R.string.nav_organizations,
-        icon = R.drawable.ic_organizations
+        icon = R.drawable.ic_organization
     )
 
-    data object Visits : BottomNavItem(
-        route = "visits",
-        title = R.string.nav_visits,
-        icon = R.drawable.ic_visits
+    data object Meetings : BottomNavItem(
+        route = "meetings",
+        title = R.string.nav_meetings,
+        icon = R.drawable.ic_meeting
     )
 
     data object PlanOffer : BottomNavItem(

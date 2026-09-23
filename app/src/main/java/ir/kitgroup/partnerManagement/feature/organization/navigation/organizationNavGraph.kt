@@ -42,7 +42,7 @@ fun NavGraphBuilder.organizationNavGraph(
             route = Screen.AddOrganization.route
         ) {
             AddOrganizationScreen(
-                organizationId = 0,
+                organizationId = null,
                 onBack = {
                     navController.popBackStack()
                 }
@@ -54,13 +54,14 @@ fun NavGraphBuilder.organizationNavGraph(
             route = Screen.EditOrganization.route,
             arguments = listOf(
                 navArgument("organizationId") {
-                    type = NavType.IntType
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
 
-            val organizationId =
-                backStackEntry.arguments?.getInt("organizationId") ?: 0
+            val organizationId = backStackEntry.arguments?.getString("organizationId")
 
             AddOrganizationScreen(
                 organizationId = organizationId,
@@ -75,16 +76,17 @@ fun NavGraphBuilder.organizationNavGraph(
             route = Screen.OrganizationDetail.route,
             arguments = listOf(
                 navArgument("organizationId") {
-                    type = NavType.IntType
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
 
-            val organizationId =
-                backStackEntry.arguments?.getInt("organizationId") ?: 0
+            val organizationId = backStackEntry.arguments?.getString("organizationId")
 
             OrganizationDetailScreen(
-                organizationId = organizationId,
+                organizationId = organizationId!!,
 
                 onBack = {
                     navController.popBackStack()
@@ -102,15 +104,15 @@ fun NavGraphBuilder.organizationNavGraph(
                     // عملیات غیرفعال‌سازی
                 },
 
-                onVisitClick = { visitId ->
+                onMeetingClick = { meetingId ->
                     navController.navigate(
-                        Screen.VisitDetail.createRoute(visitId)
+                        Screen.MeetingDetail.createRoute(meetingId)
                     )
                 },
 
-                onAddVisitClick = {
+                onAddMeetingClick = {
                     navController.navigate(
-                        Screen.RegisterVisit.createRoute(
+                        Screen.AddMeeting.createRoute(
                             organizationId = organizationId
                         )
                     )
@@ -149,14 +151,14 @@ fun NavGraphBuilder.organizationNavGraph(
                     navController.navigate(
                         Screen.AdvertisingStandAssignmentVisitorDetail
                             .createRoute(
-                                assignmentId = allocation.id
+                                assignmentId = allocation.standAssignmentId
                             )
                     )
                 },
 
                 onContractClick = { contract ->
                     navController.navigate(
-                        Screen.ContractDetail.createRoute(contract.id)
+                        Screen.ContractDetail.createRoute(contract.contractId)
                     )
                 },
 
@@ -169,17 +171,18 @@ fun NavGraphBuilder.organizationNavGraph(
         }
 
         composable(
-            route = Screen.
-            AssignVisitor.route,
+            route = Screen.AssignVisitor.route,
             arguments = listOf(
                 navArgument("organizationId") {
-                    type = NavType.IntType
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
 
-            val organizationId =
-                backStackEntry.arguments?.getInt("organizationId") ?: 0
+
+            val organizationId = backStackEntry.arguments?.getString("organizationId")
 
             AssignVisitorScreen(
                 organizationId = organizationId,

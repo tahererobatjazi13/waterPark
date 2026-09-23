@@ -5,7 +5,11 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "subject_visit")
 data class SubjectVisitEntity(
-    @PrimaryKey val subjectVisitId: Int,
-    val name: String,
-    val isActive: Boolean = true
+
+    @PrimaryKey
+    val subjectVisitId: String,
+
+    val name: String? = null,
+
+    val recreationCenterId: String? = null
 )

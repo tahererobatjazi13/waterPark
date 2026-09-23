@@ -24,9 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -46,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.feature.organization.model.PersonOrganization
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,44 +60,48 @@ import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationDetailTab
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
-import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
-import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignment
-import ir.kitgroup.partnerManagement.feature.contract.model.ContractUi
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationNotice
-import ir.kitgroup.partnerManagement.feature.organization.model.VisitorOrganization
 import androidx.compose.runtime.LaunchedEffect
+import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
+import ir.kitgroup.partnerManagement.core.ui.util.demoMeetings
+import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizations
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationWarningEntity
+import ir.kitgroup.partnerManagement.core.database.entity.StandAssignmentEntity
+import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
+import ir.kitgroup.partnerManagement.core.ui.util.demoContracts
+import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizationPersons
+import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizationWarnings
+import ir.kitgroup.partnerManagement.core.ui.util.demoStandAssignments
+import ir.kitgroup.partnerManagement.core.ui.util.demoVisitorOrganizations
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationOfferTicketModel
 import ir.kitgroup.partnerManagement.feature.organization.model.TicketSerialStatus
-import ir.kitgroup.partnerManagement.feature.organization.ui.AddOrganizationNoticeDialog
+import ir.kitgroup.partnerManagement.feature.organization.ui.AddOrganizationWarningDialog
 import ir.kitgroup.partnerManagement.feature.organization.ui.AddPersonBottomSheet
 import ir.kitgroup.partnerManagement.feature.organization.ui.InactivationReasonDialog
-import ir.kitgroup.partnerManagement.feature.organization.ui.demoOrganizations
 import ir.kitgroup.partnerManagement.feature.organization.ui.rememberAddOrganizationFormState
 import ir.kitgroup.partnerManagement.feature.organization.ui.rememberAddPersonFormState
-import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
 
 
 @Composable
 fun OrganizationDetailScreen(
-    organizationId: Int,
+    organizationId: String,
     onBack: () -> Unit,
     onEditClick: () -> Unit,
     onDisableClick: () -> Unit,
-    onAddVisitClick: () -> Unit,
-    onVisitClick: (Int) -> Unit,
-    onAssignVisitorClick: (Int) -> Unit,
-    onEditVisitorClick: (Int) -> Unit,
-    onDeleteVisitorClick: (Int) -> Unit,
-    onAssignStandsClick: (Int) -> Unit,
-    onAssignContractClick: (Int) -> Unit,
-    onViewItemDetailsClick: (AdvertisingStandAssignment) -> Unit,
-    onContractClick: (ContractUi) -> Unit,
+    onMeetingClick: (String) -> Unit,
+    onAddMeetingClick: () -> Unit,
+    onAssignVisitorClick: (String) -> Unit,
+    onEditVisitorClick: (String) -> Unit,
+    onDeleteVisitorClick: (String) -> Unit,
+    onAssignStandsClick: (String) -> Unit,
+    onAssignContractClick: (String) -> Unit,
+    onViewItemDetailsClick: (StandAssignmentEntity) -> Unit,
+    onContractClick: (ContractEntity) -> Unit,
     onAddTicketOfferClick: () -> Unit,
     viewModel: SessionViewModel = hiltViewModel()
 ) {
     val organization = remember(organizationId) {
-        demoOrganizations.find { it.receationcenterid == organizationId }
+        demoOrganizations.find { it.organizationId == organizationId }
     }
 
     val appColors = LocalPartnerManagementColors.current
@@ -119,7 +119,7 @@ fun OrganizationDetailScreen(
             tab != OrganizationDetailTab.VISITOR || isSupervisor
         }
     }
-    var showNoticeDialog by rememberSaveable { mutableStateOf(false) }
+    var showWarningDialog by rememberSaveable { mutableStateOf(false) }
 
     // متغیرهای وضعیت برای کنترل دیالوگ‌ها
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
@@ -127,115 +127,11 @@ fun OrganizationDetailScreen(
     var currentOrganizationStatus by rememberSaveable { mutableStateOf(OrganizationStatus.ACTIVE) }
     var currentInactiveReason by rememberSaveable { mutableStateOf("") }
 
-    var noticePendingDelete by remember { mutableStateOf<OrganizationNotice?>(null) }
-    var visitorToDelete by remember { mutableStateOf<VisitorOrganization?>(null) }
-
-    val mockVisits = listOf(
-        VisitModel(
-            id = 1,
-            organizationName = "هتل قصر طلایی",
-            visitType = "بازدید حضوری برنامه‌ریزی شده",
-            visitorName = "علی محمدی",
-            date = "۱۴۰۳/۰۲/۱۵ , 11:30",
-            city = "مشهد",
-            district = "خیابان آزادی",
-            icon = Icons.Default.DirectionsWalk,
-            status = Status.PLANNED
-        ),
-        VisitModel(
-            id = 2,
-            organizationName = "هتل الماس",
-            visitType = "بازدید تلفنی",
-            visitorName = "علی رضایی",
-            date = "۱۴۰۳/۰۲/۱۷ , 10:30",
-            city = "مشهد",
-            district = "خیابان آزادی",
-            icon = Icons.Default.Phone,
-            status = Status.DONE
-        ),
-        VisitModel(
-            id = 3,
-            organizationName = "هتل پارسیان",
-            visitType = "بازدید حضوری غیربرنامه‌ریزی شده",
-            visitorName = "مریم رضایی",
-            date = "۱۴۰۳/۰۲/۱۶ , 02:30",
-            city = "مشهد",
-            district = "احمد آباد",
-            icon = Icons.Default.DirectionsWalk,
-            status = Status.CANCELLED
-        ),
-        VisitModel(
-            id = 4,
-            organizationName = "سازمان برق",
-            visitType = "بازدید تلفنی",
-            visitorName = "مریم مفرد",
-            date = "۱۴۰۳/۰۲/۱۸ , 10:30",
-            city = "مشهد",
-            district = "پاسداران",
-            icon = Icons.Default.Phone,
-            status = Status.PLANNED
-        )
-    )
+    var warningPendingDelete by remember { mutableStateOf<OrganizationWarningEntity?>(null) }
+    var visitorToDelete by remember { mutableStateOf<VisitorOrganizationEntity?>(null) }
 
 
-    val persons = listOf(
-        PersonOrganization(
-            name = "علی حسینی",
-            mobile = "09121234567",
-            phone = "02112345678",
-            gender = "آقا",
-            status = "فعال",
-            description = "مدیر داخلی هتل"
-        ),
-        PersonOrganization(
-            name = "مریم احمدی",
-            mobile = "09351234567",
-            phone = "",
-            gender = "خانم",
-            status = "فعال",
-            description = "مسئول پذیرش"
-        )
-    )
-
-    val visitors = listOf(
-        VisitorOrganization(
-            id = 1,
-            name = "امیر حسین رضایی",
-            startDate = "1405/02/05",
-            endDate = "1405/02/15",
-            status = Status.ACTIVE,
-
-            ),
-        VisitorOrganization(
-            id = 2,
-            name = "سارا محمدی",
-            startDate = "1405/02/05",
-            endDate = "1405/02/15", status = Status.ACTIVE,
-
-            ),
-        VisitorOrganization(
-            id = 3,
-            name = "علی جعفری",
-            startDate = "1405/02/05",
-            endDate = "1405/02/15", status = Status.INACTIVE,
-
-            ),
-        VisitorOrganization(
-            id = 4,
-            name = "مهین محمدی",
-            startDate = "1405/02/05",
-            endDate = "1405/02/15", status = Status.ACTIVE,
-
-            ),
-        VisitorOrganization(
-            id = 5,
-            name = "جعفر امری",
-            startDate = "1405/02/05",
-            endDate = "1405/02/15", status = Status.INACTIVE,
-
-            )
-    )
-
+/*
     val stands = listOf(
         AdvertisingStandAssignment(
             "1",
@@ -245,7 +141,7 @@ fun OrganizationDetailScreen(
             "stand",
             5,
             "۱۴۰۳/۰۳/۲۲", "امانی",
-            Status.ACTIVE
+            1
         ),
         AdvertisingStandAssignment(
             "2",
@@ -255,7 +151,7 @@ fun OrganizationDetailScreen(
             "wall",
             3,
             "۱۴۰۳/۰۳/۲۴", "تبلیغاتی",
-            Status.DRAFT
+            1
         ),
         AdvertisingStandAssignment(
             "3",
@@ -265,7 +161,7 @@ fun OrganizationDetailScreen(
             "kiosk",
             2,
             "۱۴۰۳/۰۳/۲۰", "اجاره ای",
-            Status.CANCELLED
+            0
         ),
         AdvertisingStandAssignment(
             "4",
@@ -275,7 +171,7 @@ fun OrganizationDetailScreen(
             "stand",
             4,
             "۱۴۰۳/۰۳/۲۵", "اجاره ای",
-            Status.RETURNED
+            3
         ),
         AdvertisingStandAssignment(
             "5",
@@ -285,7 +181,7 @@ fun OrganizationDetailScreen(
             "kiosk",
             2,
             "۱۴۰۳/۰۳/۲۰", "تبلیغاتی",
-            Status.ACTIVE
+            2
         ),
         AdvertisingStandAssignment(
             "6",
@@ -295,38 +191,11 @@ fun OrganizationDetailScreen(
             "stand",
             4,
             "۱۴۰۳/۰۳/۲۵", "امانی",
-            Status.DRAFT
+            1
         )
     )
+*/
 
-    val contracts = listOf(
-        ContractUi(
-            id = "1",
-            organizationName = "هتل اسپیناس پالاس",
-            contractTitle = "قرارداد همکاری سال ۱۴۰۵",
-            cooperationModel = "پورسانتی",
-            settlementPeriodType = "ماهیانه",
-            startDate = "1405/01/01",
-            endDate = "1405/12/29",
-            status = Status.ACTIVE,
-            defaultDiscountPercent = 10.0,
-            defaultCommissionPercent = 5.0,
-            description = "توافق بر اساس نرخ‌نامه رسمی هتل با ۱۰٪ تخفیف برای مشتریان سازمانی."
-        ),
-        ContractUi(
-            id = "2",
-            organizationName = "هتل پارسیان آزادی",
-            contractTitle = "قرارداد همکاری فصلی",
-            cooperationModel = "بلیط تخفیف دار",
-            settlementPeriodType = "روزانه",
-            startDate = "1405/03/01",
-            endDate = "1405/05/31",
-            status = Status.INACTIVE,
-            defaultDiscountPercent = 15.0,
-            defaultCommissionPercent = 7.5,
-            description = "پورسانت بر اساس درصد فروش هر فصل محاسبه و تسویه می‌شود."
-        )
-    )
 
     val demoOrganizationOfferTickets = listOf(
         OrganizationOfferTicketModel(
@@ -361,31 +230,6 @@ fun OrganizationDetailScreen(
         )
     )
 
-    var notices = listOf(
-        OrganizationNotice(
-            id = 1,
-            type = "تذکر شفاهی",
-            score = 2,
-            description = "تاخیر در پاسخ‌گویی به پیگیری‌های واحد بازاریابی",
-            createdAt = "1405/05/02",
-            registrarName = "احمد شفاهی"
-        ),
-        OrganizationNotice(
-            id = 2,
-            type = "تذکر کتبی",
-            score = 4,
-            description = "عدم رعایت استانداردهای قرارداد همکاری در ارائه استند تبلیغاتی",
-            createdAt = "1405/05/02",
-            registrarName = "رضا موسوی"
-        ),
-        OrganizationNotice(
-            id = 3,
-            type = "تذکر شفاهی",
-            score = -3,
-            description = "مغایرت جزئی در اطلاعات ثبت‌شده حساب کاربری", createdAt = "1405/05/02",
-            registrarName = "پرهام شیری"
-        )
-    )
     val organizationOfferTickets = remember { demoOrganizationOfferTickets }
 
     Scaffold(
@@ -470,17 +314,16 @@ fun OrganizationDetailScreen(
 
                     OrganizationDetailTab.VISITS -> {
                         OrganizationVisitsTabContent(
-                            visits = mockVisits,
-                            onAddVisitClick = onAddVisitClick,
-                            onVisitClick = onVisitClick
+                            visits = demoMeetings,
+                            onAddMeetingClick = onAddMeetingClick,
+                            onMeetingClick = onMeetingClick
                         )
                     }
 
                     OrganizationDetailTab.PERSONS -> {
                         OrganizationPersonsTabContent(
-                            persons = persons,
+                            persons = demoOrganizationPersons,
                             onAddPersonClick = {
-
                                 formState.resetPersonFields(personState)
                                 showAddPersonSheet = true
                             },
@@ -491,7 +334,7 @@ fun OrganizationDetailScreen(
                         if (isSupervisor) {
 
                             OrganizationVisitorTabContent(
-                                visitors = visitors,
+                                visitors = demoVisitorOrganizations,
                                 onAssignVisitorClick = {
                                     onAssignVisitorClick(organizationId)
                                 },
@@ -502,7 +345,7 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.STANDS -> {
-                        OrganizationStandsTabContent(assignments = stands,
+                        OrganizationStandsTabContent(assignments = demoStandAssignments,
                             onAssignStandsClick = { onAssignStandsClick(organizationId) },
                             onViewItemDetailsClick = { item ->
                                 onViewItemDetailsClick(item)
@@ -510,7 +353,7 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.CONTRACTS -> {
-                        OrganizationContractsTabContent(contracts = contracts,
+                        OrganizationContractsTabContent(contracts = demoContracts(),
                             onAssignContractClick = { onAssignContractClick(organizationId) },
                             onContractClick = { contract ->
                                 onContractClick(contract)
@@ -530,13 +373,13 @@ fun OrganizationDetailScreen(
                         )
                     }
 
-                    OrganizationDetailTab.NOTICES -> {
-                        OrganizationNoticesTabContent(
-                            notices = notices,
+                    OrganizationDetailTab.WARNING -> {
+                        OrganizationWarningTabContent(
+                            warnings = demoOrganizationWarnings,
                             isSupervisor = isSupervisor,
-                            onAddNoticeClick = { showNoticeDialog = true },
-                            onDeleteNoticeClick = { notice ->
-                                noticePendingDelete = notice
+                            onAddWarningClick = { showWarningDialog = true },
+                            onDeleteWarningClick = { warnings ->
+                                warningPendingDelete = warnings
                             }
                         )
                     }
@@ -545,28 +388,28 @@ fun OrganizationDetailScreen(
         }
     }
 
-    if (showNoticeDialog) {
-        AddOrganizationNoticeDialog(
-            onDismiss = { showNoticeDialog = false },
-            onConfirm = { noticeType, description ->
-                showNoticeDialog = false
+    if (showWarningDialog) {
+        AddOrganizationWarningDialog(
+            onDismiss = { showWarningDialog = false },
+            onConfirm = { warningType, description ->
+                showWarningDialog = false
             }
         )
     }
 
     // دیالوگ تأیید حذف
-    noticePendingDelete?.let { notice ->
+    warningPendingDelete?.let { warning ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_warnings),
-            itemName = notice.type,
+            itemName = warning.name!!,
             onConfirm = {
                 // حذف از لیست محلی یا فراخوانی ViewModel
-                notices = notices.filter { it.id != notice.id }
+                //   demoOrganizationWarnings = demoOrganizationWarnings.filter { it.organizationWarningId != warning.organizationWarningId }
                 // viewModel.deleteNotice(notice.id)
-                noticePendingDelete = null
+                warningPendingDelete = null
             },
             onDismiss = {
-                noticePendingDelete = null
+                warningPendingDelete = null
             }
         )
     }
@@ -598,8 +441,8 @@ fun OrganizationDetailScreen(
                 showAddPersonSheet = false
             },
             onSavePerson = {
-                if (personState.name.isNotBlank() && personState.phone.isNotBlank()) {
-                    formState.organizationPersons.add(
+                if (personState.name.isNotBlank() && personState.phone1.isNotBlank()) {
+                   /* formState.organizationPersons.add(
                         PersonOrganization(
                             name = personState.name.trim(),
                             mobile = personState.mobile.trim(),
@@ -608,7 +451,7 @@ fun OrganizationDetailScreen(
                             gender = personState.gender,
                             description = personState.description.trim()
                         )
-                    )
+                    )*/
 
                     formState.resetPersonFields(personState)
                     showAddPersonSheet = false
@@ -619,7 +462,7 @@ fun OrganizationDetailScreen(
     visitorToDelete?.let { visitor ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_visitor),
-            itemName = visitor.name,
+            itemName = visitor.name!!,
             onConfirm = {
                 // حذف از لیست محلی یا فراخوانی ViewModel
                 //   visitors = visitors.filter { it.id != visitor.id }

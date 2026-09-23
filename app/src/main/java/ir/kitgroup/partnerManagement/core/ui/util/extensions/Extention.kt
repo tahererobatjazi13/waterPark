@@ -13,7 +13,7 @@ fun Status.toDisplayName(): String = when (this) {
 
 /*
 git add .
-git commit -m "add server setting"
+git commit -m "redesign models in screens"
 git push -u origin master
 git push
 */

@@ -4,7 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SubjectVisitDto(
-    val subjectVisitId: Int,
-    val name: String,
-    val isActive: Boolean = true
+
+    val subjectVisitId: String,
+
+    val name: String? = null,
+
+    val recreationCenterId: String? = null
 )

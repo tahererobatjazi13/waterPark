@@ -9,41 +9,41 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
     data object ThemeMode : Screen("themeMode")
 
-    data object VisitDetail : Screen("visit_detail/{visitId}") {
-        fun createRoute(visitId: Int): String {
-            return "visit_detail/$visitId"
-        }
-    }
 
     // Organization
     data object AddOrganization : Screen("add_organization")
 
     data object EditOrganization : Screen("add_organization/{organizationId}") {
-        fun createRoute(organizationId: Int) = "add_organization/$organizationId"
+        fun createRoute(organizationId: String) = "add_organization/$organizationId"
     }
 
     data object OrganizationDetail : Screen("organization_detail/{organizationId}") {
-        fun createRoute(organizationId: Int) = "organization_detail/$organizationId"
+        fun createRoute(organizationId: String) = "organization_detail/$organizationId"
     }
 
     data object AssignVisitor :
         Screen("assign_visitor/{organizationId}")
 
-    // Visits
-    data object RegisterVisit :
-        Screen("register_visit?visitId={visitId}&organizationId={organizationId}") {
+    // Meetings
+    data object MeetingDetail : Screen("meeting_detail/{meetingId}") {
+        fun createRoute(meetingId: String): String {
+            return "meeting_detail/$meetingId"
+        }
+    }
+    data object AddMeeting:
+        Screen("add_meeting?meetingId={meetingId}&organizationId={organizationId}") {
         fun createRoute(
-            visitId: Int? = null,
-            organizationId: Int? = null
+            meetingId: String? = null,
+            organizationId: String? = null
         ): String {
             val params = mutableListOf<String>()
-            if (visitId != null && visitId != -1) {
-                params.add("visitId=$visitId")
+            if (meetingId != null) {
+                params.add("meetingId=$meetingId")
             }
-            if (organizationId != null && organizationId != -1) {
+            if (organizationId != null) {
                 params.add("organizationId=$organizationId")
             }
-            return if (params.isEmpty()) "register_visit" else "register_visit?${
+            return if (params.isEmpty()) "add_meeting" else "add_meeting?${
                 params.joinToString(
                     "&"
                 )
@@ -81,7 +81,7 @@ sealed class Screen(val route: String) {
 
     data object AddAdvertisingStandAssignmentOrganization :
         Screen("add_stand_assignment?organizationId={organizationId}") {
-        fun createRoute(organizationId: Int? = null): String {
+        fun createRoute(organizationId: String? = null): String {
             return if (organizationId != null) {
                 "add_stand_assignment?organizationId=$organizationId"
             } else {
@@ -114,7 +114,7 @@ sealed class Screen(val route: String) {
     }
 
     data object AddContract : Screen("add_contract?organizationId={organizationId}") {
-        fun createRoute(organizationId: Int? = null): String {
+        fun createRoute(organizationId: String? = null): String {
             return if (organizationId != null) {
                 "add_contract?organizationId=$organizationId"
             } else {
@@ -129,18 +129,18 @@ sealed class Screen(val route: String) {
     data object AddOfferTicketPlan : Screen("add_Offer_ticket_plan")
 
     // plan_line
-    data object OfferTicketPlanLineList : Screen("offer_ticket_Plan_line_list/{offerId}") {
-        fun createRoute(offerId: String) = "offer_ticket_Plan_line_list/$offerId"
+    data object OfferTicketPlanLineList : Screen("offer_ticket_Plan_line_list/{offerTicketPlanId}") {
+        fun createRoute(offerTicketPlanId: String) = "offer_ticket_Plan_line_list/$offerTicketPlanId"
     }
 
     data object AddOfferTicketPlanLineDetail :
-        Screen("add_offer_ticket_plan_line_detail?planName={planName}") {
-        fun createRoute(planName: String = "") =
-            "add_offer_ticket_plan_line_detail?planName=$planName"
+        Screen("add_offer_ticket_plan_line_detail?planName={offerTicketPlanLineName}") {
+        fun createRoute(offerTicketPlanLineName: String = "") =
+            "add_offer_ticket_plan_line_detail?offerTicketPlanLineName=$offerTicketPlanLineName"
     }
 
     // plan_detail
-    data object OfferTicketPlanLineDetail : Screen("offer_ticket_plan_line_detail/{lineId}") {
-        fun createRoute(lineId: String) = "offer_ticket_plan_line_detail/$lineId"
+    data object OfferTicketPlanLineDetail : Screen("offer_ticket_plan_line_detail/{offerTicketPlanLineId}") {
+        fun createRoute(offerTicketPlanLineId: String) = "offer_ticket_plan_line_detail/$offerTicketPlanLineId"
     }
 }

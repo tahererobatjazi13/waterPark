@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AssignmentInd
-import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Category
@@ -23,7 +22,6 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
@@ -39,87 +37,26 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.StandAssignmentEntity
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
-import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignment
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
+import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
+import ir.kitgroup.partnerManagement.core.ui.util.demoStandAssignments
 
-private val demoAdvertisingStandAssignments = listOf(
-    AdvertisingStandAssignment(
-        "1",
-        "محمد احمدی",
-        "هتل پارسیان آزادی",
-        "تخصیص به بازاریاب",
-        "stand",
-        5,
-        "۱۴۰۳/۰۳/۲۲", "تبلیغاتی",
-        Status.ACTIVE
-    ),
-    AdvertisingStandAssignment(
-        "2",
-        "سارا مرادی",
-        "هتل اسپیناس پالاس",
-        "عودت",
-        "wall",
-        3,
-        "۱۴۰۳/۰۳/۲۴", "امانی",
-        Status.DRAFT
-    ),
-    AdvertisingStandAssignment(
-        "3",
-        "علی رضایی",
-        "هتل هما",
-        "جمع آوری",
-        "kiosk",
-        2,
-        "۱۴۰۳/۰۳/۲۰", "اجاره ای",
-        Status.CANCELLED
-    ),
-    AdvertisingStandAssignment(
-        "4",
-        "نازنین کریمی",
-        "هتل بزرگ تهران",
-        "خاتمه",
-        "stand",
-        4,
-        "۱۴۰۳/۰۳/۲۵", "اجاره ای",
-        Status.RETURNED
-    ),
-    AdvertisingStandAssignment(
-        "5",
-        "علی رضایی",
-        "هتل هما",
-        "تخصیص به بازاریاب",
-        "kiosk",
-        2,
-        "۱۴۰۳/۰۳/۲۰", "امانی",
-
-        Status.ACTIVE
-    ),
-    AdvertisingStandAssignment(
-        "6",
-        "نازنین کریمی",
-        "هتل بزرگ تهران",
-        "تخصیص به بازاریاب",
-        "stand",
-        4,
-        "۱۴۰۳/۰۳/۲۵",
-        "تبلیغاتی",
-        Status.DRAFT
-    )
-)
 
 @Composable
 fun AdvertisingStandAssignmentVisitorListScreen(
     onBackClick: () -> Unit,
     onNewAssignmentVisitorClick: () -> Unit,
-    onViewItemDetailsClick: (AdvertisingStandAssignment) -> Unit,
+    onViewItemDetailsClick: (StandAssignmentEntity) -> Unit,
     modifier: Modifier = Modifier,
-    advertisingStandAssignments: List<AdvertisingStandAssignment> = demoAdvertisingStandAssignments
+    advertisingStandAssignments: List<StandAssignmentEntity> = demoStandAssignments
 ) {
     val appColors = LocalPartnerManagementColors.current
     var selectedTab by rememberSaveable { mutableStateOf(AllocationFilterTab.All) }
@@ -127,10 +64,10 @@ fun AdvertisingStandAssignmentVisitorListScreen(
     val filteredAllocations = remember(selectedTab, advertisingStandAssignments) {
         when (selectedTab) {
             AllocationFilterTab.All -> advertisingStandAssignments
-            AllocationFilterTab.Active -> advertisingStandAssignments.filter { it.status == Status.ACTIVE }
-            AllocationFilterTab.Draft -> advertisingStandAssignments.filter { it.status == Status.DRAFT }
-            AllocationFilterTab.Returned -> advertisingStandAssignments.filter { it.status == Status.RETURNED }
-            AllocationFilterTab.Cancelled -> advertisingStandAssignments.filter { it.status == Status.CANCELLED }
+            AllocationFilterTab.Active -> advertisingStandAssignments.filter { it.status == 1 }
+            AllocationFilterTab.Draft -> advertisingStandAssignments.filter { it.status == 2 }
+            AllocationFilterTab.Returned -> advertisingStandAssignments.filter { it.status == 3 }
+            AllocationFilterTab.Cancelled -> advertisingStandAssignments.filter { it.status == 4 }
         }
     }
 
@@ -260,7 +197,7 @@ private fun AllocationFilterTabs(
             ) {
                 Text(
                     text = stringResource(tab.titleRes),
-                    style = MaterialTheme.typography.labelLarge,
+                    style = typography.labelLarge,
                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                     color = if (selected) colorScheme.onPrimary else appColors.textSecondary
                 )
@@ -271,8 +208,8 @@ private fun AllocationFilterTabs(
 
 @Composable
 private fun AllocationsList(
-    advertisingStandAssignments: List<AdvertisingStandAssignment>,
-    onViewItemDetailsClick: (AdvertisingStandAssignment) -> Unit,
+    advertisingStandAssignments: List<StandAssignmentEntity>,
+    onViewItemDetailsClick: (StandAssignmentEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -282,7 +219,7 @@ private fun AllocationsList(
     ) {
         items(
             items = advertisingStandAssignments,
-            key = { it.id }
+            key = { it.standAssignmentId }
         ) { allocation ->
             AllocationCard(
                 advertisingStandAssignment = allocation,
@@ -294,11 +231,18 @@ private fun AllocationsList(
 
 @Composable
 private fun AllocationCard(
-    advertisingStandAssignment: AdvertisingStandAssignment,
+    advertisingStandAssignment: StandAssignmentEntity,
     onViewDetailsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val assignmentTypeTitle = AssignmentType.fromId(advertisingStandAssignment.assignmentType)?.let {
+        stringResource(it.titleRes)
+    } ?: "-"
+
+    val assignmentModeTitle = AssignmentMode.fromId(advertisingStandAssignment.assignmentMode)?.let {
+        stringResource(it.titleRes)
+    } ?: "-"
 
     Card(
         modifier = modifier
@@ -326,12 +270,12 @@ private fun AllocationCard(
             ) {
                 InfoLine(
                     label = stringResource(R.string.label_choose_visitor_recipient),
-                    value = advertisingStandAssignment.visitorName,
+                    value = advertisingStandAssignment.visitorId!!,
                     leadingIcon = Icons.Default.PersonOutline,
                     modifier = Modifier.weight(1f)
                 )
+                StatusBadge(status = StandAssignmentStatus.fromId(advertisingStandAssignment.status))
 
-                StatusBadge(advertisingStandAssignment.status)
             }
 
             HorizontalDivider(
@@ -350,13 +294,13 @@ private fun AllocationCard(
                 ) {
                     DetailItem(
                         label = stringResource(R.string.label_assignment_type),
-                        value = advertisingStandAssignment.assignmentType,
+                        value = assignmentTypeTitle,
                         icon = Icons.Default.Category
                     )
 
                     DetailItem(
                         label = stringResource(R.string.label_delivery_visitor_date),
-                        value = advertisingStandAssignment.allocatedDate,
+                        value = advertisingStandAssignment.assignmentDate!!,
                         icon = Icons.Default.CalendarMonth
                     )
                 }
@@ -367,7 +311,7 @@ private fun AllocationCard(
                 ) {
                     DetailItem(
                         label = stringResource(R.string.label_assignment_mode),
-                        value = advertisingStandAssignment.assignmentMode,
+                        value = assignmentModeTitle,
                         icon = Icons.Default.AssignmentInd
                     )
 
@@ -406,12 +350,12 @@ fun InfoLine(
         Column {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = typography.labelMedium,
                 color = appColors.textSecondary
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium,
+                style = typography.titleMedium,
                 color = appColors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -468,7 +412,7 @@ private fun AllocationEmptyState(
 
             Text(
                 text = stringResource(R.string.msg_no_item_found),
-                style = MaterialTheme.typography.titleMedium,
+                style = typography.titleMedium,
                 color = appColors.textSecondary
             )
         }

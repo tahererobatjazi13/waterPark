@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -19,11 +18,12 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import androidx.compose.ui.viewinterop.AndroidView
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 
 @Composable
 fun MapScreen(
-    organizations: List<OrganizationModel>,
+    organizations: List<OrganizationEntity>,
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -74,7 +74,7 @@ fun MapScreen(
 
                     organizations.forEach { org ->
                         val marker = Marker(mapView)
-                        marker.position = GeoPoint(org.latitude, org.longitude)
+                        marker.position = GeoPoint(org.latitude!!, org.longitude!!)
                         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                         marker.title = org.name
                         marker.infoWindow = null

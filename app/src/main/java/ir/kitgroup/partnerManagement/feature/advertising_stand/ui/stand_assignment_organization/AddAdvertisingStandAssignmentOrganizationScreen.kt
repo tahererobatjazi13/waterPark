@@ -3,6 +3,7 @@ package ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignm
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,63 +15,79 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.AdvertisingStandEntity
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
+import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDateTimeFields
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.CustomSelectorField
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
-import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandItemUi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
+import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
+import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
+import ir.kitgroup.partnerManagement.core.ui.util.StandType
+import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizations
+import ir.kitgroup.partnerManagement.feature.advertising_stand.model.StandSelectionUiModel
 import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationBottomSheet
 import saman.zamani.persiandate.PersianDate
 import java.util.Locale
 
 @Composable
 fun AddAdvertisingStandAssignmentOrganizationScreen(
-    preselectedOrganizationId: Int? = null,
+    preselectedOrganizationId: String? = null,
     onBackClick: () -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var assignmentType by rememberSaveable { mutableStateOf("") }
-    val assignmentTypeList =
-        remember { listOf("تخصیص به سازمان", "عودت", "جمع آوری", "خاتمه") }
+    val context = LocalContext.current
 
-    var assignmentMode by rememberSaveable { mutableStateOf("") }
-    val assignmentModeList =
-        remember { listOf("تبلیغاتی ", "امانی", "اجاره ای") }
+    // نقشه‌های نگاشت عنوان به Enum
+    val assignmentTypeMap = remember(context) {
+        AssignmentType.entries.associateBy { context.getString(it.titleRes) }
+    }
+    var selectedAssignmentType by rememberSaveable { mutableStateOf(AssignmentType.ASSIGN_TO_ORGANIZATION) }
+
+    val assignmentModeMap = remember(context) {
+        AssignmentMode.entries.associateBy { context.getString(it.titleRes) }
+    }
+    var selectedAssignmentMode by rememberSaveable { mutableStateOf(AssignmentMode.TABLIGHATI) }
+
+    val statusMap = remember(context) {
+        StandAssignmentStatus.entries.associateBy { context.getString(it.titleRes) }
+    }
+    var selectedStatus by rememberSaveable { mutableStateOf(StandAssignmentStatus.ACTIVE_DELIVERED) }
 
     var description by rememberSaveable { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -78,209 +95,68 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
     var showActualReturnDatePicker by remember { mutableStateOf(false) }
 
     val today = remember { PersianDate() }
-    var deliveryOrganizationDate by rememberSaveable {
-        mutableStateOf(
-            "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${
-                String.format(Locale.US, "%02d", today.shDay)
-            }"
-        )
-    }
-    var plannedReturnDate by rememberSaveable {
-        mutableStateOf(
-            "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${
-                String.format(Locale.US, "%02d", today.shDay)
-            }"
-        )
+    val defaultDate = remember {
+        "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${
+            String.format(Locale.US, "%02d", today.shDay)
+        }"
     }
 
-    var actualReturnDate by rememberSaveable {
-        mutableStateOf(
-            "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${
-                String.format(Locale.US, "%02d", today.shDay)
-            }"
-        )
-    }
-    val isTrustMode = assignmentMode.trim() == "امانی"
-    val organizationList = listOf(
-        OrganizationModel(
-            1,
-            "هتل پارسیان آزادی",
-            city = "مشهد",
-            region = "منطقه 2",
-            "یوسفی",
-            Status.ACTIVE,
-            5, 0,
-            36.2845,
-            59.5892
-        ),
+    var deliveryOrganizationDate by rememberSaveable { mutableStateOf(defaultDate) }
+    var plannedReturnDate by rememberSaveable { mutableStateOf(defaultDate) }
+    var actualReturnDate by rememberSaveable { mutableStateOf(defaultDate) }
 
-        OrganizationModel(
-            2,
-            name = "سازمان پالاس",
-            city = "مشهد",
-            region = "منطقه 2",
-            address = "قاسم آباد",
-            Status.ACTIVE,
-            4, 4,
-            36.3562,
-            59.5084
-        ),
+    val isTrustMode = selectedAssignmentMode == AssignmentMode.AMANI
 
-        OrganizationModel(
-            3,
-            name = "سازمان نوید",
-            city = "مشهد",
-            region = "منطقه 2",
-            address = "پیروزی",
-            status = Status.ACTIVE,
-            3, 3,
-            latitude = 36.3015,
-            longitude = 59.5289
-        ),
-
-        OrganizationModel(
-            4,
-            name = "هتل مرکزی",
-            city = "مشهد",
-            region = "منطقه 2",
-            address = "امام رضا",
-            status = Status.ACTIVE,
-            5, 5,
-            latitude = 36.2820,
-            longitude = 59.6190
-        ),
-
-        OrganizationModel(
-            5,
-            name = "کیوسک اطلس", city = "مشهد",
-            region = "منطقه 2",
-            address = "کوهسنگی",
-            status = Status.ACTIVE,
-            3, 3,
-            latitude = 36.2736,
-            longitude = 59.5694
-        ),
-
-        OrganizationModel(
-            6,
-            name = "هتل الماس", city = "مشهد",
-            region = "منطقه 2",
-            address = "پاستور",
-            status = Status.ACTIVE,
-            2, 2,
-            latitude = 36.2994,
-            longitude = 59.5772
-        ),
-
-        OrganizationModel(
-            7,
-            name = "هتل وفا", city = "مشهد",
-            region = "منطقه 2",
-            address = "وکیل آباد",
-            status = Status.ACTIVE,
-            3, 3,
-            latitude = 36.3312,
-            longitude = 59.4851
-        ),
-
-        OrganizationModel(
-            8,
-            name = "سازمان مهندسی", city = "مشهد",
-            region = "منطقه 2",
-            address = "فاطمی",
-            status = Status.ACTIVE,
-            4, 4,
-            latitude = 36.3078,
-            longitude = 59.5935
-        ),
-
-        OrganizationModel(
-            9,
-            name = "هتل امیر", city = "مشهد",
-            region = "منطقه 2",
-            address = " رضاییه",
-            status = Status.ACTIVE,
-            2, 2,
-            latitude = 36.2768,
-            longitude = 59.6385
-        ),
-
-        OrganizationModel(
-            10,
-            name = "آپارتمان ملل", city = "مشهد",
-            region = "منطقه 2",
-            address = " ستاری",
-            status = Status.ACTIVE,
-            3, 3,
-            latitude = 36.3421,
-            longitude = 59.5208
-        ),
-
-        OrganizationModel(
-            11,
-            "مهمانسرا اسپیناس",
-            "مشهد",
-            "منطقه 2",
-            "مرکزی",
-            Status.INACTIVE,
-            5,
-            5,
-            36.3051,
-            59.6059
-        ),
-
-        OrganizationModel(
-            12,
-            name = "چالیدره", city = "مشهد",
-            region = "منطقه 2",
-            address = "طرقبه",
-            status = Status.INACTIVE,
-            2, 2,
-            latitude = 36.3198,
-            longitude = 59.3482
-        )
-    )
-
-    var selectedOrganization by remember { mutableStateOf<OrganizationModel?>(null) }
+    var selectedOrganization by remember { mutableStateOf<OrganizationEntity?>(null) }
     var showOrganizationSheet by remember { mutableStateOf(false) }
+
     LaunchedEffect(preselectedOrganizationId) {
-        if (preselectedOrganizationId != null && preselectedOrganizationId != -1) {
-            selectedOrganization =
-                organizationList.find { it.receationcenterid == preselectedOrganizationId }
+        if (preselectedOrganizationId != null) {
+            selectedOrganization = demoOrganizations.find {
+                it.organizationId == preselectedOrganizationId
+            }
         }
     }
 
-    val items = remember {
+    val standItems = remember {
         mutableStateListOf(
-            AdvertisingStandItemUi(
-                title = "استند رومیزی",
-                available = 15,
-                delivered = 0,
-                selected = false
+            StandSelectionUiModel(
+                entity = AdvertisingStandEntity(
+                    advertisingStandId = "1",
+                    name = "استند رومیزی",
+                    code = "STAND-01",
+                    standType = StandType.DESKTOP_STAND.id
+                ),
+                count = 0,
+                isSelected = false
             ),
-            AdvertisingStandItemUi(
-                title = "بنر",
-                available = 8,
-                delivered = 0,
-                selected = false
+            StandSelectionUiModel(
+                entity = AdvertisingStandEntity(
+                    advertisingStandId = "2",
+                    name = "بنر پرتابل",
+                    code = "STAND-02",
+                    standType = StandType.BANNER.id
+                ),
+                count = 0,
+                isSelected = false
             ),
-            AdvertisingStandItemUi(
-                title = "کیوسک",
-                available = 3,
-                delivered = 0,
-                selected = false
+            StandSelectionUiModel(
+                entity = AdvertisingStandEntity(
+                    advertisingStandId = "3",
+                    name = "کیوسک لمسی",
+                    code = "STAND-03",
+                    standType = StandType.KIOSK.id
+                ),
+                count = 0,
+                isSelected = false
             )
         )
     }
-    var status by mutableStateOf("فعال")
 
-    val statusList = remember {
-        listOf("پیش نویس", "فعال", "عودت شده", "لغو شده")
-    }
     val appColors = LocalPartnerManagementColors.current
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         topBar = {
             CustomHeader(
                 title = R.string.label_allocation_record,
@@ -312,26 +188,29 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-
                     DropdownSelectorField(
-                        value = assignmentType,
+                        value = stringResource(selectedAssignmentType.titleRes),
                         label = stringResource(R.string.label_assignment_type),
                         placeholder = stringResource(R.string.hint_choose_assignment_type),
-                        items = assignmentTypeList,
+                        items = assignmentTypeMap.keys.toList(),
                         isRequired = true,
-                        onItemSelected = { assignmentType = it }
+                        onItemSelected = { selectedTitle ->
+                            assignmentTypeMap[selectedTitle]?.let { selectedAssignmentType = it }
+                        }
                     )
 
                     DropdownSelectorField(
-                        value = assignmentMode,
+                        value = stringResource(selectedAssignmentMode.titleRes),
                         label = stringResource(R.string.label_assignment_mode),
                         placeholder = stringResource(R.string.hint_choose_assignment_mode),
-                        items = assignmentModeList,
+                        items = assignmentModeMap.keys.toList(),
                         isRequired = true,
-                        onItemSelected = { assignmentMode = it }
+                        onItemSelected = { selectedTitle ->
+                            assignmentModeMap[selectedTitle]?.let { selectedAssignmentMode = it }
+                        }
                     )
-                    if (preselectedOrganizationId == null) {
 
+                    if (preselectedOrganizationId == null) {
                         CustomSelectorField(
                             value = selectedOrganization?.name ?: "",
                             label = stringResource(R.string.label_organization_receiving_name),
@@ -351,27 +230,28 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
                             Icons.Filled.Checklist
                         )
 
-                        items.forEachIndexed { index, item ->
+                        standItems.forEachIndexed { index, item ->
                             AdvertisingItemCard(
                                 item = item,
                                 onToggleSelected = {
-                                    items[index] = item.copy(selected = !item.selected)
+                                    val newSelected = !item.isSelected
+                                    standItems[index] = item.copy(
+                                        isSelected = newSelected,
+                                        count = if (newSelected && item.count == 0) 1 else item.count
+                                    )
                                 },
                                 onIncrease = {
-                                    if (item.delivered < item.available) {
-                                        items[index] =
-                                            item.copy(
-                                                delivered = item.delivered + 1,
-                                                selected = true
-                                            )
-                                    }
+                                    standItems[index] = item.copy(
+                                        count = item.count + 1,
+                                        isSelected = true
+                                    )
                                 },
                                 onDecrease = {
-                                    if (item.delivered > 0) {
-                                        val newValue = item.delivered - 1
-                                        items[index] = item.copy(
-                                            delivered = newValue,
-                                            selected = newValue > 0
+                                    if (item.count > 0) {
+                                        val newCount = item.count - 1
+                                        standItems[index] = item.copy(
+                                            count = newCount,
+                                            isSelected = newCount > 0
                                         )
                                     }
                                 }
@@ -385,6 +265,7 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
                         onDateClick = { showDatePicker = true },
                         showTime = false
                     )
+
                     if (isTrustMode) {
                         CustomDateTimeFields(
                             label = stringResource(R.string.label_planned_return_date),
@@ -400,14 +281,18 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
                             showTime = false
                         )
                     }
+
                     DropdownSelectorField(
-                        value = status,
+                        value = stringResource(selectedStatus.titleRes),
                         label = stringResource(R.string.label_status),
                         placeholder = "",
-                        items = statusList,
+                        items = statusMap.keys.toList(),
                         isRequired = false,
-                        onItemSelected = { status = it }
+                        onItemSelected = { selectedTitle ->
+                            statusMap[selectedTitle]?.let { selectedStatus = it }
+                        }
                     )
+
                     CustomDescriptionField(
                         label = stringResource(R.string.label_description),
                         value = description,
@@ -435,12 +320,9 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
         }
     }
 
-
     if (showDatePicker) {
         DatePickerDialog(
-            onDismiss = {
-                showDatePicker = false
-            },
+            onDismiss = { showDatePicker = false },
             onDateSelected = { date ->
                 deliveryOrganizationDate =
                     "${date.year}/${String.format(Locale.US, "%02d", date.month)}/${
@@ -453,7 +335,7 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
 
     if (showOrganizationSheet && preselectedOrganizationId == null) {
         OrganizationBottomSheet(
-            list = organizationList,
+            list = demoOrganizations,
             onDismiss = { showOrganizationSheet = false },
             onItemSelected = { item ->
                 selectedOrganization = item
@@ -464,9 +346,7 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
 
     if (showPlannedReturnDatePicker) {
         DatePickerDialog(
-            onDismiss = {
-                showPlannedReturnDatePicker = false
-            },
+            onDismiss = { showPlannedReturnDatePicker = false },
             onDateSelected = { date ->
                 plannedReturnDate =
                     "${date.year}/${String.format(Locale.US, "%02d", date.month)}/${
@@ -479,9 +359,7 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
 
     if (showActualReturnDatePicker) {
         DatePickerDialog(
-            onDismiss = {
-                showActualReturnDatePicker = false
-            },
+            onDismiss = { showActualReturnDatePicker = false },
             onDateSelected = { date ->
                 actualReturnDate =
                     "${date.year}/${String.format(Locale.US, "%02d", date.month)}/${
@@ -491,19 +369,22 @@ fun AddAdvertisingStandAssignmentOrganizationScreen(
             }
         )
     }
-
 }
 
 @Composable
 private fun AdvertisingItemCard(
-    item: AdvertisingStandItemUi,
+    item: StandSelectionUiModel,
     onToggleSelected: () -> Unit,
     onIncrease: () -> Unit,
     onDecrease: () -> Unit
 ) {
-
     val cardBackground =
-        if (item.selected) LocalPartnerManagementColors.current.cardBackgroundAlt else LocalPartnerManagementColors.current.cardBackground
+        if (item.isSelected) LocalPartnerManagementColors.current.cardBackgroundAlt
+        else LocalPartnerManagementColors.current.cardBackground
+
+    val standTypeTitle = StandType.fromId(item.entity.standType)?.let {
+        stringResource(it.titleRes)
+    }
 
     Row(
         modifier = Modifier
@@ -514,7 +395,7 @@ private fun AdvertisingItemCard(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = item.selected,
+            checked = item.isSelected,
             onCheckedChange = { onToggleSelected() },
             colors = CheckboxDefaults.colors(
                 checkedColor = MaterialTheme.colorScheme.primary,
@@ -524,17 +405,26 @@ private fun AdvertisingItemCard(
 
         Spacer(modifier = Modifier.width(6.dp))
 
-
         Column(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = item.title,
+                text = item.entity.name ?: "-",
                 color = MaterialTheme.colorScheme.primary,
                 style = typography.titleMedium,
                 textAlign = TextAlign.Start,
             )
+
+            if (!standTypeTitle.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = standTypeTitle,
+                    color = LocalPartnerManagementColors.current.textSecondary,
+                    style = typography.bodySmall,
+                    textAlign = TextAlign.Start,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -559,7 +449,7 @@ private fun AdvertisingItemCard(
                 )
 
                 CounterValue(
-                    value = item.delivered
+                    value = item.count
                 )
 
                 CounterButton(
@@ -573,9 +463,9 @@ private fun AdvertisingItemCard(
 
 @Composable
 private fun CounterButton(
-    text: String, onClick: () -> Unit
+    text: String,
+    onClick: () -> Unit
 ) {
-
     Box(
         modifier = Modifier
             .size(width = 36.dp, height = 36.dp)

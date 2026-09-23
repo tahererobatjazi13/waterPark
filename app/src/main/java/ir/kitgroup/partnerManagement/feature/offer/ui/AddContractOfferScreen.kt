@@ -16,7 +16,10 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import ir.kitgroup.partnerManagement.core.ui.util.ContractOfferStatus
+import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 
 @Composable
 fun AddContractOfferScreen(
@@ -24,6 +27,7 @@ fun AddContractOfferScreen(
     onSaveClick: () -> Unit = {}
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val context = LocalContext.current
 
     var offerTicketPlan by rememberSaveable { mutableStateOf("") }
     var isOfferTicketPlanExpanded by remember { mutableStateOf(false) }
@@ -32,6 +36,10 @@ fun AddContractOfferScreen(
     var contract by rememberSaveable { mutableStateOf("") }
     var isContractExpanded by remember { mutableStateOf(false) }
     val contractList = remember { listOf("قراداد همکاری سلازمان ..", "قرارداد تابستانه هتل ..") }
+    val contractOfferStatusMap = remember {
+        ContractOfferStatus.entries.associateWith { context.getString(it.titleRes) }
+    }
+    var selectedContractOfferStatus by remember { mutableStateOf(ContractOfferStatus.DRAFT) }
 
 
     var serialPrefix by rememberSaveable { mutableStateOf("") }
@@ -159,8 +167,9 @@ fun AddContractOfferScreen(
                         onValueChange = { serialPrefix = it },
                         label = stringResource(R.string.label_serial_prefix),
                         placeholder = stringResource(R.string.hint_enter_serial_prefix),
-                        leadingIcon = null, isRequired = true
+                        leadingIcon = null, isRequired = false
                     )
+
                     CustomEditTextField(
                         value = countSerial,
                         onValueChange = { countSerial = it },
@@ -183,27 +192,18 @@ fun AddContractOfferScreen(
                         )
                     )
 
-        /*            CustomEditTextField(
-                        value = serialTo,
-                        onValueChange = { input ->
-                            serialTo = input.filter { it.isDigit() }
-                        },
-                        label = stringResource(R.string.label_serial_to),
-                        placeholder = stringResource(R.string.hint_enter_serial_to),
-                        leadingIcon = null,
+                    DropdownSelectorField(
+                        value = contractOfferStatusMap[selectedContractOfferStatus] ?: "",
+                        label = stringResource(R.string.label_contract_offer_Status),
+                        placeholder = stringResource(R.string.hint_choose_status),
+                        items = contractOfferStatusMap.values.toList(),
                         isRequired = false,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        )
-                    )*/
-
-                  /*  CustomEditTextField(
-                        value = title,
-                        onValueChange = { title = it },
-                        label = stringResource(R.string.label_title),
-                        placeholder = stringResource(R.string.hint_enter_title),
-                        leadingIcon = null, isRequired = false
-                    )*/
+                        onItemSelected = { selectedTitle ->
+                            selectedContractOfferStatus =
+                                contractOfferStatusMap.entries.firstOrNull { it.value == selectedTitle }?.key
+                                    ?: ContractOfferStatus.DRAFT
+                        }
+                    )
 
                     Spacer(modifier = Modifier.height(10.dp))
                 }

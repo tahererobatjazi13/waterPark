@@ -5,9 +5,15 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "warnings")
 data class WarningsEntity(
-    @PrimaryKey val warningsId: Int,
-    val name: String,
-    val score: String,
-    val receationCenterId: Int,
-    val code: String
+
+    @PrimaryKey
+    val warningsId: String,
+
+    val name: String? = null,
+
+    val score: Int? = null,
+
+    val recreationCenterId: String? = null,
+
+    val code: String? = null
 )

@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import ir.kitgroup.partnerManagement.core.ui.util.demoStandAssignments
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.AdvertisingStandMenuScreen
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.detail.AdvertisingStandAssignmentVisitorDetailScreen
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.detail.demoAssignmentDetail
@@ -45,7 +46,7 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                 )
             },
             onEditItemClick = { item ->
-                navController.navigate(Screen.AdvertisingStandDetail.createRoute(item.id))
+                navController.navigate(Screen.AdvertisingStandDetail.createRoute(item.advertisingStandId))
             },
             onDeleteItemClick = { /* لاجیک حذف در لیست یا ViewModel هندل می‌شود */ }
         )
@@ -81,7 +82,7 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
             },
             onViewItemDetailsClick = { assignment ->
                 navController.navigate(
-                    Screen.AdvertisingStandAssignmentVisitorDetail.createRoute(assignment.id)
+                    Screen.AdvertisingStandAssignmentVisitorDetail.createRoute(assignment.standAssignmentId)
                 )
             }
         )
@@ -104,7 +105,7 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
             },
             onViewItemDetailsClick = { assignment ->
                 navController.navigate(
-                    Screen.AdvertisingStandAssignmentVisitorDetail.createRoute(assignment.id)
+                    Screen.AdvertisingStandAssignmentVisitorDetail.createRoute(assignment.standAssignmentId)
                 )
             }
         )
@@ -115,15 +116,16 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
         route = Screen.AddAdvertisingStandAssignmentOrganization.route,
         arguments = listOf(
             navArgument("organizationId") {
-                type = NavType.IntType
-                defaultValue = -1
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
             }
         )
-    ) { backStackEntry ->
-        val orgId = backStackEntry.arguments?.getInt("organizationId")?.takeIf { it != -1 }
+    )  { backStackEntry ->
+        val organizationId = backStackEntry.arguments?.getString("organizationId")
 
         AddAdvertisingStandAssignmentOrganizationScreen(
-            preselectedOrganizationId = orgId,
+            preselectedOrganizationId = organizationId,
             onBackClick = { navController.popBackStack() },
             onSaveClick = { navController.popBackStack() }
         )

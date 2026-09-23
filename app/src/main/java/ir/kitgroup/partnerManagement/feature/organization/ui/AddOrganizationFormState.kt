@@ -2,8 +2,8 @@ package ir.kitgroup.partnerManagement.feature.organization.ui
 
 import androidx.compose.runtime.*
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.PersonEntity
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
-import ir.kitgroup.partnerManagement.feature.organization.model.PersonOrganization
 
 
 @Stable
@@ -34,7 +34,7 @@ class AddOrganizationFormState {
 
     var description by mutableStateOf("")
 
-    val organizationPersons = mutableStateListOf<PersonOrganization>()
+    val organizationPersons = mutableStateListOf<PersonEntity>()
 
     val images = mutableStateListOf(
         R.drawable.ic_logo,
@@ -46,21 +46,23 @@ class AddOrganizationFormState {
     fun resetPersonFields(personState: AddPersonFormState) {
         personState.name = ""
         personState.mobile = ""
-        personState.phone = ""
-        personState.gender = ""
-        personState.status = "فعال"
+        personState.phone1 = ""
+        personState.gender = 0
+        personState.status = 1
         personState.description = ""
     }
 }
 
+
+
 @Stable
 class AddPersonFormState {
     var name by mutableStateOf("")
-    var mobile by mutableStateOf("")
-    var phone by mutableStateOf("")
-    var gender by mutableStateOf("")
-    var status by mutableStateOf("فعال")
     var description by mutableStateOf("")
+    var gender by mutableIntStateOf(0)
+    var mobile by mutableStateOf("")
+    var phone1 by mutableStateOf("")
+    var status by mutableIntStateOf(0)
 }
 
 @Composable

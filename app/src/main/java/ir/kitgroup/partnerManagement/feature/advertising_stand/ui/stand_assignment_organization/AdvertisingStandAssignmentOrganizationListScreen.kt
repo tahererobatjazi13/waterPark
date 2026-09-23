@@ -29,84 +29,24 @@ import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
-import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignment
 import androidx.compose.material3.MaterialTheme.typography
+import ir.kitgroup.partnerManagement.core.database.entity.StandAssignmentEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.util.Status
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
+import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
+import ir.kitgroup.partnerManagement.core.ui.util.demoStandAssignments
 
-private val demoAdvertisingStandAssignments = listOf(
-    AdvertisingStandAssignment(
-        "1",
-        "محمد احمدی",
-        "هتل پارسیان آزادی",
-        "تخصیص به بازاریاب",
-        "stand",
-        5,
-        "۱۴۰۳/۰۳/۲۲", "تبلیغاتی",
-        Status.ACTIVE
-    ),
-    AdvertisingStandAssignment(
-        "2",
-        "سارا مرادی",
-        "هتل اسپیناس پالاس",
-        "عودت",
-        "wall",
-        3,
-        "۱۴۰۳/۰۳/۲۴", "امانی",
-        Status.DRAFT
-    ),
-    AdvertisingStandAssignment(
-        "3",
-        "علی رضایی",
-        "هتل هما",
-        "جمع آوری",
-        "kiosk",
-        2,
-        "۱۴۰۳/۰۳/۲۰", "اجاره ای",
-        Status.CANCELLED
-    ),
-    AdvertisingStandAssignment(
-        "4",
-        "نازنین کریمی",
-        "هتل بزرگ تهران",
-        "خاتمه",
-        "stand",
-        4,
-        "۱۴۰۳/۰۳/۲۵", "اجاره ای",
-        Status.RETURNED
-    ),
-    AdvertisingStandAssignment(
-        "5",
-        "علی رضایی",
-        "هتل هما",
-        "تخصیص به بازاریاب",
-        "kiosk",
-        2,
-        "۱۴۰۳/۰۳/۲۰", "امانی",
-
-        Status.ACTIVE
-    ),
-    AdvertisingStandAssignment(
-        "6",
-        "نازنین کریمی",
-        "هتل بزرگ تهران",
-        "تخصیص به بازاریاب",
-        "stand",
-        4,
-        "۱۴۰۳/۰۳/۲۵",
-        "تبلیغاتی",
-        Status.DRAFT
-    )
-)
 
 @Composable
 fun AdvertisingStandAssignmentOrganizationListScreen(
     onBackClick: () -> Unit,
     onNewAssignmentOrganizationClick: () -> Unit,
-    onViewItemDetailsClick: (AdvertisingStandAssignment) -> Unit,
+    onViewItemDetailsClick: (StandAssignmentEntity) -> Unit,
     modifier: Modifier = Modifier,
-    advertisingStandAssignments: List<AdvertisingStandAssignment> = demoAdvertisingStandAssignments
+    advertisingStandAssignments: List<StandAssignmentEntity> = demoStandAssignments
 ) {
     val appColors = LocalPartnerManagementColors.current
     var selectedTab by rememberSaveable { mutableStateOf(AllocationFilterTab.All) }
@@ -114,10 +54,10 @@ fun AdvertisingStandAssignmentOrganizationListScreen(
     val filteredAllocations = remember(selectedTab, advertisingStandAssignments) {
         when (selectedTab) {
             AllocationFilterTab.All -> advertisingStandAssignments
-            AllocationFilterTab.Active -> advertisingStandAssignments.filter { it.status == Status.ACTIVE }
-            AllocationFilterTab.Draft -> advertisingStandAssignments.filter { it.status == Status.DRAFT }
-            AllocationFilterTab.Returned -> advertisingStandAssignments.filter { it.status == Status.RETURNED }
-            AllocationFilterTab.Cancelled -> advertisingStandAssignments.filter { it.status == Status.CANCELLED }
+            AllocationFilterTab.Active -> advertisingStandAssignments.filter { it.status == 1 }
+            AllocationFilterTab.Draft -> advertisingStandAssignments.filter { it.status == 1 }
+            AllocationFilterTab.Returned -> advertisingStandAssignments.filter { it.status == 2 }
+            AllocationFilterTab.Cancelled -> advertisingStandAssignments.filter { it.status == 2 }
         }
     }
 
@@ -251,8 +191,8 @@ private fun AllocationFilterTabs(
 
 @Composable
 private fun AllocationsList(
-    advertisingStandAssignments: List<AdvertisingStandAssignment>,
-    onViewItemDetailsClick: (AdvertisingStandAssignment) -> Unit,
+    advertisingStandAssignments: List<StandAssignmentEntity>,
+    onViewItemDetailsClick: (StandAssignmentEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -260,7 +200,7 @@ private fun AllocationsList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        items(items = advertisingStandAssignments, key = { it.id }) { allocation ->
+        items(items = advertisingStandAssignments, key = { it.standAssignmentId }) { allocation ->
             AllocationCard(
                 advertisingStandAssignment = allocation,
                 onViewDetailsClick = { onViewItemDetailsClick(allocation) }
@@ -271,11 +211,20 @@ private fun AllocationsList(
 
 @Composable
 private fun AllocationCard(
-    advertisingStandAssignment: AdvertisingStandAssignment,
+    advertisingStandAssignment: StandAssignmentEntity,
     onViewDetailsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val assignmentTypeTitle =
+        AssignmentType.fromId(advertisingStandAssignment.assignmentType)?.let {
+            stringResource(it.titleRes)
+        } ?: "-"
+
+    val assignmentModeTitle =
+        AssignmentMode.fromId(advertisingStandAssignment.assignmentMode)?.let {
+            stringResource(it.titleRes)
+        } ?: "-"
 
     Card(
         modifier = modifier
@@ -293,10 +242,10 @@ private fun AllocationCard(
             ) {
                 InfoItem(
                     label = stringResource(R.string.label_organization_receiving_name),
-                    value = advertisingStandAssignment.organizationName,
+                    value = advertisingStandAssignment.organizationId!!,
                     icon = Icons.Default.Business
                 )
-                StatusBadge(advertisingStandAssignment.status)
+                StatusBadge(status = StandAssignmentStatus.fromId(advertisingStandAssignment.status))
 
             }
 
@@ -313,12 +262,12 @@ private fun AllocationCard(
                 ) {
                     DetailItem(
                         label = stringResource(R.string.label_assignment_type),
-                        value = advertisingStandAssignment.assignmentType,
+                        value = assignmentTypeTitle,
                         icon = Icons.Default.Category
                     )
                     DetailItem(
                         stringResource(R.string.label_delivery_organization_date),
-                        advertisingStandAssignment.allocatedDate,
+                        advertisingStandAssignment.assignmentDate!!,
                         Icons.Default.CalendarMonth
                     )
                 }
@@ -328,7 +277,7 @@ private fun AllocationCard(
                 ) {
                     DetailItem(
                         label = stringResource(R.string.label_assignment_mode),
-                        value = advertisingStandAssignment.assignmentMode,
+                        value = assignmentModeTitle,
                         icon = Icons.Default.AssignmentInd
                     )
                     DetailItem(
@@ -343,7 +292,7 @@ private fun AllocationCard(
 }
 
 @Composable
- fun InfoItem(label: String, value: String, icon: ImageVector) {
+fun InfoItem(label: String, value: String, icon: ImageVector) {
     val appColors = LocalPartnerManagementColors.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -407,7 +356,7 @@ private fun AllocationEmptyState(modifier: Modifier = Modifier) {
     }
 }
 
- fun allocationItemIcon(name: String): ImageVector {
+fun allocationItemIcon(name: String): ImageVector {
     return when (name.lowercase()) {
         "stand" -> Icons.Default.Devices
         "wall" -> Icons.Default.Home

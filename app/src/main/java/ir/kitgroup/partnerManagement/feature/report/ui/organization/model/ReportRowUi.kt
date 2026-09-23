@@ -7,7 +7,7 @@ data class ReportRowUi(
     val collectionName: String,
     val contractDate: String,
     val cooperate: String,
-    val status: Status
+    val status: Int
 )
 
 data class ReportDashboardUi(

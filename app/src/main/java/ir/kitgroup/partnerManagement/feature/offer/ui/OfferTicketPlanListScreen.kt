@@ -42,21 +42,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.OfferTicketPlanEntity
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.Status
+import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
-import ir.kitgroup.partnerManagement.feature.offer.model.OfferPlanUi
+import ir.kitgroup.partnerManagement.core.ui.util.demoOfferTicketPlans
 
 
 @Composable
 fun OfferTicketPlanListScreen(
     onAddClick: () -> Unit,
-    onPlanClick: (OfferPlanUi) -> Unit,
-    plans: List<OfferPlanUi> = demoOfferPlans(),
+    onOfferTicketPlanClick: (OfferTicketPlanEntity) -> Unit,
+    offerTicketPlans: List<OfferTicketPlanEntity> = demoOfferTicketPlans(),
     viewModel: SessionViewModel = hiltViewModel()
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -128,12 +129,12 @@ fun OfferTicketPlanListScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(
-                        items = plans,
-                        key = { plan -> plan.id }
+                        items = offerTicketPlans,
+                        key = { plan -> plan.offerTicketPlanId }
                     ) { plan ->
                         OfferPlanListItem(
                             plan = plan,
-                            onClick = { onPlanClick(plan) }
+                            onClick = { onOfferTicketPlanClick(plan) }
                         )
                     }
                     item {
@@ -148,7 +149,7 @@ fun OfferTicketPlanListScreen(
 
 @Composable
 private fun OfferPlanListItem(
-    plan: OfferPlanUi,
+    plan: OfferTicketPlanEntity,
     onClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -176,7 +177,7 @@ private fun OfferPlanListItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = plan.planName,
+                    text = plan.name!!,
                     style = typography.titleLarge,
                     color = appColors.textPrimary,
                     modifier = Modifier.weight(1f)
@@ -184,7 +185,7 @@ private fun OfferPlanListItem(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                StatusBadge(status = plan.status)
+                StatusBadge(status = OfferPlanStatus.fromId(plan.status))
 
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -208,7 +209,7 @@ private fun OfferPlanListItem(
                     color = appColors.textSecondary
                 )
                 Text(
-                    text = plan.planCode,
+                    text = plan.code!!,
                     style = typography.labelMedium,
                     color = appColors.textPrimary
                 )
@@ -221,8 +222,8 @@ private fun OfferPlanListItem(
 
             // ردیف بازه زمانی
             PlanDateRangeDisplay(
-                startDate = plan.startDate,
-                endDate = plan.endDate
+                startDate = plan.validFromDate!!,
+                endDate = plan.validToDate!!
             )
         }
     }
@@ -284,56 +285,13 @@ private fun PlanDateRangeDisplay(
 }
 
 
-fun demoOfferPlans(): List<OfferPlanUi> = listOf(
-    OfferPlanUi(
-        id = "1",
-        planCode = "OFF-101",
-        planName = "طرح تخفیف اقامت نوروزی",
-        startDate = "1405/01/01",
-        endDate = "1405/01/15",
-        status = Status.ACTIVE
-    ),
-    OfferPlanUi(
-        id = "2",
-        planCode = "OFF-102",
-        planName = "طرح بلیط تخفیف فصلی بهار",
-        startDate = "1405/01/16",
-        endDate = "1405/03/31",
-        status = Status.ACTIVE
-    ),
-    OfferPlanUi(
-        id = "3",
-        planCode = "OFF-103",
-        planName = "طرح آفر آخرهفته تابستانه",
-        startDate = "1405/04/01",
-        endDate = "1405/06/31",
-        status = Status.CLOSED
-    ),
-    OfferPlanUi(
-        id = "4",
-        planCode = "OFF-104",
-        planName = "طرح تشویقی وفاداری مشتریان",
-        startDate = "1404/07/01",
-        endDate = "1404/12/29",
-        status = Status.DRAFT
-    ),
-    OfferPlanUi(
-        id = "5",
-        planCode = "OFF-105",
-        planName = "طرح مشتریان ممتاز",
-        startDate = "1404/05/04",
-        endDate = "1404/10/20",
-        status = Status.ACTIVE
-    )
-)
-
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun OfferTicketPlanListScreenPreview() {
     AppScreenPreview {
         OfferTicketPlanListScreen(
             onAddClick = {},
-            onPlanClick = {}
+            onOfferTicketPlanClick = {}
         )
     }
 }

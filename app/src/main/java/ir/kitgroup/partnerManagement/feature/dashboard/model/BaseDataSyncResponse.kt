@@ -12,6 +12,6 @@ data class BaseDataSyncResponse(
     val cities: List<CityDto>,
     val regions: List<RegionDto>,
     val visitTopics: List<SubjectVisitDto>,
-    val noticeTypes: List<WarningsDto>,
+    val warningTypes: List<WarningsDto>,
     val organizations: List<OrganizationDto>
 )

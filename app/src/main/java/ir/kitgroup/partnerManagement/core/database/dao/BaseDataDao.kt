@@ -17,29 +17,29 @@ interface BaseDataDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRegions(regions: List<RegionEntity>)
 
-    @Query("SELECT * FROM regions WHERE cityId = :cityId")
+    @Query("SELECT * FROM region WHERE cityId = :cityId")
     fun getRegionsByCity(cityId: Long): Flow<List<RegionEntity>>
 
-    // --- Topics & Notices ---
+    // --- Topics & Warnings ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVisitTopics(topics: List<SubjectVisitEntity>)
 
-    @Query("SELECT * FROM subject_visit WHERE isActive = 1")
+    @Query("SELECT * FROM subject_visit")
     fun getVisitTopics(): Flow<List<SubjectVisitEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNoticeTypes(notices: List<WarningsEntity>)
+    suspend fun insertWarningTypes(warnings: List<WarningsEntity>)
 
     @Query("SELECT * FROM warnings")
-    fun getNoticeTypes(): Flow<List<WarningsEntity>>
+    fun getWarningsTypes(): Flow<List<WarningsEntity>>
 
     // --- Organizations ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrganizations(organizations: List<OrganizationEntity>)
 
-    @Query("SELECT * FROM organizations")
+    @Query("SELECT * FROM organization")
     fun getAllOrganizations(): Flow<List<OrganizationEntity>>
 
-    @Query("SELECT * FROM organizations WHERE id = :id LIMIT 1")
-    suspend fun getOrganizationById(id: Long): OrganizationEntity?
+    @Query("SELECT * FROM organization WHERE organizationId = :organizationId LIMIT 1")
+    suspend fun getOrganizationById(organizationId: Long): OrganizationEntity?
 }

@@ -1,7 +1,6 @@
 package ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,7 +16,6 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -25,39 +23,27 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.AdvertisingStandEntity
 import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandItem
-
-private val advertisingStandList = listOf(
-    AdvertisingStandItem(
-        "1", "استند رومیزی",
-        "استند رومیزی", "پرتال", "دیجیتال", ""
-    ),
-    AdvertisingStandItem(
-        "2",
-        "بروشور معرفی",
-        "استند بروشور",
-        "ایستاده", "چاپی", "توضیحات استند"
-    ),
-    AdvertisingStandItem("3", "استند لابی", "کیوسک", "ثابت", "دیجیتال", "")
-)
+import ir.kitgroup.partnerManagement.core.ui.util.DisplayType
+import ir.kitgroup.partnerManagement.core.ui.util.InstallationType
+import ir.kitgroup.partnerManagement.core.ui.util.demoAdvertisingStandList
 
 @Composable
 fun AdvertisingStandsListScreen(
     onBackClick: () -> Unit,
     onAddItemClick: () -> Unit,
-    onEditItemClick: (AdvertisingStandItem) -> Unit,
-    onDeleteItemClick: (AdvertisingStandItem) -> Unit,
+    onEditItemClick: (AdvertisingStandEntity) -> Unit,
+    onDeleteItemClick: (AdvertisingStandEntity) -> Unit,
     modifier: Modifier = Modifier,
-    items: List<AdvertisingStandItem> = advertisingStandList
+    items: List<AdvertisingStandEntity> = demoAdvertisingStandList
 ) {
-    var standToDelete by remember { mutableStateOf<AdvertisingStandItem?>(null) }
-
+    var standToDelete by remember { mutableStateOf<AdvertisingStandEntity?>(null) }
     val appColors = LocalPartnerManagementColors.current
 
     Scaffold(
@@ -93,7 +79,7 @@ fun AdvertisingStandsListScreen(
     standToDelete?.let { item ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_stand),
-            itemName = item.name,
+            itemName = item.name ?: "",
             onConfirm = {
                 onDeleteItemClick(item)
                 standToDelete = null
@@ -108,10 +94,10 @@ fun AdvertisingStandsListScreen(
 
 @Composable
 private fun AdvertisingItemsContent(
-    items: List<AdvertisingStandItem>,
+    items: List<AdvertisingStandEntity>,
     onAddItemClick: () -> Unit,
-    onEditItemClick: (AdvertisingStandItem) -> Unit,
-    onDeleteItemClick: (AdvertisingStandItem) -> Unit,
+    onEditItemClick: (AdvertisingStandEntity) -> Unit,
+    onDeleteItemClick: (AdvertisingStandEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -129,7 +115,6 @@ private fun AdvertisingItemsContent(
             colors = ButtonDefaults.buttonColors(
                 containerColor = appColors.success,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-
             ),
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -155,9 +140,9 @@ private fun AdvertisingItemsContent(
 
 @Composable
 private fun AdvertisingItemsList(
-    items: List<AdvertisingStandItem>,
-    onEditItemClick: (AdvertisingStandItem) -> Unit,
-    onDeleteItemClick: (AdvertisingStandItem) -> Unit,
+    items: List<AdvertisingStandEntity>,
+    onEditItemClick: (AdvertisingStandEntity) -> Unit,
+    onDeleteItemClick: (AdvertisingStandEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -167,7 +152,7 @@ private fun AdvertisingItemsList(
     ) {
         items(
             items = items,
-            key = { it.id }
+            key = { it.advertisingStandId }
         ) { item ->
             AdvertisingItemCard(
                 item = item,
@@ -181,7 +166,7 @@ private fun AdvertisingItemsList(
 
 @Composable
 private fun AdvertisingItemCard(
-    item: AdvertisingStandItem,
+    item: AdvertisingStandEntity,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -205,7 +190,7 @@ private fun AdvertisingItemCard(
                 .padding(16.dp)
         ) {
             Text(
-                text = item.name,
+                text = item.name ?: "",
                 style = typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
@@ -220,7 +205,7 @@ private fun AdvertisingItemCard(
             ) {
                 InfoBlockWithIcon(
                     label = "${stringResource(R.string.label_stand_type)}: ",
-                    value = item.standType,
+                    value = getStandTypeName(item.standType),
                     icon = Icons.Default.Inventory2,
                     modifier = Modifier.weight(1f)
                 )
@@ -257,23 +242,31 @@ private fun AdvertisingItemCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.Top
             ) {
+
+                val installationTitle = InstallationType.fromId(item.installationType)?.let {
+                    stringResource(it.titleRes)
+                } ?: "-"
+
+                val displayTitle = DisplayType.fromId(item.displayType)?.let {
+                    stringResource(it.titleRes)
+                } ?: "-"
+
                 InfoBlockWithIcon(
                     label = "${stringResource(R.string.label_installation_type)}: ",
-                    value = item.installationType,
+                    value = installationTitle,
                     icon = Icons.Default.Build,
                     modifier = Modifier.weight(1f)
                 )
 
                 InfoBlockWithIcon(
                     label = "${stringResource(R.string.label_display_type)}: ",
-                    value = item.displayType,
+                    value = displayTitle,
                     icon = Icons.Default.Visibility,
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            if (item.description.isNotBlank()) {
-
+            if (!item.description.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
@@ -299,8 +292,6 @@ private fun AdvertisingItemCard(
         }
     }
 }
-
-
 
 @Composable
 private fun InfoBlockWithIcon(
@@ -383,6 +374,14 @@ private fun AdvertisingItemsEmptyState(
             )
         }
     }
+}
+
+
+private fun getStandTypeName(type: Int?): String = when (type) {
+    1 -> "استند رومیزی"
+    2 -> "استند بروشور"
+    3 -> "کیوسک"
+    else -> type?.toString() ?: "-"
 }
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)

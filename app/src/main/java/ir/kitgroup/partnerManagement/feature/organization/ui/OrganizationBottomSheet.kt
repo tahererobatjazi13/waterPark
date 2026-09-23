@@ -14,22 +14,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.ui.components.*
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrganizationBottomSheet(
-    list: List<OrganizationModel>,
+    list: List<OrganizationEntity>,
     onDismiss: () -> Unit,
-    onItemSelected: (OrganizationModel) -> Unit
+    onItemSelected: (OrganizationEntity) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
     val filteredList = remember(searchQuery, list) {
         list.filter {
-            it.name.contains(searchQuery, ignoreCase = true) ||
-                    it.address.contains(searchQuery, ignoreCase = true)
+            it.name!!.contains(searchQuery, ignoreCase = true) ||
+                    it.address!!.contains(searchQuery, ignoreCase = true)
         }
     }
 
@@ -48,7 +48,8 @@ fun OrganizationBottomSheet(
                 FilterSection(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    hint = stringResource(R.string.label_search))
+                    hint = stringResource(R.string.label_search)
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -74,7 +75,7 @@ fun OrganizationBottomSheet(
                                     .padding(16.dp)
                             ) {
                                 Text(
-                                    text = item.name,
+                                    text = item.name!!,
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
@@ -82,7 +83,7 @@ fun OrganizationBottomSheet(
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
-                                    text = item.address,
+                                    text = item.address!!,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

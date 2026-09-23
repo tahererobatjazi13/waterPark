@@ -29,7 +29,7 @@ fun BottomNavigationBar(
     val items: List<BottomNavItem> = listOf(
         BottomNavItem.Profile,
         BottomNavItem.PlanOffer,
-        BottomNavItem.Visits,
+        BottomNavItem.Meetings,
         BottomNavItem.Organizations,
         BottomNavItem.Dashboard
     )

@@ -42,16 +42,19 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
+import ir.kitgroup.partnerManagement.core.database.entity.StandAssignmentEntity
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.feature.advertising_stand.model.AdvertisingStandAssignment
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_organization.DetailItem
 import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignment_organization.InfoItem
 
 @Composable
- fun OrganizationStandsTabContent(
-    assignments: List<AdvertisingStandAssignment>,
+fun OrganizationStandsTabContent(
+    assignments: List<StandAssignmentEntity>,
     onAssignStandsClick: () -> Unit = {},
-    onViewItemDetailsClick: (AdvertisingStandAssignment) -> Unit,
+    onViewItemDetailsClick: (StandAssignmentEntity) -> Unit,
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -124,7 +127,7 @@ import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignme
             ) {
                 itemsIndexed(
                     items = assignments,
-                    key = { _, item -> item.id }
+                    key = { _, item -> item.standAssignmentId }
                 ) { index, item ->
                     AdvertisingStandAssignmentCard(
                         index = index,
@@ -141,12 +144,20 @@ import ir.kitgroup.partnerManagement.feature.advertising_stand.ui.stand_assignme
 @Composable
 private fun AdvertisingStandAssignmentCard(
     index: Int,
-    advertisingStandAssignment: AdvertisingStandAssignment,
+    advertisingStandAssignment: StandAssignmentEntity,
     onViewDetailsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val assignmentTypeTitle =
+        AssignmentType.fromId(advertisingStandAssignment.assignmentType)?.let {
+            stringResource(it.titleRes)
+        } ?: "-"
 
+    val assignmentModeTitle =
+        AssignmentMode.fromId(advertisingStandAssignment.assignmentMode)?.let {
+            stringResource(it.titleRes)
+        } ?: "-"
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -163,10 +174,10 @@ private fun AdvertisingStandAssignmentCard(
             ) {
                 InfoItem(
                     label = stringResource(R.string.label_organization_receiving_name),
-                    value = advertisingStandAssignment.organizationName,
+                    value = advertisingStandAssignment.organizationId!!,
                     icon = Icons.Default.Business
                 )
-                StatusBadge(advertisingStandAssignment.status)
+                StatusBadge(status = OrganizationStatus.fromId(advertisingStandAssignment.status))
 
             }
 
@@ -183,12 +194,12 @@ private fun AdvertisingStandAssignmentCard(
                 ) {
                     DetailItem(
                         label = stringResource(R.string.label_assignment_type),
-                        value = advertisingStandAssignment.assignmentType,
+                        value = assignmentTypeTitle,
                         icon = Icons.Default.Category
                     )
                     DetailItem(
                         stringResource(R.string.label_delivery_organization_date),
-                        advertisingStandAssignment.allocatedDate,
+                        advertisingStandAssignment.assignmentDate!!,
                         Icons.Default.CalendarMonth
                     )
                 }
@@ -198,7 +209,7 @@ private fun AdvertisingStandAssignmentCard(
                 ) {
                     DetailItem(
                         label = stringResource(R.string.label_assignment_mode),
-                        value = advertisingStandAssignment.assignmentMode,
+                        value = assignmentModeTitle,
                         icon = Icons.Default.AssignmentInd
                     )
                     DetailItem(

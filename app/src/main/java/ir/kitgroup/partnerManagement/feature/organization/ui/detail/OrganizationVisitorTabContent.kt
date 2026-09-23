@@ -40,17 +40,19 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.graphics.vector.ImageVector
+import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
 import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.feature.organization.model.VisitorOrganization
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
+import ir.kitgroup.partnerManagement.core.ui.util.VisitorOrganizationStatus
 
 
 @Composable
 fun OrganizationVisitorTabContent(
-    visitors: List<VisitorOrganization> = emptyList(),
+    visitors: List<VisitorOrganizationEntity> = emptyList(),
     onAssignVisitorClick: () -> Unit = {},
-    onEditVisitorClick: (Int) -> Unit = {},
-    onDeleteVisitorClick: (Int) -> Unit = {},
+    onEditVisitorClick: (String) -> Unit = {},
+    onDeleteVisitorClick: (String) -> Unit = {},
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -121,16 +123,16 @@ fun OrganizationVisitorTabContent(
             ) {
                 itemsIndexed(
                     items = visitors,
-                    key = { _, item -> item.id }
+                    key = { _, item -> item.visitorOrganizationId }
                 ) { index, visitor ->
-                    RelatedVisitorCard(
+                    VisitorOrganizationCard(
                         index = index,
                         visitor = visitor,
                         onEditClick = {
-                            onEditVisitorClick(visitor.id)
+                            onEditVisitorClick(visitor.visitorOrganizationId)
                         },
                         onDeleteClick = {
-                            onDeleteVisitorClick(visitor.id)
+                            onDeleteVisitorClick(visitor.visitorOrganizationId)
                         }
                     )
                 }
@@ -140,9 +142,9 @@ fun OrganizationVisitorTabContent(
 }
 
 @Composable
-private fun RelatedVisitorCard(
+private fun VisitorOrganizationCard(
     index: Int,
-    visitor: VisitorOrganization,
+    visitor: VisitorOrganizationEntity,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -167,7 +169,7 @@ private fun RelatedVisitorCard(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
-                StatusBadge(visitor.status)
+                StatusBadge(status = VisitorOrganizationStatus.fromId(visitor.statusRelation))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -179,14 +181,14 @@ private fun RelatedVisitorCard(
                 // تاریخ شروع
                 VisitorStatItem(
                     label = stringResource(R.string.label_start_date),
-                    date = visitor.startDate,
+                    date = visitor.dateStart!!,
                     icon = Icons.Default.CalendarMonth
                 )
 
                 // تاریخ خاتمه
                 VisitorStatItem(
                     label = stringResource(R.string.label_end_date),
-                    date = visitor.endDate,
+                    date = visitor.dateEnd!!,
                     icon = Icons.Default.CalendarMonth
                 )
             }

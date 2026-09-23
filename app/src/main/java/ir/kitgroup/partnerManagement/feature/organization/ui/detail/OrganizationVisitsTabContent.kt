@@ -39,16 +39,18 @@ import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
+import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
-import ir.kitgroup.partnerManagement.feature.visits.ui.DetailRow
-import ir.kitgroup.partnerManagement.feature.visits.ui.VisitTypeChip
+import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
+import ir.kitgroup.partnerManagement.feature.meeting.ui.DetailRow
+import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingTypeChip
 
 @Composable
 fun OrganizationVisitsTabContent(
-    visits: List<VisitModel>,
-    onAddVisitClick: () -> Unit,
-    onVisitClick: ((Int) -> Unit),
+    visits: List<MeetingEntity>,
+    onAddMeetingClick: () -> Unit,
+    onMeetingClick: ((String) -> Unit),
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -68,7 +70,7 @@ fun OrganizationVisitsTabContent(
                 SectionTitle(title = stringResource(R.string.label_visits_list))
             }
             FilledTonalButton(
-                onClick = onAddVisitClick,
+                onClick = onAddMeetingClick,
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -122,7 +124,7 @@ fun OrganizationVisitsTabContent(
                 itemsIndexed(visits) { index, visit ->
                     VisitCard(
                         item = visit,
-                        onClick = { onVisitClick(visit.id) },
+                        onClick = { onMeetingClick(visit.meetingId) },
                         onEditClick = { /*onEditVisitClick(item.id)*/ },
                         onDeleteClick = { /*visitPendingDelete = item */ }
                     )
@@ -135,7 +137,7 @@ fun OrganizationVisitsTabContent(
 
 @Composable
 fun VisitCard(
-    item: VisitModel,
+    item: MeetingEntity,
     onClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
@@ -166,12 +168,15 @@ fun VisitCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                VisitTypeChip(
-                    text = item.visitType,
-                    icon = item.icon
+                val visitType = MeetingType.fromValue(item.type)
+
+                MeetingTypeChip(
+                    text = stringResource(id = visitType.titleRes),
+                    icon = visitType.icon
                 )
 
-                StatusBadge(status = item.status)
+                StatusBadge(status = OrganizationStatus.fromId(item.status))
+
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -179,7 +184,7 @@ fun VisitCard(
             // ردیف نام بازدیدکننده
             DetailRow(
                 icon = Icons.Default.Person,
-                text = item.visitorName
+                text = item.personId
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -192,7 +197,7 @@ fun VisitCard(
             ) {
                 DetailRow(
                     icon = Icons.Default.DateRange,
-                    text = item.date
+                    text = item.visitDate
                 )
                 /*
                                 Row(

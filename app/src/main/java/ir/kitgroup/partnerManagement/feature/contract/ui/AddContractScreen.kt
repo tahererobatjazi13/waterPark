@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.feature.contract.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,10 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDateTimeFields
@@ -20,188 +22,61 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.CustomSelectorField
-import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
-import saman.zamani.persiandate.PersianDate
-import java.util.Locale
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
+import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
+import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
+import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizations
 import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationBottomSheet
+import saman.zamani.persiandate.PersianDate
+import java.util.Locale
+import java.util.UUID
 
 @Composable
 fun AddContractScreen(
-    preselectedOrganizationId: Int? = null,
-
-    onBackClick: () -> Unit, onSaveClick: () -> Unit,
+    preselectedOrganizationId: String? = null,
+    onBackClick: () -> Unit,
+    onSaveClick: (ContractEntity) -> Unit
 ) {
+    val context = LocalContext.current
     val appColors = LocalPartnerManagementColors.current
-    var contractTitle by rememberSaveable { mutableStateOf("") }
+
+    var contractName by rememberSaveable { mutableStateOf("") }
+    var contractNumber by rememberSaveable { mutableStateOf("") }
     var defaultCommissionPercent by rememberSaveable { mutableStateOf("") }
     var defaultDiscountPercent by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
-    val organizationList = listOf(
-        OrganizationModel(
-            1,
-            "هتل پارسیان آزادی",
-            city = "مشهد",
-            region = "منطقه 2",
-            "یوسفی",
-            Status.ACTIVE,
-            5, 0,
-            36.2845,
-            59.5892
-        ),
 
-        OrganizationModel(
-            2,
-            name = "سازمان پالاس",
-            city = "مشهد",
-            region = "منطقه 2",
-            address = "قاسم آباد",
-            Status.ACTIVE,
-            4, 4,
-            36.3562,
-            59.5084
-        ),
-
-        OrganizationModel(
-            3,
-            name = "سازمان نوید",
-            city = "مشهد",
-            region = "منطقه 2",
-            address = "پیروزی",
-            status = Status.ACTIVE,
-            3, 3,
-            latitude = 36.3015,
-            longitude = 59.5289
-        ),
-
-        OrganizationModel(
-            4,
-            name = "هتل مرکزی",
-            city = "مشهد",
-            region = "منطقه 2",
-            address = "امام رضا",
-            status = Status.ACTIVE,
-            5, 5,
-            latitude = 36.2820,
-            longitude = 59.6190
-        ),
-
-        OrganizationModel(
-            5,
-            name = "کیوسک اطلس", city = "مشهد",
-            region = "منطقه 2",
-            address = "کوهسنگی",
-            status = Status.ACTIVE,
-            3, 3,
-            latitude = 36.2736,
-            longitude = 59.5694
-        ),
-
-        OrganizationModel(
-            6,
-            name = "هتل الماس", city = "مشهد",
-            region = "منطقه 2",
-            address = "پاستور",
-            status = Status.ACTIVE,
-            2, 2,
-            latitude = 36.2994,
-            longitude = 59.5772
-        ),
-
-        OrganizationModel(
-            7,
-            name = "هتل وفا", city = "مشهد",
-            region = "منطقه 2",
-            address = "وکیل آباد",
-            status = Status.ACTIVE,
-            3, 3,
-            latitude = 36.3312,
-            longitude = 59.4851
-        ),
-
-        OrganizationModel(
-            8,
-            name = "سازمان مهندسی", city = "مشهد",
-            region = "منطقه 2",
-            address = "فاطمی",
-            status = Status.ACTIVE,
-            4, 4,
-            latitude = 36.3078,
-            longitude = 59.5935
-        ),
-
-        OrganizationModel(
-            9,
-            name = "هتل امیر", city = "مشهد",
-            region = "منطقه 2",
-            address = " رضاییه",
-            status = Status.ACTIVE,
-            2, 2,
-            latitude = 36.2768,
-            longitude = 59.6385
-        ),
-
-        OrganizationModel(
-            10,
-            name = "آپارتمان ملل", city = "مشهد",
-            region = "منطقه 2",
-            address = " ستاری",
-            status = Status.ACTIVE,
-            3, 3,
-            latitude = 36.3421,
-            longitude = 59.5208
-        ),
-
-        OrganizationModel(
-            11,
-            "مهمانسرا اسپیناس",
-            "مشهد",
-            "منطقه 2",
-            "مرکزی",
-            Status.INACTIVE,
-            5,
-            5,
-            36.3051,
-            59.6059
-        ),
-
-        OrganizationModel(
-            12,
-            name = "چالیدره", city = "مشهد",
-            region = "منطقه 2",
-            address = "طرقبه",
-            status = Status.INACTIVE,
-            2, 2,
-            latitude = 36.3198,
-            longitude = 59.3482
-        )
-    )
-    var selectedOrganization by remember { mutableStateOf<OrganizationModel?>(null) }
+    var selectedOrganization by remember { mutableStateOf<OrganizationEntity?>(null) }
     var showOrganizationSheet by remember { mutableStateOf(false) }
-    // مقداردهی اولیه سازمان بر اساس آیدی دریافتی
+
+    // نگاشت Enumها با مقادیر متنی جهت استفاده مستقیم در DropdownSelectorField
+    val cooperationModelMap = remember {
+        CooperationModel.entries.associateWith { context.getString(it.titleRes) }
+    }
+    var selectedCooperationModel by remember { mutableStateOf<CooperationModel?>(null) }
+
+    val settlementPeriodTypeMap = remember {
+        SettlementPeriodType.entries.associateWith { context.getString(it.titleRes) }
+    }
+    var selectedSettlementPeriodType by remember { mutableStateOf<SettlementPeriodType?>(null) }
+
+    val contractStatusMap = remember {
+        ContractStatus.entries.associateWith { context.getString(it.titleRes) }
+    }
+    var selectedContractStatus by remember { mutableStateOf(ContractStatus.DRAFT) }
+
+    // مقداردهی اولیه سازمان
     LaunchedEffect(preselectedOrganizationId) {
         if (preselectedOrganizationId != null) {
-            selectedOrganization =
-                organizationList.find { it.receationcenterid == preselectedOrganizationId }
+            selectedOrganization = demoOrganizations.find {
+                it.organizationId == preselectedOrganizationId
+            }
         }
     }
 
-    var cooperationModel by rememberSaveable { mutableStateOf("") }
-    var isCooperationModelExpanded by remember { mutableStateOf(false) }
-    val cooperationModelList = remember { listOf("پورسانتی", "بلیط تخفیف دار", "پورسانت و تخفیف") }
-
-    var settlementPeriodType by rememberSaveable { mutableStateOf("") }
-    var isSettlementPeriodTypeExpanded by remember { mutableStateOf(false) }
-    val settlementPeriodTypeList =
-        remember { listOf("بدون تسویه", "روزانه", "هفتگی", "ماهیانه", "سایر") }
-
-    var contractStatus by rememberSaveable { mutableStateOf("") }
-    val contractStatusList = remember {
-        listOf("پیش نویس", "فعال", "معلق", "غیرفعال")
-    }
     val today = remember { PersianDate() }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
@@ -209,25 +84,18 @@ fun AddContractScreen(
     var startDate by rememberSaveable {
         mutableStateOf(
             "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${
-                String.format(
-                    Locale.US,
-                    "%02d",
-                    today.shDay
-                )
+                String.format(Locale.US, "%02d", today.shDay)
             }"
         )
     }
     var endDate by rememberSaveable {
         mutableStateOf(
             "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${
-                String.format(
-                    Locale.US,
-                    "%02d",
-                    today.shDay
-                )
+                String.format(Locale.US, "%02d", today.shDay)
             }"
         )
     }
+
     Scaffold(
         topBar = {
             CustomHeader(
@@ -262,97 +130,37 @@ fun AddContractScreen(
                 }
 
                 CustomEditTextField(
-                    value = contractTitle,
-                    onValueChange = { contractTitle = it },
+                    value = contractName,
+                    onValueChange = { contractName = it },
                     label = stringResource(R.string.label_contract_title),
                     placeholder = stringResource(R.string.hint_enter_contract_title),
                     isRequired = true,
                     leadingIcon = null
                 )
 
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    CustomSelectorField(
-                        value = cooperationModel,
-                        label = stringResource(R.string.label_cooperation_model),
-                        placeholder = stringResource(R.string.hint_choose_cooperation_model),
-                        isExpanded = isCooperationModelExpanded,
-                        onClick = {
-                            isCooperationModelExpanded = !isCooperationModelExpanded
-                        }
-                    )
-                    DropdownMenu(
-                        expanded = isCooperationModelExpanded,
-                        onDismissRequest = { isCooperationModelExpanded = false },
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .background(appColors.cardBackground)
-                    ) {
-                        cooperationModelList.forEachIndexed { index, cooperationModelItem ->
-                            val backgroundColor =
-                                if (index % 2 == 0) appColors.cardBackground else appColors.cardBackgroundAlt
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                color = backgroundColor
-                            ) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = cooperationModelItem,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = appColors.textPrimary
-                                        )
-                                    },
-                                    onClick = {
-                                        cooperationModel = cooperationModelItem
-                                        isCooperationModelExpanded = false
-                                    }
-                                )
-                            }
-                        }
+                DropdownSelectorField(
+                    value = cooperationModelMap[selectedCooperationModel] ?: "",
+                    label = stringResource(R.string.label_cooperation_model),
+                    placeholder = stringResource(R.string.hint_choose_cooperation_model),
+                    items = cooperationModelMap.values.toList(),
+                    isRequired = false,
+                    onItemSelected = { selectedTitle ->
+                        selectedCooperationModel =
+                            cooperationModelMap.entries.firstOrNull { it.value == selectedTitle }?.key
                     }
-                }
+                )
 
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    CustomSelectorField(
-                        value = settlementPeriodType,
-                        label = stringResource(R.string.label_settlement_period_type),
-                        placeholder = stringResource(R.string.hint_choose_settlement_period_type),
-                        isExpanded = isSettlementPeriodTypeExpanded,
-                        onClick = {
-                            isSettlementPeriodTypeExpanded = !isSettlementPeriodTypeExpanded
-                        }
-                    )
-                    DropdownMenu(
-                        expanded = isSettlementPeriodTypeExpanded,
-                        onDismissRequest = { isSettlementPeriodTypeExpanded = false },
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .background(appColors.cardBackground)
-                    ) {
-                        settlementPeriodTypeList.forEachIndexed { index, settlementPeriodTypeItem ->
-                            val backgroundColor =
-                                if (index % 2 == 0) appColors.cardBackground else appColors.cardBackgroundAlt
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                color = backgroundColor
-                            ) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = settlementPeriodTypeItem,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = appColors.textPrimary
-                                        )
-                                    },
-                                    onClick = {
-                                        settlementPeriodType = settlementPeriodTypeItem
-                                        isSettlementPeriodTypeExpanded = false
-                                    }
-                                )
-                            }
-                        }
+                DropdownSelectorField(
+                    value = settlementPeriodTypeMap[selectedSettlementPeriodType] ?: "",
+                    label = stringResource(R.string.label_settlement_period_type),
+                    placeholder = stringResource(R.string.hint_choose_settlement_period_type),
+                    items = settlementPeriodTypeMap.values.toList(),
+                    isRequired = false,
+                    onItemSelected = { selectedTitle ->
+                        selectedSettlementPeriodType =
+                            settlementPeriodTypeMap.entries.firstOrNull { it.value == selectedTitle }?.key
                     }
-                }
+                )
 
                 CustomDateTimeFields(
                     label = stringResource(R.string.label_start_date),
@@ -371,12 +179,16 @@ fun AddContractScreen(
                 )
 
                 DropdownSelectorField(
-                    value = contractStatus,
+                    value = contractStatusMap[selectedContractStatus] ?: "",
                     label = stringResource(R.string.label_contract_Status),
                     placeholder = stringResource(R.string.hint_choose_status),
-                    items = contractStatusList,
+                    items = contractStatusMap.values.toList(),
                     isRequired = false,
-                    onItemSelected = { contractStatus = it }
+                    onItemSelected = { selectedTitle ->
+                        selectedContractStatus =
+                            contractStatusMap.entries.firstOrNull { it.value == selectedTitle }?.key
+                                ?: ContractStatus.DRAFT
+                    }
                 )
 
                 CustomEditTextField(
@@ -387,6 +199,7 @@ fun AddContractScreen(
                     isRequired = false,
                     leadingIcon = null
                 )
+
                 CustomEditTextField(
                     value = defaultDiscountPercent,
                     onValueChange = { defaultDiscountPercent = it },
@@ -396,9 +209,6 @@ fun AddContractScreen(
                     leadingIcon = null
                 )
 
-
-                Spacer(Modifier.weight(1f))
-
                 CustomDescriptionField(
                     label = stringResource(R.string.label_description),
                     value = description,
@@ -406,9 +216,28 @@ fun AddContractScreen(
                     placeholder = stringResource(R.string.hint_description)
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 CustomButton(
                     text = stringResource(R.string.label_registration),
-                    onClick = onSaveClick,
+                    onClick = {
+                        val newContract = ContractEntity(
+                            contractId = UUID.randomUUID().toString(),
+                            name = contractName.ifBlank { null },
+                            contractNumber = contractNumber.ifBlank { null },
+                            organizationId = selectedOrganization?.organizationId
+                                ?: preselectedOrganizationId,
+                            cooperationModel = selectedCooperationModel?.id,
+                            settlementPeriodType = selectedSettlementPeriodType?.id,
+                            startDate = startDate.ifBlank { null },
+                            endDate = endDate.ifBlank { null },
+                            contractStatus = selectedContractStatus.id,
+                            defaultCommissionPercent = defaultCommissionPercent.toDoubleOrNull(),
+                            defaultDiscountPercent = defaultDiscountPercent.toDoubleOrNull(),
+                            description = description.ifBlank { null }
+                        )
+                        onSaveClick(newContract)
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -417,7 +246,7 @@ fun AddContractScreen(
 
     if (showOrganizationSheet && preselectedOrganizationId == null) {
         OrganizationBottomSheet(
-            list = organizationList,
+            list = demoOrganizations,
             onDismiss = { showOrganizationSheet = false },
             onItemSelected = { item ->
                 selectedOrganization = item
@@ -428,9 +257,7 @@ fun AddContractScreen(
 
     if (showStartDatePicker) {
         DatePickerDialog(
-            onDismiss = {
-                showStartDatePicker = false
-            },
+            onDismiss = { showStartDatePicker = false },
             onDateSelected = { date ->
                 startDate = "${date.year}/${String.format(Locale.US, "%02d", date.month)}/${
                     String.format(Locale.US, "%02d", date.day)
@@ -442,9 +269,7 @@ fun AddContractScreen(
 
     if (showEndDatePicker) {
         DatePickerDialog(
-            onDismiss = {
-                showEndDatePicker = false
-            },
+            onDismiss = { showEndDatePicker = false },
             onDateSelected = { date ->
                 endDate = "${date.year}/${String.format(Locale.US, "%02d", date.month)}/${
                     String.format(Locale.US, "%02d", date.day)
@@ -455,14 +280,14 @@ fun AddContractScreen(
     }
 }
 
-
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun AddContractScreenPreview() {
     AppScreenPreview {
-        AddContractScreen(preselectedOrganizationId = -1,
-
+        AddContractScreen(
+            preselectedOrganizationId = null,
             onBackClick = {},
-            onSaveClick = {})
+            onSaveClick = {}
+        )
     }
 }

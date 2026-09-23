@@ -46,6 +46,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationOfferTicketModel
 
 
@@ -176,7 +177,7 @@ fun TicketOfferCard(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
-                StatusBadge(status = Status.ACTIVE)
+                StatusBadge(status = OrganizationStatus.fromId(1))
 
             }
 

@@ -5,8 +5,9 @@
     <string name="label_login">ورود</string>
     <string name="label_organizations_list">لیست سازمان ها</string>
     <string name="label_visits_list">لیست بازدیدها</string>
+    <string name="label_meeting">بازدید / قرار ملاقات</string>
     <string name="label_cards_list">لیست کارت ها</string>
-    <string name="label_visit_details">جزییات بازدید</string>
+    <string name="label_meeting_details">جزییات بازدید</string>
     <string name="label_details">جزییات</string>
     <string name="label_personal_code">کد بازاریاب / پرسنلی</string>
     <string name="label_contact_number">شماره تماس</string>
@@ -27,6 +28,7 @@
     <string name="label_status">وضعیت</string>
     <string name="label_plan_status">وضعیت طرح/آفر</string>
     <string name="label_contract_Status">وضعیت قرارداد</string>
+    <string name="label_contract_offer_Status">وضعیت سریالها</string>
     <string name="label_visit_status">وضعیت بازدید</string>
     <string name="label_all_status">همه وضعیت‌ها</string>
     <string name="label_search">جستجو ...</string>
@@ -112,9 +114,7 @@
     <string name="label_card_delivery">تحویل کارت</string>
     <string name="label_card_registration">ثبت کارت </string>
     <string name="label_registration">ثبت</string>
-
     <string name="label_city">نام شهر</string>
-
     <string name="label_issuing_new_card">صدور کارت جدید</string>
     <string name="label_all_visitors">همه بازدیدکنندگان</string>
     <string name="label_pick_date">انتخاب تاریخ</string>
@@ -212,7 +212,7 @@
     <string name="label_gender">جنسیت</string>
     <string name="splash_loading">در حال آماده‌سازی...</string>
     <string name="label_offer_plan">طرح /آفر</string>
-    <string name="label_serial_prefix">کد تخفیف سریال</string>
+    <string name="label_serial_prefix">کد مخفف سریال</string>
     <string name="label_count_serial">تعداد سریال</string>
     <string name="label_serial_from">شروع سریال</string>
     <string name="label_serial_to">پایان سریال</string>
@@ -263,7 +263,6 @@
     <string name="label_visit_status_done">انجام‌شده</string>
     <string name="label_visit_status_planned">برنامه‌ریزی‌شده</string>
     <string name="label_visit_status_canceled">لغوشده</string>
-
 
 
     <string name="label_has_warnings">دارای تذکر</string>
@@ -327,6 +326,14 @@
     <string name="label_transfer_changes">انتقال تغییرات</string>
     <string name="label_update_data">بروزرسانی داده‌ها</string>
 
+    <string name="label_category_none">نامشخص</string>
+    <string name="label_category_adult">بزرگسال</string>
+    <string name="label_category_child">کودک</string>
+
+    <string name="gender_none">-</string>
+    <string name="gender_male">مرد</string>
+    <string name="gender_female">زن</string>
+    <string name="gender_not_required">نیاز نیست</string>
 
 
     <!-- Common formatted values -->
@@ -336,21 +343,97 @@
 
     //status
     <string name="status_initial_registration">ثبت اولیه</string>
-    <string name="status_orange">نارنجی</string>
+    <string name="status_active">فعال</string>
+    <string name="status_inactive">غیرفعال</string>
     <string name="status_suspended">معلق</string>
     <string name="status_closed">بسته شده</string>
-    <string name="status_returned">عودت شده</string>
-    <string name="status_cancelled">لغو شده</string>
+    <string name="status_yellow">زرد</string>
+    <string name="status_orange">ارجاع فوری / نارنجی</string>
+
     <string name="status_planned">برنامه‌ریزی شده</string>
     <string name="status_done">انجام شده</string>
-    <string name="status_blocked">مسدود شده</string>
+    <string name="status_cancelled">لغو شده</string>
+    <string name="status_termination_cooperation">قطع همکاری </string>
     <string name="status_draft">پیش‌نویس</string>
+    <string name="status_active_delivered">فعال تحویل داده شده</string>
+    <string name="status_returned">عودت شده</string>
+    <string name="status_temporarily_stopped">موقتا متوقف</string>
+    <string name="status_revoked">ابطال شده</string>
+
+    <string name="status_allocated_active">فعال/اختصاص داده شده</string>
+    <string name="status_quota_exhausted">اتمام سهمیه/بسته شده</string>
+
+
+
     <string name="status_delivered">تحویل شده</string>
     <string name="status_used">استفاده شده</string>
-    <string name="status_inactive">غیرفعال</string>
-    <string name="status_active">فعال</string>
+    <string name="status_blocked">مسدود شده</string>
+
     <string name="status_completed">تکمیل شده</string>
     <string name="status_expired">منقضی شده</string>
+
+    <string name="visit_type_phone">تلفنی</string>
+    <string name="visit_type_planned_in_person">حضوری برنامه‌ریزی شده</string>
+    <string name="visit_type_unplanned_in_person">حضوری غیر برنامه‌ریزی شده</string>
+    <string name="visit_type_urgent_in_person">حضوری فوری</string>
+
+    <!-- Display Types -->
+    <string name="display_type_print">چاپی</string>
+    <string name="display_type_digital">دیجیتال</string>
+    <string name="display_type_interactive">تعاملی</string>
+
+    <!-- Installation Types -->
+    <string name="installation_type_fixed">ثابت</string>
+    <string name="installation_type_portable">پرتال</string>
+    <string name="installation_type_wall">دیواری</string>
+    <string name="installation_type_hanging">آویزی</string>
+    <string name="installation_type_standing">ایستاده</string>
+    <string name="installation_type_desktop">رومیزی</string>
+
+    <!-- Stand Types -->
+    <string name="stand_type_banner">بنری</string>
+    <string name="stand_type_brochure">استند بروشور</string>
+    <string name="stand_type_desktop">استند رومیزی</string>
+    <string name="stand_type_backlight">بک لایت</string>
+    <string name="stand_type_rollup">رول آپ</string>
+    <string name="stand_type_xstand">ایکس استند</string>
+    <string name="stand_type_popup">پاپ آپ</string>
+    <string name="stand_type_kiosk">کیوسک</string>
+    <string name="stand_type_guide">راهنما</string>
+    <string name="stand_type_branding">برندینگ</string>
+    <string name="stand_type_other">سایر</string>
+
+
+    <string name="assign_type_to_visitor">تخصیص به بازاریاب</string>
+    <string name="assign_type_to_organization">تخصیص به سازمان</string>
+    <string name="assign_type_return">عودت</string>
+    <string name="assign_type_collect">جمع آوری</string>
+    <string name="assign_type_terminate">خاتمه</string>
+    <string name="assign_mode_tablighati">تبلیغاتی</string>
+    <string name="assign_mode_amani">امانی</string>
+    <string name="assign_mode_ejarehi">اجاره‌ای</string>
+
+    <!-- Commission Types -->
+    <string name="commission_none">بدون پورسانت</string>
+    <string name="commission_percentage">درصدی</string>
+    <string name="commission_fixed">مبلغ ثابت</string>
+
+    <!-- Discount Types -->
+    <string name="discount_none">بدون تخفیف</string>
+    <string name="discount_percentage">درصدی</string>
+    <string name="discount_fixed">مبلغ ثابت</string>
+
+    <!-- Cooperation Model -->
+    <string name="cooperation_model_referral_voucher">خرید با برگه معرفی</string>
+    <string name="cooperation_model_direct_organization_purchase">خرید مستقیم سازمانی</string>
+
+    <!-- Settlement Period Type -->
+    <string name="settlement_none">بدون تسویه</string>
+    <string name="settlement_daily">روزانه</string>
+    <string name="settlement_weekly">هفتگی</string>
+    <string name="settlement_monthly">ماهیانه</string>
+    <string name="settlement_other">سایر</string>
+
 
     //tab
     <string name="tab_organization_basic_info">اطلاعات پایه</string>
@@ -361,7 +444,7 @@
     <string name="tab_organization_stands">استندها</string>
     <string name="tab_organization_contracts">قراردادها</string>
     <string name="tab_tickets_offers">بلیط ها</string>
-    <string name="tab_organization_notices">تذکرات</string>
+    <string name="tab_organization_warnings">تذکرات</string>
 
     <!-- KPI -->
     <string name="label_count_visitor">تعداد بازاریاب ها</string>
@@ -385,21 +468,15 @@
     <string name="label_consumed_offer_cards_count">تعداد کارت‌های آفر مصرفی</string>
     <string name="label_consumption_comparison">مقایسه مصرف</string>
     <string name="label_delete_title">حذف %1$s</string>
-    <string name="label_register_organization_notice">ثبت تذکر برای سازمان</string>
-    <string name="label_notice_description">شرح تذکر</string>
-    <string name="label_register_notice">ثبت تذکر</string>
+    <string name="label_register_organization_warning">ثبت تذکر برای سازمان</string>
+    <string name="label_warning_description">شرح تذکر</string>
+    <string name="label_register_warning">ثبت تذکر</string>
     <string name="label_warnings_type">نوع تذکر</string>
     <string name="label_warnings">تذکر</string>
     <string name="label_warnings_organization">لیست تذکرات سازمان</string>
     <string name="label_score">امتیاز</string>
-    <string name="label_description_notice_score">امتیاز %1$d</string>
-    <string name="label_notice_score_level_1">خیلی کم</string>
-    <string name="label_notice_score_level_2">کم</string>
-    <string name="label_notice_score_level_3">متوسط</string>
-    <string name="label_notice_score_level_4">زیاد</string>
-    <string name="label_notice_score_level_5">خیلی زیاد</string>
     <string name="label_choose_score">امتیاز را انتخاب کنید</string>
-    <string name="label_no_notice_added">تذکری برای این سازمان ثبت نشده است</string>
+    <string name="label_no_warning_added">تذکری برای این سازمان ثبت نشده است</string>
 
     <string name="label_assignment_details">جزئیات تخصیص استند</string>
     <string name="label_assignment_information">اطلاعات تخصیص</string>
@@ -414,13 +491,10 @@
     <string name="label_server_address">آدرس سرور (IP:Port)</string>
 
 
-
-
-
     // nav
     <string name="nav_dashboard">داشبورد</string>
     <string name="nav_organizations">سازمان ها</string>
-    <string name="nav_visits">بازدیدها</string>
+    <string name="nav_meetings">بازدیدها</string>
     <string name="nav_cards">کارت‌ها</string>
     <string name="nav_plan_offer">طرح/آفر</string>
     <string name="nav_profile">پروفایل</string>
@@ -484,7 +558,7 @@
     <string name="hint_description">توضیحات خود را وارد کنید…</string>
     <string name="hint_search_card_number">جستجو بر اساس شماره کارت ...</string>
     <string name="hint_choose_warnings_type">نوع تذکر را انتخاب کنید</string>
-    <string name="hint_notice_description">توضیحات تکمیلی را وارد کنید...</string>
+    <string name="hint_warning_description">توضیحات تکمیلی را وارد کنید...</string>
     <string name="hint_choose_gender">جنسیت را انتخاب کنید</string>
     <string name="hint_choose_status">وضعیت را انتخاب کنید</string>
     <string name="hint_enter_person_full_name">نام و نام خانوادگی را وارد کنید</string>
@@ -495,7 +569,7 @@
     <string name="hint_enter_default_discount_percent">درصد تخفیف پیش‌فرض را وارد کنید</string>
     <string name="hint_choose_offer_plan">طرح /آفر را انتخاب کنید</string>
     <string name="hint_choose_contract">قرارداد را انتخاب کنید</string>
-    <string name="hint_enter_serial_prefix">کد تخفیف سریال را وارد کنید</string>
+    <string name="hint_enter_serial_prefix">کد مخفف سریال را وارد کنید</string>
     <string name="hint_enter_count_serial">تعداد سریال را وارد کنید</string>
     <string name="hint_enter_serial_from">شروع سریال را وارد کنید</string>
     <string name="hint_enter_serial_to">پایان سریال را وارد کنید</string>

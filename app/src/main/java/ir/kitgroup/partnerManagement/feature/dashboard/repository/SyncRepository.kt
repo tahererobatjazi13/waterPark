@@ -27,7 +27,7 @@ class SyncRepository @Inject constructor(
             baseDataDao.insertCities(response.cities.map { it.toEntity() })
             baseDataDao.insertRegions(response.regions.map { it.toEntity() })
             baseDataDao.insertVisitTopics(response.visitTopics.map { it.toEntity() })
-            baseDataDao.insertNoticeTypes(response.noticeTypes.map { it.toEntity() })
+            baseDataDao.insertWarningTypes(response.warningTypes.map { it.toEntity() })
             baseDataDao.insertOrganizations(response.organizations.map { it.toEntity() })
 
             // ۴. بروزرسانی تایم استمپ آخرین همگام‌سازی

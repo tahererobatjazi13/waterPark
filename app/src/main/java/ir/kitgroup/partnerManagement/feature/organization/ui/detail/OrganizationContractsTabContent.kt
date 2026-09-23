@@ -33,15 +33,15 @@ import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
-import ir.kitgroup.partnerManagement.feature.contract.model.ContractUi
+import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractListItem
 
 
 @Composable
 fun OrganizationContractsTabContent(
-    contracts: List<ContractUi>,
+    contracts: List<ContractEntity>,
     onAssignContractClick: () -> Unit = {},
-    onContractClick: (ContractUi) -> Unit,
+    onContractClick: (ContractEntity) -> Unit,
 
     ) {
     val appColors = LocalPartnerManagementColors.current
@@ -116,7 +116,7 @@ fun OrganizationContractsTabContent(
             ) {
                 itemsIndexed(
                     items = contracts,
-                    key = { _, item -> item.id }
+                    key = { _, item -> item.contractId }
                 ) { _, contract ->
                     ContractListItem(
                         contract = contract,

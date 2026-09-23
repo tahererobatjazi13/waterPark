@@ -39,20 +39,19 @@ import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.util.Status
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
-import ir.kitgroup.partnerManagement.feature.visits.model.VisitModel
-import ir.kitgroup.partnerManagement.feature.visits.ui.VisitTypeChip
 import ir.kitgroup.partnerManagement.navigation.Screen
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
-import kotlinx.coroutines.flow.collectLatest
+import ir.kitgroup.partnerManagement.core.ui.util.demoMeetings
+import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingTypeChip
 
 @Composable
 fun DashboardScreen(
@@ -115,50 +114,6 @@ fun DashboardScreen(
         )
     )
 
-    val visits = listOf(
-        VisitModel(
-            id = 1,
-            organizationName = "هتل قصر طلایی",
-            visitType = "بازدید حضوری برنامه‌ریزی شده",
-            visitorName = "علی محمدی",
-            date = "۱۴۰۳/۰۲/۱۵ , 11:30",
-            city = "مشهد",
-            district = "خیابان آزادی",
-            icon = Icons.Default.DirectionsWalk,
-            status = Status.PLANNED
-        ),
-        VisitModel(
-            id = 2,
-            organizationName = "سازمان پالاس",
-            visitType = "بازدید تلفنی",
-            visitorName = "علی رضایی",
-            date = "۱۴۰۳/۰۲/۱۷ , 10:30", city = "مشهد",
-            district = "خیابان آزادی",
-            icon = Icons.Default.Phone,
-            status = Status.DONE
-        ),
-        VisitModel(
-            id = 3,
-            organizationName = "هتل پردیسان",
-            visitType = "بازدید حضوری غیربرنامه‌ریزی شده",
-            visitorName = "مریم رضایی",
-            date = "۱۴۰۳/۰۲/۱۶ , 02:30",
-            city = "مشهد",
-            district = "احمد آباد",
-            icon = Icons.Default.DirectionsWalk,
-            status = Status.CANCELLED
-        ),
-        VisitModel(
-            id = 4,
-            organizationName = "سازمان برق",
-            visitType = "بازدید تلفنی",
-            visitorName = "مریم مفرد",
-            date = "۱۴۰۳/۰۲/۱۸ , 10:30", city = "مشهد",
-            district = "پاسداران",
-            icon = Icons.Default.Phone,
-            status = Status.PLANNED
-        )
-    )
 
 
     Column(
@@ -194,7 +149,7 @@ fun DashboardScreen(
                     QuickActionsSection(
                         onQuickContractClick = { navController.navigate(Screen.AddContract.route) },
                         onQuickOrganizationClick = { navController.navigate(Screen.AddOrganization.route) },
-                        onQuickVisitClick = { navController.navigate(Screen.RegisterVisit.createRoute()) },
+                        onQuickMeetingClick = { navController.navigate(Screen.AddMeeting.createRoute()) },
                         onQuickContractOfferClick = { navController.navigate(Screen.AddContractOffer.route) }
                     )
                 }
@@ -227,11 +182,11 @@ fun DashboardScreen(
                     )
                 }
                 items(
-                    items = visits,
-                    key = { it.id }
+                    items = demoMeetings,
+                    key = { it.meetingId }
                 ) { item ->
                     val isEditableScheduledPhysicalVisit =
-                        item.status == Status.PLANNED
+                        item.status == 1
 
                     VisitCard(
                         item = item,
@@ -239,14 +194,14 @@ fun DashboardScreen(
                         onClick = {
                             if (isEditableScheduledPhysicalVisit) {
                                 navController.navigate(
-                                    Screen.RegisterVisit.createRoute(
-                                        visitId = item.id
+                                    Screen.AddMeeting.createRoute(
+                                        meetingId = item.meetingId
                                     )
                                 )
                             } else {
                                 navController.navigate(
-                                    Screen.VisitDetail.createRoute(
-                                        visitId = item.id
+                                    Screen.MeetingDetail.createRoute(
+                                        meetingId = item.meetingId
                                     )
                                 )
                             }
@@ -510,7 +465,7 @@ private fun SummaryCard(data: SummaryCardData, modifier: Modifier) {
 private fun QuickActionsSection(
     onQuickContractClick: () -> Unit,
     onQuickOrganizationClick: () -> Unit,
-    onQuickVisitClick: () -> Unit,
+    onQuickMeetingClick: () -> Unit,
     onQuickContractOfferClick: () -> Unit,
 ) {
     Column(
@@ -542,7 +497,7 @@ private fun QuickActionsSection(
             QuickActionCard(
                 title = stringResource(R.string.label_register_visit),
                 icon = Icons.Filled.FactCheck,
-                onClick = onQuickVisitClick,
+                onClick = onQuickMeetingClick,
                 modifier = Modifier.weight(1f)
             )
             QuickActionCard(
@@ -725,7 +680,7 @@ private fun QuickAccessCard(
 
 @Composable
 private fun VisitCard(
-    item: VisitModel,
+    item: MeetingEntity,
     isSupervisor: Boolean,
     onClick: () -> Unit
 ) {
@@ -754,19 +709,21 @@ private fun VisitCard(
             ) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = item.organizationName,
+                    text = item.organizationId!!,
                     style = typography.titleLarge
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                VisitTypeChip(
-                    text = item.visitType,
-                    icon = item.icon
+                val visitType = MeetingType.fromValue(item.type)
+
+                MeetingTypeChip(
+                    text = stringResource(id = visitType.titleRes),
+                    icon = visitType.icon
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
                 // نمایش نام بازاریاب صرفاً در صورتی که نقش سرپرست باشد و مقدار داشته باشد
-                if (isSupervisor && item.visitorName.isNotBlank()) {
+                if (isSupervisor && item.visitorId!!.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -779,7 +736,7 @@ private fun VisitCard(
                             tint = LocalPartnerManagementColors.current.textSecondary
                         )
                         Text(
-                            text = item.visitorName,
+                            text = item.visitorId,
                             style = typography.labelMedium,
                             color = LocalPartnerManagementColors.current.textSecondary
                         )
@@ -788,7 +745,7 @@ private fun VisitCard(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 LocationRow(
-                    location = "${item.city}، ${item.district}"
+                    location = "${item.organizationId}، ${item.organizationId}"
                 )
             }
 
@@ -799,18 +756,18 @@ private fun VisitCard(
 
 
 @Composable
-fun VisitTimeAndStatus(item: VisitModel) {
+fun VisitTimeAndStatus(item: MeetingEntity) {
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(
-            text = item.date,
+            text = item.visitDate!!,
             style = typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        StatusBadge(status = OrganizationStatus.fromId(item.status))
 
-        StatusBadge(item.status)
     }
 }
 

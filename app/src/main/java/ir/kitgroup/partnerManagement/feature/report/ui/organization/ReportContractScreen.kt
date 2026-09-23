@@ -21,6 +21,7 @@ import ir.kitgroup.partnerManagement.feature.report.ui.organization.model.Report
 import ir.kitgroup.partnerManagement.feature.report.ui.organization.model.ReportRowUi
 import ir.kitgroup.partnerManagement.core.ui.components.DateRangeChip
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.Status
 
 @Composable
@@ -203,7 +204,8 @@ private fun ReportTable(
                         modifier = Modifier.weight(1.5f),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        StatusBadge(row.status)
+                        StatusBadge(status = OrganizationStatus.fromId(row.status))
+
                     }
 
                 }
@@ -297,56 +299,56 @@ fun demoReportDashboardUi(): ReportDashboardUi {
             collectionName = "هتل اسپیناس پالاس",
             contractDate = "1405/02/25",
             cooperate = "پورسانت و تخفیف",
-            status = Status.ACTIVE
+            status = 1
         ),
         ReportRowUi(
             id = "2",
             collectionName = "هتل پارسیان آزادی",
             contractDate = "1405/02/25",
             cooperate = "پورسانتی",
-            status = Status.ACTIVE
+            status = 1
         ),
         ReportRowUi(
             id = "3",
             collectionName = "هتل هما شیراز",
             contractDate = "1405/02/25",
             cooperate = "پورسانت و تخفیف",
-            status = Status.ACTIVE
+            status =1
         ),
         ReportRowUi(
             id = "4",
             collectionName = "هتل بزرگ تهران",
             contractDate = "1405/02/25",
             cooperate = "بلیط تخفیف دار",
-            status = Status.INACTIVE
+            status = 2
         ),
         ReportRowUi(
             id = "5",
             collectionName = "هتل پردیس کیش",
             contractDate = "1405/02/25",
             cooperate = "پورسانتی",
-            status = Status.INACTIVE
+            status = 2
         ),
         ReportRowUi(
             id = "6",
             collectionName = "هتل آسمان اصفهان",
             contractDate = "1405/02/25",
             cooperate = "نقدی",
-            status = Status.INACTIVE
+            status =2
         ),
         ReportRowUi(
             id = "7",
             collectionName = "هتل المپیک تهران",
             contractDate = "1405/02/25",
             cooperate = "بلیط تخفیف دار",
-            status = Status.ACTIVE
+            status =1
         ),
         ReportRowUi(
             id = "8",
             collectionName = "هتل آرامیس مشهد",
             contractDate = "1405/02/25",
             cooperate = "بلیط تخفیف دار",
-            status = Status.INACTIVE
+            status = 2
         )
     )
 

@@ -1,38 +1,38 @@
 package ir.kitgroup.partnerManagement.feature.contract.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.util.Status
-import ir.kitgroup.partnerManagement.feature.contract.model.ContractUi
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
+import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
+import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
+import ir.kitgroup.partnerManagement.core.ui.util.demoContracts
 
 @Composable
 fun ContractsListScreen(
     onBackClick: () -> Unit,
     onAddClick: () -> Unit,
-    onContractClick: (ContractUi) -> Unit,
-    contracts: List<ContractUi> = demoContracts()
+    onContractClick: (ContractEntity) -> Unit,
+    contracts: List<ContractEntity> = demoContracts()
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -68,7 +68,7 @@ fun ContractsListScreen(
                 ) {
                     items(
                         items = contracts,
-                        key = { contract -> contract.id }
+                        key = { contract -> contract.contractId }
                     ) { contract ->
                         ContractListItem(
                             contract = contract,
@@ -82,25 +82,35 @@ fun ContractsListScreen(
 }
 
 @Composable
- fun ContractListItem(
-    contract: ContractUi,
+fun ContractListItem(
+    contract: ContractEntity,
     onClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
+
+    val cooperationModelText = contract.cooperationModel?.let { id ->
+        CooperationModel.fromId(id)?.let { stringResource(it.titleRes) }
+    } ?: "-"
+
+    val settlementPeriodTypeText = contract.settlementPeriodType?.let { id ->
+        SettlementPeriodType.fromId(id)?.let { stringResource(it.titleRes) }
+    } ?: "-"
+
+    val status = ContractStatus.fromId(contract.contractStatus)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = LocalPartnerManagementColors.current.cardBackground
+            containerColor = appColors.cardBackground
         ),
         border = BorderStroke(
             width = 0.7.dp,
-            color = LocalPartnerManagementColors.current.border
+            color = appColors.border
         )
-    )
-    {
+    ) {
         Column(modifier = Modifier.padding(14.dp)) {
 
             Row(
@@ -108,13 +118,12 @@ fun ContractsListScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = contract.organizationName,
+                    text = contract.name ?: "-",
                     style = typography.titleLarge,
                     color = appColors.textPrimary,
                     modifier = Modifier.weight(1f)
                 )
-
-                StatusBadge(status = contract.status)
+                StatusBadge(status = status)
 
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -125,18 +134,19 @@ fun ContractsListScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = contract.contractTitle,
-                style = typography.labelMedium,
-                color = appColors.textSecondary
-            )
+            contract.contractNumber?.let { number ->
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = number,
+                    style = typography.labelMedium,
+                    color = appColors.textSecondary
+                )
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
             HorizontalDivider(
                 thickness = 0.6.dp,
-                color = LocalPartnerManagementColors.current.border
+                color = appColors.border
             )
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -146,13 +156,13 @@ fun ContractsListScreen(
             ) {
                 ContractInfoItem(
                     label = stringResource(R.string.label_cooperation_model),
-                    value = contract.cooperationModel,
+                    value = cooperationModelText,
                     modifier = Modifier.weight(1f)
                 )
 
                 ContractInfoItem(
                     label = stringResource(R.string.label_settlement_period_type),
-                    value = contract.settlementPeriodType,
+                    value = settlementPeriodTypeText,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -220,84 +230,3 @@ private fun ContractsHeader(
         )
     }
 }
-
-fun demoContracts(): List<ContractUi> = listOf(
-    ContractUi(
-        id = "1",
-        organizationName = "هتل اسپیناس پالاس",
-        contractTitle = "قرارداد همکاری سال ۱۴۰۵",
-        cooperationModel = "پورسانتی",
-        settlementPeriodType = "ماهیانه",
-        startDate = "1405/01/01",
-        endDate = "1405/12/29",
-        status = Status.ACTIVE,
-        defaultDiscountPercent = 10.0,
-        defaultCommissionPercent = 5.0,
-        description = "توافق بر اساس نرخ‌نامه رسمی هتل با ۱۰٪ تخفیف برای مشتریان سازمانی."
-    ),
-    ContractUi(
-        id = "2",
-        organizationName = "هتل پارسیان آزادی",
-        contractTitle = "قرارداد همکاری فصلی",
-        cooperationModel = "بلیط تخفیف دار",
-        settlementPeriodType = "روزانه",
-        startDate = "1405/03/01",
-        endDate = "1405/05/31",
-        status = Status.ACTIVE,
-        defaultDiscountPercent = 15.0,
-        defaultCommissionPercent = 7.5,
-        description = "پورسانت بر اساس درصد فروش هر فصل محاسبه و تسویه می‌شود."
-    ),
-    ContractUi(
-        id = "3",
-        organizationName = "هتل هما شیراز",
-        contractTitle = "قرارداد همکاری شش‌ماهه",
-        cooperationModel = "پورسانت و تخفیف",
-        settlementPeriodType = "روزانه",
-        startDate = "1404/10/01",
-        endDate = "1405/03/31",
-        status = Status.ACTIVE,
-        defaultDiscountPercent = 12.0,
-        defaultCommissionPercent = 6.0,
-        description = "تمدید خودکار قرارداد در صورت تحقق سقف فروش تعیین‌شده."
-    ),
-    ContractUi(
-        id = "4",
-        organizationName = "هتل بزرگ تهران",
-        contractTitle = "قرارداد همکاری سالانه",
-        cooperationModel = "بلیط تخفیف دار",
-        settlementPeriodType = "ماهانه",
-        startDate = "1404/06/01",
-        endDate = "1405/05/31",
-        status = Status.INACTIVE,
-        defaultDiscountPercent = 8.0,
-        defaultCommissionPercent = 4.0,
-        description = "قرارداد به‌دلیل عدم تمدید در پایان دوره، غیرفعال شده است."
-    ),
-    ContractUi(
-        id = "5",
-        organizationName = "هتل پردیس کیش",
-        contractTitle = "قرارداد همکاری نوروز ۱۴۰۵",
-        cooperationModel = "پورسانت و تخفیف",
-        settlementPeriodType = "ماهانه",
-        startDate = "1404/12/15",
-        endDate = "1405/02/15",
-        status = Status.INACTIVE,
-        defaultDiscountPercent = 20.0,
-        defaultCommissionPercent = 10.0,
-        description = "پروژه ویژه نوروز با تخفیف پلکانی برای رزروهای گروهی."
-    ),
-    ContractUi(
-        id = "6",
-        organizationName = "هتل آسمان اصفهان",
-        contractTitle = "قرارداد همکاری تابستانه",
-        cooperationModel = "بلیط تخفیف دار",
-        settlementPeriodType = "هفتگی",
-        startDate = "1405/04/01",
-        endDate = "1405/06/31",
-        status = Status.ACTIVE,
-        defaultDiscountPercent = 10.0,
-        defaultCommissionPercent = 5.0,
-        description = "تخفیف ۱۰٪ برای رزروهای بالای ۵ شب."
-    )
-)

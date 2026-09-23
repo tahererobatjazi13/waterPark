@@ -54,11 +54,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationModel
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.feature.organization.ui.SerialsDetailBottomSheet
 
 @Composable
-fun OrganizationGeneralInfoTabContent(organization: OrganizationModel) {
+fun OrganizationGeneralInfoTabContent(organization: OrganizationEntity) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,8 +73,8 @@ fun OrganizationGeneralInfoTabContent(organization: OrganizationModel) {
 
 @Composable
 private fun BasicGeneralSection(
-    organization: OrganizationModel,
-    totalNoticesCount: Int = 3,
+    organization: OrganizationEntity,
+    totalWarningsCount: Int = 3,
     totalScore: Int = 85,
     activeMarketersCount: Int = 6,
     assignedStandsCount: Int = 5,
@@ -105,11 +105,11 @@ private fun BasicGeneralSection(
             StatMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.label_total_warnings),
-                count = totalNoticesCount,
+                count = totalWarningsCount,
                 unit = stringResource(R.string.label_warnings_unit),
                 icon = Icons.Outlined.WarningAmber,
-                accentColor = if (totalNoticesCount > 0) appColors.warning else appColors.success,
-                containerColor = if (totalNoticesCount > 0) appColors.warning.copy(alpha = 0.06f) else colors.surface
+                accentColor = if (totalWarningsCount > 0) appColors.warning else appColors.success,
+                containerColor = if (totalWarningsCount > 0) appColors.warning.copy(alpha = 0.06f) else colors.surface
             )
 
             // تجمیع امتیاز
