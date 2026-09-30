@@ -1,11 +1,10 @@
 package ir.kitgroup.partnerManagement.core.network
 
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
-import javax.inject.Inject
-import javax.inject.Singleton
-
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
 class BaseUrlProvider @Inject constructor(
@@ -17,12 +16,17 @@ class BaseUrlProvider @Inject constructor(
 
     suspend fun init() {
         val url = mainPreferences.getBaseUrl()
-        cachedBaseUrl = url.toHttpUrl()
+
+        cachedBaseUrl = url
+            .ifBlank {
+                "http://192.168.20.209:9880/"
+            }
+            .toHttpUrl()
     }
 
     fun getBaseUrl(): HttpUrl {
         return cachedBaseUrl
-            ?: throw IllegalStateException("BaseUrlProvider is not initialized")
+            ?: "http://192.168.20.209:9880/".toHttpUrl()
     }
 
     fun updateBaseUrl(newUrl: String) {

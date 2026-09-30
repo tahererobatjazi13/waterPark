@@ -15,10 +15,6 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Schedule
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus.INITIAL_REGISTRATION
 
-enum class UserRole {
-    SUPERVISOR,
-    VISITOR
-}
 
 enum class ThemeMode {
     LIGHT,
@@ -93,8 +89,8 @@ enum class OrganizationDetailTab(
     CONTRACTS(
         titleRes = R.string.tab_organization_contracts
     ),
-    TICKETS(
-        titleRes = R.string.tab_tickets_offers
+    SERIALS(
+        titleRes = R.string.tab_organization_serials
     ),
     WARNING(
         titleRes = R.string.tab_organization_warnings
@@ -441,5 +437,29 @@ enum class ContractOfferStatus(
     companion object {
         fun fromId(id: Int?): ContractOfferStatus =
             entries.find { it.id == id } ?: DRAFT
+    }
+}
+
+
+enum class UserRole(
+    val code: String,
+    val title: String,
+    @StringRes val titleRes: Int? = null
+) {
+    MARKETER(code = "0", title = "بازاریاب", titleRes = R.string.role_visitor),
+    SUPERVISOR(code = "1", title = "سرپرست", titleRes = R.string.role_supervisor),
+    RECEPTION(code = "2", title = "پذیرش", titleRes = R.string.role_reception),
+    FINANCE(code = "3", title = "مالی", titleRes = R.string.role_finance),
+    OTHER(code = "4", title = "سایر", titleRes = R.string.role_other),
+    ADMIN(code = "ADMIN", title = "مدیر سیستم", titleRes = R.string.role_admin);
+
+    companion object {
+
+        fun fromCode(codeOrName: String?): UserRole {
+            if (codeOrName.isNullOrBlank()) return ADMIN
+            val byCode = entries.find { it.code.equals(codeOrName.trim(), ignoreCase = true) }
+            if (byCode != null) return byCode
+            return entries.find { it.name.equals(codeOrName.trim(), ignoreCase = true) } ?: ADMIN
+        }
     }
 }

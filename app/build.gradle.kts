@@ -78,6 +78,8 @@ dependencies {
     // Retrofit & OkHttp
     implementation(libs.retrofit)
     implementation(libs.retrofit.serialization)
+    implementation(libs.gson)
+    implementation(libs.converter.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
 

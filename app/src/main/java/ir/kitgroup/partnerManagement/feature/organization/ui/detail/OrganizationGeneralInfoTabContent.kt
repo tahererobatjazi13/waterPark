@@ -55,10 +55,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
+import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.feature.organization.ui.SerialsDetailBottomSheet
 
 @Composable
-fun OrganizationGeneralInfoTabContent(organization: OrganizationEntity) {
+fun OrganizationGeneralInfoTabContent(organization: OrganizationWithDetail) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,97 +74,129 @@ fun OrganizationGeneralInfoTabContent(organization: OrganizationEntity) {
 
 @Composable
 private fun BasicGeneralSection(
-    organization: OrganizationEntity,
-    totalWarningsCount: Int = 3,
-    totalScore: Int = 85,
-    activeMarketersCount: Int = 6,
-    assignedStandsCount: Int = 5,
-    completedVisitsCount: Int = 12,
-    plannedVisitsCount: Int = 4,
-    totalAssignedSerials: Int = 1000,
-    issuedSerialsCount: Int = 800,
-    usedSerialsCount: Int = 620,
-    revokedSerialsCount: Int = 30
+    item: OrganizationWithDetail
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
 
-    val remainingSerialsCount =
-        (totalAssignedSerials - usedSerialsCount - revokedSerialsCount).coerceAtLeast(0)
-    val usedProgress =
-        if (totalAssignedSerials > 0) usedSerialsCount.toFloat() / totalAssignedSerials else 0f
-    var showSerialsDetailSheet by rememberSaveable { mutableStateOf(false) }
+    // -----------------------------
+    // Organization statistics
+    // -----------------------------
+    val warningCount = item.organization.countWarning ?: 0
+    val totalScore = item.organization.sumScore ?: 0
+    val activeMarketers = item.organization.countVisitorActive ?: 0
+    val assignedStands = item.organization.countStandAssign ?: 0
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val completedVisits = item.organization.visitCount ?: 0
+    val plannedVisits = item.organization.programingVisitCount ?: 0
 
-        // ================= ردیف اول: تجمیع تذکرات و تجمیع امتیاز =================
+    // -----------------------------
+    // Serial statistics
+    // -----------------------------
+    val assignedSerials = item.organization.assignedSerialCount ?: 0
+    val usedSerials = item.organization.usingSerialCount ?: 0
+    val issuedSerials = item.organization.issuedSerialCount ?: 0
+    val cancelledSerials = item.organization.cancelledSerialCount ?: 0
+    val remainingSerials = item.organization.remainingSerialCount ?: 0
+
+    val usedProgress = if (assignedSerials > 0) {
+        (usedSerials.toFloat() / assignedSerials.toFloat())
+            .coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+
+    var showSerialsDetailSheet by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+
+        // =========================
+        // تذکرات و امتیاز
+        // =========================
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // تجمیع تذکرات
             StatMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.label_total_warnings),
-                count = totalWarningsCount,
+                count = warningCount,
                 unit = stringResource(R.string.label_warnings_unit),
                 icon = Icons.Outlined.WarningAmber,
-                accentColor = if (totalWarningsCount > 0) appColors.warning else appColors.success,
-                containerColor = if (totalWarningsCount > 0) appColors.warning.copy(alpha = 0.06f) else colors.surface
+                accentColor = if (warningCount > 0) {
+                    appColors.warning
+                } else {
+                    appColors.success
+                },
+                containerColor = if (warningCount > 0) {
+                    appColors.warning.copy(alpha = 0.06f)
+                } else {
+                    colors.surface
+                }
             )
 
-            // تجمیع امتیاز
             StatMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.label_total_score),
                 count = totalScore,
                 unit = stringResource(R.string.label_score_unit),
                 icon = Icons.Outlined.Stars,
-                accentColor = if (totalScore >= 0) appColors.success else colors.error,
-                containerColor = if (totalScore >= 0) appColors.success.copy(alpha = 0.06f) else colors.error.copy(
-                    alpha = 0.06f
-                )
+                accentColor = if (totalScore >= 0) {
+                    appColors.success
+                } else {
+                    colors.error
+                },
+                containerColor = if (totalScore >= 0) {
+                    appColors.success.copy(alpha = 0.06f)
+                } else {
+                    colors.error.copy(alpha = 0.06f)
+                }
             )
         }
 
-        // ================= ردیف دوم: بازاریابان فعال و استندهای اختصاص‌یافته =================
+        // =========================
+        // بازاریابان و استندها
+        // =========================
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // بازاریابان فعال
             StatMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.label_active_marketers),
-                count = activeMarketersCount,
+                count = activeMarketers,
                 unit = stringResource(R.string.label_marketers_unit),
                 icon = Icons.Outlined.Group,
-                accentColor = Color(0xFF0288D1),
-                containerColor = Color(0xFF0288D1).copy(alpha = 0.06f)
+                accentColor = appColors.info,
+                containerColor = appColors.info.copy(alpha = 0.06f)
             )
 
-            // استندهای اختصاص‌یافته
             StatMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.label_assigned_stands),
-                count = assignedStandsCount,
+                count = assignedStands,
                 unit = stringResource(R.string.label_stands_unit),
                 icon = Icons.Filled.Storefront,
-                accentColor = colors.primary,
-                containerColor = colors.primary.copy(alpha = 0.06f)
+                accentColor = appColors.purple,
+                containerColor = appColors.purple.copy(alpha = 0.06f)
             )
         }
 
-        // ================= ردیف دوم: استندها + بازدیدهای انجام‌شده + برنامه‌ریزی‌شده =================
+        // =========================
+        // بازدیدها
+        // =========================
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             MiniMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.label_completed_visits),
-                count = completedVisitsCount,
+                count = completedVisits,
                 unit = stringResource(R.string.label_visits_unit),
                 icon = Icons.Outlined.TaskAlt,
                 accentColor = appColors.success
@@ -172,23 +205,28 @@ private fun BasicGeneralSection(
             MiniMetricCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.label_planned_visits),
-                count = plannedVisitsCount,
+                count = plannedVisits,
                 unit = stringResource(R.string.label_visits_unit),
                 icon = Icons.Outlined.CalendarMonth,
                 accentColor = Color(0xFF0288D1)
             )
         }
 
-        Spacer(Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
-        // ================= کادر اصلی اختصاصی سریال‌ها (مینیمال و حرفه‌ای با دکمه جزئیات) =================
+        // =========================
+        // سریال‌ها
+        // =========================
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
             colors = CardDefaults.cardColors(
                 containerColor = colors.primary.copy(alpha = 0.04f)
             ),
-            border = BorderStroke(1.dp, colors.primary.copy(alpha = 0.2f))
+            border = BorderStroke(
+                width = 1.dp,
+                color = colors.primary.copy(alpha = 0.2f)
+            )
         ) {
             Column(
                 modifier = Modifier
@@ -196,12 +234,14 @@ private fun BasicGeneralSection(
                     .padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // هدر کادر سریال
+
+                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -210,7 +250,9 @@ private fun BasicGeneralSection(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(colors.primary.copy(alpha = 0.12f)),
+                                .background(
+                                    colors.primary.copy(alpha = 0.12f)
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -220,31 +262,45 @@ private fun BasicGeneralSection(
                                 modifier = Modifier.size(20.dp)
                             )
                         }
+
                         Column {
                             Text(
-                                text = stringResource(R.string.label_assigned_serials),
+                                text = stringResource(
+                                    R.string.label_assigned_serials
+                                ),
                                 style = typography.titleMedium,
                                 color = colors.onSurface
                             )
+
                             Text(
-                                text = "$totalAssignedSerials ${stringResource(R.string.label_unit_count)}",
+                                text = "$assignedSerials ${
+                                    stringResource(R.string.label_unit_count)
+                                }",
                                 style = typography.labelSmall,
-                                color = colors.primary,
+                                color = colors.primary
                             )
                         }
                     }
 
-                    // دکمه باز شدن باتم‌شیت
                     TextButton(
-                        onClick = { showSerialsDetailSheet = true },
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                        onClick = {
+                            showSerialsDetailSheet = true
+                        },
+                        contentPadding = PaddingValues(
+                            horizontal = 10.dp,
+                            vertical = 4.dp
+                        )
                     ) {
                         Text(
-                            text = stringResource(R.string.label_action_view_details),
+                            text = stringResource(
+                                R.string.label_action_view_details
+                            ),
                             style = typography.titleSmall,
                             color = colors.primary
                         )
+
                         Spacer(modifier = Modifier.width(4.dp))
+
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                             contentDescription = null,
@@ -254,7 +310,7 @@ private fun BasicGeneralSection(
                     }
                 }
 
-                // نوار درصد پیشرفت مصرف سریال‌ها
+                // Progress
                 LinearProgressIndicator(
                     progress = { usedProgress },
                     modifier = Modifier
@@ -265,71 +321,81 @@ private fun BasicGeneralSection(
                     trackColor = colors.outlineVariant.copy(alpha = 0.3f)
                 )
 
-                // ردیف خلاصه: مصرف‌شده و باقی‌مانده
+                // Used / Remaining
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(colors.primary)
-                        )
-                        Text(
-                            text = stringResource(R.string.label_serials_used) + ":",
-                            style = typography.bodySmall,
-                            color = appColors.textSecondary
-                        )
-                        Text(
-                            text = "$usedSerialsCount",
-                            style = typography.titleSmall,
-                            color = colors.onSurface
-                        )
-                    }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(appColors.warning)
-                        )
-                        Text(
-                            text = stringResource(R.string.label_serials_remaining) + ":",
-                            style = typography.bodySmall,
-                            color = appColors.textSecondary
-                        )
-                        Text(
-                            text = "$remainingSerialsCount",
-                            style = typography.titleSmall,
-                            color = appColors.warning
-                        )
-                    }
+                    SerialSummaryItem(
+                        label = stringResource(R.string.label_serials_used),
+                        value = usedSerials,
+                        color = colors.primary
+                    )
+
+                    SerialSummaryItem(
+                        label = stringResource(R.string.label_serials_remaining),
+                        value = remainingSerials,
+                        color = appColors.warning
+                    )
                 }
             }
         }
 
-
-        // باز شدن باتم‌شیت جزئیات سریال‌ها در صورت کلیک
+        // =========================
+        // Serial details
+        // =========================
         if (showSerialsDetailSheet) {
             SerialsDetailBottomSheet(
-                totalAssigned = totalAssignedSerials,
-                issuedCount = issuedSerialsCount,
-                usedCount = usedSerialsCount,
-                revokedCount = revokedSerialsCount,
-                remainingCount = remainingSerialsCount,
-                onDismiss = { showSerialsDetailSheet = false }
+                totalAssigned = assignedSerials,
+                issuedCount = issuedSerials,
+                usedCount = usedSerials,
+                cancelledCount = cancelledSerials,
+                remainingCount = remainingSerials,
+                onDismiss = {
+                    showSerialsDetailSheet = false
+                }
             )
         }
+    }
+}
+
+@Composable
+private fun SerialSummaryItem(
+    label: String,
+    value: Int,
+    color: Color
+) {
+    val colors = MaterialTheme.colorScheme
+    val appColors = LocalPartnerManagementColors.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+
+        Text(
+            text = "$label:",
+            style = typography.bodySmall,
+            color = appColors.textSecondary
+        )
+
+        Text(
+            text = value.toString(),
+            style = typography.titleSmall,
+            color = if (color == appColors.warning) {
+                appColors.warning
+            } else {
+                colors.onSurface
+            }
+        )
     }
 }
 

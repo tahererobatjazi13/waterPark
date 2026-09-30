@@ -3,100 +3,183 @@ package ir.kitgroup.partnerManagement.core.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ir.kitgroup.partnerManagement.feature.login.domain.AuthRepository
+import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.login.domain.UserSession
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val mainPreferences: MainPreferences
 ) : ViewModel() {
 
-    /**
-     * Session واقعی کاربر
-     */
+    // =========================================================
+    // Session
+    // =========================================================
+
     val session: StateFlow<UserSession?> =
-        authRepository.session
+        mainPreferences.session.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null
+        )
+
+    // =========================================================
+    // Session Status
+    // =========================================================
+
+    private val _sessionStatus =
+        MutableStateFlow<SessionStatus>(
+            SessionStatus.Checking
+        )
+
+    val sessionStatus: StateFlow<SessionStatus> =
+        _sessionStatus.asStateFlow()
+
+    // =========================================================
+    // Profile
+    // =========================================================
+
+    val fullName: StateFlow<String?> =
+        mainPreferences.fullName.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
+    val userName: StateFlow<String?> =
+        mainPreferences.userName.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
+    val userMobile: StateFlow<String?> =
+        mainPreferences.userMobile.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
+    val roleCode: StateFlow<Int?> =
+        mainPreferences.roleCode.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
+    val roleName: StateFlow<String?> =
+        mainPreferences.roleName.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+    val centerName: StateFlow<String?> =
+        mainPreferences.centerName
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.Eagerly,
+                started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = null
             )
 
-    /**
-     * وضعیت Session
-     *
-     * نکته مهم:
-     * مستقیماً از authRepository.session ساخته می‌شود
-     * تا مقدار اولیه null در session باعث LoggedOut شدن
-     * زودهنگام نشود.
-     */
-    val sessionStatus: StateFlow<SessionStatus> =
-        authRepository.session
-            .map { userSession ->
-                if (userSession != null) {
-                    SessionStatus.LoggedIn(userSession)
-                } else {
-                    SessionStatus.LoggedOut
-                }
-            }
+
+    val centerBrandName: StateFlow<String?> =
+        mainPreferences.centerBrandName
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = SessionStatus.Checking
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
             )
 
-    /**
-     * وضعیت ورود
-     */
+    val centerPhone: StateFlow<String?> =
+        mainPreferences.centerPhone
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
+
+    val centerSupportPhone: StateFlow<String?> =
+        mainPreferences.centerSupportPhone
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
+
+    val centerAddress: StateFlow<String?> =
+        mainPreferences.centerAddress
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
+
+    val centerWebsite: StateFlow<String?> =
+        mainPreferences.centerWebsite
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
+
+    val centerLatitude: StateFlow<String?> =
+        mainPreferences.centerLatitude
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
+
+    val centerLongitude: StateFlow<String?> =
+        mainPreferences.centerLongitude
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
+
     val isLoggedIn: StateFlow<Boolean> =
-        session
-            .map { it != null }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = false
-            )
+        mainPreferences.isLoggedIn.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
 
-    /**
-     * نام کاربری
-     */
-    val userName: StateFlow<String> =
-        session
-            .map { it?.username.orEmpty() }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = ""
-            )
+    init {
+        observeSession()
+    }
 
-    /**
-     * نقش کاربر
-     */
-    val userRole: StateFlow<String> =
-        session
-            .map { it?.role?.name.orEmpty() }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Eagerly,
-                initialValue = ""
-            )
+    private fun observeSession() {
 
-    /**
-     * Logout
-     */
+        viewModelScope.launch {
+
+            mainPreferences.session.collect { userSession ->
+
+                _sessionStatus.value =
+                    if (userSession != null) {
+                        SessionStatus.LoggedIn(userSession)
+                    } else {
+                        SessionStatus.LoggedOut
+                    }
+            }
+        }
+    }
+
+    // =========================================================
+    // Logout
+    // =========================================================
+
     fun logout(
         onComplete: () -> Unit
     ) {
         viewModelScope.launch {
-
-            authRepository.logout()
-
+            mainPreferences.logout()
             onComplete()
         }
     }

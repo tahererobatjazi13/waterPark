@@ -10,10 +10,9 @@ fun Status.toDisplayName(): String = when (this) {
 }
 
 
-
 /*
 git add .
-git commit -m "redesign models in screens"
+git commit -m "add entity dto tables "
 git push -u origin master
 git push
 */

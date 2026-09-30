@@ -5,8 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import ir.kitgroup.partnerManagement.core.ui.util.demoContracts
-import ir.kitgroup.partnerManagement.feature.contract.ui.AddContractScreen
+import ir.kitgroup.partnerManagement.feature.contract.ui.AddContractRoute
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractDetailScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractsListScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddContractOfferScreen
@@ -16,7 +15,6 @@ import ir.kitgroup.partnerManagement.navigation.Screen
 fun NavGraphBuilder.contractNavGraph(navController: NavController) {
 
     composable(Screen.ContractsList.route) {
-        val contracts = demoContracts()
 
         ContractsListScreen(
             onBackClick = { navController.popBackStack() },
@@ -27,9 +25,7 @@ fun NavGraphBuilder.contractNavGraph(navController: NavController) {
                 navController.navigate(
                     Screen.ContractDetail.createRoute(contract.contractId)
                 )
-            },
-            contracts = contracts
-        )
+            })
     }
 
     composable(
@@ -37,37 +33,31 @@ fun NavGraphBuilder.contractNavGraph(navController: NavController) {
         arguments = listOf(
             navArgument("contractId") { type = NavType.StringType }
         )
-    ) { backStackEntry ->
-        val contractId = backStackEntry.arguments?.getString("contractId") ?: ""
-        val contract = demoContracts().firstOrNull { it.contractId == contractId }
-
-        if (contract != null) {
-            ContractDetailScreen(
-                contract = contract,
-                onBackClick = { navController.popBackStack() }
-            )
-        }
+    ) {
+        ContractDetailScreen(
+            onBackClick = { navController.popBackStack() }
+        )
     }
 
     composable(
-        route = Screen.AddContract.route,
+        route = "${Screen.AddContract.route}?preselectedOrganizationId={preselectedOrganizationId}",
         arguments = listOf(
-            navArgument("organizationId") {
+            navArgument("preselectedOrganizationId") {
                 type = NavType.StringType
                 nullable = true
                 defaultValue = null
             }
         )
-    ) { backStackEntry ->
-        val organizationId = backStackEntry.arguments?.getString("organizationId")
-        AddContractScreen(
-            preselectedOrganizationId = organizationId,
+    ) {
+        AddContractRoute(
             onBackClick = { navController.popBackStack() },
-            onSaveClick = {
-                // عملیات ذخیره‌سازی
+            onSaveClick = { contract ->
+                // عملیات ذخیره‌سازی یا فراخوانی متد ذخیره
+                navController.popBackStack()
             }
         )
     }
+
 
     composable(Screen.AddContractOffer.route) {
         AddContractOfferScreen(

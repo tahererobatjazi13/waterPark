@@ -33,7 +33,7 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
@@ -55,42 +56,40 @@ import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
-import ir.kitgroup.partnerManagement.core.ui.util.demoMeetings
-
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
+import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
+import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 
 @Composable
 fun MeetingDetailScreen(
     meetingId: String,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: MeetingDetailViewModel = hiltViewModel()
 ) {
     val appColors = LocalPartnerManagementColors.current
 
-    val meeting = remember(meetingId) {
-        val selected = demoMeetings.find { it.meetingId == meetingId } ?: demoMeetings.first()
-        val dateParts = selected.visitDate!!.split(",")
-        val pureDate = dateParts.getOrNull(0)?.trim() ?: selected.visitDate
-        val pureTime = dateParts.getOrNull(1)?.trim() ?: "۱۰:۰۰"
+    val meeting by viewModel.meeting.collectAsState()
 
-        MeetingEntity(
-            meetingId = "meet-001",
-            name = "بازدید حضوری برنامه‌ریزی شده - هتل قصر طلایی",
-            description = "مشهد، خیابان آزادی",
-            organizationId = "org-ghasr-talaee",
-            status = 2,
-            type = 1,
-            visitDate = "1403/02/15",
-            visitTime = "11:30",
-            visitorId = "visitor-ali-mohammadi",
-            visitRealDate = "1403/02/15",
-            subjectVisitId = "subj-regular-inspection",
-            personId = "person-ali-mohammadi",
-            latitude = 36.2972,
-            longitude = 59.6067
-        )
+    LaunchedEffect(meetingId) {
+        viewModel.observeMeetingById(meetingId)
     }
+    val currentMeeting = meeting ?: run {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "بازدید پیدا نشد",
+                color = appColors.textSecondary
+            )
+        }
 
+        return
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -112,11 +111,11 @@ fun MeetingDetailScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                OrganizationInfoCard(meeting = meeting)
+                OrganizationInfoCard(item = currentMeeting)
 
                 Spacer(Modifier.height(12.dp))
 
-                VisitorInfoCard(meeting = meeting)
+                VisitorInfoCard(item = currentMeeting)
 
                 Spacer(Modifier.height(12.dp))
 
@@ -132,7 +131,7 @@ fun MeetingDetailScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                CustomDescriptionCard(meeting.description!!)
+                CustomDescriptionCard(currentMeeting.meeting.description!!)
 
                 Spacer(Modifier.height(80.dp))
             }
@@ -141,9 +140,18 @@ fun MeetingDetailScreen(
 }
 
 @Composable
-private fun OrganizationInfoCard(meeting: MeetingEntity) {
+private fun OrganizationInfoCard(item: MeetingWithDetail) {
     val appColors = LocalPartnerManagementColors.current
 
+    val locationText = item.organizationAddress
+        .takeIf { it.isNotBlank() }
+        ?: listOf(
+            item.cityName,
+            item.regionName
+        )
+            .filter { it.isNotBlank() }
+            .joinToString("، ")
+            .ifBlank { "-" }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -169,31 +177,28 @@ private fun OrganizationInfoCard(meeting: MeetingEntity) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = meeting.name.orEmpty(),
+                        text = item.organizationName,
                         style = typography.titleLarge,
                         color = appColors.textPrimary
-                    )
-                    StatusBadge(
-                        status = OrganizationStatus.fromId(meeting.status)
                     )
                 }
 
                 Spacer(Modifier.height(6.dp))
 
                 LocationRow(
-                    location = meeting.description ?: "-"
+                    location = locationText
                 )
 
                 Spacer(Modifier.height(8.dp))
 
-                Rating( 4)
+                Rating(item.organizationGrade)
             }
         }
     }
 }
 
 @Composable
-private fun VisitorInfoCard(meeting: MeetingEntity) {
+private fun VisitorInfoCard(item: MeetingWithDetail) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
@@ -208,7 +213,7 @@ private fun VisitorInfoCard(meeting: MeetingEntity) {
         )
     ) {
         Column {
-            val meetingType = MeetingType.fromValue(meeting.type)
+            val meetingType = MeetingType.fromValue(item.meeting.type)
 
             InfoRow(
                 label = stringResource(R.string.label_visit_type),
@@ -221,7 +226,7 @@ private fun VisitorInfoCard(meeting: MeetingEntity) {
 
             InfoRow(
                 label = stringResource(R.string.label_visit_subject),
-                value = meeting.subjectVisitId,
+                value = item.subjectVisitName,
                 icon = Icons.Default.Subject
             )
 
@@ -229,7 +234,7 @@ private fun VisitorInfoCard(meeting: MeetingEntity) {
 
             InfoRow(
                 label = stringResource(R.string.label_visitor_name),
-                value = meeting.visitorId,
+                value = item.meeting.visitorName,
                 icon = Icons.Default.Badge
             )
 
@@ -237,7 +242,7 @@ private fun VisitorInfoCard(meeting: MeetingEntity) {
 
             InfoRow(
                 label = stringResource(R.string.label_visit_Scheduled_date),
-                value = meeting.visitDate,
+                value = formatJalaliDate(item.meeting.visitDate),
                 icon = Icons.Default.Event
             )
 
@@ -245,7 +250,7 @@ private fun VisitorInfoCard(meeting: MeetingEntity) {
 
             InfoRow(
                 label = stringResource(R.string.label_visit_real_date),
-                value = meeting.visitRealDate,
+                value = formatJalaliDate(item.meeting.visitRealDate),
                 icon = Icons.Default.EventAvailable
             )
 
@@ -253,8 +258,19 @@ private fun VisitorInfoCard(meeting: MeetingEntity) {
 
             InfoRow(
                 label = stringResource(R.string.label_visit_time),
-                value = meeting.visitTime,
+                value = item.meeting.visitTime,
                 icon = Icons.Default.Schedule
+            )
+
+            HorizontalDivider(
+                color = appColors.border.copy(alpha = 0.5f)
+            )
+
+            InfoRow(
+                label = stringResource(R.string.label_visit_status),
+                value = null,
+                icon = Icons.Default.EventAvailable,
+                status = item.meeting.status
             )
         }
     }
@@ -297,7 +313,7 @@ private fun InfoRow(
         Spacer(modifier = Modifier.weight(1f))
 
         if (status != null) {
-            StatusBadge(status = OrganizationStatus.fromId(status))
+            StatusBadge(status = MeetingStatus.fromId(status))
 
         } else {
             Text(

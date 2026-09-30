@@ -3,7 +3,7 @@
     <string name="label_username">نام کاربری</string>
     <string name="label_password">رمز عبور</string>
     <string name="label_login">ورود</string>
-    <string name="label_organizations_list">لیست سازمان ها</string>
+    <string name="label_organizations_list">سازمان ها</string>
     <string name="label_visits_list">لیست بازدیدها</string>
     <string name="label_meeting">بازدید / قرار ملاقات</string>
     <string name="label_cards_list">لیست کارت ها</string>
@@ -72,9 +72,12 @@
     <string name="label_register_gps">ثبت موقعیت مکانی GPS</string>
     <string name="label_visit_image">تصویر بازدید</string>
     <string name="label_gps_success_msg">موقعیت مکانی با GPS ثبت شد</string>
-    <string name="label_summary_title">خلاصه فعالیت امروز</string>
+    <string name="label_summary_title">خلاصه فعالیت ها</string>
+    <string name="label_total_assigned_stands">استندهای تخصیص‌یافته</string>
+    <string name="label_total_assigned_serials">سریال‌های تخصیص‌یافته</string>
+    <string name="label_total_warnings_registered">تذکرهای ثبت‌شده</string>
     <string name="label_received_visits">بازدیدهای دریافتی</string>
-    <string name="label_total_views_today">کل بازدیدهای امروز</string>
+    <string name="label_total_meetings">کل بازدیدها</string>
     <string name="label_phone_calls">تماس‌های تلفنی</string>
     <string name="label_delivered_referrals">معرفی‌نامه‌های تحویلی</string>
     <string name="label_in_person_visits">بازدیدهای حضوری</string>
@@ -185,6 +188,7 @@
     <string name="label_default_commission_percent">درصد پورسانت پیش‌فرض</string>
     <string name="label_default_discount_percent">درصد تخفیف پیش‌فرض</string>
     <string name="label_cooperation_model">مدل همکاری</string>
+    <string name="label_contract_number">شماره قراداد:</string>
     <string name="label_settlement_period_type">نوع دوره تسویه</string>
     <string name="label_call">تماس</string>
     <string name="label_visitor_code">کد بازاریاب:</string>
@@ -276,6 +280,7 @@
     <!-- تب و لیست بلیط‌ها / آفرها -->
     <string name="tab_tickets_offers_1">آفرها و بلیط‌ها</string>
     <string name="label_tickets_offers_list">لیست طرح‌ها و آفرها</string>
+    <string name="label_organization_serial_list">لیست سریال های صادر شده به سازمان</string>
     <string name="label_new_ticket_offer">افزودن آفر جدید</string>
     <string name="msg_no_tickets_offers_found_1">هیچ طرح یا آفری برای این سازمان ثبت نشده است</string>
 
@@ -290,6 +295,7 @@
     <string name="label_serial_range">بازه سریال</string>
     <string name="label_serial_status">وضعیت سریال‌ها</string>
     <string name="label_last_used_serial">آخرین سریال استفاده شده</string>
+    <string name="label_remaining_serial_count">تعداد سریال باقیمانده</string>
     <string name="label_owner">مالک</string>
     <string name="action_close">بستن</string>
 
@@ -362,7 +368,6 @@
 
     <string name="status_allocated_active">فعال/اختصاص داده شده</string>
     <string name="status_quota_exhausted">اتمام سهمیه/بسته شده</string>
-
 
 
     <string name="status_delivered">تحویل شده</string>
@@ -443,7 +448,7 @@
     <string name="tab_organization_visitor">بازاریاب</string>
     <string name="tab_organization_stands">استندها</string>
     <string name="tab_organization_contracts">قراردادها</string>
-    <string name="tab_tickets_offers">بلیط ها</string>
+    <string name="tab_organization_serials">سریال ها</string>
     <string name="tab_organization_warnings">تذکرات</string>
 
     <!-- KPI -->
@@ -489,6 +494,13 @@
     <string name="label_item_code">کد استند</string>
     <string name="label_server_setting">تنظیمات سرور</string>
     <string name="label_server_address">آدرس سرور (IP:Port)</string>
+    <string name="label_center_information">اطلاعات مرکز</string>
+    <string name="label_phone_number">شماره تماس</string>
+    <string name="label_support_phone">شماره پشتیبانی</string>
+    <string name="label_website">وب‌سایت</string>
+    <string name="label_geo_coordinates">مختصات جغرافیایی</string>
+    <string name="format_geo_coordinates">عرض جغرافیایی: %1$s\nطول جغرافیایی: %2$s</string>
+    <string name="placeholder_empty_value">—</string>
 
 
     // nav
@@ -498,6 +510,15 @@
     <string name="nav_cards">کارت‌ها</string>
     <string name="nav_plan_offer">طرح/آفر</string>
     <string name="nav_profile">پروفایل</string>
+
+
+    // role
+    <string name="role_visitor">بازاریاب</string>
+    <string name="role_supervisor">سرپرست</string>
+    <string name="role_reception">پذیرش</string>
+    <string name="role_finance">مالی</string>
+    <string name="role_other">سایر</string>
+    <string name="role_admin">مدیر سیستم</string>
 
 
     // message
@@ -510,6 +531,8 @@
     <string name="msg_no_stand_found">هیچ استندی تخصیص داده نشده است</string>
     <string name="msg_no_contract_found">قرداداد همکاری برای این سازمان ثبت نشده است</string>
     <string name="msg_no_tickets_offers_found">بلیط آفری برای این سازمان ثبت نشده است</string>
+    <string name="msg_no_meeting_register_today">برای امروز برنامه‌ی بازدیدی ثبت نشده است.</string>
+    <string name="msg_no_offers_details_found">هیچ جزئیاتی برای این طرح ثبت نشده است</string>
     <string name="msg_no_item_found">آیتمی برای نمایش یافت نشد</string>
     <string name="msg_select_one_of_options">یکی از گزینه‌های زیر را انتخاب کنید</string>
     <string name="msg_delete_message">
@@ -598,5 +621,31 @@
     <string name="error_unknown_error">خطای ناشناخته رخ داد</string>
     <string name="error_enter_address_server">آدرس سرور را وارد کنید</string>
     <string name="error_unable_connect_server">امکان برقراری ارتباط با سرور وجود ندارد</string>
+
+    <string name="error_bad_request">درخواست نادرست بود</string>
+    <string name="error_unauthorized">دسترسی غیرمجاز</string>
+    <string name="error_forbidden">دسترسی ممنوع است</string>
+    <string name="error_internal_server">خطای داخلی سرور</string>
+    <string name="error_unknown">خطای ناشناخته رخ داده است</string>
+    <string name="error_timeout">اتصال به سرور با تاخیر مواجه شد</string>
+    <string name="error_network_internet">اتصال اینترنت برقرار نیست</string>
+    <string name="error_not_found">موردی یافت نشد</string>
+    <string name="error_network_connection">امکان اتصال به سرور وجود ندارد. لطفاً آدرس سرور و اتصال شبکه را بررسی کنید.</string>
+    <string name="error_server_unavailable">سرور در حال حاضر در دسترس نیست. لطفاً دوباره تلاش کنید.</string>
+    <string name="error_http">خطای ارتباط با سرور (%1$d)</string>
+
+
+    <!-- Login -->
+    <string name="login_username_required">نام کاربری را وارد کنید</string>
+    <string name="login_password_required">رمز عبور را وارد کنید</string>
+    <string name="login_failed">ورود ناموفق بود</string>
+    <string name="login_user_not_received">اطلاعات کاربر از سرور دریافت نشد</string>
+    <string name="login_token_not_received">توکن ورود از سرور دریافت نشد</string>
+
+    <!-- Server -->
+    <string name="server_address_required">آدرس سرور را وارد کنید</string>
+    <string name="server_address_invalid">آدرس سرور نامعتبر است</string>
+    <string name="server_address_save_failed">ذخیره آدرس سرور انجام نشد</string>
+
 
 </resources>

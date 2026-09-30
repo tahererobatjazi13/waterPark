@@ -19,33 +19,55 @@ fun NavGraphBuilder.authNavGraph(
     sessionViewModel: SessionViewModel
 ) {
     composable(Screen.Splash.route) {
-        val sessionStatus by sessionViewModel.sessionStatus.collectAsState()
+
+        val sessionStatus by
+        sessionViewModel.sessionStatus.collectAsState()
 
         LaunchedEffect(sessionStatus) {
-            if (sessionStatus == SessionStatus.Checking) return@LaunchedEffect
 
-            delay(2000)
+            when (val status = sessionStatus) {
 
-            when (sessionStatus) {
-                SessionStatus.Checking -> Unit
+                SessionStatus.Checking -> {
+                    // هنوز وضعیت Session مشخص نشده
+                }
+
                 is SessionStatus.LoggedIn -> {
-                    navController.navigate(BottomNavItem.Dashboard.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+
+                    delay(2000)
+
+                    navController.navigate(
+                        BottomNavItem.Dashboard.route
+                    ) {
+                        popUpTo(Screen.Splash.route) {
+                            inclusive = true
+                        }
+
                         launchSingleTop = true
                     }
                 }
+
                 SessionStatus.LoggedOut -> {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+
+                    delay(2000)
+
+                    navController.navigate(
+                        Screen.Login.route
+                    ) {
+                        popUpTo(Screen.Splash.route) {
+                            inclusive = true
+                        }
+
                         launchSingleTop = true
                     }
                 }
             }
         }
+
         SplashScreen()
     }
-
     composable(Screen.Login.route) {
-        LoginScreen(navController = navController)
+        LoginScreen(
+            navController = navController
+        )
     }
 }

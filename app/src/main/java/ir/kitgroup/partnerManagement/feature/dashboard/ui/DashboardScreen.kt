@@ -29,12 +29,11 @@ import ir.kitgroup.partnerManagement.feature.dashboard.model.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
-import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
@@ -43,14 +42,19 @@ import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.navigation.Screen
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
+import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
-import ir.kitgroup.partnerManagement.core.ui.util.demoMeetings
+import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.feature.meeting.ui.DetailRow
 import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingTypeChip
 
 @Composable
@@ -61,160 +65,291 @@ fun DashboardScreen(
     onSyncDataClick: () -> Unit = {},
     onUploadDataClick: () -> Unit = {}
 ) {
+    val todayMeetings by dashboardViewModel.todayMeetings.collectAsStateWithLifecycle()
+    val statistics by dashboardViewModel.statistics.collectAsStateWithLifecycle()
 
-    val role by sessionViewModel.userRole.collectAsState()
-    val isSupervisor = role == UserRole.SUPERVISOR.name
+    val fullName by sessionViewModel.fullName.collectAsState()
+    val roleCode by sessionViewModel.roleCode.collectAsState()
 
-    val syncState by dashboardViewModel.syncState.collectAsStateWithLifecycle()
-    val isSyncing = syncState is DataState.Loading
-    var isUploading by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
+    val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
+    val isSupervisor = currentRole == UserRole.SUPERVISOR
 
+    val syncState by dashboardViewModel.syncState
+        .collectAsStateWithLifecycle()
 
-    val context = LocalContext.current
+    val uploadState by dashboardViewModel.uploadState
+        .collectAsStateWithLifecycle()
+
+    val isSyncing =
+        syncState is DataState.Loading
+
+    val isUploading =
+        uploadState is DataState.Loading
+
+    val snackbarHostState =
+        remember { SnackbarHostState() }
+
+    val context =
+        LocalContext.current
 
     LaunchedEffect(dashboardViewModel.uiEvent) {
         dashboardViewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowMessage -> {
-                    val message = event.message.asString(context)
-                    snackbarHostState.showSnackbar(message)
+                    snackbarHostState.showSnackbar(
+                        event.message.asString(context)
+                    )
                 }
 
                 is UiEvent.ShowError -> {
-                    val error = event.error.asString(context)
-                    snackbarHostState.showSnackbar(error)
+                    snackbarHostState.showSnackbar(
+                        event.error.asString(context)
+                    )
                 }
             }
         }
     }
 
-
     val summaryItems = listOf(
         SummaryCardData(
-            Icons.Filled.Domain,
-            Orange,
-            "34",
-            stringResource(R.string.label_total_views_today),
-            Orange
+            icon = Icons.Filled.Domain,
+            iconColor = Orange,
+            value = (statistics?.totalVisits ?: 0).toString(),
+            title = stringResource(R.string.label_total_meetings),
+            accent = Orange
         ),
         SummaryCardData(
-            Icons.Filled.Person,
-            Green,
-            "18",
-            stringResource(R.string.label_in_person_visits),
-            Green
+            icon = Icons.Filled.Inventory2,
+            iconColor = Blue,
+            value = (statistics?.totalAssignedStands ?: 0).toString(),
+            title = stringResource(R.string.label_total_assigned_stands),
+            accent = Blue
         ),
         SummaryCardData(
-            Icons.Filled.Call,
-            Blue,
-            "16",
-            stringResource(R.string.label_phone_calls),
-            Blue
+            icon = Icons.Filled.ConfirmationNumber,
+            iconColor = Purple,
+            value = (statistics?.totalAssignedSerials ?: 0).toString(),
+            title = stringResource(R.string.label_total_assigned_serials),
+            accent = Purple
+        ),
+        SummaryCardData(
+            icon = Icons.Filled.AssignmentTurnedIn,
+            iconColor = Green,
+            value = (statistics?.activeContractsCount ?: 0).toString(),
+            title = stringResource(R.string.label_total_active_contracts_count),
+            accent = Green
+        ),
+        SummaryCardData(
+            icon = Icons.Filled.Warning,
+            iconColor = Red,
+            value = (statistics?.totalWarningsRegistered ?: 0).toString(),
+            title = stringResource(R.string.label_total_warnings_registered),
+            accent = Red
         )
     )
 
 
+    /*  val summaryItems = listOf(
+          SummaryCardData(
+              Icons.Filled.Domain,
+              Orange,
+              value = (statistics?.totalVisits ?: 0).toString(),
+              stringResource(R.string.label_total_views_today),
+              Orange
+          ),
+          SummaryCardData(
+              Icons.Filled.Person,
+              Green,
+              value = (statistics?.activeContractsCount ?: 0).toString(),
+              stringResource(R.string.label_in_person_visits),
+              Green
+          ),
+          SummaryCardData(
+              Icons.Filled.Call,
+              Blue,
+              "16",
+              stringResource(R.string.label_phone_calls),
+              Blue
+          )
+      )*/
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
-    ) {
-        DashboardHeader()
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = MaterialTheme.colorScheme.background
+
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState
+            )
+        }
+    ) { innerPadding ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(
+                    MaterialTheme.colorScheme.primary
+                )
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // بخش عملیات همگام‌سازی و سینک داده‌ها
-                item {
-                    DataSyncSection(
-                        isSyncing = isSyncing,
-                        isUploading = isUploading,
-                        onSyncClick = dashboardViewModel::onReceiveDataClick,
-                        onUploadClick = dashboardViewModel::onSendDataClick
-                    )
-                }
 
-                item { SummarySection(summaryItems) }
-                item { Spacer(Modifier.width(6.dp)) }
-                item {
-                    QuickActionsSection(
-                        onQuickContractClick = { navController.navigate(Screen.AddContract.route) },
-                        onQuickOrganizationClick = { navController.navigate(Screen.AddOrganization.route) },
-                        onQuickMeetingClick = { navController.navigate(Screen.AddMeeting.createRoute()) },
-                        onQuickContractOfferClick = { navController.navigate(Screen.AddContractOffer.route) }
-                    )
-                }
-                item { Spacer(Modifier.width(6.dp)) }
-                item {
-                    QuickAccessSection(
-                        onContractClick = { navController.navigate(Screen.ContractsList.route) },
-                        onAdvertisingClick = {
-                            if (isSupervisor) {
-                                navController.navigate(Screen.AdvertisingStandMenu.route)
-                            } else {
+            DashboardHeader(fullName = fullName.orEmpty())
+
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // بخش عملیات همگام‌سازی و سینک داده‌ها
+                    item {
+                        DataSyncSection(
+                            isSyncing = isSyncing,
+                            isUploading = isUploading,
+                            onSyncClick = dashboardViewModel::onReceiveDataClick,
+                            onUploadClick = dashboardViewModel::onSendDataClick
+                        )
+                    }
+
+                    item { SummarySection(summaryItems) }
+                    item { Spacer(Modifier.width(6.dp)) }
+                    item {
+                        QuickActionsSection(
+                            onQuickContractClick = { navController.navigate(Screen.AddContract.route) },
+                            onQuickOrganizationClick = { navController.navigate(Screen.AddOrganization.route) },
+                            onQuickMeetingClick = { navController.navigate(Screen.AddMeeting.createRoute()) },
+                            onQuickContractOfferClick = { navController.navigate(Screen.AddContractOffer.route) }
+                        )
+                    }
+                    item { Spacer(Modifier.width(6.dp)) }
+                    item {
+                        QuickAccessSection(
+                            onContractClick = { navController.navigate(Screen.ContractsList.route) },
+                            onAdvertisingClick = {
+                                if (isSupervisor) {
+                                    navController.navigate(Screen.AdvertisingStandMenu.route)
+                                } else {
+                                    navController.navigate(
+                                        Screen.AssignedStandsOrganizationList.route
+                                    )
+                                }
+                            },
+                            onReportClick = { navController.navigate(Screen.ReportMenu.route) },
+                            onMapClick = {
                                 navController.navigate(
-                                    Screen.AdvertisingStandAssignmentOrganizationList.route
+                                    Screen.Map.route
                                 )
                             }
-                        },
-                        onReportClick = { navController.navigate(Screen.ReportMenu.route) },
-                        onMapClick = {
-                            navController.navigate(
-                                Screen.Map.route
+                        )
+                    }
+                    item { Spacer(Modifier.width(6.dp)) }
+                    item {
+                        SectionTitle(
+                            stringResource(R.string.label_schedule_title),
+                            Icons.Default.Schedule
+                        )
+                    }
+
+                    if (todayMeetings.isEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                        alpha = 0.3f
+                                    )
+                                )
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.msg_no_meeting_register_today),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    textAlign = TextAlign.Center,
+                                    style = typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        items(
+                            items = todayMeetings,
+                            key = { it.meeting.meetingId }
+                        ) { item ->
+                            val meetingEntity = item.meeting
+                            val isEditableScheduledPhysicalVisit = meetingEntity.status == 1
+
+                            MeetingCard(
+                                item = item,
+                                isSupervisor = isSupervisor,
+                                onClick = {
+                                    if (isEditableScheduledPhysicalVisit) {
+                                        navController.navigate(
+                                            Screen.AddMeeting.createRoute(
+                                                meetingId = meetingEntity.meetingId
+                                            )
+                                        )
+                                    } else {
+                                        navController.navigate(
+                                            Screen.MeetingDetail.createRoute(
+                                                meetingId = meetingEntity.meetingId
+                                            )
+                                        )
+                                    }
+                                }
                             )
                         }
-                    )
-                }
-                item { Spacer(Modifier.width(6.dp)) }
-                item {
-                    SectionTitle(
-                        stringResource(R.string.label_schedule_title),
-                        Icons.Default.Schedule
-                    )
-                }
-                items(
-                    items = demoMeetings,
-                    key = { it.meetingId }
-                ) { item ->
-                    val isEditableScheduledPhysicalVisit =
-                        item.status == 1
+                    }
 
-                    VisitCard(
-                        item = item,
-                        isSupervisor = isSupervisor,
-                        onClick = {
-                            if (isEditableScheduledPhysicalVisit) {
-                                navController.navigate(
-                                    Screen.AddMeeting.createRoute(
-                                        meetingId = item.meetingId
-                                    )
-                                )
-                            } else {
-                                navController.navigate(
-                                    Screen.MeetingDetail.createRoute(
-                                        meetingId = item.meetingId
-                                    )
-                                )
-                            }
-                        }
-                    )
+                    /*         item {
+                                 SectionTitle(
+                                     stringResource(R.string.label_schedule_title),
+                                     Icons.Default.Schedule
+                                 )
+                             }
+                             items(
+                                 items = demoMeetings,
+                                 key = { it.meetingId }
+                             ) { item ->
+                                 val isEditableScheduledPhysicalVisit =
+                                     item.status == 1
+
+                                 VisitCard(
+                                     item = item,
+                                     isSupervisor = isSupervisor,
+                                     onClick = {
+                                         if (isEditableScheduledPhysicalVisit) {
+                                             navController.navigate(
+                                                 Screen.AddMeeting.createRoute(
+                                                     meetingId = item.meetingId
+                                                 )
+                                             )
+                                         } else {
+                                             navController.navigate(
+                                                 Screen.MeetingDetail.createRoute(
+                                                     meetingId = item.meetingId
+                                                 )
+                                             )
+                                         }
+                                     }
+                                 )
+                             }*/
                 }
             }
         }
     }
+
 }
 
 @Composable
 private fun DashboardHeader(
+    fullName: String
 ) {
     Row(
         modifier = Modifier
@@ -230,7 +365,11 @@ private fun DashboardHeader(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = stringResource(R.string.greeting_text),
+            text = if (fullName.isBlank()) {
+                stringResource(R.string.greeting_text)
+            } else {
+                "$fullName خوش آمدی "
+            },
             color = MaterialTheme.colorScheme.onPrimary,
             style = typography.titleLarge
         )
@@ -392,16 +531,25 @@ private fun NotificationIcon() {
 
 
 @Composable
-private fun SummarySection(items: List<SummaryCardData>) {
-
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+private fun SummarySection(
+    summaryItems: List<SummaryCardData>,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
 
         SectionTitle(stringResource(R.string.label_summary_title))
+        Spacer(Modifier.width(6.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-
-            items.forEach {
-                SummaryCard(it, Modifier.weight(1f))
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(summaryItems) { item ->
+                SummaryCard(
+                    data = item,
+                    modifier = Modifier.width(130.dp)
+                )
             }
         }
     }
@@ -679,10 +827,10 @@ private fun QuickAccessCard(
 }
 
 @Composable
-private fun VisitCard(
-    item: MeetingEntity,
+fun MeetingCard(
+    item: MeetingWithDetail,
     isSupervisor: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -691,83 +839,79 @@ private fun VisitCard(
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColors.cardBackground
-        ),
-        border = BorderStroke(
-            width = 0.7.dp,
-            color = appColors.border
-        )
+        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
+        border = BorderStroke(0.7.dp, appColors.border)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Column(modifier = Modifier.weight(1f)) {
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
+                // عنوان + Badge وضعیت
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    text = item.organizationId!!,
-                    style = typography.titleLarge
-                )
-                Spacer(modifier = Modifier.height(6.dp))
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = item.subjectVisitName,
+                        style = typography.titleLarge,
+                        color = appColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
 
-                val visitType = MeetingType.fromValue(item.type)
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    StatusBadge(status = MeetingStatus.fromId(item.meeting.status))
+
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // چیپ نوع بازدید
+                val meetingType = MeetingType.fromValue(item.meeting.type)
 
                 MeetingTypeChip(
-                    text = stringResource(id = visitType.titleRes),
-                    icon = visitType.icon
+                    text = stringResource(id = meetingType.titleRes),
+                    icon = meetingType.icon
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // نمایش نام بازاریاب صرفاً در صورتی که نقش سرپرست باشد و مقدار داشته باشد
-                if (isSupervisor && item.visitorId!!.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = LocalPartnerManagementColors.current.textSecondary
-                        )
-                        Text(
-                            text = item.visitorId,
-                            style = typography.labelMedium,
-                            color = LocalPartnerManagementColors.current.textSecondary
-                        )
+                DetailRow(
+                    icon = Icons.Default.Business,
+                    text = item.organizationName
+                )
+                if (isSupervisor && !item.meeting.visitorId.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    DetailRow(
+                        icon = Icons.Default.Person,
+                        text = item.visitorName
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // نمایش تاریخ/زمان
+                val dateTimeText = buildString {
+                    append(formatJalaliDate(item.meeting.visitDate ?: "-"))
+                    item.meeting.visitTime?.let { t ->
+                        if (t.isNotBlank()) append("  |  $t")
                     }
                 }
+
+                DetailRow(
+                    icon = Icons.Default.DateRange,
+                    text = dateTimeText
+                )
+
                 Spacer(modifier = Modifier.height(6.dp))
 
-                LocationRow(
-                    location = "${item.organizationId}، ${item.organizationId}"
-                )
             }
-
-            VisitTimeAndStatus(item)
         }
     }
-}
 
 
-@Composable
-fun VisitTimeAndStatus(item: MeetingEntity) {
-    Column(
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Text(
-            text = item.visitDate!!,
-            style = typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        StatusBadge(status = OrganizationStatus.fromId(item.status))
-
-    }
 }
 

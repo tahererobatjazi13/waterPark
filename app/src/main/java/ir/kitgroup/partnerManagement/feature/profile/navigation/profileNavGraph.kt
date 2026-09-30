@@ -9,6 +9,7 @@ import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.theme.ThemeViewModel
 import ir.kitgroup.partnerManagement.core.ui.util.ThemeMode
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
+import ir.kitgroup.partnerManagement.feature.profile.ui.CenterInfoScreen
 import ir.kitgroup.partnerManagement.feature.profile.ui.ProfileScreen
 import ir.kitgroup.partnerManagement.feature.profile.ui.SettingsScreen
 import ir.kitgroup.partnerManagement.feature.profile.ui.ThemeModeScreen
@@ -24,6 +25,9 @@ fun NavGraphBuilder.profileNavGraph(
         ProfileScreen(
             onSettingsClick = {
                 navController.navigate(Screen.Settings.route)
+            },
+            onCenterClick = {
+                navController.navigate(Screen.CenterInfo.route)
             },
             onLogoutSuccess = {
                 navController.navigate(Screen.Login.route) {
@@ -56,4 +60,13 @@ fun NavGraphBuilder.profileNavGraph(
             onBackClick = { navController.popBackStack() }
         )
     }
+
+    composable(Screen.CenterInfo.route) {
+        CenterInfoScreen(
+            onBackClick = {
+                navController.popBackStack()
+            }
+        )
+    }
+
 }

@@ -10,7 +10,7 @@ import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.organization.ui.AddOrganizationScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.AssignVisitorScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.OrganizationDetailScreen
-import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationsListScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationsListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 fun NavGraphBuilder.organizationNavGraph(
@@ -134,7 +134,7 @@ fun NavGraphBuilder.organizationNavGraph(
 
                 onAssignStandsClick = {
                     navController.navigate(
-                        Screen.AddAdvertisingStandAssignmentOrganization
+                        Screen.AddAssignedStandsOrganization
                             .createRoute(organizationId)
                     )
                 },
@@ -149,9 +149,9 @@ fun NavGraphBuilder.organizationNavGraph(
 
                 onViewItemDetailsClick = { allocation ->
                     navController.navigate(
-                        Screen.AdvertisingStandAssignmentVisitorDetail
+                        Screen.AssignedStandsDetail
                             .createRoute(
-                                assignmentId = allocation.standAssignmentId
+                                assignedStandId = allocation.assignedStand.assignedStandId
                             )
                     )
                 },

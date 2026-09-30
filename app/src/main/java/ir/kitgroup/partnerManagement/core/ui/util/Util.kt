@@ -2,13 +2,10 @@ package ir.kitgroup.partnerManagement.core.ui.util
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -21,6 +18,11 @@ import retrofit2.HttpException
 import java.io.File
 import java.io.IOException
 import java.util.UUID
+
+import saman.zamani.persiandate.PersianDate
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 
 /** دانلود عکس و ذخیره روی حافظه داخلی */
 suspend fun saveBase64ImageToFile(base64Data: String, fileName: String, context: Context): String? {
@@ -99,9 +101,43 @@ class Event<out T>(private val content: T) {
     }
 }
 
+fun String.toEnglishDigits(): String {
 
+    val persianDigits = "۰۱۲۳۴۵۶۷۸۹"
+    val arabicDigits = "٠١٢٣٤٥٦٧٨٩"
 
-/*object ErrorHandler {
+    return buildString {
+
+        for (char in this@toEnglishDigits) {
+
+            when {
+                char in persianDigits -> {
+                    append(
+                        ('0'.code + persianDigits.indexOf(char))
+                            .toChar()
+                    )
+                }
+
+                char in arabicDigits -> {
+                    append(
+                        ('0'.code + arabicDigits.indexOf(char))
+                            .toChar()
+                    )
+                }
+
+                else -> append(char)
+            }
+        }
+    }
+}
+
+fun String.fixPersianChars(): String {
+    return replace('ي', 'ی')
+        .replace('ى', 'ی')
+        .replace('ك', 'ک')
+}
+
+object ErrorHandler {
     fun getHttpErrorMessage(context: Context, code: Int, message: String?): String {
         return when (code) {
             400 -> context.getString(R.string.error_bad_request)
@@ -133,13 +169,8 @@ class Event<out T>(private val content: T) {
             else -> context.getString(R.string.error_unknown)
         }
     }
-}*/
-
-fun fixPersianChars(input: String): String {
-    return input
-        .replace('ي', 'ی') // Arabic yeh to Persian yeh
-        .replace('ك', 'ک') // Arabic kaf to Persian kaf
 }
+
 
 fun convertNumbersToEnglish(input: String): String {
     val arabicNumbers = listOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
@@ -156,4 +187,28 @@ fun convertNumbersToEnglish(input: String): String {
 
 fun getGUID(): String {
     return UUID.randomUUID().toString()
+}
+
+
+
+
+
+fun formatJalaliDate(dateTime: String?): String {
+    if (dateTime.isNullOrBlank()) return "—"
+
+    return runCatching {
+        // حذف بخش اعشار ثانیه یا Z در صورت وجود
+        val cleanDateTime = dateTime.substringBefore(".").substringBefore("Z")
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+        val date = inputFormat.parse(cleanDateTime) ?: return dateTime
+
+        // تبدیل میلادی به شمسی
+        val pDate = PersianDate(date.time)
+
+        val year = pDate.shYear
+        val month = pDate.shMonth.toString().padStart(2, '0')
+        val day = pDate.shDay.toString().padStart(2, '0')
+
+        "$year/$month/$day"
+    }.getOrDefault(dateTime)
 }

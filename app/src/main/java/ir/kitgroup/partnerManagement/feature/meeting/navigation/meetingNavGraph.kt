@@ -7,7 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.meeting.ui.AddMeetingScreen
+import ir.kitgroup.partnerManagement.feature.meeting.ui.AddMeetingRoute
 import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingDetailScreen
 import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingsListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
@@ -54,28 +54,25 @@ fun NavGraphBuilder.meetingNavGraph(navController: NavController) {
         }
         // صفحه ثبت / ویرایش بازدید
         composable(
-            route = Screen.AddMeeting.route,
+            route = "${Screen.AddMeeting.route}?meetingId={meetingId}&preselectedOrganizationId={preselectedOrganizationId}",
             arguments = listOf(
                 navArgument("meetingId") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
                 },
-                navArgument("organizationId") {
+                navArgument("preselectedOrganizationId") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
                 }
             )
-        ) { backStackEntry ->
-            val meetingId = backStackEntry.arguments?.getString("meetingId")
-            val organizationId = backStackEntry.arguments?.getString("organizationId")
-
-            AddMeetingScreen(
-                meetingId = meetingId,
-                preselectedOrganizationId = organizationId,
+        ) {
+            AddMeetingRoute(
                 onBackClick = { navController.popBackStack() },
-                onSubmitClick = { navController.popBackStack() }
+                onSubmitClick = { meeting ->
+                    navController.popBackStack()
+                }
             )
         }
     }

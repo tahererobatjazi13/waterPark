@@ -12,6 +12,7 @@ sealed interface UiEvent {
     data class ShowMessage(val message: UiText) : UiEvent
     data class ShowError(val error: UiText) : UiEvent
 }
+
 fun <T> ViewModel.execute(
     stateFlow: MutableStateFlow<DataState<T>>,
     eventFlow: MutableSharedFlow<UiEvent>,
@@ -20,26 +21,56 @@ fun <T> ViewModel.execute(
     onSuccess: ((T) -> Unit)? = null,
     action: suspend () -> Result<T>
 ) {
+
     viewModelScope.launch {
+
         stateFlow.value = DataState.Loading
-        val result = action()
 
-        result.fold(
-            onSuccess = { data ->
-                stateFlow.value = DataState.Success(data)
-                successMessageRes?.let {
-                    eventFlow.emit(UiEvent.ShowMessage(UiText.StringResource(it)))
+        try {
+
+            val result = action()
+
+            result.fold(
+
+                onSuccess = { data ->
+
+                    stateFlow.value = DataState.Success(data)
+
+                    successMessageRes?.let { messageRes ->
+
+                        eventFlow.emit(
+                            UiEvent.ShowMessage(
+                                UiText.StringResource(messageRes)
+                            )
+                        )
+                    }
+
+                    onSuccess?.invoke(data)
+                },
+
+                onFailure = { throwable ->
+
+                    val errorUiText = AppErrorMapper.map(throwable)
+
+                    stateFlow.value =
+                        DataState.Error(errorUiText)
+
+                    eventFlow.emit(
+                        UiEvent.ShowError(errorUiText)
+                    )
                 }
-                onSuccess?.invoke(data)
-            },
-            onFailure = { throwable ->
-                val errorUiText = throwable.message?.let {
-                    UiText.DynamicString(it)
-                } ?: UiText.StringResource(defaultErrorMessageRes)
+            )
 
-                stateFlow.value = DataState.Error(errorUiText)
-                eventFlow.emit(UiEvent.ShowError(errorUiText))
-            }
-        )
+        } catch (throwable: Throwable) {
+
+            val errorUiText = AppErrorMapper.map(throwable)
+
+            stateFlow.value =
+                DataState.Error(errorUiText)
+
+            eventFlow.emit(
+                UiEvent.ShowError(errorUiText)
+            )
+        }
     }
 }

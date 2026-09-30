@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
@@ -26,6 +25,7 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
+import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.feature.report.model.Visitor
 
@@ -99,17 +99,17 @@ fun VisitorListScreen(
                         .padding(top = 10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = appColors.success,
-                        contentColor =MaterialTheme.colorScheme.onPrimary
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (visitors.isEmpty()) {
-                    VisitorEmptyState(
+                    EmptyState(
+                        textRes = R.string.msg_no_item_found,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
+                            .fillMaxSize()
                     )
                 } else {
                     VisitorsList(
@@ -265,36 +265,6 @@ fun VisitorStatItem(
             style = typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-    }
-}
-
-
-@Composable
-private fun VisitorEmptyState(
-    modifier: Modifier = Modifier
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Inventory2,
-                contentDescription = null,
-                tint = appColors.border,
-                modifier = Modifier.size(56.dp)
-            )
-            Text(
-                text = stringResource(R.string.msg_no_item_found),
-                style = typography.titleMedium,
-                color = appColors.textSecondary
-            )
-        }
     }
 }
 

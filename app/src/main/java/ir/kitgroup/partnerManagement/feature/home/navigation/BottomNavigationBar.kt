@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 
 @Composable
@@ -28,7 +29,7 @@ fun BottomNavigationBar(
 ) {
     val items: List<BottomNavItem> = listOf(
         BottomNavItem.Profile,
-        BottomNavItem.PlanOffer,
+        BottomNavItem.Offers,
         BottomNavItem.Meetings,
         BottomNavItem.Organizations,
         BottomNavItem.Dashboard
@@ -53,7 +54,7 @@ fun BottomNavigationBar(
                     onClick = {
                         if (currentRoute != item.route) {
                             navController.navigate(item.route) {
-                                popUpTo(BottomNavItem.Dashboard.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
                                 launchSingleTop = true

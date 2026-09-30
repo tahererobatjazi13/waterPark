@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,13 +37,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.text.style.TextAlign
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
+import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationStatus
 
 
 @Composable
 fun OrganizationPersonsTabContent(
-    persons: List<OrganizationPersonEntity> = emptyList(),
+    persons: List<OrganizationPersonEntity>,
     onAddPersonClick: () -> Unit = {},
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -86,27 +86,12 @@ fun OrganizationPersonsTabContent(
             }
         }
         if (persons.isEmpty()) {
-            Box(
+            EmptyState(
+                textRes = R.string.msg_no_person_found,
                 modifier = Modifier
+                    .weight(1f)
                     .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Filled.WorkspacePremium,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.msg_no_person_found),
-                        style = typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            )
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -152,7 +137,7 @@ private fun PersonOrganizationCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "${index + 1}. ${person.name}".trim(),
+                        text = "${index + 1}. ${person.fullName}".trim(),
                         style = typography.titleMedium,
                         color = appColors.textPrimary,
                         maxLines = 1
@@ -167,33 +152,33 @@ private fun PersonOrganizationCard(
 
                         StatusBadge(status = PersonOrganizationStatus.fromId(person.statusRelation))
 
-                       /* if (person.gender.isNotBlank()) {
-                            Text(
-                                text = person.gender,
-                                style = typography.labelSmall,
-                                color = appColors.textSecondary
-                            )
-                        }*/
+                        /* if (person.gender.isNotBlank()) {
+                             Text(
+                                 text = person.gender,
+                                 style = typography.labelSmall,
+                                 color = appColors.textSecondary
+                             )
+                         }*/
                     }
                 }
             }
 
             PersonInfoRow(
                 title = stringResource(R.string.label_mobile),
-                value = person.personId!!
+                value = person.mobile.orEmpty()
             )
 
             PersonInfoRow(
                 title = stringResource(R.string.label_phone),
-                value = person.personId
+                value = person.phone.orEmpty()
             )
 
-            if (person.description!!.isNotBlank()) {
-                PersonInfoRow(
-                    title = stringResource(R.string.label_description),
-                    value = person.description
-                )
-            }
+            /* if (person.description!!.isNotBlank()) {
+                 PersonInfoRow(
+                     title = stringResource(R.string.label_description),
+                     value = person.description
+                 )
+             }*/
         }
     }
 }

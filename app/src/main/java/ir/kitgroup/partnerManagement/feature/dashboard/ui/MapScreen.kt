@@ -1,45 +1,72 @@
 package ir.kitgroup.partnerManagement.feature.dashboard.ui
 
 import android.content.Context
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import androidx.compose.ui.viewinterop.AndroidView
-import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
-import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+
+@Composable
+fun MapRoute(
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: MapViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    MapScreen(
+        organizations = uiState.organizations,
+        isLoading = uiState.isLoading,
+        onBackClick = onBackClick,
+        modifier = modifier
+    )
+}
 
 @Composable
 fun MapScreen(
     organizations: List<OrganizationEntity>,
-    onBackClick: () -> Unit
+    isLoading: Boolean = false,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val appColors = LocalPartnerManagementColors.current
+    val mapView = remember { MapView(context) }
 
-    // راه‌اندازی مقادیر پیش‌فرض کتابخانه OSMdroid
-    DisposableEffect(Unit) {
+    // راه‌اندازی و مدیریت چرخه حیات MapView و تنظیمات OSMdroid
+    DisposableEffect(mapView) {
         Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         Configuration.getInstance().userAgentValue = context.packageName
 
+        mapView.onResume()
+
         onDispose {
+            mapView.onPause()
             Configuration.getInstance().save(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         }
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             CustomHeader(
                 title = R.string.label_map,
@@ -57,47 +84,43 @@ fun MapScreen(
         ) {
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
-                factory = { ctx ->
-                    MapView(ctx).apply {
+                factory = {
+                    mapView.apply {
                         setTileSource(TileSourceFactory.MAPNIK)
                         controller.setZoom(12.0)
-                        controller.setCenter(
-                            GeoPoint(36.2972, 59.6067) // مرکز مشهد
-                        )
+                        controller.setCenter(GeoPoint(36.2972, 59.6067)) // مرکز مشهد
                         setMultiTouchControls(true)
                     }
                 },
-                update = { mapView ->
-
-                    // 1. نمایش مارکر برای وی سازمان
-                    mapView.overlays.clear()
+                update = { view ->
+                    // بازنشانی و ترسیم مجدد مارکرها در صورت تغییر لیست سازمان‌ها در دیتابیس
+                    view.overlays.clear()
 
                     organizations.forEach { org ->
-                        val marker = Marker(mapView)
-                        marker.position = GeoPoint(org.latitude!!, org.longitude!!)
-                        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        marker.title = org.name
-                        marker.infoWindow = null
-                        mapView.overlays.add(marker)
+                        val lat = org.latitude?.toDoubleOrNull()
+                        val lon = org.longitude?.toDoubleOrNull()
+
+                        if (lat != null && lon != null) {
+                            val marker = Marker(view).apply {
+                                position = GeoPoint(lat, lon)
+                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                title = org.name
+                                snippet = org.phone ?: ""
+                                infoWindow = null
+                            }
+                            view.overlays.add(marker)
+                        }
                     }
+                    view.invalidate()
                 }
             )
-           /* ExtendedFloatingActionButton(
-                onClick = {  },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth(0.62f)
-                    .height(52.dp)
-            ) {
-                Icon(
-                    imageVector =  Icons.Default.MyLocation,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-        }*/
 
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }

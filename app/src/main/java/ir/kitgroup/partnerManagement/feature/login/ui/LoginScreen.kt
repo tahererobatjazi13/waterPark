@@ -2,39 +2,33 @@ package ir.kitgroup.partnerManagement.feature.login.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.Login
-import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
-import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import androidx.compose.ui.tooling.preview.Preview
-import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-
+import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 @Composable
 fun LoginScreen(
     navController: NavController,
@@ -45,52 +39,49 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                LoginEffect.NavigateToDashboard -> {
-                    navController.navigate(BottomNavItem.Dashboard.route) {
-                        popUpTo("login") { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-            }
-        }
-    }
-
-
-    LaunchedEffect(Unit) {
-        viewModel.effects.collect { effect ->
-            when (effect) {
-                LoginEffect.NavigateToDashboard -> {
+                LoginEffect.NavigateToMain -> {
                     navController.navigate(
                         BottomNavItem.Dashboard.route
                     ) {
                         popUpTo("login") {
                             inclusive = true
                         }
-
                         launchSingleTop = true
                     }
                 }
             }
         }
     }
-    if (uiState.isServerDialogVisible) {
-        ServerAddressDialog(
-            initialAddress = uiState.currentServerAddress,
-            errorMessage = uiState.serverAddressError,
-            isLoading = uiState.isTestingServer,
-            onDismissRequest = viewModel::onDismissServerDialog,
-            onSaveClick = viewModel::onSaveServerAddress
-        )
+
+    CompositionLocalProvider(
+        LocalLayoutDirection provides LayoutDirection.Rtl
+    ) {
+
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+            LoginContent(
+                uiState = uiState,
+                onUsernameChange = viewModel::onUsernameChange,
+                onPasswordChange = viewModel::onPasswordChange,
+                onLoginClick = viewModel::onLoginClick,
+                onSettingClick = viewModel::onOpenServerDialog
+            )
+
+            if (uiState.isServerDialogVisible) {
+                ServerAddressDialog(
+                    initialAddress = uiState.currentServerAddress,
+                    errorMessage = uiState.serverAddressError,
+                    isLoading = uiState.isTestingServer,
+                    onDismissRequest = viewModel::onDismissServerDialog,
+                    onSaveClick = viewModel::onSaveServerAddress
+                )
+            }
+        }
     }
-    LoginContent(
-        uiState = uiState,
-        onUsernameChange = viewModel::onUsernameChange,
-        onPasswordChange = viewModel::onPasswordChange,
-        onLoginClick = viewModel::onLoginClick,
-        onSettingClick = viewModel::onOpenServerDialog,
-        onForgotPasswordClick = { /* Forgot Password */ }
-    )
 }
+
 @Composable
 private fun LoginContent(
     uiState: LoginUiState,
@@ -98,7 +89,6 @@ private fun LoginContent(
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit,
     onSettingClick: () -> Unit,
-    onForgotPasswordClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
@@ -109,12 +99,11 @@ private fun LoginContent(
         modifier = modifier
             .fillMaxSize()
             .background(appColors.appBackground)
-            .imePadding()
-            .pointerInput(Unit) {
+         /*   .pointerInput(Unit) {
                 detectTapGestures {
                     focusManager.clearFocus()
                 }
-            }
+            }*/
             .padding(horizontal = 32.dp)
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -136,7 +125,7 @@ private fun LoginContent(
             label = stringResource(R.string.label_username),
             placeholder = stringResource(R.string.hint_enter_your_username),
             leadingIcon = painterResource(R.drawable.ic_user_name),
-            errorMessage = uiState.usernameErrorRes?.let { stringResource(it) }
+            errorMessage = uiState.usernameError
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -148,14 +137,14 @@ private fun LoginContent(
             placeholder = stringResource(R.string.hint_enter_your_password),
             leadingIcon = painterResource(R.drawable.ic_lock),
             isPasswordField = true,
-            errorMessage = uiState.passwordErrorRes?.let { stringResource(it) }
+            errorMessage = uiState.passwordError
         )
 
-        uiState.loginErrorRes?.let { errorRes ->
+        uiState.loginError?.let { error ->
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = stringResource(errorRes),
+                text = error,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center
@@ -171,43 +160,21 @@ private fun LoginContent(
                 onLoginClick()
             },
             icon = Icons.AutoMirrored.Filled.Login,
+            isLoading = uiState.isLoading
         )
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // دکمه تنظیمات سرور
         CustomButton(
             text = stringResource(R.string.label_server_setting),
-            onClick = {
-                focusManager.clearFocus()
-                onSettingClick()
-            },
+            onClick = onSettingClick,
             icon = Icons.Default.Dns,
             colors = ButtonDefaults.buttonColors(
                 containerColor = appColors.tableHeaderBackground,
-                contentColor =appColors.textPrimary
-
-            ),
+                contentColor = appColors.textPrimary
+            )
         )
 
         Spacer(modifier = Modifier.height(40.dp))
     }
 }
-
-/*
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun LoginContentPreview() {
-    AppScreenPreview {
-        LoginContent(
-            uiState = LoginUiState(
-                username = "s",
-                password = "123"
-            ),
-            onUsernameChange = {},
-            onPasswordChange = {},
-            onLoginClick = {},
-            onForgotPasswordClick = {}
-        )
-    }
-}*/

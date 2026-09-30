@@ -12,9 +12,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
-import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
+import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDateTimeFields
@@ -28,15 +30,33 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
 import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
-import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizations
-import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationBottomSheet
+import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationListBottomSheet
 import saman.zamani.persiandate.PersianDate
 import java.util.Locale
 import java.util.UUID
 
 @Composable
+fun AddContractRoute(
+    onBackClick: () -> Unit,
+    onSaveClick: (ContractEntity) -> Unit,
+    viewModel: AddContractViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    AddContractScreen(
+        preselectedOrganizationId = viewModel.preselectedOrganizationId,
+        preselectedOrganization = uiState.preselectedOrganization,
+        organizationsList = uiState.organizations,
+        onBackClick = onBackClick,
+        onSaveClick = onSaveClick
+    )
+}
+
+@Composable
 fun AddContractScreen(
     preselectedOrganizationId: String? = null,
+    preselectedOrganization: OrganizationWithDetail? = null,
+    organizationsList: List<OrganizationWithDetail> = emptyList(),
     onBackClick: () -> Unit,
     onSaveClick: (ContractEntity) -> Unit
 ) {
@@ -49,7 +69,7 @@ fun AddContractScreen(
     var defaultDiscountPercent by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
 
-    var selectedOrganization by remember { mutableStateOf<OrganizationEntity?>(null) }
+    var selectedOrganization by remember { mutableStateOf<OrganizationWithDetail?>(null) }
     var showOrganizationSheet by remember { mutableStateOf(false) }
 
     // نگاشت Enumها با مقادیر متنی جهت استفاده مستقیم در DropdownSelectorField
@@ -68,12 +88,10 @@ fun AddContractScreen(
     }
     var selectedContractStatus by remember { mutableStateOf(ContractStatus.DRAFT) }
 
-    // مقداردهی اولیه سازمان
-    LaunchedEffect(preselectedOrganizationId) {
-        if (preselectedOrganizationId != null) {
-            selectedOrganization = demoOrganizations.find {
-                it.organizationId == preselectedOrganizationId
-            }
+    // ست کردن مقدار اولیه سازمان از دیتابیس
+    LaunchedEffect(preselectedOrganization) {
+        if (preselectedOrganization != null && selectedOrganization == null) {
+            selectedOrganization = preselectedOrganization
         }
     }
 
@@ -121,7 +139,7 @@ fun AddContractScreen(
             ) {
                 if (preselectedOrganizationId == null) {
                     CustomSelectorField(
-                        value = selectedOrganization?.name ?: "",
+                        value = selectedOrganization?.organization!!.name ?: "",
                         label = stringResource(R.string.label_organization_name),
                         placeholder = stringResource(R.string.hint_choose_organization_name),
                         isExpanded = showOrganizationSheet,
@@ -223,15 +241,15 @@ fun AddContractScreen(
                     onClick = {
                         val newContract = ContractEntity(
                             contractId = UUID.randomUUID().toString(),
-                            name = contractName.ifBlank { null },
+                            title = contractName.ifBlank { null },
                             contractNumber = contractNumber.ifBlank { null },
-                            organizationId = selectedOrganization?.organizationId
+                            organizationId = selectedOrganization?.organization!!.organizationId
                                 ?: preselectedOrganizationId,
                             cooperationModel = selectedCooperationModel?.id,
                             settlementPeriodType = selectedSettlementPeriodType?.id,
                             startDate = startDate.ifBlank { null },
                             endDate = endDate.ifBlank { null },
-                            contractStatus = selectedContractStatus.id,
+                            status = selectedContractStatus.id,
                             defaultCommissionPercent = defaultCommissionPercent.toDoubleOrNull(),
                             defaultDiscountPercent = defaultDiscountPercent.toDoubleOrNull(),
                             description = description.ifBlank { null }
@@ -244,9 +262,10 @@ fun AddContractScreen(
         }
     }
 
+    // باز شدن باتم شیت با لیست ارسالی از دیتابیس
     if (showOrganizationSheet && preselectedOrganizationId == null) {
-        OrganizationBottomSheet(
-            list = demoOrganizations,
+        OrganizationListBottomSheet(
+            list = organizationsList,
             onDismiss = { showOrganizationSheet = false },
             onItemSelected = { item ->
                 selectedOrganization = item
@@ -286,6 +305,8 @@ private fun AddContractScreenPreview() {
     AppScreenPreview {
         AddContractScreen(
             preselectedOrganizationId = null,
+            preselectedOrganization = null,
+            organizationsList = emptyList(),
             onBackClick = {},
             onSaveClick = {}
         )

@@ -15,13 +15,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.theme.ThemeViewModel
-import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizations
 import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardScreen
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavigationBar
-import ir.kitgroup.partnerManagement.feature.advertising_stand.navigation.advertisingStandNavGraph
+import ir.kitgroup.partnerManagement.feature.stand.navigation.advertisingStandNavGraph
 import ir.kitgroup.partnerManagement.feature.contract.navigation.contractNavGraph
-import ir.kitgroup.partnerManagement.feature.dashboard.ui.MapScreen
+import ir.kitgroup.partnerManagement.feature.dashboard.ui.MapRoute
 import ir.kitgroup.partnerManagement.feature.login.navigation.authNavGraph
 import ir.kitgroup.partnerManagement.feature.offer.navigation.offerNavGraph
 import ir.kitgroup.partnerManagement.feature.organization.navigation.organizationNavGraph
@@ -42,7 +41,7 @@ fun AppNavigation(
         BottomNavItem.Dashboard.route,
         BottomNavItem.Organizations.route,
         BottomNavItem.Meetings.route,
-        BottomNavItem.PlanOffer.route,
+        BottomNavItem.Offers.route,
         BottomNavItem.Profile.route
     )
 
@@ -70,11 +69,11 @@ fun AppNavigation(
                 }
 
                 composable(Screen.Map.route) {
-                    MapScreen(
-                        organizations = demoOrganizations,
+                    MapRoute(
                         onBackClick = { navController.popBackStack() }
                     )
                 }
+
 
                 organizationNavGraph(navController)
 

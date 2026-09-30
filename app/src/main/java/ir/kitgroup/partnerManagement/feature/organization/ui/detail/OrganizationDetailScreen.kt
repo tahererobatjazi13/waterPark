@@ -62,19 +62,12 @@ import ir.kitgroup.partnerManagement.core.ui.util.OrganizationDetailTab
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
-import ir.kitgroup.partnerManagement.core.ui.util.demoMeetings
-import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizations
-import ir.kitgroup.partnerManagement.core.database.entity.OrganizationWarningEntity
-import ir.kitgroup.partnerManagement.core.database.entity.StandAssignmentEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
-import ir.kitgroup.partnerManagement.core.ui.util.demoContracts
-import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizationPersons
-import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizationWarnings
-import ir.kitgroup.partnerManagement.core.ui.util.demoStandAssignments
+import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
+import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
 import ir.kitgroup.partnerManagement.core.ui.util.demoVisitorOrganizations
-import ir.kitgroup.partnerManagement.feature.organization.model.OrganizationOfferTicketModel
-import ir.kitgroup.partnerManagement.feature.organization.model.TicketSerialStatus
 import ir.kitgroup.partnerManagement.feature.organization.ui.AddOrganizationWarningDialog
 import ir.kitgroup.partnerManagement.feature.organization.ui.AddPersonBottomSheet
 import ir.kitgroup.partnerManagement.feature.organization.ui.InactivationReasonDialog
@@ -95,18 +88,54 @@ fun OrganizationDetailScreen(
     onDeleteVisitorClick: (String) -> Unit,
     onAssignStandsClick: (String) -> Unit,
     onAssignContractClick: (String) -> Unit,
-    onViewItemDetailsClick: (StandAssignmentEntity) -> Unit,
+    onViewItemDetailsClick: (AssignedStandWithDetail) -> Unit,
     onContractClick: (ContractEntity) -> Unit,
     onAddTicketOfferClick: () -> Unit,
-    viewModel: SessionViewModel = hiltViewModel()
+    sessionViewModel: SessionViewModel = hiltViewModel(),
+    organizationDetailViewModel: OrganizationDetailViewModel = hiltViewModel()
 ) {
-    val organization = remember(organizationId) {
-        demoOrganizations.find { it.organizationId == organizationId }
+
+    val organization by organizationDetailViewModel.organization
+        .collectAsState()
+
+    val meetings by organizationDetailViewModel.meetings
+        .collectAsStateWithLifecycle()
+
+
+    val persons by organizationDetailViewModel.persons
+        .collectAsStateWithLifecycle()
+
+    val contracts by organizationDetailViewModel.contracts
+        .collectAsStateWithLifecycle()
+
+
+    val assignedStands by organizationDetailViewModel.assignedStands
+        .collectAsStateWithLifecycle()
+
+    val warnings by organizationDetailViewModel.warnings
+        .collectAsStateWithLifecycle()
+
+    val assignedSerials by organizationDetailViewModel.assignedSerials
+        .collectAsStateWithLifecycle()
+
+
+    LaunchedEffect(organizationId) {
+        organizationDetailViewModel.getOrganizationById(organizationId)
+        organizationDetailViewModel.observeOrganizationMeetings(organizationId)
+        organizationDetailViewModel.observeOrganizationPersons(organizationId)
+        organizationDetailViewModel.observeOrganizationContracts(organizationId)
+        organizationDetailViewModel.observeOrganizationWarnings(organizationId)
+        organizationDetailViewModel.observeOrganizationAssignedStands(organizationId)
+        organizationDetailViewModel.observeOrganizationAssignedSerials(organizationId)
     }
 
+
+    val currentOrganization = organization ?: return
     val appColors = LocalPartnerManagementColors.current
-    val role by viewModel.userRole.collectAsState()
-    val isSupervisor = role == UserRole.SUPERVISOR.name
+    val roleCode by sessionViewModel.roleCode.collectAsState()
+
+    val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
+    val isSupervisor = currentRole == UserRole.SUPERVISOR
 
     val formState = rememberAddOrganizationFormState()
     val personState = rememberAddPersonFormState()
@@ -127,110 +156,10 @@ fun OrganizationDetailScreen(
     var currentOrganizationStatus by rememberSaveable { mutableStateOf(OrganizationStatus.ACTIVE) }
     var currentInactiveReason by rememberSaveable { mutableStateOf("") }
 
-    var warningPendingDelete by remember { mutableStateOf<OrganizationWarningEntity?>(null) }
+    var warningPendingDelete by remember { mutableStateOf<WarningWithDetail?>(null) }
     var visitorToDelete by remember { mutableStateOf<VisitorOrganizationEntity?>(null) }
 
 
-/*
-    val stands = listOf(
-        AdvertisingStandAssignment(
-            "1",
-            "محمد احمدی",
-            "هتل پارسیان آزادی",
-            "تخصیص به بازاریاب",
-            "stand",
-            5,
-            "۱۴۰۳/۰۳/۲۲", "امانی",
-            1
-        ),
-        AdvertisingStandAssignment(
-            "2",
-            "سارا مرادی",
-            "هتل اسپیناس پالاس",
-            "تخصیص به بازاریاب",
-            "wall",
-            3,
-            "۱۴۰۳/۰۳/۲۴", "تبلیغاتی",
-            1
-        ),
-        AdvertisingStandAssignment(
-            "3",
-            "علی رضایی",
-            "هتل هما",
-            "تخصیص به بازاریاب",
-            "kiosk",
-            2,
-            "۱۴۰۳/۰۳/۲۰", "اجاره ای",
-            0
-        ),
-        AdvertisingStandAssignment(
-            "4",
-            "نازنین کریمی",
-            "هتل بزرگ تهران",
-            "تخصیص به بازاریاب",
-            "stand",
-            4,
-            "۱۴۰۳/۰۳/۲۵", "اجاره ای",
-            3
-        ),
-        AdvertisingStandAssignment(
-            "5",
-            "علی رضایی",
-            "هتل هما",
-            "جمع آوری",
-            "kiosk",
-            2,
-            "۱۴۰۳/۰۳/۲۰", "تبلیغاتی",
-            2
-        ),
-        AdvertisingStandAssignment(
-            "6",
-            "نازنین کریمی",
-            "هتل بزرگ تهران",
-            "عودت",
-            "stand",
-            4,
-            "۱۴۰۳/۰۳/۲۵", "امانی",
-            1
-        )
-    )
-*/
-
-
-    val demoOrganizationOfferTickets = listOf(
-        OrganizationOfferTicketModel(
-            id = 1,
-            offerPlanName = "فروش بلیط تابستانه",
-            contractName = "قرارداد فروش مهمانپذیر شبنم",
-            organizationName = "مهمانپذیر شبنم",
-            cooperationModel = "بلیط تخفیف دار",
-            serialPrefix = "DC",
-            serialCount = 7,
-            startSerial = 100L,
-            endSerial = 106L,
-            status = TicketSerialStatus.DRAFT,
-            lastUsedSerial = null,
-            title = "DC - قرارداد فروش مهمانپذیر شبنم - فروش بلیط تابستانه -سریال 100 - 106",
-            ownerName = "مدیر سیستم"
-        ),
-        OrganizationOfferTicketModel(
-            id = 2,
-            offerPlanName = "طرح تخفیف پاییزه",
-            contractName = "قرارداد فروش مهمانپذیر شبنم",
-            organizationName = "مهمانپذیر شبنم",
-            cooperationModel = "بلیط تخفیف دار",
-            serialPrefix = "DC",
-            serialCount = 10,
-            startSerial = 107L,
-            endSerial = 116L,
-            status = TicketSerialStatus.ACTIVE,
-            lastUsedSerial = 109L,
-            title = "DC - قرارداد فروش مهمانپذیر شبنم - طرح تخفیف پاییزه -سریال 107 - 116",
-            ownerName = "کاربر بازاریاب"
-        )
-    )
-
-    val organizationOfferTickets = remember { demoOrganizationOfferTickets }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -305,16 +234,18 @@ fun OrganizationDetailScreen(
 
                 when (selectedTab) {
                     OrganizationDetailTab.BASIC_INFO -> {
-                        OrganizationBasicInfoTabContent(organization = organization!!)
+                        OrganizationBasicInfoTabContent(
+                            organization = currentOrganization
+                        )
                     }
 
                     OrganizationDetailTab.GENERAL_INFO -> {
-                        OrganizationGeneralInfoTabContent(organization = organization!!)
+                        OrganizationGeneralInfoTabContent(organization = currentOrganization)
                     }
 
                     OrganizationDetailTab.VISITS -> {
-                        OrganizationVisitsTabContent(
-                            visits = demoMeetings,
+                        OrganizationMeetingsTabContent(
+                            meetings = meetings,
                             onAddMeetingClick = onAddMeetingClick,
                             onMeetingClick = onMeetingClick
                         )
@@ -322,7 +253,7 @@ fun OrganizationDetailScreen(
 
                     OrganizationDetailTab.PERSONS -> {
                         OrganizationPersonsTabContent(
-                            persons = demoOrganizationPersons,
+                            persons = persons,
                             onAddPersonClick = {
                                 formState.resetPersonFields(personState)
                                 showAddPersonSheet = true
@@ -345,7 +276,7 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.STANDS -> {
-                        OrganizationStandsTabContent(assignments = demoStandAssignments,
+                        OrganizationStandsTabContent(assignments = assignedStands,
                             onAssignStandsClick = { onAssignStandsClick(organizationId) },
                             onViewItemDetailsClick = { item ->
                                 onViewItemDetailsClick(item)
@@ -353,16 +284,16 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.CONTRACTS -> {
-                        OrganizationContractsTabContent(contracts = demoContracts(),
+                        OrganizationContractsTabContent(contracts = contracts,
                             onAssignContractClick = { onAssignContractClick(organizationId) },
                             onContractClick = { contract ->
                                 onContractClick(contract)
                             })
                     }
 
-                    OrganizationDetailTab.TICKETS -> {
-                        OrganizationTicketsTabContent(
-                            tickets = organizationOfferTickets, // لیست آفرها پاس داده شود
+                    OrganizationDetailTab.SERIALS -> {
+                        OrganizationSerialsTabContent(
+                            serials = assignedSerials,
                             onAddTicketClick = {
                                 onAddTicketOfferClick()
                             },
@@ -375,7 +306,7 @@ fun OrganizationDetailScreen(
 
                     OrganizationDetailTab.WARNING -> {
                         OrganizationWarningTabContent(
-                            warnings = demoOrganizationWarnings,
+                            warnings = warnings,
                             isSupervisor = isSupervisor,
                             onAddWarningClick = { showWarningDialog = true },
                             onDeleteWarningClick = { warnings ->
@@ -387,25 +318,35 @@ fun OrganizationDetailScreen(
             }
         }
     }
-
     if (showWarningDialog) {
         AddOrganizationWarningDialog(
-            onDismiss = { showWarningDialog = false },
+            onDismiss = {
+                showWarningDialog = false
+            },
             onConfirm = { warningType, description ->
+
+                organizationDetailViewModel.addWarning(
+                    organizationId = organizationId,
+                    organizationName = currentOrganization.organization.name,
+                    warningTypeId = warningType,
+                    warningTypeName = warningType,
+                    description = description
+                )
+
                 showWarningDialog = false
             }
         )
     }
 
     // دیالوگ تأیید حذف
-    warningPendingDelete?.let { warning ->
+    warningPendingDelete?.let { item ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_warnings),
-            itemName = warning.name!!,
+            itemName = item.warningTypeName,
             onConfirm = {
-                // حذف از لیست محلی یا فراخوانی ViewModel
-                //   demoOrganizationWarnings = demoOrganizationWarnings.filter { it.organizationWarningId != warning.organizationWarningId }
-                // viewModel.deleteNotice(notice.id)
+                organizationDetailViewModel.deleteWarning(
+                    item.warning.warningId
+                )
                 warningPendingDelete = null
             },
             onDismiss = {
@@ -442,16 +383,16 @@ fun OrganizationDetailScreen(
             },
             onSavePerson = {
                 if (personState.name.isNotBlank() && personState.phone1.isNotBlank()) {
-                   /* formState.organizationPersons.add(
-                        PersonOrganization(
-                            name = personState.name.trim(),
-                            mobile = personState.mobile.trim(),
-                            phone = personState.phone.trim(),
-                            status = personState.status,
-                            gender = personState.gender,
-                            description = personState.description.trim()
-                        )
-                    )*/
+                    /* formState.organizationPersons.add(
+                         PersonOrganization(
+                             name = personState.name.trim(),
+                             mobile = personState.mobile.trim(),
+                             phone = personState.phone.trim(),
+                             status = personState.status,
+                             gender = personState.gender,
+                             description = personState.description.trim()
+                         )
+                     )*/
 
                     formState.resetPersonFields(personState)
                     showAddPersonSheet = false

@@ -11,25 +11,48 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
-import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
+import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
+import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
-import ir.kitgroup.partnerManagement.core.ui.util.demoMeetings
-import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizations
-import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationBottomSheet
+import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationListBottomSheet
 import saman.zamani.persiandate.PersianDate
 import java.util.Calendar
 import java.util.Locale
+
+@Composable
+fun AddMeetingRoute(
+    onBackClick: () -> Unit,
+    onSubmitClick: (MeetingEntity) -> Unit,
+    viewModel: AddMeetingViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    AddMeetingScreen(
+        meetingId = viewModel.meetingId,
+        preselectedOrganizationId = viewModel.preselectedOrganizationId,
+        preselectedOrganization = uiState.preloadedOrganization,
+        existingMeeting = uiState.existingMeeting,
+        organizationsList = uiState.organizations,
+        onBackClick = onBackClick,
+        onSubmitClick = onSubmitClick
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMeetingScreen(
     meetingId: String?,
     preselectedOrganizationId: String?,
+    preselectedOrganization: OrganizationWithDetail? = null,
+    existingMeeting: MeetingWithDetail? = null,
+    organizationsList: List<OrganizationWithDetail> = emptyList(),
     onBackClick: () -> Unit,
     onSubmitClick: (MeetingEntity) -> Unit = {}
 ) {
@@ -38,39 +61,27 @@ fun AddMeetingScreen(
     val appColors = LocalPartnerManagementColors.current
 
     var showOrganizationSheet by remember { mutableStateOf(false) }
-    var selectedOrganization by remember { mutableStateOf<OrganizationEntity?>(null) }
+    var selectedOrganization by remember { mutableStateOf<OrganizationWithDetail?>(null) }
 
-    // لیست و مقدار انتخابی نوع بازدید
+    // نوع و وضعیت بازدید
     val meetingTypes = remember { MeetingType.entries }
     var selectedVisitType by remember { mutableStateOf(MeetingType.PHONE) }
 
-    // شرط‌های نمایشی بر اساس نام‌های صحیح Enum
     val isScheduledInPersonVisit = selectedVisitType == MeetingType.PLANNED_IN_PERSON
     val isUnscheduledInPersonVisit = selectedVisitType == MeetingType.UNPLANNED_IN_PERSON
 
-    // موضوع بازدید
     var visitSubject by rememberSaveable { mutableStateOf("") }
     val visitSubjectList = remember { listOf("ثبت نام", "وصول مطالبات", "تحویل استند", "سایر") }
 
-
-    //  وضعیت بازدید (با مقدار پیش‌فرض PLANNED)
     val statusTypes = remember { MeetingStatus.entries }
     var selectedStatus by remember { mutableStateOf(MeetingStatus.PLANNED) }
 
-
-    // تاریخ امروز جلالی
+    // زمان‌بندی جلالی اولیه
     val today = remember { PersianDate() }
     val initialDate = remember {
-        "${today.shYear}/${
-            String.format(
-                Locale.US,
-                "%02d",
-                today.shMonth
-            )
-        }/${String.format(Locale.US, "%02d", today.shDay)}"
+        "${today.shYear}/${String.format(Locale.US, "%02d", today.shMonth)}/${String.format(Locale.US, "%02d", today.shDay)}"
     }
 
-    // زمان حال
     val calendar = remember { Calendar.getInstance() }
     val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
     val currentMinute = calendar.get(Calendar.MINUTE)
@@ -81,7 +92,7 @@ fun AddMeetingScreen(
     var showVisitScheduledDatePicker by remember { mutableStateOf(false) }
     var showVisitScheduledTimePicker by remember { mutableStateOf(false) }
     var visitScheduledDate by rememberSaveable { mutableStateOf(initialDate) }
-    val visitScheduledTime by rememberSaveable { mutableStateOf(initialTime) }
+    var visitScheduledTime by rememberSaveable { mutableStateOf(initialTime) }
 
     var showVisitRealDatePicker by remember { mutableStateOf(false) }
     var showVisitRealTimePicker by remember { mutableStateOf(false) }
@@ -101,40 +112,31 @@ fun AddMeetingScreen(
     val personList = remember { listOf("علی علوی", "رضا رضایی", "محمد محمدی", "حسین حسینی") }
 
     var description by rememberSaveable { mutableStateOf("") }
+    var currentLatitude by rememberSaveable { mutableStateOf<String?>(null) }
+    var currentLongitude by rememberSaveable { mutableStateOf<String?>(null) }
 
-    // لوکیشن GPS
-    var currentLatitude by rememberSaveable { mutableStateOf<Double?>(null) }
-    var currentLongitude by rememberSaveable { mutableStateOf<Double?>(null) }
-
-    // لود اولیه سازمان در صورت پاس داده شدن از صفحه قبل
-    LaunchedEffect(preselectedOrganizationId) {
-        if (preselectedOrganizationId != null) {
-            selectedOrganization = demoOrganizations.find {
-                it.organizationId == preselectedOrganizationId
-            }
+    // بایند کردن سازمان پیش‌فرض
+    LaunchedEffect(preselectedOrganization) {
+        if (preselectedOrganization != null && selectedOrganization == null) {
+            selectedOrganization = preselectedOrganization
         }
     }
 
-    // حالت ویرایش
-    LaunchedEffect(meetingId) {
-        if (isEditMode) {
-            val existingItem = demoMeetings.find { it.meetingId == meetingId }
-            existingItem?.let { meeting ->
-                selectedVisitType = MeetingType.fromValue(meeting.type)
-                selectedStatus = MeetingStatus.fromId(meeting.status)
+    // بارگذاری داده‌های واقعی جلسه در حالت ویرایش (جایگزین demoMeetings)
+    LaunchedEffect(existingMeeting) {
+        existingMeeting?.let { item ->
+            val entity = item.meeting
+            selectedVisitType = MeetingType.fromValue(entity.type)
+            selectedStatus = MeetingStatus.fromId(entity.status) ?: MeetingStatus.PLANNED
+            visitSubject = item.subjectVisitName ?: ""
 
-                selectedOrganization = demoOrganizations.find {
-                    it.organizationId == meeting.organizationId
-                }
+            entity.visitDate?.let { visitRealDate = it }
+            entity.visitTime?.let { visitRealTime = it }
 
-                meeting.visitDate?.let { visitRealDate = it }
-                meeting.visitTime?.let { visitRealTime = it }
-
-                description = meeting.description.orEmpty()
-                currentLatitude = meeting.latitude
-                currentLongitude = meeting.longitude
-                visitorName = meeting.visitorId.orEmpty()
-            }
+            description = entity.description.orEmpty()
+            currentLatitude = entity.latitude
+            currentLongitude = entity.longitude
+            visitorName = entity.visitorId.orEmpty()
         }
     }
 
@@ -163,8 +165,6 @@ fun AddMeetingScreen(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-
                 // نوع بازدید
                 val meetingTypeTitles = meetingTypes.map { stringResource(id = it.titleRes) }
                 DropdownSelectorField(
@@ -191,10 +191,10 @@ fun AddMeetingScreen(
                     onItemSelected = { visitSubject = it }
                 )
 
-                // سازمان
+                // انتخاب سازمان
                 if (!isFromOrganizationDetail) {
                     CustomSelectorField(
-                        value = selectedOrganization?.name ?: "",
+                        value = selectedOrganization?.organization?.name.orEmpty(),
                         label = stringResource(R.string.label_organization_name),
                         placeholder = stringResource(R.string.hint_choose_organization_name),
                         isExpanded = showOrganizationSheet,
@@ -259,7 +259,7 @@ fun AddMeetingScreen(
                     }
                 )
 
-                // فیلد توضیحات
+                // توضیحات
                 CustomDescriptionField(
                     label = stringResource(R.string.label_description),
                     value = description,
@@ -267,18 +267,12 @@ fun AddMeetingScreen(
                     placeholder = stringResource(R.string.hint_description)
                 )
 
-                // فیلدهای تکمیلی بازدید سرزده / غیر برنامه‌ریزی شده
                 if (isUnscheduledInPersonVisit) {
-                    ImageUploadField(
-                        label = stringResource(R.string.label_visit_image)
-                    )
-
-                    GpsLocationField(
-                        label = stringResource(R.string.label_register_gps)
-                    )
+                    ImageUploadField(label = stringResource(R.string.label_visit_image))
+                    GpsLocationField(label = stringResource(R.string.label_register_gps))
                 }
 
-                // دکمه تایید و ذخیره
+                // دکمه ثبت / ذخیره
                 CustomButton(
                     text = if (isEditMode) {
                         stringResource(R.string.label_edit_visit)
@@ -286,10 +280,11 @@ fun AddMeetingScreen(
                         stringResource(R.string.label_submit_visit)
                     },
                     onClick = {
+                        val orgId = selectedOrganization?.organization?.organizationId.orEmpty()
                         val entityToSave = MeetingEntity(
                             meetingId = meetingId ?: java.util.UUID.randomUUID().toString(),
-                            name = visitSubject,
-                            organizationId = selectedOrganization?.organizationId,
+                            subjectVisitName = visitSubject,
+                            organizationId = orgId,
                             visitorId = visitorName.ifBlank { null },
                             type = selectedVisitType.value,
                             status = selectedStatus.id,
@@ -297,7 +292,8 @@ fun AddMeetingScreen(
                             visitTime = visitRealTime,
                             description = description,
                             latitude = currentLatitude,
-                            longitude = currentLongitude
+                            longitude = currentLongitude,
+                            stateCode = 0
                         )
                         onSubmitClick(entityToSave)
                     },
@@ -309,7 +305,7 @@ fun AddMeetingScreen(
         }
     }
 
-    // دیالوگ‌های زمان و تاریخ
+    // دیالوگ‌های تاریخ و ساعت
     if (showVisitRealTimePicker) {
         TimePickerDialog(
             timePickerState = timePickerState,
@@ -326,11 +322,7 @@ fun AddMeetingScreen(
             onDismiss = { showVisitRealDatePicker = false },
             onDateSelected = { date ->
                 visitRealDate = "${date.year}/${String.format(Locale.US, "%02d", date.month)}/${
-                    String.format(
-                        Locale.US,
-                        "%02d",
-                        date.day
-                    )
+                    String.format(Locale.US, "%02d", date.day)
                 }"
                 showVisitRealDatePicker = false
             }
@@ -341,40 +333,23 @@ fun AddMeetingScreen(
         DatePickerDialog(
             onDismiss = { showVisitScheduledDatePicker = false },
             onDateSelected = { date ->
-                visitScheduledDate =
-                    "${date.year}/${String.format(Locale.US, "%02d", date.month)}/${
-                        String.format(
-                            Locale.US,
-                            "%02d",
-                            date.day
-                        )
-                    }"
+                visitScheduledDate = "${date.year}/${String.format(Locale.US, "%02d", date.month)}/${
+                    String.format(Locale.US, "%02d", date.day)
+                }"
                 showVisitScheduledDatePicker = false
             }
         )
     }
 
+    // باتم شیت لیست سازمان‌ها
     if (showOrganizationSheet && preselectedOrganizationId == null) {
-        OrganizationBottomSheet(
-            list = demoOrganizations,
+        OrganizationListBottomSheet(
+            list = organizationsList,
             onDismiss = { showOrganizationSheet = false },
             onItemSelected = { item ->
                 selectedOrganization = item
                 showOrganizationSheet = false
             }
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun AddMeetingScreenPreview() {
-    AppScreenPreview {
-        AddMeetingScreen(
-            meetingId = null,
-            preselectedOrganizationId = null,
-            onBackClick = {},
-            onSubmitClick = {}
         )
     }
 }

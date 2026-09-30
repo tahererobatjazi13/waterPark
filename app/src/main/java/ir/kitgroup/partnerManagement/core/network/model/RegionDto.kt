@@ -4,11 +4,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RegionDto(
+
     val regionId: String,
 
-    val name: String? = null,
+    val name: String?,
 
-    val cityId: String? = null,
+    val cityId: String?,
 
-    val recreationCenterId: String? = null
-)
+    val stateCode: Int?,
+
+    )

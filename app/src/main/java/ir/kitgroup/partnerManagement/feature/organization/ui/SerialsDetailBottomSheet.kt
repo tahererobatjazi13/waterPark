@@ -30,7 +30,7 @@ fun SerialsDetailBottomSheet(
     totalAssigned: Int,
     issuedCount: Int,
     usedCount: Int,
-    revokedCount: Int,
+    cancelledCount: Int,
     remainingCount: Int,
     onDismiss: () -> Unit
 ) {
@@ -112,7 +112,7 @@ fun SerialsDetailBottomSheet(
 
             SerialDetailRow(
                 title = stringResource(R.string.label_serials_revoked),
-                count = revokedCount,
+                count = cancelledCount,
                 total = totalAssigned,
                 color = colors.error,
                 icon = Icons.Outlined.Cancel

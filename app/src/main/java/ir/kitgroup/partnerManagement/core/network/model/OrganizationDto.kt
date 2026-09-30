@@ -4,47 +4,97 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class OrganizationDto(
+
     val organizationId: String,
-    val name: String? = null,
-    val address: String? = null,
-    val cityId: String? = null,
-    val code: String? = null,
-    val customerCapacity: Int? = null,
-    val document: String? = null,
-    val email: String? = null,
-    val englishName: String? = null,
-    val grade: Int? = null,
-    val landLine: String? = null,
-    val latitude: Double? = null,
-    val longitude: Double? = null,
-    val mobile: String? = null,
-    val nationalId: String? = null,
-    val organizationType: Int? = null,
-    val ownerName: String? = null,
-    val phone: String? = null,
-    val regionId: String? = null,
-    val status: Int? = null,
-    val ticketSaleCountHistory: Int? = null,
-    val statusExternalCustomer: Boolean? = null,
-    val level: Int? = null,
-    val statusGetStand: Boolean? = null,
-    val reasonDeactive: String? = null,
-    val countWarning: Int? = null,
-    val sumScore: Int? = null,
-    val recreationCenterId: String? = null,
-    val sourceCreate: Int? = null,
-    val recalculateStatistics: Boolean? = null,
-    val countVisitorActive: Int? = null,
-    val countStandAssign: Int? = null,
-    val assignedSerialCount: Int? = null,
-    val cancelledSerialCount: Int? = null,
-    val remainingSerialCount: Int? = null,
-    val issuedSerialCount: Int? = null,
-    val visitCount: Int? = null,
-    val visitorId: String? = null,
-    val visitDate: String? = null,
-    val programmingVisitCount: Int? = null,
-    val usingSerialCount: Int? = null,
-    val deactiveDate: String? = null,
-    val subjectVisitId: String? = null
+
+    val name: String?,
+
+    val ownerName: String?,
+
+    val code: String?,
+
+    val nationalId: String?,
+
+    val organizationType: Int?,
+
+    val organizationTypeName: String?,
+
+    val grade: Int?,
+
+    val gradeName: String?,
+
+    val statusGetStand: Boolean?,
+
+    val statusGetStandName: String?,
+
+    val level: Int?,
+
+    val levelName: String?,
+
+    val status: Int?,
+
+    val statusName: String?,
+
+    val phone: String?,
+
+    val landLine: String?,
+
+    val mobile: String?,
+
+    val address: String?,
+
+    val cityId: String?,
+
+    val cityName: String?,
+
+    val regionId: String?,
+
+    val regionName: String?,
+
+    val latitude: String?,
+
+    val longitude: String?,
+
+    val visitorId: String?,
+
+    val statusExternalCustomer: Boolean?,
+
+    val englishName: String?,
+
+    val document: String?,
+
+    val customerCapacity: Int?,
+
+    val email: String?,
+
+    val ticketSaleCountHistory: Int?,
+
+    val issuedSerialCount: Int?,
+
+    val remainingSerialCount: Int?,
+
+    val assignedSerialCount: Int?,
+
+    val cancelledSerialCount: Int?,
+
+    val usingSerialCount: Int?,
+
+    val programingVisitCount: Int?,
+
+    val visitCount: Int?,
+
+    val countVisitorActive: Int?,
+
+    val countStandAssign: Int?,
+
+    val countWarning: Int?,
+
+    val sumScore: Int?,
+
+    val deactiveDate: String?,
+
+    val reasonDeactive: String?,
+
+    val stateCode: Int?
+
 )

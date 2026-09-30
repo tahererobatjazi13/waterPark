@@ -1,127 +1,263 @@
 package ir.kitgroup.partnerManagement.feature.login.ui
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.network.BaseUrlProvider
-import ir.kitgroup.partnerManagement.core.network.BaseUrlValidator
-import ir.kitgroup.partnerManagement.core.ui.util.convertNumbersToEnglish
+import ir.kitgroup.partnerManagement.core.network.NetworkResult
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.core.ui.util.fixPersianChars
-import ir.kitgroup.partnerManagement.feature.login.domain.AuthRepository
-import ir.kitgroup.partnerManagement.feature.login.domain.InvalidCredentialsException
-import kotlinx.coroutines.channels.Channel
+import ir.kitgroup.partnerManagement.core.ui.util.toEnglishDigits
+import ir.kitgroup.partnerManagement.feature.login.model.LoginResponse
+import ir.kitgroup.partnerManagement.feature.login.repository.LoginRepository
+import ir.kitgroup.partnerManagement.feature.login.validator.ServerAddressValidator
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val loginRepository: LoginRepository,
+    private val mainPreferences: MainPreferences,
+    private val baseUrlProvider: BaseUrlProvider
 ) : ViewModel() {
 
-    @Inject
-    lateinit var mainPreferences: MainPreferences
-
-    @Inject
-    lateinit var baseUrlProvider: BaseUrlProvider
-
     private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    val uiState = _uiState.asStateFlow()
 
-    private val _effects = Channel<LoginEffect>(Channel.BUFFERED)
-    val effects = _effects.receiveAsFlow()
+    private val _effects = MutableSharedFlow<LoginEffect>()
+    val effects = _effects.asSharedFlow()
+
+    // =========================================================
+    // Username
+    // =========================================================
 
     fun onUsernameChange(value: String) {
         _uiState.update {
-            it.copy(username = value, usernameErrorRes = null, loginErrorRes = null)
+            it.copy(
+                username = value,
+                usernameError = null,
+                loginError = null
+            )
         }
     }
+
+    // =========================================================
+    // Password
+    // =========================================================
 
     fun onPasswordChange(value: String) {
         _uiState.update {
-            it.copy(password = value, passwordErrorRes = null, loginErrorRes = null)
+            it.copy(
+                password = value,
+                passwordError = null,
+                loginError = null
+            )
         }
     }
 
+    // =========================================================
+    // Login
+    // =========================================================
     fun onLoginClick() {
-        val current = _uiState.value
-        if (current.isLoading) return
+        if (_uiState.value.isLoading) return
 
-        val usernameError = if (current.username.isBlank()) {
-            R.string.error_username_required
-        } else {
-            null
-        }
-        val passwordError = if (current.password.isBlank()) {
-            R.string.error_password_required
-        } else {
-            null
-        }
-
-        if (usernameError != null || passwordError != null) {
-            _uiState.update {
-                it.copy(
-                    usernameErrorRes = usernameError,
-                    passwordErrorRes = passwordError,
-                    loginErrorRes = null
-                )
+        viewModelScope.launch {
+            val baseUrl = mainPreferences.baseUrlFlow.first().orEmpty()
+            if (baseUrl.isBlank()) {
+                _uiState.update {
+                    it.copy(
+                        loginError = "ابتدا تنظیمات سرور را انجام دهید.",
+                        isServerDialogVisible = true,
+                        currentServerAddress = "",
+                        serverAddressError = null
+                    )
+                }
+                return@launch
             }
+
+            proceedLoginValidationAndCall()
+        }
+    }
+
+
+    fun proceedLoginValidationAndCall() {
+
+        val state = _uiState.value
+
+        val username = state.username
+            .trim()
+            .toEnglishDigits()
+            .fixPersianChars()
+
+        val password = state.password
+            .trim()
+            .toEnglishDigits()
+
+        _uiState.update {
+            it.copy(
+                usernameError = null,
+                passwordError = null,
+                loginError = null
+            )
+        }
+
+        when {
+            username.isBlank() -> {
+                _uiState.update {
+                    it.copy(
+                        usernameError = "نام کاربری را وارد کنید"
+                    )
+                }
+            }
+
+            password.isBlank() -> {
+                _uiState.update {
+                    it.copy(
+                        passwordError = "رمز عبور را وارد کنید"
+                    )
+                }
+            }
+
+            else -> {
+                login(username, password)
+            }
+        }
+    }
+
+    private fun login(
+        username: String,
+        password: String
+    ) {
+
+        if (_uiState.value.isLoading) {
             return
         }
 
         viewModelScope.launch {
+
             _uiState.update {
                 it.copy(
                     isLoading = true,
-                    usernameErrorRes = null,
-                    passwordErrorRes = null,
-                    loginErrorRes = null
+                    loginError = null
                 )
             }
 
-            val result = authRepository.login(
-                username = current.username,
-                password = current.password
-            )
+            when (
+                val result = loginRepository.loginUser(
+                    username = username,
+                    password = password
+                )
+            ) {
 
-            result.fold(
-                onSuccess = { session ->
-                    _uiState.update { state -> state.copy(isLoading = false) }
-                    _effects.send(LoginEffect.NavigateToDashboard)
-                },
-                onFailure = { error ->
-                    val errorRes = if (error is InvalidCredentialsException) {
-                        R.string.error_invalid_login
-                    } else {
-                        R.string.error_invalid_login
-                    }
+                is NetworkResult.Loading -> Unit
+
+                is NetworkResult.Error -> {
+
                     _uiState.update {
-                        it.copy(isLoading = false, loginErrorRes = errorRes)
+                        it.copy(
+                            isLoading = false,
+                            loginError = result.message
+                        )
                     }
                 }
-            )
+
+                is NetworkResult.Success -> {
+
+                    handleLoginSuccess(result.data)
+                }
+            }
         }
     }
 
+    private suspend fun handleLoginSuccess(
+        response: LoginResponse
+    ) {
+
+        if (!response.success) {
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    loginError = response.message
+                        ?: "ورود ناموفق بود"
+                )
+            }
+
+            return
+        }
+
+        val user = response.user
+
+        if (user == null) {
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    loginError =
+                    "اطلاعات کاربر از سرور دریافت نشد"
+                )
+            }
+
+            return
+        }
+
+        val token = response.token
+
+        if (token.isNullOrBlank()) {
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    loginError =
+                    "توکن ورود از سرور دریافت نشد"
+                )
+            }
+
+            return
+        }
+
+        mainPreferences.saveFullSession(
+            token = token,
+            user = user,
+            center = response.center
+        )
+
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                loginError = null
+            )
+        }
+
+        _effects.emit(
+            LoginEffect.NavigateToMain
+        )
+    }
+
+    // =========================================================
+    // Server
+    // =========================================================
 
     fun onOpenServerDialog() {
+
         viewModelScope.launch {
-            val savedBaseUrl = mainPreferences.baseUrlFlow.firstOrNull().orEmpty()
-            val displayAddress = extractHostAndPort(savedBaseUrl)
+
+            val baseUrl =
+                mainPreferences.baseUrlFlow.first().orEmpty()
+
             _uiState.update {
                 it.copy(
                     isServerDialogVisible = true,
-                    currentServerAddress = displayAddress,
+                    currentServerAddress =
+                    ServerAddressValidator.extractHostAndPort(
+                        baseUrl
+                    ),
                     serverAddressError = null
                 )
             }
@@ -129,51 +265,99 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onDismissServerDialog() {
-        _uiState.update { it.copy(isServerDialogVisible = false, serverAddressError = null) }
+
+        if (_uiState.value.isTestingServer) {
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isServerDialogVisible = false,
+                serverAddressError = null
+            )
+        }
     }
 
-    fun onSaveServerAddress(inputAddress: String) {
-        val cleanAddress = convertNumbersToEnglish(fixPersianChars(inputAddress)).trim()
+    fun onSaveServerAddress(address: String) {
 
-        if (cleanAddress.isEmpty()) {
-            _uiState.update { it.copy(serverAddressError = R.string.error_enter_address_server) }
+        val normalizedAddress = address
+            .trim()
+            .toEnglishDigits()
+            .fixPersianChars()
+
+        if (normalizedAddress.isBlank()) {
+
+            _uiState.update {
+                it.copy(
+                    serverAddressError =
+                    "آدرس سرور را وارد کنید"
+                )
+            }
+
+            return
+        }
+
+        val baseUrl =
+            ServerAddressValidator.normalize(
+                normalizedAddress
+            )
+
+        if (baseUrl == null) {
+
+            _uiState.update {
+                it.copy(
+                    serverAddressError =
+                    "آدرس سرور نامعتبر است"
+                )
+            }
+
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isTestingServer = true, serverAddressError = null) }
-
-            val validBaseUrl = BaseUrlValidator.buildBaseUrl(cleanAddress)
-            if (validBaseUrl == null) {
-                _uiState.update {
-                    it.copy(
-                        isTestingServer = false,
-                        serverAddressError = R.string.error_unable_connect_server
-                    )
-                }
-                return@launch
-            }
-
-            // ذخیره و به‌روزرسانی زنده در Retrofit/BaseUrlProvider
-            mainPreferences.saveBaseUrl(validBaseUrl)
-            baseUrlProvider.updateBaseUrl(validBaseUrl)
 
             _uiState.update {
                 it.copy(
-                    isTestingServer = false,
-                    isServerDialogVisible = false,
+                    isTestingServer = true,
                     serverAddressError = null
                 )
             }
-        }
-    }
 
-    private fun extractHostAndPort(fullUrl: String): String {
-        return try {
-            val uri = fullUrl.toHttpUrl()
-            if (uri.port == 80 || uri.port == 443) uri.host else "${uri.host}:${uri.port}"
-        } catch (e: Exception) {
-            ""
+            try {
+
+                // ذخیره دائمی
+                mainPreferences.saveBaseUrl(baseUrl)
+
+                // اعمال فوری روی Retrofit/OkHttp
+                baseUrlProvider.updateBaseUrl(baseUrl)
+
+                _uiState.update {
+                    it.copy(
+                        isTestingServer = false,
+                        isServerDialogVisible = false,
+                        currentServerAddress =
+                        ServerAddressValidator
+                            .extractHostAndPort(baseUrl),
+                        serverAddressError = null
+                    )
+                }
+
+            } catch (e: Exception) {
+
+                _uiState.update {
+                    it.copy(
+                        isTestingServer = false,
+                        serverAddressError =
+                        e.message
+                            ?: "ذخیره آدرس سرور انجام نشد"
+                    )
+                }
+            }
         }
     }
+}
+
+sealed interface LoginEffect {
+
+    data object NavigateToMain : LoginEffect
 }

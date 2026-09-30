@@ -4,31 +4,41 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class OrganizationPersonDto(
-    val organizationPersonId: String,
 
-    val name: String? = null,
+    val orgPersonId: String,
 
-    val description: String? = null,
+    val organizationId: String,
 
-    val isCommissionEligible: Boolean? = null,
+    val mainPersonId: String?,
 
-    val organizationId: String? = null,
+    val fullName: String?,
 
-    val personId: String? = null,
+    val role: Int?,
 
-    val role: Int? = null,
+    val roleName: String?,
 
-    val beforeDate: String? = null,
+    val mobile: String?,
 
-    val beforeRemain: String? = null,
+    val phone: String?,
 
-    val remainBalance: String? = null,
+    val gender: Int?,
 
-    val appPassword: String? = null,
+    val genderName: String?,
 
-    val updateRemainPriceWallet: Boolean? = null,
+    val description: String?,
 
-    val finalDate: String? = null,
+    val isCommissionEligible: Boolean?,
 
-    val statusRelation: Int? = null
+    val statusRelation: Int?,
+
+    val statusRelationName: String?,
+
+    val remainBalance: Double?,
+
+    val beforeRemain: Double?,
+
+    val beforeDate: String?,
+
+    val stateCode: Int?
+
 )

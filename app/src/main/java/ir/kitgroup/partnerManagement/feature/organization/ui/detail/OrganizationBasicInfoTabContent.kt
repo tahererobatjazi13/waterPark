@@ -56,11 +56,13 @@ import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Storefront
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
-import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionCard
+import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 
 @Composable
-fun OrganizationBasicInfoTabContent(organization: OrganizationEntity) {
+fun OrganizationBasicInfoTabContent(
+    organization: OrganizationWithDetail
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -72,26 +74,24 @@ fun OrganizationBasicInfoTabContent(organization: OrganizationEntity) {
         BasicInfoSection(organization)
 
         SectionTitle(stringResource(R.string.label_contact_information))
-        ContactInfoSection()
+        ContactInfoSection(organization)
 
         SectionTitle(stringResource(R.string.label_location))
         AddressMapCard(
-            city = organization.cityId!!,
-            region = organization.regionId!!,
-            address = organization.address!!
+            organization
         )
 
         SectionTitle(stringResource(R.string.label_analytical_information))
-        AnalysisInfoSection(grade = organization.grade!!)
+        AnalysisInfoSection(organization)
 
         SectionTitle(stringResource(R.string.label_statuses))
-        StatusInfoSection()
+        StatusInfoSection(organization)
 
-        SectionTitle(stringResource(R.string.label_description))
+        /*SectionTitle(stringResource(R.string.label_description))
         CustomDescriptionCard(description = "این سازمان از مشتریان فعال است...")
 
         SectionTitle(stringResource(R.string.label_images))
-        ImagesSection(images = listOf(R.drawable.ic_logo))
+        ImagesSection(images = listOf(R.drawable.ic_logo))*/
 
         Spacer(Modifier.height(16.dp))
     }
@@ -99,7 +99,7 @@ fun OrganizationBasicInfoTabContent(organization: OrganizationEntity) {
 
 @Composable
 private fun BasicInfoSection(
-    organization: OrganizationEntity
+    item: OrganizationWithDetail
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
@@ -116,7 +116,7 @@ private fun BasicInfoSection(
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
                 InfoRowItem(
                     title = stringResource(R.string.label_organization_name),
-                    value = organization.name!!,
+                    value = item.organization.name.orEmpty(),
                     icon = Icons.Filled.Business,
                     isHighlighted = true
                 )
@@ -128,7 +128,7 @@ private fun BasicInfoSection(
 
                 InfoRowItem(
                     title = stringResource(R.string.label_organization_type),
-                    value = "هتل",
+                    value = item.organization.organizationTypeName.orEmpty(),
                     icon = Icons.Filled.Category
                 )
                 HorizontalDivider(
@@ -139,7 +139,7 @@ private fun BasicInfoSection(
 
                 InfoRowItem(
                     title = stringResource(R.string.label_organization_level),
-                    value = "معمولی",
+                    value = item.organization.levelName.orEmpty(),
                     icon = Icons.Filled.WorkspacePremium
                 )
                 HorizontalDivider(
@@ -150,7 +150,7 @@ private fun BasicInfoSection(
 
                 InfoRowItem(
                     title = stringResource(R.string.label_owner_name),
-                    value = "حسینی",
+                    value = item.organization.ownerName.orEmpty(),
                     icon = Icons.Filled.ManageAccounts
                 )
                 HorizontalDivider(
@@ -161,7 +161,7 @@ private fun BasicInfoSection(
 
                 InfoRowItem(
                     title = stringResource(R.string.label_english_name),
-                    value = "parsian",
+                    value = item.organization.englishName.orEmpty(),
                     icon = Icons.Filled.Language
                 )
                 HorizontalDivider(
@@ -172,7 +172,7 @@ private fun BasicInfoSection(
 
                 InfoRowItem(
                     title = stringResource(R.string.label_national_id),
-                    value = "125",
+                    value = item.organization.nationalId.orEmpty(),
                     icon = Icons.Filled.Badge
                 )
                 HorizontalDivider(
@@ -196,7 +196,7 @@ private fun BasicInfoSection(
                     )
 
                     StatusBadge(
-                        status = OrganizationStatus.fromId(organization.status)
+                        status = OrganizationStatus.fromId(item.organization.status)
                     )
                 }
             }
@@ -205,7 +205,9 @@ private fun BasicInfoSection(
 }
 
 @Composable
-private fun ContactInfoSection() {
+private fun ContactInfoSection(
+    item: OrganizationWithDetail
+) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         val colors = MaterialTheme.colorScheme
 
@@ -218,7 +220,7 @@ private fun ContactInfoSection() {
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
                 InfoRowItem(
                     title = stringResource(R.string.label_organization_land_line),
-                    value = "025685",
+                    value = item.organization.landLine.orEmpty(),
                     icon = Icons.Filled.Phone
                 )
                 HorizontalDivider(
@@ -229,7 +231,7 @@ private fun ContactInfoSection() {
 
                 InfoRowItem(
                     title = stringResource(R.string.label_phone),
-                    value = "0512336888",
+                    value = item.organization.phone.orEmpty(),
                     icon = Icons.Filled.Phone
                 )
                 HorizontalDivider(
@@ -240,7 +242,7 @@ private fun ContactInfoSection() {
 
                 InfoRowItem(
                     title = stringResource(R.string.label_mobile),
-                    value = "09129876543",
+                    value = item.organization.mobile.orEmpty(),
                     icon = Icons.Filled.Smartphone
                 )
                 HorizontalDivider(
@@ -251,7 +253,7 @@ private fun ContactInfoSection() {
 
                 InfoRowItem(
                     title = stringResource(R.string.label_email),
-                    value = "info@parsian.com",
+                    value = item.organization.email.orEmpty(),
                     icon = Icons.Filled.Email
                 )
             }
@@ -304,9 +306,7 @@ private fun InfoRowItem(
 
 @Composable
 private fun AddressMapCard(
-    city: String = "",
-    region: String = "",
-    address: String = ""
+    item: OrganizationWithDetail
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -347,7 +347,7 @@ private fun AddressMapCard(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 // نمایش شهر و منطقه در صورت وجود
-                val locationScope = listOf(city.trim(), region.trim())
+                val locationScope = listOf(item.cityName.trim(), item.regionName.trim())
                     .filter { it.isNotBlank() }
                     .joinToString("، ")
 
@@ -382,7 +382,7 @@ private fun AddressMapCard(
                     )
 
                     Text(
-                        text = address.ifBlank { "-" },
+                        text = item.organization.address?.ifBlank { "-" } ?: "-",
                         style = typography.bodyMedium,
                         color = colors.onSurface
                     )
@@ -394,9 +394,7 @@ private fun AddressMapCard(
 
 @Composable
 private fun AnalysisInfoSection(
-    grade: Int,
-    ticketSaleCount: String = "1250",
-    customerCapacity: String = "350 نفر",
+    item: OrganizationWithDetail,
     modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
@@ -407,7 +405,7 @@ private fun AnalysisInfoSection(
     ) {
         // ── بخش درجه‌بندی ──
         GradeSelector(
-            grade = grade
+            grade = item.organization.grade ?: 0
         )
 
         // ── کارت یکپارچه اطلاعات آماری/تحلیلی ──
@@ -427,7 +425,7 @@ private fun AnalysisInfoSection(
                 // سابقه تعداد فروش بلیت
                 InfoRowItem(
                     title = stringResource(R.string.label_ticket_sale_count_history),
-                    value = ticketSaleCount,
+                    value = item.organization.ticketSaleCountHistory.toString(),
                     icon = Icons.Outlined.ConfirmationNumber,
                     isHighlighted = false
                 )
@@ -441,7 +439,7 @@ private fun AnalysisInfoSection(
                 // ظرفیت مشتریان
                 InfoRowItem(
                     title = stringResource(R.string.label_customer_capacity),
-                    value = customerCapacity,
+                    value = item.organization.customerCapacity.toString(),
                     icon = Icons.Outlined.Groups,
                     isHighlighted = false
                 )
@@ -452,8 +450,7 @@ private fun AnalysisInfoSection(
 
 @Composable
 private fun StatusInfoSection(
-    hasForeignGuests: Boolean = false,
-    wantsAdvertisingStands: Boolean = false,
+    item: OrganizationWithDetail,
     modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
@@ -474,13 +471,13 @@ private fun StatusInfoSection(
             // ── پذیرش مهمان خارجی ──
             InfoRowItem(
                 title = stringResource(R.string.label_foreign_guest_reception),
-                value = if (hasForeignGuests) {
+                value = if (item.organization.statusExternalCustomer == true) {
                     stringResource(R.string.label_has)
                 } else {
                     stringResource(R.string.label_has_not)
                 },
                 icon = Icons.Outlined.Public,
-                isHighlighted = hasForeignGuests
+                isHighlighted = false
             )
 
             HorizontalDivider(
@@ -492,13 +489,13 @@ private fun StatusInfoSection(
             // ── تمایل به دریافت استند تبلیغاتی ──
             InfoRowItem(
                 title = stringResource(R.string.label_desire_receive_advertising_stands),
-                value = if (wantsAdvertisingStands) {
+                value = if (item.organization.statusGetStand == true) {
                     stringResource(R.string.label_has)
                 } else {
                     stringResource(R.string.label_has_not)
                 },
                 icon = Icons.Outlined.Storefront,
-                isHighlighted = wantsAdvertisingStands
+                isHighlighted = false
             )
         }
     }

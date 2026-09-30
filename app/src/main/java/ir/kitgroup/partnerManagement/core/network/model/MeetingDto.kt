@@ -7,29 +7,42 @@ data class MeetingDto(
 
     val meetingId: String,
 
-    val name: String? = null,
+    val organizationId: String,
 
-    val description: String? = null,
+    val organizationName: String,
 
-    val organizationId: String? = null,
+    val visitorId: String,
 
-    val status: Int? = null,
+    val visitorName: String?,
 
-    val type: Int? = null,
+    val subjectVisitId: String?,
 
-    val visitDate: String? = null,
+    val subjectVisitName: String?,
 
-    val visitorId: String? = null,
+    val organizationPersonId: String?,
 
-    val visitRealDate: String? = null,
+    val organizationPersonName: String?,
 
-    val subjectVisitId: String? = null,
+    val description: String?,
 
-    val visitTime: String? = null,
+    val visitDate: String?,
 
-    val personId: String? = null,
+    val visitRealDate: String?,
 
-    val longitude: Double? = null,
+    val visitTime: String?,
 
-    val latitude: Double? = null
+    val status: Int?,
+
+    val statusName: String?,
+
+    val type: Int?,
+
+    val typeName: String?,
+
+    val longitude: String?,
+
+    val latitude: String?,
+
+    val stateCode: Int?
+
 )

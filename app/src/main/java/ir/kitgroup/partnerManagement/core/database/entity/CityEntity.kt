@@ -9,5 +9,8 @@ data class CityEntity(
     @PrimaryKey
     val cityId: String,
 
-    val name: String? = null
-)
+    val name: String? = null,
+
+    val stateCode: Int? = null,
+
+    )

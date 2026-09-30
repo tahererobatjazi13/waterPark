@@ -7,25 +7,34 @@ data class ContractDto(
 
     val contractId: String,
 
-    val name: String? = null,
+    val title: String?,
 
-    val contractNumber: String? = null,
+    val organizationId: String?,
 
-    val cooperationModel: Int? = null,
+    val contractNumber: String?,
 
-    val defaultCommissionPercent: Double? = null,
+    val startDate: String?,
 
-    val defaultDiscountPercent: Double? = null,
+    val endDate: String?,
 
-    val description: String? = null,
+    val description: String?,
 
-    val endDate: String? = null,
+    val settlementPeriodType: Int?,
 
-    val organizationId: String? = null,
+    val settlementPeriodTypeName: String?,
 
-    val settlementPeriodType: Int? = null,
+    val cooperationModel: Int?,
 
-    val startDate: String? = null,
+    val cooperationModelName: String?,
 
-    val contractStatus: Int? = null
+    val defaultDiscountPercent: Double?,
+
+    val defaultCommissionPercent: Double?,
+
+    val status: Int?,
+
+    val statusName: String?,
+
+    val stateCode: Int?
+
 )

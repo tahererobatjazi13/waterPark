@@ -1,43 +1,38 @@
 package ir.kitgroup.partnerManagement.feature.offer.navigation
 
-import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import ir.kitgroup.partnerManagement.core.ui.util.demoOfferTicketPlans
-import ir.kitgroup.partnerManagement.core.ui.util.demoOfferTicketPlanLines
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferTicketPlanLineDetailScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferTicketPlanScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanLineDetailScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanLineListScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.OfferTicketPlanListScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferDetailScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail.OfferDetailScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.OfferDetailsListScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.OfferListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 
 fun NavGraphBuilder.offerNavGraph(navController: NavController) {
 
-    //  لیست کلی طرح‌ها
-    composable(BottomNavItem.PlanOffer.route) {
-
-        OfferTicketPlanListScreen(
+    //  لیست کلی آفرها
+    composable(BottomNavItem.Offers.route) {
+        OfferListScreen(
             onAddClick = {
-                navController.navigate(Screen.AddOfferTicketPlan.route)
+                navController.navigate(Screen.AddOffer.route)
             },
-            onOfferTicketPlanClick = { offerTicketPlan ->
+            onOfferClick = { offer ->
                 navController.navigate(
-                    Screen.OfferTicketPlanLineList.createRoute(offerTicketPlan.offerTicketPlanId)
+                    Screen.OfferDetailList.createRoute(offer.offerId)
                 )
-            },
-            offerTicketPlans = demoOfferTicketPlans()
+            }
         )
     }
 
     // افزودن  طرح جدید
-    composable(Screen.AddOfferTicketPlan.route) {
-        AddOfferTicketPlanScreen(
+    composable(Screen.AddOffer.route) {
+        AddOfferScreen(
             onBackClick = { navController.popBackStack() },
             onSaveClick = {
             }
@@ -46,37 +41,30 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
 
     // لیست جزییات و لاین‌های طرح انتخاب‌شده
     composable(
-        route = Screen.OfferTicketPlanLineList.route,
+        route = Screen.OfferDetailList.route,
         arguments = listOf(
-            navArgument("offerTicketPlanId") { type = NavType.StringType }
+            navArgument("offerId") { type = NavType.StringType }
         )
-    ) { backStackEntry ->
-        val offerTicketPlanId = backStackEntry.arguments?.getString("offerTicketPlanId").orEmpty()
-        val selectedOfferTicketPlan = demoOfferTicketPlans().firstOrNull { it.offerTicketPlanId == offerTicketPlanId }
-        val offerTicketPlanLines = demoOfferTicketPlanLines()
-
-        OfferTicketPlanLineListScreen(
-            headerOfferTicketPlan = selectedOfferTicketPlan,
-            offerTicketPlanLines = offerTicketPlanLines,
+    ) {
+        OfferDetailsListScreen(
             onBackClick = { navController.popBackStack() },
-            onAddClick = {
+            onAddClick = { planTitle ->
                 navController.navigate(
-                    Screen.AddOfferTicketPlanLineDetail.createRoute(
-                        selectedOfferTicketPlan?.name ?: ""
-                    )
+                    Screen.AddOfferDetail.createRoute(planTitle)
                 )
             },
-            onOfferTicketPlanLineClick = { planLine ->
+            onOfferTicketPlanLineClick = { item  ->
                 navController.navigate(
-                    Screen.OfferTicketPlanLineDetail.createRoute(planLine.offerTicketPlanLineId)
+                         Screen.OfferDetail.createRoute(item.offerDetail.offerDetailId)
                 )
             }
         )
     }
 
-    // ثبت جزییات طرح جدید با دریافت نام طرح
+
+// ثبت جزییات طرح جدید با دریافت نام طرح
     composable(
-        route = Screen.AddOfferTicketPlanLineDetail.route,
+        route = Screen.AddOfferDetail.route,
         arguments = listOf(
             navArgument("offerTicketPlanLineName") {
                 type = NavType.StringType
@@ -84,34 +72,29 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
             }
         )
     ) { backStackEntry ->
-        val offerTicketPlanLineName = backStackEntry.arguments?.getString("offerTicketPlanLineName").orEmpty()
-        AddOfferTicketPlanLineDetailScreen(
-            initialPlanHeader = offerTicketPlanLineName,
+        val rawName = backStackEntry.arguments?.getString("offerTicketPlanLineName").orEmpty()
+        val decodedPlanName = runCatching {
+            java.net.URLDecoder.decode(rawName, "UTF-8").trim()
+        }.getOrDefault(rawName)
+
+        AddOfferDetailScreen(
+            initialPlanHeader = decodedPlanName,
             onBackClick = { navController.popBackStack() },
             onSaveClick = { navController.popBackStack() }
         )
     }
 
-    // صفحه جزئیات طرح
-    composable(
-        route = Screen.OfferTicketPlanLineDetail.route,
-        arguments = listOf(
-            navArgument("offerTicketPlanLineId") { type = NavType.StringType }
-        )
-    ) { backStackEntry ->
-        val offerTicketPlanLineId = backStackEntry.arguments?.getString("offerTicketPlanLineId").orEmpty()
-        val planLine = demoOfferTicketPlanLines().firstOrNull { it.offerTicketPlanLineId == offerTicketPlanLineId }
 
-        if (planLine != null) {
-            OfferTicketPlanLineDetailScreen(
-                plan = planLine,
-                onBackClick = { navController.popBackStack() }
-            )
-        } else {
-            LaunchedEffect(Unit) {
-                navController.popBackStack()
-            }
-        }
+    // صفحه جزئیات کالا/خدمت لاین طرح
+    composable(
+        route = Screen.OfferDetail.route,
+        arguments = listOf(
+            navArgument("offerDetailId") { type = NavType.StringType }
+        )
+    ) {
+        OfferDetailScreen(
+            onBackClick = { navController.popBackStack() }
+        )
     }
 
 }

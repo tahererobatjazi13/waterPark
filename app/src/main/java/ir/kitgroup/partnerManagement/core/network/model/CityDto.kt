@@ -7,6 +7,9 @@ data class CityDto(
 
     val cityId: String,
 
-    val name: String? = null
-)
+    val name: String?,
+
+    val stateCode: Int?,
+
+    )
 

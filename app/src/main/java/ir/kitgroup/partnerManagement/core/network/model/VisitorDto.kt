@@ -10,29 +10,12 @@ data class VisitorDto(
 
     val code: String? = null,
 
-    val description: String? = null,
-
     val mobile: String? = null,
-
-    val recreationCenterId: String? = null,
 
     val workType: Int? = null,
 
-    val systemUserId: String? = null,
+    val workTypeName: String? = null,
 
-    val appPassword: String? = null,
+    val stateCode: Int?
 
-    val recreationCenterPartId: String? = null,
-
-    val countActiveOrg: Int? = null,
-
-    val deviceModel: String? = null,
-
-    val androidVersion: String? = null,
-
-    val appVersion: String? = null,
-
-    val imei: String? = null,
-
-    val lastSyncDate: String? = null
 )

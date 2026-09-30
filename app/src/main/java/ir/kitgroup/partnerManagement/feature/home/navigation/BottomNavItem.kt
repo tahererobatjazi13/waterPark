@@ -28,8 +28,8 @@ sealed class BottomNavItem(
         icon = R.drawable.ic_meeting
     )
 
-    data object PlanOffer : BottomNavItem(
-        route = "planOffer",
+    data object Offers : BottomNavItem(
+        route = "Offers",
         title = R.string.nav_plan_offer,
         icon = R.drawable.ic_plan_offer
     )

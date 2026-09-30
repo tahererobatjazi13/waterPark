@@ -22,11 +22,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -67,26 +67,31 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
-
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
-import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
+import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
-import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
+import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
-import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
-import ir.kitgroup.partnerManagement.core.ui.util.demoMeetings
+import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun MeetingsListScreen(
     onMeetingClick: (String) -> Unit,
     onAddMeetingClick: () -> Unit,
     onEditMeetingClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: MeetingsViewModel = hiltViewModel()
 ) {
+
+    val allMeetings by viewModel.allMeetings.collectAsState()
+
     val appColors = LocalPartnerManagementColors.current
     val allVisitorsLabel = stringResource(R.string.label_all_visitors)
     val pickDateLabel = stringResource(R.string.label_pick_date)
@@ -96,7 +101,7 @@ fun MeetingsListScreen(
     var selectedStartDate by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedStatus by rememberSaveable { mutableStateOf<Int?>(null) } // <-- استیت وضعیت
     var showDatePicker by remember { mutableStateOf(false) }
-    var visitPendingDelete by remember { mutableStateOf<MeetingEntity?>(null) }
+    var visitPendingDelete by remember { mutableStateOf<MeetingWithDetail?>(null) }
 
     val today = remember { PersianDate() }
     val todayDate = remember(today) {
@@ -105,10 +110,6 @@ fun MeetingsListScreen(
                 today.shDay.toString().padStart(2, '0')
             }"
         )
-    }
-
-    var items by remember {
-        mutableStateOf(demoMeetings)
     }
 
 
@@ -121,7 +122,7 @@ fun MeetingsListScreen(
 
     // اعمال فیلتر وضعیت در جستجو
     val filteredItems = remember(
-        items,
+        allMeetings,
         searchQuery,
         selectedVisitor,
         selectedStartDate,
@@ -129,21 +130,37 @@ fun MeetingsListScreen(
         todayDate,
         allVisitorsLabel
     ) {
-        items.filter { item ->
-            val matchesSearch = searchQuery.isBlank() ||
-                    (item.name?.contains(searchQuery, ignoreCase = true) == true) ||
-                    (item.visitDate?.contains(searchQuery, ignoreCase = true) == true)
+        allMeetings.filter { item ->
 
-            val matchesStatus = selectedStatus == null || item.status == selectedStatus
+            val matchesSearch =
+                searchQuery.isBlank() ||
+                        item.subjectVisitName?.contains(
+                            searchQuery,
+                            ignoreCase = true
+                        ) == true ||
+                        item.meeting.visitDate?.contains(
+                            searchQuery,
+                            ignoreCase = true
+                        ) == true
 
-            val matchesDateRange = selectedStartDate == null || run {
-                val itemVisitDate = item.visitDate ?: return@run false
-                val itemDate = normalizeDate(itemVisitDate)
-                val startDate = normalizeDate(selectedStartDate!!)
-                itemDate in startDate..todayDate
-            }
+            val matchesStatus =
+                selectedStatus == null ||
+                        item.meeting.status == selectedStatus
 
-            matchesSearch && matchesStatus && matchesDateRange
+            val matchesDateRange =
+                selectedStartDate == null || run {
+                    val itemVisitDate = item.meeting.visitDate
+                        ?: return@run false
+
+                    val itemDate = normalizeDate(itemVisitDate)
+                    val startDate = normalizeDate(selectedStartDate!!)
+
+                    itemDate in startDate..todayDate
+                }
+
+            matchesSearch &&
+                    matchesStatus &&
+                    matchesDateRange
         }
     }
 
@@ -222,27 +239,12 @@ fun MeetingsListScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     if (filteredItems.isEmpty()) {
-                        Box(
+                        EmptyState(
+                            textRes = R.string.msg_no_item_found,
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    imageVector = Icons.Default.SearchOff,
-                                    contentDescription = null,
-                                    tint = appColors.textSecondary,
-                                    modifier = Modifier.size(40.dp)
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = stringResource(R.string.msg_no_item_found),
-                                    style = typography.bodyMedium,
-                                    color = appColors.textSecondary
-                                )
-                            }
-                        }
+                                .fillMaxWidth()
+                        )
                     } else {
                         LazyColumn(
                             modifier = Modifier.weight(1f),
@@ -251,12 +253,12 @@ fun MeetingsListScreen(
                         ) {
                             items(
                                 items = filteredItems,
-                                key = { it.meetingId }
+                                key = { it.meeting.meetingId }
                             ) { item ->
                                 MeetingCard(
                                     item = item,
-                                    onClick = { onMeetingClick(item.meetingId) },
-                                    onEditClick = { onEditMeetingClick(item.meetingId) },
+                                    onClick = { onMeetingClick(item.meeting.meetingId) },
+                                    onEditClick = { onEditMeetingClick(item.meeting.meetingId) },
                                     onDeleteClick = { visitPendingDelete = item }
                                 )
                             }
@@ -287,9 +289,9 @@ fun MeetingsListScreen(
     visitPendingDelete?.let { visit ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_visit),
-            itemName = visit.name!!,
+            itemName = visit.subjectVisitName,
             onConfirm = {
-                items = items.filter { it.meetingId != visit.meetingId }
+                viewModel.deleteMeeting(visit.meeting.meetingId)
                 visitPendingDelete = null
             },
             onDismiss = {
@@ -346,7 +348,6 @@ private fun MeetingFiltersRow(
                 }
             }
 
-            // فیلتر وضعیت
             // فیلتر وضعیت
             item {
                 ExposedDropdownMenuBox(
@@ -481,7 +482,7 @@ private fun MeetingFiltersRow(
 
 @Composable
 fun MeetingCard(
-    item: MeetingEntity,
+    item: MeetingWithDetail,
     onClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
@@ -508,7 +509,7 @@ fun MeetingCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = item.name.orEmpty(),
+                        text = item.subjectVisitName,
                         style = typography.titleLarge,
                         color = appColors.textPrimary,
                         maxLines = 1,
@@ -518,15 +519,14 @@ fun MeetingCard(
 
                     Spacer(modifier = Modifier.width(6.dp))
 
-                    StatusBadge(status = MeetingStatus.fromId(item.status))
-
+                    StatusBadge(status = MeetingStatus.fromId(item.meeting.status))
 
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // چیپ نوع بازدید
-                val meetingType = MeetingType.fromValue(item.type)
+                val meetingType = MeetingType.fromValue(item.meeting.type)
 
                 MeetingTypeChip(
                     text = stringResource(id = meetingType.titleRes),
@@ -535,58 +535,65 @@ fun MeetingCard(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // نمایش visitorId (فعلاً)
+                DetailRow(
+                    icon = Icons.Default.Business,
+                    text = item.organizationName
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
                 DetailRow(
                     icon = Icons.Default.Person,
-                    text = item.visitorId ?: "-"
+                    text = item.visitorName
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
 
                 // نمایش تاریخ/زمان
                 val dateTimeText = buildString {
-                    append(item.visitDate ?: "-")
-                    item.visitTime?.let { t ->
+                    append(formatJalaliDate(item.meeting.visitDate ?: "-"))
+                    item.meeting.visitTime?.let { t ->
                         if (t.isNotBlank()) append("  |  $t")
                     }
                 }
 
-                DetailRow(
-                    icon = Icons.Default.DateRange,
-                    text = dateTimeText
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = appColors.border.copy(alpha = 0.4f)
                 )
 
-                // اگر مختصات دارید (اختیاری)
-                if (item.latitude != null && item.longitude != null) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    LocationRow(
-                        location = "${item.latitude}, ${item.longitude}"
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // اکشن‌ها
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ActionIconButton(
-                        icon = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.label_edit),
-                        onClick = onEditClick,
-                        tint = MaterialTheme.colorScheme.primary,
-                        backgroundColor = appColors.cardBackgroundAlt
+                    DetailRow(
+                        icon = Icons.Default.DateRange,
+                        text = dateTimeText
                     )
 
-                    ActionIconButton(
-                        icon = Icons.Default.DeleteOutline,
-                        contentDescription = stringResource(R.string.label_delete),
-                        onClick = onDeleteClick,
-                        tint = MaterialTheme.colorScheme.error,
-                        backgroundColor = MaterialTheme.colorScheme.errorContainer
-                    )
+                    // اکشن‌ها
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ActionIconButton(
+                            icon = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.label_edit),
+                            onClick = onEditClick,
+                            tint = MaterialTheme.colorScheme.primary,
+                            backgroundColor = appColors.cardBackgroundAlt
+                        )
+
+                        ActionIconButton(
+                            icon = Icons.Default.DeleteOutline,
+                            contentDescription = stringResource(R.string.label_delete),
+                            onClick = onDeleteClick,
+                            tint = MaterialTheme.colorScheme.error,
+                            backgroundColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    }
                 }
             }
         }

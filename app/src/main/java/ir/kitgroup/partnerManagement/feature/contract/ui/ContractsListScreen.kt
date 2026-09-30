@@ -12,10 +12,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
@@ -25,16 +28,17 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
 import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
-import ir.kitgroup.partnerManagement.core.ui.util.demoContracts
+import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun ContractsListScreen(
     onBackClick: () -> Unit,
     onAddClick: () -> Unit,
     onContractClick: (ContractEntity) -> Unit,
-    contracts: List<ContractEntity> = demoContracts()
+    viewModel: ContractsViewModel = hiltViewModel()
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val contracts by viewModel.contracts.collectAsState()
 
     Scaffold(
         topBar = {
@@ -96,7 +100,7 @@ fun ContractListItem(
         SettlementPeriodType.fromId(id)?.let { stringResource(it.titleRes) }
     } ?: "-"
 
-    val status = ContractStatus.fromId(contract.contractStatus)
+    val status = ContractStatus.fromId(contract.status)
 
     Card(
         modifier = Modifier
@@ -113,12 +117,13 @@ fun ContractListItem(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
 
+            // ردیف اول: عنوان قرارداد و وضعیت
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = contract.name ?: "-",
+                    text = contract.title ?: "-",
                     style = typography.titleLarge,
                     color = appColors.textPrimary,
                     modifier = Modifier.weight(1f)
@@ -136,59 +141,102 @@ fun ContractListItem(
 
             contract.contractNumber?.let { number ->
                 Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = number,
-                    style = typography.labelMedium,
-                    color = appColors.textSecondary
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+
+                    Text(
+                        text = stringResource(R.string.label_contract_number),
+                        style = typography.labelMedium,
+                        color = appColors.textTertiary
+                    )
+                    Text(
+                        text = number,
+                        style = typography.titleMedium,
+                        color = appColors.textPrimary
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(
                 thickness = 0.6.dp,
                 color = appColors.border
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
+            // مدل همکاری در یک ردیف جداگانه
+            ContractInfoRow(
+                label = stringResource(R.string.label_cooperation_model),
+                value = cooperationModelText
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // نوع دوره تسویه در یک ردیف جداگانه
+            ContractInfoRow(
+                label = stringResource(R.string.label_settlement_period_type),
+                value = settlementPeriodTypeText
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ردیف پایین: دوره اعتبار و تاریخ‌ها در سمت چپ
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ContractInfoItem(
-                    label = stringResource(R.string.label_cooperation_model),
-                    value = cooperationModelText,
-                    modifier = Modifier.weight(1f)
+                Text(
+                    text = stringResource(R.string.label_validity_period),
+                    style = typography.labelMedium,
+                    color = appColors.textSecondary
                 )
 
-                ContractInfoItem(
-                    label = stringResource(R.string.label_settlement_period_type),
-                    value = settlementPeriodTypeText,
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = formatJalaliDate(contract.startDate),
+                        style = typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "تا",
+                        style = typography.labelLarge,
+                        color = appColors.textTertiary
+                    )
+                    Text(
+                        text = formatJalaliDate(contract.endDate),
+                        style = typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ContractInfoItem(
+private fun ContractInfoRow(
     label: String,
     value: String,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
 
-    Column(
-        modifier = modifier
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
-            style = typography.labelSmall,
+            style = typography.labelMedium,
             color = appColors.textSecondary
         )
-
-        Spacer(modifier = Modifier.height(3.dp))
-
         Text(
             text = value,
             style = typography.bodyMedium,
@@ -196,6 +244,7 @@ private fun ContractInfoItem(
         )
     }
 }
+
 
 @Composable
 private fun ContractsHeader(

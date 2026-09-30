@@ -3,8 +3,6 @@ package ir.kitgroup.partnerManagement.feature.profile.ui
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +15,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -52,23 +53,16 @@ import ir.kitgroup.partnerManagement.core.ui.theme.RedContent
 @Composable
 fun ProfileScreen(
     onSettingsClick: () -> Unit,
+    onCenterClick: () -> Unit,
     onLogoutSuccess: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SessionViewModel = hiltViewModel()
 ) {
-    val username by viewModel.userName.collectAsState()
-    val role by viewModel.userRole.collectAsState()
-
-    val roleTitle = remember(role) {
-        when (role) {
-            "0" -> "بازاریاب"
-            "1" -> "سرپرست"
-            "2" -> "پذیرش"
-            "3" -> "مالی"
-            "4" -> "سایر"
-            else -> "مدیر سیستم"
-        }
-    }
+    val fullName by viewModel.fullName.collectAsState()
+    val userName by viewModel.userName.collectAsState()
+    val userMobile by viewModel.userMobile.collectAsState()
+    val roleName by viewModel.roleName.collectAsState()
+    val centerName by viewModel.centerName.collectAsState()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     val appColors = LocalPartnerManagementColors.current
@@ -88,16 +82,21 @@ fun ProfileScreen(
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             color = appColors.screenBackground
         ) {
-            // اعمال verticalScroll و مقداری padding در انتهای محتوا
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
+                CenterSummaryCard(
+                    centerName = centerName?.ifBlank { "—" } ?: "—",
+                    onClick = onCenterClick
+                )
                 UserInfoCard(
-                    fullName = username ?: "علی رضایی",
-                    roleTitle = roleTitle
+                    fullName = fullName?.ifBlank { "—" } ?: "—",
+                    personalCode = userName?.ifBlank { "—" } ?: "—",
+                    mobile = userMobile?.ifBlank { "—" } ?: "—",
+                    roleName = roleName?.ifBlank { "—" } ?: "—"
                 )
 
                 CardMenuItem(
@@ -139,13 +138,86 @@ fun ProfileScreen(
         }
     )
 }
+@Composable
+private fun CenterSummaryCard(
+    centerName: String,
+    onClick: () -> Unit
+) {
+    val appColors = LocalPartnerManagementColors.current
 
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = appColors.cardBackground
+        ),
+        border = BorderStroke(
+            width = 0.8.dp,
+            color = appColors.border.copy(alpha = 0.8f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .background(
+                        color = appColors.iconBlueContainer,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Business,
+                    contentDescription = null,
+                    tint = appColors.info,
+                    modifier = Modifier.size(25.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "مرکز / مجموعه",
+                    style = typography.labelMedium,
+                    color = appColors.textSecondary
+                )
+
+                Spacer(modifier = Modifier.size(4.dp))
+
+                Text(
+                    text = centerName,
+                    style = typography.titleMedium,
+                    color = appColors.textPrimary
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Default.ChevronLeft,
+                contentDescription = "مشاهده اطلاعات مرکز",
+                tint = appColors.textSecondary
+            )
+        }
+    }
+}
 
 
 @Composable
 private fun UserInfoCard(
     fullName: String,
-    roleTitle: String
+    personalCode: String,
+    mobile: String,
+    roleName: String
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -175,7 +247,7 @@ private fun UserInfoCard(
 
             UserInfoRow(
                 label = stringResource(R.string.label_personal_code),
-                value = "4567",
+                value = personalCode,
                 icon = R.drawable.ic_badge,
                 iconColor = appColors.iconOrangeContainer,
                 tint = appColors.warning
@@ -184,7 +256,7 @@ private fun UserInfoCard(
 
             UserInfoRow(
                 label = stringResource(R.string.label_mobile),
-                value = "09151234567",
+                value = mobile,
                 icon = R.drawable.ic_call,
                 iconColor = appColors.iconGreenContainer,
                 tint = appColors.success
@@ -193,7 +265,7 @@ private fun UserInfoCard(
 
             UserInfoRow(
                 label = stringResource(R.string.label_user_role),
-                value = roleTitle,
+                value = roleName,
                 icon = R.drawable.ic_user_role,
                 iconColor = appColors.iconPurpleContainer,
                 tint = appColors.purple
@@ -274,6 +346,7 @@ private fun ProfileScreenPreview() {
     AppScreenPreview {
         ProfileScreen(
             onSettingsClick = {},
+            onCenterClick = {},
             onLogoutSuccess = {}
         )
     }

@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -42,8 +41,8 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.graphics.vector.ImageVector
 import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
 import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
+import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.VisitorOrganizationStatus
 
 
@@ -93,27 +92,13 @@ fun OrganizationVisitorTabContent(
             }
         }
         if (visitors.isEmpty()) {
-            Box(
+            EmptyState(
+                textRes = R.string.msg_no_visitor_found,
                 modifier = Modifier
+                    .weight(1f)
                     .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Filled.WorkspacePremium,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.msg_no_visitor_found),
-                        style = typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            )
+
         } else {
             LazyColumn(
                 modifier = Modifier

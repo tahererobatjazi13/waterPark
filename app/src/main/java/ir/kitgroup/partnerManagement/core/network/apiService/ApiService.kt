@@ -1,15 +1,31 @@
 package ir.kitgroup.partnerManagement.core.network.apiService
 
-import ir.kitgroup.partnerManagement.feature.dashboard.model.BaseDataSyncResponse
-import retrofit2.http.GET
+
+import ir.kitgroup.partnerManagement.feature.dashboard.model.ConfirmLastSyncResponse
+import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataRequest
+import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataResponse
+import ir.kitgroup.partnerManagement.feature.login.model.LoginRequest
+import ir.kitgroup.partnerManagement.feature.login.model.LoginResponse
+import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.POST
 import retrofit2.http.Query
 
-
-
 interface ApiService {
-    @GET("sync/base-data")
-    suspend fun getBaseData(
-        @Query("lastSyncTime") lastSyncTimestamp: Long? = null
-    ): BaseDataSyncResponse
+
+    @POST("api/Auth/Login")
+    suspend fun login(
+        @Body request: LoginRequest
+    ): Response<LoginResponse>
+
+    @POST("api/Sync/syncData")
+    suspend fun syncData(
+        @Body request: SyncDataRequest
+    ): SyncDataResponse
+
+    @POST("api/Sync/confirmLastSync")
+    suspend fun confirmLastSync(
+        @Query("userId") userId: String
+    ): ConfirmLastSyncResponse
 
 }

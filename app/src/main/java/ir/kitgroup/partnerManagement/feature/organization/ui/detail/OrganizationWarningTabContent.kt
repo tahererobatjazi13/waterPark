@@ -37,18 +37,19 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.ui.text.style.TextOverflow
-import ir.kitgroup.partnerManagement.core.database.entity.OrganizationWarningEntity
+import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
+import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
-import ir.kitgroup.partnerManagement.core.ui.util.demoOrganizationWarnings
+import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun OrganizationWarningTabContent(
-    warnings: List<OrganizationWarningEntity>,
+    warnings: List<WarningWithDetail>,
     isSupervisor: Boolean,
     onAddWarningClick: () -> Unit,
-    onDeleteWarningClick: (OrganizationWarningEntity) -> Unit,
+    onDeleteWarningClick: (WarningWithDetail) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -74,30 +75,14 @@ fun OrganizationWarningTabContent(
         )
 
         if (warnings.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.RateReview,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(40.dp)
-                    )
+            EmptyState(
+                textRes = R.string.label_no_warning_added,
+                icon = Icons.Filled.RateReview,
 
-                    Text(
-                        text = stringResource(R.string.label_no_warning_added),
-                        style = typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
         } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -105,13 +90,13 @@ fun OrganizationWarningTabContent(
             ) {
                 itemsIndexed(
                     items = warnings,
-                    key = { _, item -> item.organizationWarningId }
-                ) { index, warning ->
+                    key = { _, item -> item.warning.warningId }
+                ) { index, item ->
                     OrganizationWarningCard(
                         index = index,
-                        warning = warning,
+                        warning = item,
                         isSupervisor = isSupervisor,
-                        onDeleteClick = { onDeleteWarningClick(warning) }
+                        onDeleteClick = { onDeleteWarningClick(item) }
                     )
                 }
             }
@@ -122,7 +107,7 @@ fun OrganizationWarningTabContent(
 @Composable
 private fun OrganizationWarningCard(
     index: Int,
-    warning: OrganizationWarningEntity,
+    warning: WarningWithDetail,
     isSupervisor: Boolean,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -162,7 +147,7 @@ private fun OrganizationWarningCard(
                         )
                     }
                     Text(
-                        text = "تذکر ${index + 1}: ${warning.name}",
+                        text = "${index + 1}_ ${warning.warningTypeName}",
                         style = typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
@@ -174,7 +159,7 @@ private fun OrganizationWarningCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    WarningScoreChip(score = warning.score!!)
+                    WarningScoreChip(score = warning.warning.score ?: 0)
                     if (isSupervisor) {
                         ActionIconButton(
                             icon = Icons.Default.DeleteOutline,
@@ -189,25 +174,26 @@ private fun OrganizationWarningCard(
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-            // توضیحات تذکر
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = "توضیحات:",
-                    style = typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = warning.description!!.ifBlank { "-" },
-                    style = typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
+            warning.warning.description?.takeIf { it.isNotBlank() }?.let { description ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_description),
+                        style = typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = description,
+                        style = typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            }
             // --- تاریخ و ثبت‌کننده ---
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -226,12 +212,10 @@ private fun OrganizationWarningCard(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = warning.visitorId.toString(),
+                        text = warning.visitorName,
                         style = typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-
-
                 }
                 // تاریخ
                 Row(
@@ -245,7 +229,7 @@ private fun OrganizationWarningCard(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = warning.dateWarning!!,
+                        text = formatJalaliDate(warning.warning.warningDate),
                         style = typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
