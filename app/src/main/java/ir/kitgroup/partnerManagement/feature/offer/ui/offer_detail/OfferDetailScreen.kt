@@ -63,7 +63,7 @@ fun OfferDetailScreen(
                 onBackClick = onBackClick
             )
         },
-        containerColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
             modifier = Modifier
@@ -73,7 +73,7 @@ fun OfferDetailScreen(
                 topStart = 24.dp,
                 topEnd = 24.dp
             ),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             val currentItem = planWithProduct
             if (currentItem == null) {

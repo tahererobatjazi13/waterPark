@@ -64,6 +64,8 @@ class MainPreferences @Inject constructor(
         // Settings
         val KEY_BASE_URL = stringPreferencesKey("key_base_url")
         val KEY_LAST_SYNC_TIME = longPreferencesKey("key_last_sync_time")
+        val KEY_FIRST_SYNC = booleanPreferencesKey("key_first_sync")
+
     }
 
     // Session Flows
@@ -180,6 +182,25 @@ class MainPreferences @Inject constructor(
 
     suspend fun getLastSyncTime(): Long? {
         return context.userPreferencesDataStore.data.map { it[KEY_LAST_SYNC_TIME] }.first()
+    }
+
+    // First Sync
+    val isFirstSync: Flow<Boolean> = settingsPrefs.data.map { prefs ->
+        prefs[KEY_FIRST_SYNC] ?: true
+    }
+
+    // تغییر وضعیت به false بعد از اتمام اولین سینک
+    suspend fun markFirstSyncCompleted() {
+        settingsPrefs.edit { prefs ->
+            prefs[KEY_FIRST_SYNC] = false
+        }
+    }
+
+    // ریست کردن به true هنگام خروج از حساب (Logout)
+    suspend fun resetFirstSyncFlag() {
+        settingsPrefs.edit { prefs ->
+            prefs[KEY_FIRST_SYNC] = true
+        }
     }
 
     // Logout

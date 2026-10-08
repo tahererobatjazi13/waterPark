@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui
+package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

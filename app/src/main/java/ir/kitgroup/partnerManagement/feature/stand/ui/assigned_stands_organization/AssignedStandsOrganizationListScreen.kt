@@ -67,7 +67,7 @@ fun AssignedStandsOrganizationListScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CustomHeader(
                 title = R.string.label_assignment_advertising_stand,
@@ -81,7 +81,7 @@ fun AssignedStandsOrganizationListScreen(
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier

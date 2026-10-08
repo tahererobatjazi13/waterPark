@@ -44,16 +44,22 @@ data class JalaliDate(
         return day > other.day
     }
 }
-
 @Composable
 fun DatePickerDialog(
+    initialMillis: Long? = null,
     onDismiss: () -> Unit,
     onDateSelected: (JalaliDate) -> Unit
 ) {
     val colors = LocalPartnerManagementColors.current
-    val today = PersianDate()
-    var year by remember { mutableStateOf(today.shYear) }
-    var month by remember { mutableStateOf(today.shMonth) }
+    val today = remember(initialMillis) {
+        if (initialMillis != null && initialMillis > 0) {
+            PersianDate(initialMillis)
+        } else {
+            PersianDate()
+        }
+    }
+    var year by remember(today) { mutableStateOf(today.shYear) }
+    var month by remember(today) { mutableStateOf(today.shMonth) }
     val days = getDaysInMonth(month)
 
     AlertDialog(
@@ -62,29 +68,53 @@ fun DatePickerDialog(
         containerColor = colors.cardBackground,
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // هدر ماه‌ها
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { /* ... logic for previous month ... */ }) { Text("ماه قبل") }
+                    TextButton(onClick = {
+                        if (month == 1) {
+                            month = 12
+                            year--
+                        } else {
+                            month--
+                        }
+                    }) { Text("ماه قبل") }
+
                     Text(
                         text = "$year / ${getMonthName(month)}",
                         style = MaterialTheme.typography.titleMedium,
                         color = colors.textPrimary
                     )
-                    TextButton(onClick = { /* ... logic for next month ... */ }) { Text("ماه بعد") }
+
+                    TextButton(onClick = {
+                        if (month == 12) {
+                            month = 1
+                            year++
+                        } else {
+                            month++
+                        }
+                    }) { Text("ماه بعد") }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
+
                 LazyVerticalGrid(columns = GridCells.Fixed(7), modifier = Modifier.height(250.dp)) {
                     items(days) { day ->
-                        val isToday =
-                            year == today.shYear && month == today.shMonth && day == today.shDay
-                        val backgroundColor =
-                            if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(
-                                alpha = 0.1f
-                            )
-                        val textColor =
-                            if (isToday) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                        val isToday = year == today.shYear && month == today.shMonth && day == today.shDay
+                        val backgroundColor = if (isToday) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        }
+                        val textColor = if (isToday) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            colors.textPrimary
+                        }
+
                         Box(
                             modifier = Modifier
                                 .padding(4.dp)
@@ -95,26 +125,32 @@ fun DatePickerDialog(
                         ) {
                             Text(
                                 text = day.toString(),
-                                color = colors.textSecondary,
+                                color = textColor,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
                 }
+
                 Spacer(modifier = Modifier.height(12.dp))
+
                 Button(onClick = {
+                    val realToday = PersianDate()
                     onDateSelected(
                         JalaliDate(
-                            today.shYear,
-                            today.shMonth,
-                            today.shDay
+                            realToday.shYear,
+                            realToday.shMonth,
+                            realToday.shDay
                         )
                     )
-                }) { Text("امروز") }
+                }) {
+                    Text("امروز")
+                }
             }
         }
     )
 }
+
 
 @Composable
 fun JalaliCalendar(

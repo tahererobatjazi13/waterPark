@@ -212,3 +212,59 @@ fun formatJalaliDate(dateTime: String?): String {
         "$year/$month/$day"
     }.getOrDefault(dateTime)
 }
+
+
+ fun jalaliToGregorian(date: String): String? {
+    return try {
+        val parts = date.split("/")
+
+        if (parts.size != 3) {
+            return null
+        }
+
+        val year = parts[0].toInt()
+        val month = parts[1].toInt()
+        val day = parts[2].toInt()
+
+        val gregorian = PersianDate().jalali_to_gregorian(year, month, day)
+
+        "%04d-%02d-%02d".format(
+            gregorian[0],
+            gregorian[1],
+            gregorian[2]
+        )
+    } catch (e: Exception) {
+        null
+    }
+}
+
+ fun formatPercentForInput(value: Double?): String {
+    if (value == null) return ""
+
+    return if (value % 1.0 == 0.0) {
+        value.toInt().toString()
+    } else {
+        value.toString()
+    }
+}
+
+
+ fun extractErrorMessage(
+    errorBody: String?,
+    defaultMessage: String
+): String {
+    if (errorBody.isNullOrBlank()) {
+        return defaultMessage
+    }
+
+    return try {
+        val json = org.json.JSONObject(errorBody)
+
+        json.optString("message")
+            .takeIf { it.isNotBlank() }
+            ?: defaultMessage
+
+    } catch (e: Exception) {
+        errorBody
+    }
+}

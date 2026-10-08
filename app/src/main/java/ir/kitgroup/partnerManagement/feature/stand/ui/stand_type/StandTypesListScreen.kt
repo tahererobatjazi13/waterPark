@@ -58,14 +58,14 @@ fun StandTypesListScreen(
                 onBackClick = onBackClick
             )
         },
-        containerColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             AdvertisingItemsContent(
                 items = items,

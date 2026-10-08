@@ -9,10 +9,9 @@ fun Status.toDisplayName(): String = when (this) {
     else -> "نامشخص"
 }
 
-
 /*
 git add .
-git commit -m "add entity dto tables "
+git commit -m "add post web_services"
 git push -u origin master
 git push
 */

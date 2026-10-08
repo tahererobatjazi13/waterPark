@@ -16,4 +16,8 @@ interface VisitSubjectDao {
 
     @Query("DELETE FROM visit_subjects")
     suspend fun deleteAll()
+
+
+    @Query("SELECT COUNT(*) FROM visit_subjects")
+    suspend fun getCount(): Int
 }

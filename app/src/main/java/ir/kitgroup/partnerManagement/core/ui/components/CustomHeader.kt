@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -37,7 +36,47 @@ fun CustomHeader(
     onBackClick: (() -> Unit)? = null,
     actions: @Composable (() -> Unit)? = null
 ) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+    CustomHeaderContent(
+        title = stringResource(title),
+        modifier = modifier,
+        showBackButton = showBackButton,
+        backIcon = backIcon,
+        onBackClick = onBackClick,
+        actions = actions
+    )
+}
+
+@Composable
+fun CustomHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    showBackButton: Boolean = true,
+    @DrawableRes backIcon: Int = R.drawable.ic_back,
+    onBackClick: (() -> Unit)? = null,
+    actions: @Composable (() -> Unit)? = null
+) {
+    CustomHeaderContent(
+        title = title,
+        modifier = modifier,
+        showBackButton = showBackButton,
+        backIcon = backIcon,
+        onBackClick = onBackClick,
+        actions = actions
+    )
+}
+
+@Composable
+private fun CustomHeaderContent(
+    title: String,
+    modifier: Modifier,
+    showBackButton: Boolean,
+    @DrawableRes backIcon: Int,
+    onBackClick: (() -> Unit)?,
+    actions: @Composable (() -> Unit)?
+) {
+    CompositionLocalProvider(
+        LocalLayoutDirection provides LayoutDirection.Ltr
+    ) {
         Row(
             modifier = modifier
                 .fillMaxWidth()
@@ -62,8 +101,8 @@ fun CustomHeader(
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
-                    text = stringResource(title),
-                    style = typography.titleLarge,
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )

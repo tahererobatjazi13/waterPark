@@ -17,6 +17,8 @@ data class OrganizationEntity(
     @PrimaryKey
     val organizationId: String,
 
+    val activeVisitorId: String? = null,
+
     val name: String? = null,
 
     val ownerName: String? = null,
@@ -61,9 +63,9 @@ data class OrganizationEntity(
 
     val regionName: String? = null,
 
-    val latitude: String? = null,
+    val latitude: Double? = null,
 
-    val longitude: String? = null,
+    val longitude: Double? = null,
 
     val visitorId: String? = null,
 

@@ -10,6 +10,7 @@ data class LoginResponse(
 )
 
 data class UserDto(
+    val statusSync: Boolean,
     val visitorId: String,
     val systemUserId: String?,
     val fullName: String?,

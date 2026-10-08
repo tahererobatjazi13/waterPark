@@ -27,8 +27,8 @@ class MapViewModel @Inject constructor(
             val validOrganizations = orgDetailsList
                 .map { it.organization }
                 .filter { org ->
-                    val lat = org.latitude?.toDoubleOrNull()
-                    val lon = org.longitude?.toDoubleOrNull()
+                    val lat = org.latitude
+                    val lon = org.longitude
                     lat != null && lon != null
                 }
 

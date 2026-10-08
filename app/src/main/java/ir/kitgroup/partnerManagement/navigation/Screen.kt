@@ -32,6 +32,16 @@ sealed class Screen(val route: String) {
         }
     }
 
+    data object EditMeeting :
+        Screen("edit_meeting/{meetingId}") {
+
+        fun createRoute(
+            meetingId: String
+        ): String {
+            return "edit_meeting/$meetingId"
+        }
+    }
+
     data object AddMeeting :
         Screen("add_meeting?meetingId={meetingId}&organizationId={organizationId}") {
         fun createRoute(
@@ -114,17 +124,39 @@ sealed class Screen(val route: String) {
     data object ContractDetail : Screen("contract_detail/{contractId}") {
         fun createRoute(contractId: String) = "contract_detail/$contractId"
     }
+    data object AddContract :
+        Screen("addContract") {
 
-    data object AddContract : Screen("add_contract?organizationId={organizationId}") {
-        fun createRoute(organizationId: String? = null): String {
-            return if (organizationId != null) {
-                "add_contract?organizationId=$organizationId"
+        const val ORGANIZATION_ID_ARGUMENT =
+            "organizationId"
+
+        const val CONTRACT_ID_ARGUMENT =
+            "contractId"
+
+        fun createRoute(
+            organizationId: String? = null
+        ): String {
+
+            return if (
+                organizationId.isNullOrBlank()
+            ) {
+                route
             } else {
-                "add_contract"
+
+                "$route?" +
+                        "$ORGANIZATION_ID_ARGUMENT=$organizationId"
             }
         }
     }
+    data object EditContract :
+        Screen("edit_contract/{contractId}") {
 
+        fun createRoute(
+            contractId: String
+        ): String {
+            return "edit_contract/$contractId"
+        }
+    }
     data object AddContractOffer : Screen("add_contract_Offer")
 
     // add Offer

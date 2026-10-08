@@ -26,6 +26,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataRequest
 import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataResponse
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -51,7 +52,9 @@ class SyncRepository @Inject constructor(
     private val assignedSerialDao: AssignedSerialDao,
     private val statisticDao: StatisticDao,
     private val preferences: MainPreferences,
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val mainPreferences: MainPreferences,
+
 ) {
     suspend fun syncData(): Result<Unit> = withContext(Dispatchers.IO) {
 
@@ -72,8 +75,10 @@ class SyncRepository @Inject constructor(
                     )
                 )
             }
+            val isFirstSync = mainPreferences.isFirstSync.first()
 
             val request = SyncDataRequest(
+                statusSync = isFirstSync,
                 systemUserId = systemUserId,
                 visitorId = visitorId,
                 roleCode = roleCode,
@@ -121,7 +126,9 @@ class SyncRepository @Inject constructor(
             val confirmResponse = apiService.confirmLastSync(
                 userId = visitorId
             )
-
+            if (response.success && isFirstSync) {
+                mainPreferences.markFirstSyncCompleted()
+            }
             if (!confirmResponse.success) {
                 throw ApiException(
                     confirmResponse.message

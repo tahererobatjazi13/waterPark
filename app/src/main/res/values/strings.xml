@@ -53,6 +53,7 @@
     <string name="label_national_id">شناسه ملی</string>
     <string name="label_capacity">ظرفیت (تعداد نفر)</string>
     <string name="label_ticket_sale_count_history">تعداد فروش در شروع سیستم</string>
+
     <string name="label_customer_capacity">ظرفیت یا پتانسیل مشتری</string>
     <string name="label_date_time">تاریخ و ساعت</string>
     <string name="label_start_date">تاریخ شروع</string>
@@ -90,7 +91,6 @@
     <string name="label_save">ذخیره</string>
     <string name="label_cancel">لغو</string>
     <string name="label_select_time">انتخاب ساعت</string>
-    <string name="label_user_profile">پروفایل کاربری</string>
     <string name="label_images">تصاویر</string>
     <string name="label_submit_visit">ثبت بازدید</string>
     <string name="label_edit_visit">ویرایش بازدید</string>
@@ -123,9 +123,21 @@
     <string name="label_pick_date">انتخاب تاریخ</string>
     <string name="label_image_gallery">گالری تصویر</string>
     <string name="label_deactivation">غیرفعال‌سازی</string>
+
     <string name="label_determination_organization_status">تعیین وضعیت سازمان</string>
     <string name="label_edit_organization">ویرایش سازمان</string>
     <string name="label_quick_access">دسترسی سریع</string>
+    <string name="label_retrieving_phone_current_location">در حال دریافت موقعیت فعلی گوشی...</string>
+    <string name="label_location_map">انتخاب موقعیت روی نقشه</string>
+    <string name="label_organization_location">موقعیت سازمان</string>
+    <string name="label_location_selected">موقعیت انتخاب شده</string>
+    <string name="msg_location_not_selected">هنوز موقعیت سازمان روی نقشه انتخاب نشده است</string>
+    <string name="label_change_location">تغییر موقعیت</string>
+    <string name="label_latitude_longitude">عرض: %1$s  |  طول: %2$s</string>
+    <string name="location_current">موقعیت فعلی</string>
+    <string name="location_organization">موقعیت سازمان</string>
+    <string name="action_confirm">تایید</string>
+    <string name="action_confirm_location">تایید موقعیت</string>
     <string name="label_map">نقشه</string>
     <string name="label_reports">گزارشات</string>
     <string name="label_advertising_stands">استندهای تبلیغاتی</string>
@@ -174,6 +186,7 @@
     <string name="label_new_contract">قرارداد جدید</string>
     <string name="label_contract">قرارداد همکاری</string>
     <string name="label_contract_item">قرارداد</string>
+    <string name="label_edit_contract">ویرایش قرارداد</string>
     <string name="label_report_cooperation_agreement"> گزارش لیست قرارداد همکاری ها</string>
     <string name="label_visitor_list">لیست بازاریاب ها</string>
     <string name="label_report_view_visitor">مشاهده گزارشات عملکرد همه بازاریاب ها و یک بازاریاب</string>
@@ -189,6 +202,7 @@
     <string name="label_default_discount_percent">درصد تخفیف پیش‌فرض</string>
     <string name="label_cooperation_model">مدل همکاری</string>
     <string name="label_contract_number">شماره قراداد:</string>
+    <string name="label_termination_contract">خاتمه قراداد</string>
     <string name="label_settlement_period_type">نوع دوره تسویه</string>
     <string name="label_call">تماس</string>
     <string name="label_visitor_code">کد بازاریاب:</string>
@@ -250,6 +264,7 @@
     <string name="label_offer_status">وضعیت طرح/آفر</string>
     <string name="label_recorded_inactive_reason">علت غیرفعال‌سازی ثبت شده:</string>
     <string name="label_inactivation_reason_title">علت غیرفعال‌سازی</string>
+    <string name="label_inactivation_date">تاریخ غیرفعال‌سازی</string>
     <string name="label_inactivation_reason_description">لطفاً دلیل غیرفعال کردن این سازمان را به طور دقیق وارد نمایید</string>
     <string name="label_inactivation_reason_field">شرح علت غیرفعال‌سازی *</string>
     <string name="hint_enter_inactivation_reason">علت را اینجا وارد کنید...</string>
@@ -259,7 +274,13 @@
     <string name="label_assigned_stands">استندهای اختصاص داده شده</string>
     <string name="format_warnings_count">%d تذکر</string>
     <string name="format_stands_count">%d عدد</string>
+    <string name="role_organization_employee">کارمند ساده</string>
+    <string name="role_manager">مدیر</string>
 
+    <string name="label_organization_name_required">نام سازمان الزامی است</string>
+    <string name="label_organization_type_required">نوع سازمان الزامی است</string>
+    <string name="label_city_name_required">نام شهر الزامی است</string>
+    <string name="label_region_name_required">نام منطقه الزامی است</string>
 
     <string name="label_visit_code">کد بازدید: %1$s</string>
     <string name="label_visit_date">تاریخ بازدید: %1$s</string>
@@ -276,6 +297,18 @@
     <string name="label_offer_plan_header">هدر طرح</string>
     <string name="label_validity_period">دوره اعتبار</string>
 
+    //organization type
+    <string name="organization_type_hotel">هتل</string>
+    <string name="organization_type_government_office">اداره دولتی</string>
+    <string name="organization_type_private_company">شرکت خصوصی</string>
+    <string name="organization_type_kiosk">کیوسک</string>
+    <string name="organization_type_organization_institution">سازمان / نهاد</string>
+
+    //organization level
+    <string name="organization_level_normal">معمولی</string>
+    <string name="organization_level_medium">متوسط</string>
+    <string name="organization_level_above_medium">متوسط رو به بالا</string>
+    <string name="organization_level_excellent">عالی</string>
 
     <!-- تب و لیست بلیط‌ها / آفرها -->
     <string name="tab_tickets_offers_1">آفرها و بلیط‌ها</string>
@@ -283,6 +316,7 @@
     <string name="label_organization_serial_list">لیست سریال های صادر شده به سازمان</string>
     <string name="label_new_ticket_offer">افزودن آفر جدید</string>
     <string name="msg_no_tickets_offers_found_1">هیچ طرح یا آفری برای این سازمان ثبت نشده است</string>
+    <string name="msg_enable_location_access_current_location">برای نمایش موقعیت فعلی، دسترسی مکان را فعال کنید</string>
 
     <!-- عناوین فیلدهای جزئیات آفر -->
     <string name="label_ticket_offer_detail">جزئیات طرح و آفر</string>
@@ -341,6 +375,9 @@
     <string name="gender_female">زن</string>
     <string name="gender_not_required">نیاز نیست</string>
 
+    <string name="label_organization_role">نقش شخص در سازمان</string>
+    <string name="hint_choose_organization_role">نقش شخص را انتخاب کنید</string>
+    <string name="label_update_wallet_balance">به‌روزرسانی مانده کیف پول</string>
 
     <!-- Common formatted values -->
     <string name="value_not_available">---</string>
@@ -489,6 +526,7 @@
     <string name="label_allocated_stands">استندهای تخصیص‌یافته</string>
     <string name="label_item_types_count">تعداد انواع استند</string>
     <string name="label_total_allocated_count">تعداد کل استندها</string>
+    <string name="label_welcome_user">%1$s خوش آمدی</string>
 
     <string name="label_items_count_summary">%1$d نوع ، %2$d عدد</string>
     <string name="label_item_code">کد استند</string>
@@ -502,14 +540,12 @@
     <string name="format_geo_coordinates">عرض جغرافیایی: %1$s\nطول جغرافیایی: %2$s</string>
     <string name="placeholder_empty_value">—</string>
 
-
     // nav
     <string name="nav_dashboard">داشبورد</string>
     <string name="nav_organizations">سازمان ها</string>
     <string name="nav_meetings">بازدیدها</string>
-    <string name="nav_cards">کارت‌ها</string>
     <string name="nav_plan_offer">طرح/آفر</string>
-    <string name="nav_profile">پروفایل</string>
+    <string name="nav_profile">پروفایل کاربری</string>
 
 
     // role
@@ -539,6 +575,7 @@
     آیا از حذف «%1$s» مطمئن هستید؟ این عملیات قابل بازگشت نیست.</string>
 
     <string name="msg_dialog_deactivate_organization">آیا از غیرفعال‌سازی این سازمان اطمینان دارید؟</string>
+    <string name="msg_sync_data_first">لطفاً ابتدا اطلاعات را دریافت (همگام‌سازی) کنید.</string>
 
     // sample
     <string name="greeting_text">رضا، خوش آمدی</string>

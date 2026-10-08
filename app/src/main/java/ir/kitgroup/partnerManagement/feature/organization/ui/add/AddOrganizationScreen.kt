@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui
+package ir.kitgroup.partnerManagement.feature.organization.ui.add
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -11,8 +11,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
@@ -25,17 +27,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.CityEntity
 import ir.kitgroup.partnerManagement.core.database.entity.PersonEntity
-import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
+import ir.kitgroup.partnerManagement.core.database.entity.RegionEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
@@ -44,31 +47,212 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomOutlinedButton
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 import ir.kitgroup.partnerManagement.core.ui.components.GradeSelector
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.components.YesNoSwitchRow
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationLevel
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
+import ir.kitgroup.partnerManagement.core.ui.util.OrganizationType
 import ir.kitgroup.partnerManagement.core.ui.util.Status
+import java.util.UUID
+import android.view.ViewGroup
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ir.kitgroup.partnerManagement.core.ui.util.PersonGenderType
+import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 @Composable
 fun AddOrganizationScreen(
     organizationId: String?,
     onBack: () -> Unit,
-    onCancel: () -> Unit = {},
-    onSaveClick: () -> Unit = {},
+    onSuccessCreate: () -> Unit = {},
     onSelectLocation: () -> Unit = {},
+    selectedLatitude: Double? = null,
+    selectedLongitude: Double? = null,
     onAddImage: () -> Unit = {},
+    viewModel: AddOrganizationViewModel = hiltViewModel()
 ) {
-    val appColors = LocalPartnerManagementColors.current
-    val isEditMode = organizationId != null
 
-    val formState = rememberAddOrganizationFormState()
+    val cities by viewModel.cities.collectAsState()
+    val regions by viewModel.regions.collectAsState()
+    val appColors = LocalPartnerManagementColors.current
+
+    val isEditMode = !organizationId.isNullOrBlank()
+
+    val formState = viewModel.formState
     val personState = rememberAddPersonFormState()
 
+    val existingOrganization by remember(organizationId) {
+        if (organizationId != null) {
+            viewModel.observeOrganization(organizationId)
+        } else {
+            kotlinx.coroutines.flow.flowOf(null)
+        }
+    }.collectAsStateWithLifecycle(initialValue = null)
+
+    var formInitialized by remember(organizationId) {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(existingOrganization) {
+
+        val organization = existingOrganization
+            ?: return@LaunchedEffect
+
+        if (formInitialized) return@LaunchedEffect
+
+        formInitialized = true
+
+        formState.organizationName =
+            organization.organization.name.orEmpty()
+
+        formState.organizationType =
+            organization.organization.organizationType ?: 0
+
+        formState.organizationLevel =
+            organization.organization.level ?: 0
+
+        formState.ownerName =
+            organization.organization.ownerName.orEmpty()
+
+        formState.englishName =
+            organization.organization.englishName.orEmpty()
+
+        formState.nationalId =
+            organization.organization.nationalId.orEmpty()
+
+        formState.landLine =
+            organization.organization.landLine.orEmpty()
+
+        formState.phone =
+            organization.organization.phone.orEmpty()
+
+        formState.mobile =
+            organization.organization.mobile.orEmpty()
+
+        formState.email =
+            organization.organization.email.orEmpty()
+
+        formState.cityId =
+            organization.organization.cityId.orEmpty()
+
+        formState.regionId =
+            organization.organization.regionId.orEmpty()
+
+        if (formState.cityId.isNotBlank()) {
+            viewModel.loadRegions(formState.cityId)
+        }
+
+        formState.address =
+            organization.organization.address.orEmpty()
+
+        formState.description =
+            organization.organization.document.orEmpty()
+
+        formState.latitude =
+            organization.organization.latitude
+
+        formState.longitude =
+            organization.organization.longitude
+
+        formState.organizationGrade =
+            organization.organization.grade ?: 0
+
+        formState.ticketSaleCountHistory =
+            organization.organization.ticketSaleCountHistory
+                ?.toString()
+                .orEmpty()
+
+        formState.customerCapacity =
+            organization.organization.customerCapacity
+                ?.toString()
+                .orEmpty()
+
+        formState.statusExtenalCutomer =
+            organization.organization.statusExternalCustomer
+                ?: false
+
+        formState.statusGetStand =
+            organization.organization.statusGetStand
+                ?: false
+
+        formState.organizationStatus =
+            OrganizationStatus.fromId(
+                organization.organization.status
+            )
+        formState.inactiveReason = ""
+    }
     var showAddPersonSheet by rememberSaveable { mutableStateOf(false) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val createState by viewModel.createState.collectAsState()
+    val context = LocalContext.current
+    val isLoading = createState is DataState.Loading
+
+    LaunchedEffect(selectedLatitude, selectedLongitude) {
+        selectedLatitude?.let {
+            formState.latitude = it
+        }
+        selectedLongitude?.let {
+            formState.longitude = it
+        }
+    }
+
+    // دریافت پیام‌های اعتبارسنجی
+    LaunchedEffect(Unit) {
+        viewModel.toastEvent.collect { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Long
+            )
+        }
+    }
+
+    // دریافت نتیجه ذخیره‌سازی
+    LaunchedEffect(createState) {
+        when (val state = createState) {
+            is DataState.Success -> {
+                val message = state.data.message?.takeIf { it.isNotBlank() }
+                    ?: if (organizationId.isNullOrBlank()) {
+                        "سازمان با موفقیت ایجاد شد"
+                    } else {
+                        "اطلاعات سازمان با موفقیت ویرایش شد"
+                    }
+
+                android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+
+                viewModel.resetState()
+                onSuccessCreate()
+            }
+
+            is DataState.Error -> {
+                snackbarHostState.showSnackbar(
+                    message = state.error.asString(context),
+                    duration = androidx.compose.material3.SnackbarDuration.Long
+                )
+                viewModel.resetState()
+            }
+
+            else -> Unit
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
+                )
+            )
+        },
         topBar = {
             CustomHeader(
                 title = if (isEditMode) {
@@ -80,7 +264,7 @@ fun AddOrganizationScreen(
                 onBackClick = onBack
             )
         },
-        containerColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 
         Surface(
@@ -88,10 +272,21 @@ fun AddOrganizationScreen(
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             AddOrganizationContent(
                 state = formState,
+                isLoading = isLoading,
+                cities = cities,
+                regions = regions,
+                onCitySelected = { cityId ->
+                    formState.cityId = cityId
+                    formState.regionId = ""
+                    viewModel.loadRegions(cityId)
+                },
+                onRegionSelected = { regionId ->
+                    formState.regionId = regionId
+                },
                 onSelectLocation = onSelectLocation,
                 onAddImage = onAddImage,
                 onRemoveImage = { index ->
@@ -104,12 +299,29 @@ fun AddOrganizationScreen(
                 onRemovePerson = { index ->
                     formState.organizationPersons.removeAt(index)
                 },
-                onSaveClick = onSaveClick,
-                onCancel = onCancel
+                onSaveClick = {
+                    viewModel.saveOrganization(
+                        state = formState,
+                        organizationId = organizationId
+                    )
+                },
+                onCancel = onBack
             )
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.2f))
+                        .clickable(enabled = false) {},
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            }
         }
     }
 
+/*
     if (showAddPersonSheet) {
         AddPersonBottomSheet(
             personState = personState,
@@ -117,15 +329,15 @@ fun AddOrganizationScreen(
                 showAddPersonSheet = false
             },
             onSavePerson = {
-                if (personState.name.isNotBlank() && personState.phone1.isNotBlank()) {
+                if (personState.name.isNotBlank() && personState.mobile.isNotBlank()) {
                     formState.organizationPersons.add(
                         PersonEntity(
-                            personId = java.util.UUID.randomUUID().toString(),
+                            personId = UUID.randomUUID().toString(),
                             name = personState.name.trim(),
                             description = personState.description.trim(),
                             gender = personState.gender,
                             mobile = personState.mobile.trim(),
-                            phone1 = personState.phone1.trim(),
+                            phone1 = personState.mobile.trim(),
                             status = personState.status
                         )
                     )
@@ -136,12 +348,18 @@ fun AddOrganizationScreen(
             }
         )
     }
+*/
 }
 
 
 @Composable
 private fun AddOrganizationContent(
     state: AddOrganizationFormState,
+    isLoading: Boolean,
+    cities: List<CityEntity>,
+    regions: List<RegionEntity>,
+    onCitySelected: (String) -> Unit,
+    onRegionSelected: (String) -> Unit,
     onSelectLocation: () -> Unit,
     onAddImage: () -> Unit,
     onRemoveImage: (Int) -> Unit,
@@ -150,6 +368,10 @@ private fun AddOrganizationContent(
     onSaveClick: () -> Unit,
     onCancel: () -> Unit
 ) {
+    var showInactiveReasonDialog by remember { mutableStateOf(false) }
+    var previousStatus by remember { mutableStateOf(state.organizationStatus) }
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -162,38 +384,65 @@ private fun AddOrganizationContent(
         OrganizationContactSection(state)
 
         OrganizationLocationSection(
-            city = state.city,
-            onCityChange = { state.city = it },
-            district = state.region,
-            onDistrictChange = { state.region = it },
+            state = state,
+            cities = cities,
+            regions = regions,
+            onCitySelected = onCitySelected,
+            onRegionSelected = onRegionSelected,
             address = state.address,
             onAddressChange = { state.address = it },
             onSelectLocation = onSelectLocation
         )
-
         OrganizationAnalysisSection(state)
 
         OrganizationStatusSection(state)
 
-        OrganizationRelatedPersonsSection(
-            persons = state.organizationPersons,
-            onAddPersonClick = onAddPersonClick,
-            onRemovePerson = onRemovePerson
-        )
+        /* OrganizationRelatedPersonsSection(
+             persons = state.organizationPersons,
+             onAddPersonClick = onAddPersonClick,
+             onRemovePerson = onRemovePerson
+         )*/
 
         OrganizationDescriptionSection(state)
 
-        OrganizationImagesSection(
-            images = state.images,
-            onAddImage = onAddImage,
-            onRemoveImage = onRemoveImage
-        )
+        /* OrganizationImagesSection(
+             images = state.images,
+             onAddImage = onAddImage,
+             onRemoveImage = onRemoveImage
+         )*/
 
         OrganizationFormActionButtons(
+            isLoading = isLoading,
             onSaveClick = onSaveClick,
             onCancel = onCancel
         )
     }
+
+    if (showInactiveReasonDialog) {
+        InactivationReasonDialog(
+            initialReason = state.inactiveReason,
+            onDismiss = {
+                showInactiveReasonDialog = false
+
+                if (state.inactiveReason.isBlank()) {
+                    state.organizationStatus = previousStatus
+                }
+            },
+            onConfirm = { reason ->
+
+                // ثبت وضعیت و علت
+                state.organizationStatus = OrganizationStatus.INACTIVE
+                state.inactiveReason = reason
+
+                // بستن دیالوگ
+                showInactiveReasonDialog = false
+
+                // ذخیره اطلاعات
+                onSaveClick()
+            }
+        )
+    }
+
 }
 
 
@@ -201,18 +450,29 @@ private fun AddOrganizationContent(
 private fun OrganizationBasicInfoSection(
     state: AddOrganizationFormState
 ) {
-    val organizationTypeList = remember {
-        listOf("هتل", "اداره دولتی", "شرکت خصوصی", "کیوسک", "سازمان / نهاد")
+
+    val organizationTypeOptions = OrganizationType.entries.map { level ->
+        level to stringResource(level.titleRes)
     }
 
-    val organizationLevelList = remember {
-        listOf("معمولی", "متوسط", "متوسط رو به بالا", "عالی")
+    val selectedOrganizationType = organizationTypeOptions
+        .firstOrNull { it.first.code == state.organizationType }
+
+
+    val organizationLevelOptions = OrganizationLevel.entries.map { level ->
+        level to stringResource(level.titleRes)
     }
-    val statusEntries = remember { OrganizationStatus.entries }
+
+    val selectedOrganizationLevel = organizationLevelOptions
+        .firstOrNull { it.first.code == state.organizationLevel }
+
+    val statusEntries = listOf(
+        OrganizationStatus.INITIAL_REGISTRATION,
+        OrganizationStatus.ACTIVE
+    )
+    //val statusEntries = remember { OrganizationStatus.entries }
     val statusTitles = statusEntries.map { stringResource(it.titleRes) }
 
-    var showInactiveReasonDialog by remember { mutableStateOf(false) }
-    var previousStatus by remember { mutableStateOf(state.organizationStatus) }
 
     SectionTitle(
         title = stringResource(R.string.label_organization_basic_information),
@@ -228,20 +488,39 @@ private fun OrganizationBasicInfoSection(
     )
 
     DropdownSelectorField(
-        value = state.organizationType,
+        value = selectedOrganizationType?.second.orEmpty(),
         label = stringResource(R.string.label_organization_type),
         placeholder = stringResource(R.string.hint_choose_organization_type),
-        items = organizationTypeList,
-        onItemSelected = { state.organizationType = it }
+        items = organizationTypeOptions.map { it.second },
+        isRequired = true,
+        onItemSelected = { selectedTitle ->
+
+            val selectedType = organizationTypeOptions
+                .firstOrNull { it.second == selectedTitle }
+                ?.first
+
+            selectedType?.let {
+                state.organizationType = it.code
+            }
+        }
     )
 
     DropdownSelectorField(
-        value = state.organizationLevel,
+        value = selectedOrganizationLevel?.second.orEmpty(),
         label = stringResource(R.string.label_organization_level),
         placeholder = stringResource(R.string.hint_choose_organization_level),
-        items = organizationLevelList,
+        items = organizationLevelOptions.map { it.second },
         isRequired = false,
-        onItemSelected = { state.organizationLevel = it }
+        onItemSelected = { selectedTitle ->
+
+            val selectedLevel = organizationLevelOptions
+                .firstOrNull { it.second == selectedTitle }
+                ?.first
+
+            selectedLevel?.let {
+                state.organizationLevel = it.code
+            }
+        }
     )
 
     TwoColumnRow(
@@ -287,16 +566,24 @@ private fun OrganizationBasicInfoSection(
                 isRequired = false,
                 onItemSelected = { selectedTitle ->
                     val selectedIndex = statusTitles.indexOf(selectedTitle)
-                    val selectedEnum =
-                        if (selectedIndex != -1) statusEntries[selectedIndex] else OrganizationStatus.INITIAL_REGISTRATION
-
-                    if (selectedEnum == OrganizationStatus.INACTIVE) {
-                        previousStatus = state.organizationStatus
-                        showInactiveReasonDialog = true
-                    } else {
-                        state.organizationStatus = selectedEnum
-                        state.inactiveReason = ""
+                    if (selectedIndex != -1) {
+                        state.organizationStatus = statusEntries[selectedIndex]
                     }
+
+                    /*  val selectedEnum =
+                          if (selectedIndex != -1) {
+                              statusEntries[selectedIndex]
+                          } else {
+                              OrganizationStatus.INITIAL_REGISTRATION
+                          }
+
+                      if (selectedEnum == OrganizationStatus.INACTIVE) {
+                          previousStatus = state.organizationStatus
+                          showInactiveReasonDialog = true
+                      } else {
+                          state.organizationStatus = selectedEnum
+                          state.inactiveReason = ""
+                      }*/
                 }
             )
         }
@@ -327,24 +614,22 @@ private fun OrganizationBasicInfoSection(
             }
         }
     }
-    if (showInactiveReasonDialog) {
-        InactivationReasonDialog(
-            initialReason = state.inactiveReason,
-            onDismiss = {
-                showInactiveReasonDialog = false
-                if (state.inactiveReason.isBlank()) {
-                    state.organizationStatus = previousStatus
-                }
-            },
-            onConfirm = { reason ->
-                state.organizationStatus = OrganizationStatus.INACTIVE
-                state.inactiveReason = reason
-                showInactiveReasonDialog = false
-            }
-        )
-    }
+
 }
 
+@Composable
+private fun TwoColumnRow(
+    start: @Composable () -> Unit,
+    end: @Composable () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(modifier = Modifier.weight(1f)) { start() }
+        Box(modifier = Modifier.weight(1f)) { end() }
+    }
+}
 @Composable
 fun InactivationReasonDialog(
     initialReason: String,
@@ -446,6 +731,7 @@ private fun OrganizationContactSection(
             CustomEditTextField(
                 value = state.landLine,
                 onValueChange = { state.landLine = it },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 label = stringResource(R.string.label_organization_land_line),
                 placeholder = stringResource(R.string.hint_enter_land_line),
                 isRequired = false,
@@ -456,6 +742,7 @@ private fun OrganizationContactSection(
             CustomEditTextField(
                 value = state.phone,
                 onValueChange = { state.phone = it },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 label = stringResource(R.string.label_phone),
                 placeholder = stringResource(R.string.hint_enter_phone),
                 isRequired = false,
@@ -469,6 +756,7 @@ private fun OrganizationContactSection(
             CustomEditTextField(
                 value = state.mobile,
                 onValueChange = { state.mobile = it },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 label = stringResource(R.string.label_mobile),
                 placeholder = stringResource(R.string.hint_enter_mobile),
                 isRequired = false,
@@ -490,41 +778,65 @@ private fun OrganizationContactSection(
 
 @Composable
 private fun OrganizationLocationSection(
-    city: String,
-    onCityChange: (String) -> Unit,
-    district: String,
-    onDistrictChange: (String) -> Unit,
+    state: AddOrganizationFormState,
+    cities: List<CityEntity>,
+    regions: List<RegionEntity>,
+    onCitySelected: (String) -> Unit,
+    onRegionSelected: (String) -> Unit,
     address: String,
     onAddressChange: (String) -> Unit,
     onSelectLocation: () -> Unit
 ) {
-    // لیست‌های نمونه (این لیست‌ها می‌توانند از ریپوزیتوری یا دیتابیس بیایند)
-    val cityList = remember { listOf("تهران", "مشهد", "اصفهان", "شیراز", "تبریز") }
-    val districtList = remember { listOf("منطقه ۱", "منطقه ۲", "منطقه ۳", "مرکز شهر", "حاشیه شهر") }
 
     SectionTitle(
         title = stringResource(R.string.label_location),
         titleColor = MaterialTheme.colorScheme.primary
     )
+    val selectedCity = cities.firstOrNull {
+        it.cityId == state.cityId
+    }
 
+    val selectedRegion = regions.firstOrNull {
+        it.regionId == state.regionId
+    }
     TwoColumnRow(
         start = {
             DropdownSelectorField(
-                value = city,
+                value = selectedCity?.name.orEmpty(),
                 label = stringResource(R.string.label_city),
                 placeholder = stringResource(R.string.hint_choose_city),
-                items = cityList,
-                onItemSelected = onCityChange,
+                items = cities.mapNotNull { it.name },
+                onItemSelected = { selectedName ->
+                    val city = cities.firstOrNull {
+                        it.name == selectedName
+                    }
+
+                    city?.let {
+                        onCitySelected(it.cityId)
+                    }
+                },
                 isRequired = false
             )
         },
         end = {
             DropdownSelectorField(
-                value = district,
+                value = selectedRegion?.name.orEmpty(),
                 label = stringResource(R.string.label_region),
-                placeholder = stringResource(R.string.hint_choose_region),
-                items = districtList,
-                onItemSelected = onDistrictChange,
+                placeholder = if (state.cityId == null) {
+                    "ابتدا شهر را انتخاب کنید"
+                } else {
+                    stringResource(R.string.hint_choose_region)
+                },
+                items = regions.mapNotNull { it.name },
+                onItemSelected = { selectedName ->
+                    val region = regions.firstOrNull {
+                        it.name == selectedName
+                    }
+
+                    region?.let {
+                        onRegionSelected(it.regionId)
+                    }
+                },
                 isRequired = false
             )
         }
@@ -540,6 +852,8 @@ private fun OrganizationLocationSection(
     )
 
     MapCard(
+        latitude = state.latitude,
+        longitude = state.longitude,
         onSelectLocation = onSelectLocation
     )
 }
@@ -565,6 +879,7 @@ private fun OrganizationAnalysisSection(
                 onValueChange = { state.ticketSaleCountHistory = it },
                 label = stringResource(R.string.label_ticket_sale_count_history),
                 placeholder = "",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isRequired = false,
                 leadingIcon = null
             )
@@ -574,6 +889,7 @@ private fun OrganizationAnalysisSection(
                 value = state.customerCapacity,
                 onValueChange = { state.customerCapacity = it },
                 label = stringResource(R.string.label_customer_capacity),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 placeholder = "",
                 isRequired = false,
                 leadingIcon = null
@@ -651,10 +967,12 @@ private fun OrganizationImagesSection(
 
 @Composable
 private fun OrganizationFormActionButtons(
+    isLoading: Boolean,
     onSaveClick: () -> Unit,
     onCancel: () -> Unit
 ) {
     Spacer(Modifier.height(8.dp))
+    println("onSaveClick = 3")
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -663,176 +981,21 @@ private fun OrganizationFormActionButtons(
         CustomButton(
             text = stringResource(R.string.label_save),
             onClick = onSaveClick,
+            enabled = !isLoading,
             modifier = Modifier.weight(1f)
         )
 
         CustomOutlinedButton(
             text = stringResource(R.string.label_cancel),
             onClick = onCancel,
+            enabled = !isLoading,
             modifier = Modifier.weight(1f)
         )
     }
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddPersonBottomSheet(
-    personState: AddPersonFormState,
-    onDismiss: () -> Unit,
-    onSavePerson: () -> Unit
-) {
-    val appColors = LocalPartnerManagementColors.current
 
-    val genderList = remember {
-        listOf("مرد", "زن")
-    }
-
-    val statusList = remember {
-        listOf("پیش نویس", "فعال", "غیرفعال", "مسدود شده")
-    }
-
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        modifier = Modifier
-            .fillMaxHeight()
-            .padding(top = 60.dp),
-        containerColor = appColors.screenBackground,
-        dragHandle = {
-            BottomSheetDefaults.DragHandle()
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.label_add_related_person),
-                style = typography.titleLarge,
-                color = appColors.textPrimary
-            )
-
-            CustomEditTextField(
-                value = personState.name,
-                onValueChange = { personState.name = it },
-                label = stringResource(R.string.label_person_full_name),
-                placeholder = stringResource(R.string.hint_enter_person_full_name),
-                isRequired = true,
-                leadingIcon = null
-            )
-
-            TwoColumnRow(
-                start = {
-                    CustomEditTextField(
-                        value = personState.mobile,
-                        onValueChange = { personState.mobile = it },
-                        label = stringResource(R.string.label_mobile),
-                        placeholder = stringResource(R.string.hint_enter_mobile),
-                        isRequired = true,
-                        leadingIcon = null
-                    )
-                },
-                end = {
-                    CustomEditTextField(
-                        value = personState.phone1,
-                        onValueChange = { personState.phone1 = it },
-                        label = stringResource(R.string.label_phone),
-                        placeholder = stringResource(R.string.hint_enter_phone),
-                        isRequired = false,
-                        leadingIcon = null
-                    )
-                }
-            )
-            DropdownSelectorField(
-                value = when (personState.gender) {
-                    1 -> "مرد"
-                    2 -> "زن"
-                    else -> ""
-                },
-                label = stringResource(R.string.label_gender),
-                placeholder = stringResource(R.string.hint_choose_gender),
-                items = genderList,
-                isRequired = false,
-                onItemSelected = { selectedGender ->
-                    personState.gender = when (selectedGender) {
-                        "مرد" -> 1
-                        "زن" -> 2
-                        else -> 0
-                    }
-                }
-            )
-
-            DropdownSelectorField(
-                value = personState.status.toString(),
-                label = stringResource(R.string.label_status),
-                placeholder = stringResource(R.string.hint_choose_status),
-                items = statusList,
-                isRequired = false,
-                onItemSelected = {
-                    personState.status = 1
-                }
-            )
-
-            CustomDescriptionField(
-                label = stringResource(R.string.label_description),
-                value = personState.description,
-                onValueChange = { personState.description = it },
-                placeholder = stringResource(R.string.hint_description)
-            )
-
-            AddPersonBottomSheetActions(
-                enabled = personState.name.isNotBlank() && personState.phone1.isNotBlank(),
-                onDismiss = onDismiss,
-                onSavePerson = onSavePerson
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
-}
-
-@Composable
-private fun AddPersonBottomSheetActions(
-    enabled: Boolean,
-    onDismiss: () -> Unit,
-    onSavePerson: () -> Unit
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        CustomOutlinedButton(
-            text = stringResource(R.string.label_cancel),
-            onClick = onDismiss,
-            modifier = Modifier.weight(1f)
-        )
-
-        CustomButton(
-            text = stringResource(R.string.label_add_person),
-            onClick = onSavePerson,
-            modifier = Modifier.weight(1f),
-            enabled = enabled,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                disabledContainerColor = appColors.border.copy(alpha = 0.4f),
-                disabledContentColor = appColors.textSecondary
-            )
-        )
-    }
-}
 
 @Composable
 private fun OrganizationPersonsSummarySection(
@@ -1032,59 +1195,244 @@ fun personStatusToStatus(status: String): Status {
 }
 
 
-@Composable
-private fun TwoColumnRow(
-    start: @Composable () -> Unit,
-    end: @Composable () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Box(modifier = Modifier.weight(1f)) { start() }
-        Box(modifier = Modifier.weight(1f)) { end() }
-    }
-}
-
 
 @Composable
 private fun MapCard(
+    latitude: Double?,
+    longitude: Double?,
     onSelectLocation: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
 
-    Box(
+    val hasLocation =
+        latitude != null && longitude != null
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(appColors.cardBackgroundAlt)
-            .border(
-                BorderStroke(1.dp, appColors.border),
-                shape = RoundedCornerShape(16.dp)
-            )
     ) {
-        Button(
-            onClick = onSelectLocation,
-            modifier = Modifier.align(Alignment.Center),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = null
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = stringResource(R.string.label_select_location)
-            )
+
+        if (!hasLocation) {
+
+            // هنوز موقعیت انتخاب نشده
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(appColors.cardBackgroundAlt)
+                    .border(
+                        BorderStroke(
+                            1.dp,
+                            appColors.border
+                        ),
+                        RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+
+                Button(
+                    onClick = onSelectLocation,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null
+                    )
+
+                    Spacer(
+                        modifier = Modifier.width(6.dp)
+                    )
+
+                    Text(
+                        text = stringResource(
+                            R.string.label_select_location
+                        )
+                    )
+                }
+            }
+
+        } else {
+
+            // موقعیت انتخاب شده
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(appColors.cardBackgroundAlt)
+                    .border(
+                        BorderStroke(
+                            1.dp,
+                            appColors.border
+                        ),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .padding(10.dp)
+            ) {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(
+                        modifier = Modifier.width(8.dp)
+                    )
+
+                    Text(
+                        text = stringResource(
+                            R.string.label_location_selected
+                        ),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                )
+
+                LocationPreviewMap(
+                    latitude = latitude!!,
+                    longitude = longitude!!,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                )
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                )
+
+                Text(
+                    text = stringResource(
+                        R.string.label_latitude_longitude,
+                        latitude,
+                        longitude
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = appColors.textSecondary
+                )
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                )
+
+                OutlinedButton(
+                    onClick = onSelectLocation,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null
+                    )
+
+                    Spacer(
+                        modifier = Modifier.width(6.dp)
+                    )
+
+                    Text(
+                        text = stringResource(
+                            R.string.label_change_location
+                        )
+                    )
+                }
+            }
         }
     }
 }
 
+@Composable
+private fun LocationPreviewMap(
+    latitude: Double,
+    longitude: Double,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val point = remember(latitude, longitude) {
+        GeoPoint(latitude, longitude)
+    }
+
+    AndroidView(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp)),
+
+        factory = { ctx ->
+
+            Configuration.getInstance().userAgentValue =
+                ctx.packageName
+
+            MapView(ctx).apply {
+
+                setTileSource(
+                    TileSourceFactory.MAPNIK
+                )
+
+                setMultiTouchControls(false)
+
+                controller.setZoom(16.0)
+                controller.setCenter(point)
+
+                val marker = Marker(this).apply {
+
+                    position = point
+
+                    setAnchor(
+                        Marker.ANCHOR_CENTER,
+                        Marker.ANCHOR_BOTTOM
+                    )
+
+                    title = context.getString(
+                        R.string.label_organization_location
+                    )
+                }
+
+                overlays.add(marker)
+
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+        },
+
+        update = { mapView ->
+
+            val newPoint = GeoPoint(
+                latitude,
+                longitude
+            )
+
+            mapView.controller.animateTo(
+                newPoint
+            )
+
+            val marker =
+                mapView.overlays
+                    .filterIsInstance<Marker>()
+                    .firstOrNull()
+
+            if (marker != null) {
+                marker.position = newPoint
+            }
+
+            mapView.invalidate()
+        }
+    )
+}
 
 @Composable
 private fun CollectionImagesSection(
@@ -1199,6 +1547,7 @@ private fun PersonInfoRow(
         )
     }
 }
+/*
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
@@ -1208,9 +1557,10 @@ private fun AddOrganizationScreenPreview() {
             organizationId = "",
             onBack = {},
             onCancel = {},
-            onSaveClick = {},
+            onSuccessCreate = {},
             onSelectLocation = {},
             onAddImage = {}
         )
     }
 }
+*/

@@ -35,10 +35,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,10 +59,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.FilterSection
 import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
@@ -67,10 +71,12 @@ import ir.kitgroup.partnerManagement.core.ui.components.Rating
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
-import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationsViewModel
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_ORGANIZATION_SAVE
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 
 @Composable
 fun OrganizationsListScreen(
+    navController: NavController,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToAdd: () -> Unit,
     modifier: Modifier = Modifier,
@@ -84,6 +90,46 @@ fun OrganizationsListScreen(
     val allOrganizations by viewModel.allOrganizations.collectAsState()
 
     val statusOptions = remember { OrganizationStatus.entries }
+
+    val snackbarHostState =
+        remember { SnackbarHostState() }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val currentBackStackEntry = navController.currentBackStackEntry
+
+    // بررسی پرچم همگام‌سازی پس از بازگشت به این صفحه
+    LaunchedEffect(currentBackStackEntry) {
+        val needSync = currentBackStackEntry
+            ?.savedStateHandle
+            ?.get<Boolean>(SYNC_AFTER_ORGANIZATION_SAVE) ?: false
+
+        if (needSync) {
+            viewModel.syncOrganizationsData()
+            // پاک کردن پرچم تا در تغییر کانفیگ تکرار نشود
+            currentBackStackEntry?.savedStateHandle?.remove<Boolean>(SYNC_AFTER_ORGANIZATION_SAVE)
+        }
+    }
+
+// گوش دادن به خطای صادرشده از ViewModel
+
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(
+                        event.message.asString(context)
+                    )
+                }
+
+                is UiEvent.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        event.error.asString(context)
+                    )
+                }
+            }
+        }
+    }
 
     // فیلتر کردن لیست
     val filteredOrganizations =
@@ -104,11 +150,20 @@ fun OrganizationsListScreen(
         }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.primary,
+        modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onNavigateToAdd,
+                onClick = {
+                    // <-- بررسی وجود شهر و منطقه قبل از ناوبری
+                    viewModel.checkCanNavigateToAddOrganization {
+                        onNavigateToAdd()
+                    }
+                },
                 containerColor = LocalPartnerManagementColors.current.success,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp),
@@ -135,76 +190,70 @@ fun OrganizationsListScreen(
         },
         floatingActionButtonPosition = FabPosition.Center
     ) {
-        Column(
-            modifier = modifier.fillMaxSize()
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp
+            ),
+            color = MaterialTheme.colorScheme.background
         ) {
-            CustomHeader(
-                title = R.string.label_organizations_list,
-                showBackButton = false
-            )
-            Surface(
-                modifier = modifier.fillMaxSize(),
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                color = MaterialTheme.colorScheme.background
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp, end = 16.dp, top = 12.dp)
-                ) {
-                    FilterSection(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        hint = stringResource(R.string.label_search)
+                FilterSection(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    hint = stringResource(R.string.label_search)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OrganizationsFiltersRow(
+                    selectedStatus = selectedStatus,
+                    statusOptions = statusOptions,
+                    isWarningOnly = isWarningOnly,
+                    onStatusSelected = { selectedStatus = it },
+                    onClearStatus = { selectedStatus = null },
+                    onToggleWarningOnly = { isWarningOnly = !isWarningOnly }
+                )
+
+                if (filteredOrganizations.isEmpty()) {
+                    EmptyState(
+                        textRes = R.string.msg_no_item_found,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
                     )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        itemsIndexed(
+                            items = filteredOrganizations,
+                            key = { _, item -> item.organization.organizationId }
+                        ) { index, organization ->
+                            OrganizationsCard(
+                                item = organization,
+                                number = index + 1,
+                                onClick = {
+                                    onNavigateToDetail(organization.organization.organizationId)
+                                }
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OrganizationsFiltersRow(
-                        selectedStatus = selectedStatus,
-                        statusOptions = statusOptions,
-                        isWarningOnly = isWarningOnly,
-                        onStatusSelected = { selectedStatus = it },
-                        onClearStatus = { selectedStatus = null },
-                        onToggleWarningOnly = { isWarningOnly = !isWarningOnly }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (filteredOrganizations.isEmpty()) {
-                        EmptyState(
-                            textRes = R.string.msg_no_item_found,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp)
-                        ) {
-                            itemsIndexed(
-                                items = filteredOrganizations,
-                                key = { _, item -> item.organization.organizationId }
-                            ) { index, organization ->
-                                OrganizationsCard(
-                                    item = organization,
-                                    number = index + 1,
-                                    onClick = {
-                                        onNavigateToDetail(organization.organization.organizationId)
-                                    }
-                                )
-                            }
-
-                            item {
-                                Spacer(modifier = Modifier.height(80.dp))
-                            }
+                        item {
+                            Spacer(modifier = Modifier.height(80.dp))
                         }
                     }
                 }
             }
         }
+
     }
 }
 
@@ -402,6 +451,8 @@ fun OrganizationsCard(
             "-"
         }
     }
+
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -520,8 +571,10 @@ fun OrganizationsCard(
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun OrganizationsListScreenPreview() {
+    val navController = rememberNavController()
     AppScreenPreview {
         OrganizationsListScreen(
+            navController = navController,
             onNavigateToDetail = {},
             onNavigateToAdd = {}
         )

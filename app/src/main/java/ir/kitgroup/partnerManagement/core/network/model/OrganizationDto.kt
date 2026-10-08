@@ -7,6 +7,8 @@ data class OrganizationDto(
 
     val organizationId: String,
 
+    val activeVisitorId: String?,
+
     val name: String?,
 
     val ownerName: String?,
@@ -51,9 +53,9 @@ data class OrganizationDto(
 
     val regionName: String?,
 
-    val latitude: String?,
+    val latitude: Double?,
 
-    val longitude: String?,
+    val longitude: Double?,
 
     val visitorId: String?,
 

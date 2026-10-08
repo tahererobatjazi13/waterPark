@@ -99,7 +99,7 @@ fun AssignedStandsDetailScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CustomHeader(
                 title = R.string.label_assignment_details,
@@ -116,7 +116,7 @@ fun AssignedStandsDetailScreen(
                 topStart = 24.dp,
                 topEnd = 24.dp
             ),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             LazyColumn(
                 modifier = Modifier

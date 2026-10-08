@@ -2,6 +2,7 @@ package ir.kitgroup.partnerManagement.feature.dashboard.model
 
 
 data class SyncDataRequest(
+    val statusSync : Boolean,
     val systemUserId: String,
     val visitorId: String,
     val roleCode: Int = 0,

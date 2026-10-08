@@ -18,4 +18,8 @@ interface OfferDao {
 
     @Query("DELETE FROM offers")
     suspend fun deleteAll()
+
+
+    @Query("SELECT COUNT(*) FROM offers")
+    suspend fun getCount(): Int
 }

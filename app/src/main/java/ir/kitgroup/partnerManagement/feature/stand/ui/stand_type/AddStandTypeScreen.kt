@@ -68,7 +68,7 @@ fun AddStandTypeScreen(
                 onBackClick = onBackClick
             )
         },
-        containerColor = colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
             modifier = Modifier

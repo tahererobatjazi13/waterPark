@@ -65,7 +65,7 @@ fun VisitorsPerformanceDashboardScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CustomHeader(
                 title = R.string.label_visitors_performance_analysis,
@@ -79,7 +79,7 @@ fun VisitorsPerformanceDashboardScreen(
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier

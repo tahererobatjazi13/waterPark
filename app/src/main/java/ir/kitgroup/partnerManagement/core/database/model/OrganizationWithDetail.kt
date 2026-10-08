@@ -24,6 +24,7 @@ data class OrganizationWithDetail(
     val region: RegionEntity?
 
 ) {
+
     val cityName: String
         get() = city?.name ?: ""
 

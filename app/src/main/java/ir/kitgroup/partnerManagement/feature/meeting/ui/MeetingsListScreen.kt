@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,7 +58,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.components.FilterSection
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -70,6 +70,9 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
@@ -79,6 +82,7 @@ import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
@@ -111,12 +115,28 @@ fun MeetingsListScreen(
             }"
         )
     }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
+    val snackbarHostState =
+        remember { SnackbarHostState() }
 
-    // لیست وضعیت‌های قابل انتخاب
-    /*   val statusOptions = remember {
-           listOf(Status.PLANNED, Status.DONE, Status.CANCELLED)
-       }*/
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(
+                        event.message.asString(context)
+                    )
+                }
+
+                is UiEvent.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        event.error.asString(context)
+                    )
+                }
+            }
+        }
+    }
 
     val statusOptions = remember { MeetingStatus.entries }
 
@@ -133,15 +153,13 @@ fun MeetingsListScreen(
         allMeetings.filter { item ->
 
             val matchesSearch =
-                searchQuery.isBlank() ||
-                        item.subjectVisitName?.contains(
-                            searchQuery,
-                            ignoreCase = true
-                        ) == true ||
-                        item.meeting.visitDate?.contains(
-                            searchQuery,
-                            ignoreCase = true
-                        ) == true
+                searchQuery.isBlank() || item.subjectVisitName.contains(
+                    searchQuery,
+                    ignoreCase = true
+                ) || item.meeting.visitDate?.contains(
+                    searchQuery,
+                    ignoreCase = true
+                ) == true
 
             val matchesStatus =
                 selectedStatus == null ||
@@ -165,11 +183,20 @@ fun MeetingsListScreen(
     }
 
     Scaffold(
+        modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onAddMeetingClick,
-                containerColor = LocalPartnerManagementColors.current.success,
+                onClick = {
+                    viewModel.checkCanNavigateToAddMeeting {
+                        onAddMeetingClick()
+                    }
+                },
+                containerColor = appColors.success,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -195,76 +222,64 @@ fun MeetingsListScreen(
         },
         floatingActionButtonPosition = FabPosition.Center
     ) {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.primary)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            color = MaterialTheme.colorScheme.background
         ) {
-            CustomHeader(
-                title = R.string.label_meeting,
-                showBackButton = false
-            )
-
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                color = appColors.screenBackground
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp, end = 16.dp, top = 12.dp)
-                ) {
-                    FilterSection(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        hint = stringResource(R.string.label_search)
+
+                FilterSection(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    hint = stringResource(R.string.label_search)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                MeetingFiltersRow(
+                    selectedVisitor = selectedVisitor,
+                    selectedDate = selectedStartDate ?: pickDateLabel,
+                    selectedStatus = selectedStatus,
+                    statusOptions = statusOptions,
+                    onVisitorSelected = { selectedVisitor = it },
+                    onDateClick = { showDatePicker = true },
+                    onClearDate = { selectedStartDate = null },
+                    onStatusSelected = { selectedStatus = it },
+                    onClearStatus = { selectedStatus = null },
+                    isDateFiltered = selectedStartDate != null
+                )
+
+                if (filteredItems.isEmpty()) {
+                    EmptyState(
+                        textRes = R.string.msg_no_item_found,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
                     )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    MeetingFiltersRow(
-                        selectedVisitor = selectedVisitor,
-                        selectedDate = selectedStartDate ?: pickDateLabel,
-                        selectedStatus = selectedStatus,
-                        statusOptions = statusOptions,
-                        onVisitorSelected = { selectedVisitor = it },
-                        onDateClick = { showDatePicker = true },
-                        onClearDate = { selectedStartDate = null },
-                        onStatusSelected = { selectedStatus = it },
-                        onClearStatus = { selectedStatus = null },
-                        isDateFiltered = selectedStartDate != null
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (filteredItems.isEmpty()) {
-                        EmptyState(
-                            textRes = R.string.msg_no_item_found,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp),
-                        ) {
-                            items(
-                                items = filteredItems,
-                                key = { it.meeting.meetingId }
-                            ) { item ->
-                                MeetingCard(
-                                    item = item,
-                                    onClick = { onMeetingClick(item.meeting.meetingId) },
-                                    onEditClick = { onEditMeetingClick(item.meeting.meetingId) },
-                                    onDeleteClick = { visitPendingDelete = item }
-                                )
-                            }
-                            item {
-                                Spacer(modifier = Modifier.height(80.dp))
-                            }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp),
+                    ) {
+                        items(
+                            items = filteredItems,
+                            key = { it.meeting.meetingId }
+                        ) { item ->
+                            MeetingCard(
+                                item = item,
+                                onClick = { onMeetingClick(item.meeting.meetingId) },
+                                onEditClick = { onEditMeetingClick(item.meeting.meetingId) },
+                                onDeleteClick = { visitPendingDelete = item }
+                            )
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(80.dp))
                         }
                     }
                 }
@@ -534,6 +549,7 @@ fun MeetingCard(
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
+
 
                 DetailRow(
                     icon = Icons.Default.Business,

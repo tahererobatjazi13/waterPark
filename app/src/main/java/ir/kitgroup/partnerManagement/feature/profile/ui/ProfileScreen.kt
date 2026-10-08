@@ -22,9 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -46,7 +44,6 @@ import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CardMenuItem
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDialog
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.theme.RedContent
 
@@ -71,53 +68,42 @@ fun ProfileScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
+            .background(appColors.screenBackground)
+            .verticalScroll(scrollState)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        CustomHeader(
-            title = R.string.label_user_profile,
-            showBackButton = false
+
+        CenterSummaryCard(
+            centerName = centerName?.ifBlank { "—" } ?: "—",
+            onClick = onCenterClick
         )
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                CenterSummaryCard(
-                    centerName = centerName?.ifBlank { "—" } ?: "—",
-                    onClick = onCenterClick
-                )
-                UserInfoCard(
-                    fullName = fullName?.ifBlank { "—" } ?: "—",
-                    personalCode = userName?.ifBlank { "—" } ?: "—",
-                    mobile = userMobile?.ifBlank { "—" } ?: "—",
-                    roleName = roleName?.ifBlank { "—" } ?: "—"
-                )
 
-                CardMenuItem(
-                    icon = R.drawable.ic_setting,
-                    title = R.string.label_settings,
-                    containerColor = appColors.cardBackground,
-                    contentColor = appColors.textPrimary,
-                    onClick = onSettingsClick
-                )
+        UserInfoCard(
+            fullName = fullName?.ifBlank { "—" } ?: "—",
+            personalCode = userName?.ifBlank { "—" } ?: "—",
+            mobile = userMobile?.ifBlank { "—" } ?: "—",
+            roleName = roleName?.ifBlank { "—" } ?: "—"
+        )
 
-                CardMenuItem(
-                    icon = R.drawable.ic_logout,
-                    title = R.string.label_log_out_account,
-                    containerColor = appColors.errorContainer,
-                    contentColor = appColors.onErrorContainer,
-                    onClick = { showLogoutDialog = true }
-                )
+        CardMenuItem(
+            icon = R.drawable.ic_setting,
+            title = R.string.label_settings,
+            containerColor = appColors.cardBackground,
+            contentColor = appColors.textPrimary,
+            onClick = onSettingsClick
+        )
 
-                Spacer(modifier = Modifier.size(16.dp))
-            }
-        }
+        Spacer(modifier = Modifier.size(8.dp))
+
+        CardMenuItem(
+            icon = R.drawable.ic_logout,
+            title = R.string.label_log_out_account,
+            containerColor = appColors.errorContainer,
+            contentColor = appColors.onErrorContainer,
+            onClick = { showLogoutDialog = true }
+        )
+
+        Spacer(modifier = Modifier.size(16.dp))
     }
 
     CustomDialog(
@@ -138,6 +124,7 @@ fun ProfileScreen(
         }
     )
 }
+
 @Composable
 private fun CenterSummaryCard(
     centerName: String,
@@ -149,7 +136,7 @@ private fun CenterSummaryCard(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp),
+            .padding(vertical = 4.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = appColors.cardBackground
@@ -197,7 +184,7 @@ private fun CenterSummaryCard(
 
                 Text(
                     text = centerName,
-                    style = typography.titleMedium,
+                    style = typography.titleLarge,
                     color = appColors.textPrimary
                 )
             }
@@ -211,7 +198,6 @@ private fun CenterSummaryCard(
     }
 }
 
-
 @Composable
 private fun UserInfoCard(
     fullName: String,
@@ -224,7 +210,7 @@ private fun UserInfoCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = appColors.cardBackground
@@ -252,6 +238,7 @@ private fun UserInfoCard(
                 iconColor = appColors.iconOrangeContainer,
                 tint = appColors.warning
             )
+
             ProfileDivider()
 
             UserInfoRow(
@@ -261,6 +248,7 @@ private fun UserInfoCard(
                 iconColor = appColors.iconGreenContainer,
                 tint = appColors.success
             )
+
             ProfileDivider()
 
             UserInfoRow(

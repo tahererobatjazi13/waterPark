@@ -2,21 +2,25 @@ package ir.kitgroup.partnerManagement.core.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-
-@Entity(tableName = "visitor_organization")
+@Entity(tableName = "visitor_organizations")
 data class VisitorOrganizationEntity(
+
     @PrimaryKey
     val visitorOrganizationId: String,
 
-    val name: String? = null,
+    val visitorId: String?,
 
-    val dateEnd: String? = null,
+    val organizationId: String?,
 
-    val dateStart: String? = null,
+    val statusRelation: Int?,
 
-    val organizationId: String? = null,
+    val statusRelationName: String?,
 
-    val visitorId: String? = null,
+    val dateStart: String?,
 
-    val statusRelation: Int? = null   // ثبت اولیه=0 ،فعال=1 ، غیر فعال=2
+    val dateEnd: String?,
+
+    val name: String?,
+
+    val status: Int?// ثبت اولیه=0 ،فعال=1 ، غیر فعال=2
 )

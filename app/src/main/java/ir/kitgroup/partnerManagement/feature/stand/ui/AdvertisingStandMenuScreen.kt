@@ -70,7 +70,7 @@ fun AdvertisingStandMenuScreen(
                 onBackClick = onBackClick
             )
         },
-        containerColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
 
         Surface(

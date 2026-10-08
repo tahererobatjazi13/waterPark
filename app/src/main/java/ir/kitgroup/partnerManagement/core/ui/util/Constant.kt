@@ -15,6 +15,11 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Schedule
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus.INITIAL_REGISTRATION
 
+const val SYNC_AFTER_ORGANIZATION_SAVE =
+    "sync_after_organization_save"
+
+const val SYNC_AFTER_CONTRACT_SAVE =
+    "sync_after_contract_save"
 
 enum class ThemeMode {
     LIGHT,
@@ -37,6 +42,72 @@ enum class Status {
     CLOSED
 }
 
+enum class OrganizationType(
+    val code: Int,
+    @StringRes val titleRes: Int
+) {
+    HOTEL(
+        code = 1,
+        titleRes = R.string.organization_type_hotel
+    ),
+
+    GOVERNMENT_OFFICE(
+        code = 2,
+        titleRes = R.string.organization_type_government_office
+    ),
+
+    PRIVATE_COMPANY(
+        code = 3,
+        titleRes = R.string.organization_type_private_company
+    ),
+
+    KIOSK(
+        code = 4,
+        titleRes = R.string.organization_type_kiosk
+    ),
+
+    ORGANIZATION_INSTITUTION(
+        code = 5,
+        titleRes = R.string.organization_type_organization_institution
+    );
+
+    companion object {
+        fun fromCode(code: Int): OrganizationType? {
+            return entries.firstOrNull { it.code == code }
+        }
+    }
+}
+
+enum class OrganizationLevel(
+    val code: Int,
+    @StringRes val titleRes: Int
+) {
+    NORMAL(
+        code = 0,
+        titleRes = R.string.organization_level_normal
+    ),
+
+    MEDIUM(
+        code = 1,
+        titleRes = R.string.organization_level_medium
+    ),
+
+    ABOVE_MEDIUM(
+        code = 2,
+        titleRes = R.string.organization_level_above_medium
+    ),
+
+    EXCELLENT(
+        code = 3,
+        titleRes = R.string.organization_level_excellent
+    );
+
+    companion object {
+        fun fromCode(code: Int): OrganizationLevel? {
+            return entries.firstOrNull { it.code == code }
+        }
+    }
+}
 
 enum class CardStatusFilter(
     @StringRes val titleRes: Int,
@@ -80,9 +151,6 @@ enum class OrganizationDetailTab(
     PERSONS(
         titleRes = R.string.tab_organization_persons
     ),
-    VISITOR(
-        titleRes = R.string.tab_organization_visitor
-    ),
     STANDS(
         titleRes = R.string.tab_organization_stands
     ),
@@ -94,7 +162,10 @@ enum class OrganizationDetailTab(
     ),
     WARNING(
         titleRes = R.string.tab_organization_warnings
-    )
+    ),
+    VISITOR(
+        titleRes = R.string.tab_organization_visitor
+    ),
 }
 
 enum class StatusColor {
@@ -360,6 +431,26 @@ enum class GenderType(
     }
 }
 
+enum class PersonGenderType(
+    val id: Int,
+    @StringRes val titleRes: Int
+) {
+    MALE(
+        id = 0,
+        titleRes = R.string.gender_male
+    ),
+    FEMALE(
+        id = 1,
+        titleRes = R.string.gender_female
+    );
+
+    companion object {
+        fun fromId(id: Int?): PersonGenderType? {
+            return entries.firstOrNull { it.id == id }
+        }
+    }
+}
+
 
 enum class OfferPlanLineStatus(
     override val id: Int,
@@ -463,3 +554,31 @@ enum class UserRole(
         }
     }
 }
+
+
+enum class PersonOrganizationRole(
+    val id: Int,
+    @StringRes val titleRes: Int
+) {
+    EMPLOYEE(
+        id = 0,
+        titleRes = R.string.role_organization_employee
+    ),
+
+    SUPERVISOR(
+        id = 1,
+        titleRes = R.string.role_supervisor
+    ),
+
+    MANAGER(
+        id = 3,
+        titleRes = R.string.role_manager
+    );
+
+    companion object {
+        fun fromId(id: Int?): PersonOrganizationRole? {
+            return entries.firstOrNull { it.id == id }
+        }
+    }
+}
+

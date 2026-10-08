@@ -1,4 +1,3 @@
-// src/main/java/ir/kitgroup/partnerManagement/feature/report/ui/visitor/VisitorAnalysisScreen.kt
 package ir.kitgroup.partnerManagement.feature.report.ui.visitor
 
 import androidx.compose.foundation.BorderStroke
@@ -35,7 +34,7 @@ fun VisitorAnalysisScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CustomHeader(
                 title = R.string.label_visitor_performance_analysis,
@@ -49,7 +48,7 @@ fun VisitorAnalysisScreen(
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding()),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier

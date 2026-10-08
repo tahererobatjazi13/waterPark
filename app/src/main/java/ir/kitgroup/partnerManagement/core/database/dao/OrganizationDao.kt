@@ -19,7 +19,6 @@ interface OrganizationDao {
     @Query(
         """
         SELECT * FROM organizations
-        ORDER BY name
     """
     )
     fun observeAll(): Flow<List<OrganizationWithDetail>>
@@ -40,4 +39,8 @@ interface OrganizationDao {
     """
     )
     suspend fun deleteAll()
+
+
+    @Query("SELECT COUNT(*) FROM organizations")
+    suspend fun getCount(): Int
 }

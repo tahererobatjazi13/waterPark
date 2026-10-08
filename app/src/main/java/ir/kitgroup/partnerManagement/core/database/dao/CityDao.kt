@@ -25,4 +25,7 @@ interface CityDao {
 
     @Query("DELETE FROM cities")
     suspend fun deleteAll()
+
+    @Query("SELECT COUNT(*) FROM cities")
+    suspend fun getCount(): Int
 }

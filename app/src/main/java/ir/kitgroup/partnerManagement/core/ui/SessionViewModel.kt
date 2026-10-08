@@ -1,21 +1,26 @@
 package ir.kitgroup.partnerManagement.core.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.kitgroup.partnerManagement.core.database.AppDatabase
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.login.domain.UserSession
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class SessionViewModel @Inject constructor(
-    private val mainPreferences: MainPreferences
+    private val mainPreferences: MainPreferences,
+    private val database: AppDatabase
 ) : ViewModel() {
 
     // =========================================================
@@ -174,13 +179,37 @@ class SessionViewModel @Inject constructor(
     // =========================================================
     // Logout
     // =========================================================
-
-    fun logout(
-        onComplete: () -> Unit
-    ) {
+    fun logout(onComplete: () -> Unit) {
         viewModelScope.launch {
-            mainPreferences.logout()
-            onComplete()
+            try {
+                Log.d("SessionViewModel", "========== LOGOUT START ==========")
+
+                // 1. Clear local database on IO thread
+                withContext(Dispatchers.IO) {
+                    Log.d("SessionViewModel", "Clearing Room database...")
+                    database.clearAllTables()
+                }
+
+                Log.d("SessionViewModel", "Room database cleared")
+
+                // 2. Clear session
+                mainPreferences.logout()
+
+                Log.d("SessionViewModel", "Session cleared")
+
+                // 3. Reset sync flag
+                mainPreferences.resetFirstSyncFlag()
+
+                Log.d("SessionViewModel", "Sync flag reset")
+
+                // 4. Navigate to Login
+                onComplete()
+
+                Log.d("SessionViewModel", "========== LOGOUT SUCCESS ==========")
+
+            } catch (e: Exception) {
+                Log.e("SessionViewModel", "========== LOGOUT FAILED ==========", e)
+            }
         }
     }
 }

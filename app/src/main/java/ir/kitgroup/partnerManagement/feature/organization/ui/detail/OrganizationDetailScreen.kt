@@ -1,13 +1,13 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
+import androidx.compose.foundation.layout.size
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,21 +17,42 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -62,17 +83,30 @@ import ir.kitgroup.partnerManagement.core.ui.util.OrganizationDetailTab
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
+import ir.kitgroup.partnerManagement.core.database.entity.VisitSubjectEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
-import ir.kitgroup.partnerManagement.core.ui.util.demoVisitorOrganizations
-import ir.kitgroup.partnerManagement.feature.organization.ui.AddOrganizationWarningDialog
-import ir.kitgroup.partnerManagement.feature.organization.ui.AddPersonBottomSheet
-import ir.kitgroup.partnerManagement.feature.organization.ui.InactivationReasonDialog
-import ir.kitgroup.partnerManagement.feature.organization.ui.rememberAddOrganizationFormState
-import ir.kitgroup.partnerManagement.feature.organization.ui.rememberAddPersonFormState
+import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
+import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
+import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.PersonGenderType
+import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddPersonFormState
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.InactivationReasonDialog
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddOrganizationFormState
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddPersonFormState
+import saman.zamani.persiandate.PersianDate
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 
 @Composable
@@ -81,6 +115,7 @@ fun OrganizationDetailScreen(
     onBack: () -> Unit,
     onEditClick: () -> Unit,
     onDisableClick: () -> Unit,
+    onStatusChangeSuccess: () -> Unit,
     onMeetingClick: (String) -> Unit,
     onAddMeetingClick: () -> Unit,
     onAssignVisitorClick: (String) -> Unit,
@@ -94,7 +129,6 @@ fun OrganizationDetailScreen(
     sessionViewModel: SessionViewModel = hiltViewModel(),
     organizationDetailViewModel: OrganizationDetailViewModel = hiltViewModel()
 ) {
-
     val organization by organizationDetailViewModel.organization
         .collectAsState()
 
@@ -108,7 +142,6 @@ fun OrganizationDetailScreen(
     val contracts by organizationDetailViewModel.contracts
         .collectAsStateWithLifecycle()
 
-
     val assignedStands by organizationDetailViewModel.assignedStands
         .collectAsStateWithLifecycle()
 
@@ -117,6 +150,12 @@ fun OrganizationDetailScreen(
 
     val assignedSerials by organizationDetailViewModel.assignedSerials
         .collectAsStateWithLifecycle()
+    val visitorsState by organizationDetailViewModel.visitorsState.collectAsStateWithLifecycle()
+
+    val addPersonState by organizationDetailViewModel.addPersonState
+        .collectAsStateWithLifecycle()
+
+    var showAddPersonSheet by rememberSaveable { mutableStateOf(false) }
 
 
     LaunchedEffect(organizationId) {
@@ -127,6 +166,8 @@ fun OrganizationDetailScreen(
         organizationDetailViewModel.observeOrganizationWarnings(organizationId)
         organizationDetailViewModel.observeOrganizationAssignedStands(organizationId)
         organizationDetailViewModel.observeOrganizationAssignedSerials(organizationId)
+        organizationDetailViewModel.fetchOrganizationVisitors(organizationId)
+
     }
 
 
@@ -140,7 +181,6 @@ fun OrganizationDetailScreen(
     val formState = rememberAddOrganizationFormState()
     val personState = rememberAddPersonFormState()
 
-    var showAddPersonSheet by rememberSaveable { mutableStateOf(false) }
 
     var selectedTab by rememberSaveable { mutableStateOf(OrganizationDetailTab.BASIC_INFO) }
     val visibleTabs = remember(isSupervisor) {
@@ -149,8 +189,6 @@ fun OrganizationDetailScreen(
         }
     }
     var showWarningDialog by rememberSaveable { mutableStateOf(false) }
-
-    // متغیرهای وضعیت برای کنترل دیالوگ‌ها
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
     var showInactiveReasonDialog by rememberSaveable { mutableStateOf(false) }
     var currentOrganizationStatus by rememberSaveable { mutableStateOf(OrganizationStatus.ACTIVE) }
@@ -159,10 +197,102 @@ fun OrganizationDetailScreen(
     var warningPendingDelete by remember { mutableStateOf<WarningWithDetail?>(null) }
     var visitorToDelete by remember { mutableStateOf<VisitorOrganizationEntity?>(null) }
 
+    val activeVisitorName by organizationDetailViewModel.activeVisitorName.collectAsState()
 
+
+    // متغیرهای وضعیت برای کنترل دیالوگ‌ها
+    val statusUpdateState by organizationDetailViewModel.statusUpdateState
+        .collectAsStateWithLifecycle()
+    val visitSubjects by organizationDetailViewModel.visitSubjects
+        .collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    /*
+    // گوش دادن به پیام‌های وضعیت
+        LaunchedEffect(Unit) {
+            organizationDetailViewModel.statusUiEvent.collect { event ->
+                when (event) {
+                    is UiEvent.ShowMessage -> snackbarHostState.showSnackbar(
+                        event.message.asString(
+                            context
+                        )
+                    )
+
+                    is UiEvent.ShowError -> snackbarHostState.showSnackbar(event.error.asString(context))
+                }
+            }
+        }*/
+
+// بستن دیالوگ و بازگشت پس از موفقیت
+// بستن دیالوگ و بازگشت به لیست سازمان‌ها همراه با فعال‌سازی پرچم سینک
+    LaunchedEffect(statusUpdateState) {
+        when (val state = statusUpdateState) {
+
+            is DataState.Success -> {
+                showStatusDialog = false
+                organizationDetailViewModel.resetStatusUpdateState()
+
+                Toast.makeText(
+                    context,
+                    "وضعیت سازمان با موفقیت ثبت شد",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                onStatusChangeSuccess()
+            }
+
+            is DataState.Error -> {
+                showStatusDialog = false
+
+                snackbarHostState.showSnackbar(
+                    state.error.asString(context)
+                )
+
+                organizationDetailViewModel.resetStatusUpdateState()
+            }
+
+            else -> Unit
+        }
+    }
+    LaunchedEffect(addPersonState) {
+        when (val state = addPersonState) {
+
+            is DataState.Success -> {
+
+                organizationDetailViewModel.resetAddPersonState()
+
+                showAddPersonSheet = false
+
+                formState.resetPersonFields(personState)
+
+                organizationDetailViewModel
+                    .observeOrganizationPersons(organizationId)
+
+                Toast.makeText(
+                    context,
+                    "شخص با موفقیت ثبت شد",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is DataState.Error -> {
+
+                snackbarHostState.showSnackbar(
+                    state.error.asString(context)
+                )
+
+                organizationDetailViewModel.resetAddPersonState()
+            }
+
+            else -> Unit
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         topBar = {
             CustomHeader(
                 title = R.string.label_details,
@@ -184,7 +314,7 @@ fun OrganizationDetailScreen(
                 }
             }
         },
-        containerColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 
         Surface(
@@ -195,7 +325,7 @@ fun OrganizationDetailScreen(
                     bottom = innerPadding.calculateBottomPadding()
                 ),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 LaunchedEffect(isSupervisor) {
@@ -235,7 +365,8 @@ fun OrganizationDetailScreen(
                 when (selectedTab) {
                     OrganizationDetailTab.BASIC_INFO -> {
                         OrganizationBasicInfoTabContent(
-                            organization = currentOrganization
+                            organization = currentOrganization,
+                            activeVisitorName = activeVisitorName
                         )
                     }
 
@@ -259,20 +390,6 @@ fun OrganizationDetailScreen(
                                 showAddPersonSheet = true
                             },
                         )
-                    }
-
-                    OrganizationDetailTab.VISITOR -> {
-                        if (isSupervisor) {
-
-                            OrganizationVisitorTabContent(
-                                visitors = demoVisitorOrganizations,
-                                onAssignVisitorClick = {
-                                    onAssignVisitorClick(organizationId)
-                                },
-                                onEditVisitorClick = { id -> onEditVisitorClick(id) },
-                                onDeleteVisitorClick = { id -> onDeleteVisitorClick(id) }
-                            )
-                        }
                     }
 
                     OrganizationDetailTab.STANDS -> {
@@ -314,6 +431,21 @@ fun OrganizationDetailScreen(
                             }
                         )
                     }
+
+                    OrganizationDetailTab.VISITOR -> {
+                        OrganizationVisitorTabContent(
+                            visitorsState = visitorsState,
+                            onRetry = {
+                                organizationDetailViewModel.fetchOrganizationVisitors(organizationId)
+                            },
+                            onAssignVisitorClick = {
+                                onAssignVisitorClick(organizationId)
+                            },
+                            onEditVisitorClick = { id -> onEditVisitorClick(id) },
+                            onDeleteVisitorClick = { id -> onDeleteVisitorClick(id) }
+                        )
+                    }
+
                 }
             }
         }
@@ -354,22 +486,25 @@ fun OrganizationDetailScreen(
             }
         )
     }
-
     if (showStatusDialog) {
         ChangeOrganizationStatusDialog(
-            initialStatus = currentOrganizationStatus,
-            initialReason = currentInactiveReason,
-            onDismiss = { showStatusDialog = false },
-            onConfirm = { newStatus, reason ->
-                currentOrganizationStatus = newStatus
-                currentInactiveReason = reason
+            initialStatus = OrganizationStatus.ACTIVE,
+            visitSubjects = visitSubjects,
+            initialReason = "",
+            isSubmitting = statusUpdateState is DataState.Loading,
+            onDismiss = {
                 showStatusDialog = false
-
-                // در صورت نیاز به فراخوانی اکشن اختصاصی غیرفعال‌سازی
-                if (newStatus == OrganizationStatus.INACTIVE) {
-                    onDisableClick()
-                }
-                // viewModel.updateOrganizationStatus(organizationId, newStatus.id, reason)
+                organizationDetailViewModel.resetStatusUpdateState()
+            },
+            onConfirm = { newStatus, deactiveDate, reason, visitDate, subjectVisitId ->
+                organizationDetailViewModel.updateOrganizationStatus(
+                    organizationId = organizationId,
+                    status = newStatus,
+                    deactiveDate = deactiveDate,
+                    reason = reason,
+                    visitDate = visitDate,
+                    subjectVisitId = subjectVisitId
+                )
             }
         )
     }
@@ -378,28 +513,37 @@ fun OrganizationDetailScreen(
     if (showAddPersonSheet) {
         AddPersonBottomSheet(
             personState = personState,
+
             onDismiss = {
                 showAddPersonSheet = false
+                organizationDetailViewModel.resetAddPersonState()
             },
-            onSavePerson = {
-                if (personState.name.isNotBlank() && personState.phone1.isNotBlank()) {
-                    /* formState.organizationPersons.add(
-                         PersonOrganization(
-                             name = personState.name.trim(),
-                             mobile = personState.mobile.trim(),
-                             phone = personState.phone.trim(),
-                             status = personState.status,
-                             gender = personState.gender,
-                             description = personState.description.trim()
-                         )
-                     )*/
 
-                    formState.resetPersonFields(personState)
-                    showAddPersonSheet = false
+            onSavePerson = {
+
+                if (
+                    personState.name.isBlank() ||
+                    personState.mobile.isBlank() ||
+                    personState.role == null
+                ) {
+                    return@AddPersonBottomSheet
                 }
+
+                organizationDetailViewModel.addOrganizationPerson(
+                    organizationId = organizationId,
+                    fullName = personState.name,
+                    role = personState.role!!,
+                    mobile = personState.mobile,
+                    phone = personState.phone,
+                    gender = personState.gender,
+                    description = personState.description,
+                    isCommissionEligible =
+                    personState.isCommissionEligible
+                )
             }
         )
     }
+
     visitorToDelete?.let { visitor ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_visitor),
@@ -429,6 +573,211 @@ fun OrganizationDetailScreen(
         )
     }
 
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddPersonBottomSheet(
+    personState: AddPersonFormState,
+    onDismiss: () -> Unit,
+    onSavePerson: () -> Unit
+) {
+    val appColors = LocalPartnerManagementColors.current
+
+    val genderList = remember { PersonGenderType.entries }
+    val roleList = remember { PersonOrganizationRole.entries }
+
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = appColors.screenBackground,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.9f) // تعیین ارتفاع در کانتنت داخلی به جای شیت بیرونی
+                .imePadding() // کیبورد مستقیماً کانتنت را به بالا هل می‌دهد
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.label_add_related_person),
+                style = typography.titleLarge,
+                color = appColors.textPrimary
+            )
+
+            // نام و نام خانوادگی
+            CustomEditTextField(
+                value = personState.name,
+                onValueChange = { personState.name = it },
+                label = stringResource(R.string.label_person_full_name),
+                placeholder = stringResource(R.string.hint_enter_person_full_name),
+                isRequired = true,
+                leadingIcon = null
+            )
+
+            // دو ستون شماره همراه و تلفن
+            TwoColumnRow(
+                start = {
+                    CustomEditTextField(
+                        value = personState.mobile,
+                        onValueChange = { personState.mobile = it },
+                        label = stringResource(R.string.label_mobile),
+                        placeholder = stringResource(R.string.hint_enter_mobile),
+                        isRequired = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone
+                        ),
+                        leadingIcon = null
+                    )
+                },
+                end = {
+                    CustomEditTextField(
+                        value = personState.phone,
+                        onValueChange = { personState.phone = it },
+                        label = stringResource(R.string.label_phone),
+                        placeholder = stringResource(R.string.hint_enter_phone),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone
+                        ),
+                        isRequired = false,
+                        leadingIcon = null
+                    )
+                }
+            )
+
+            // جنسیت
+            val genderItems = genderList.map { stringResource(it.titleRes) }
+            DropdownSelectorField(
+                value = PersonGenderType
+                    .fromId(personState.gender)
+                    ?.let { stringResource(it.titleRes) }
+                    ?: "",
+                label = stringResource(R.string.label_gender),
+                placeholder = stringResource(R.string.hint_choose_gender),
+                items = genderItems,
+                isRequired = false,
+                onItemSelected = { selectedGender ->
+                    val index = genderItems.indexOf(selectedGender)
+                    if (index >= 0) {
+                        personState.gender = genderList[index].id
+                    }
+                }
+            )
+
+            // نقش شخص در سازمان
+            val roleItems = roleList.map { stringResource(it.titleRes) }
+            DropdownSelectorField(
+                value = PersonOrganizationRole
+                    .fromId(personState.role)
+                    ?.let { stringResource(it.titleRes) }
+                    ?: "",
+                label = stringResource(R.string.label_organization_role),
+                placeholder = stringResource(R.string.hint_choose_organization_role),
+                items = roleItems,
+                isRequired = true,
+                onItemSelected = { selectedRole ->
+                    val selectedIndex = roleItems.indexOf(selectedRole)
+                    if (selectedIndex >= 0) {
+                        personState.role = roleList[selectedIndex].id
+                    }
+                }
+            )
+
+            // بروزرسانی مانده کیف پول
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(R.string.label_update_wallet_balance),
+                    style = typography.bodyLarge,
+                    color = appColors.textPrimary
+                )
+
+                Switch(
+                    checked = personState.isCommissionEligible,
+                    onCheckedChange = { personState.isCommissionEligible = it }
+                )
+            }
+
+            // توضیحات
+            CustomDescriptionField(
+                label = stringResource(R.string.label_description),
+                value = personState.description,
+                onValueChange = { personState.description = it },
+                placeholder = stringResource(R.string.hint_description)
+            )
+
+            // دکمه‌ها
+            AddPersonBottomSheetActions(
+                enabled = personState.name.isNotBlank() &&
+                        personState.mobile.isNotBlank() &&
+                        personState.role != null,
+                onDismiss = onDismiss,
+                onSavePerson = onSavePerson
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+
+@Composable
+private fun AddPersonBottomSheetActions(
+    enabled: Boolean,
+    onDismiss: () -> Unit,
+    onSavePerson: () -> Unit
+) {
+    val appColors = LocalPartnerManagementColors.current
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        CustomOutlinedButton(
+            text = stringResource(R.string.label_cancel),
+            onClick = onDismiss,
+            modifier = Modifier.weight(1f)
+        )
+
+        CustomButton(
+            text = stringResource(R.string.label_add_person),
+            onClick = onSavePerson,
+            modifier = Modifier.weight(1f),
+            enabled = enabled,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                disabledContainerColor = appColors.border.copy(alpha = 0.4f),
+                disabledContentColor = appColors.textSecondary
+            )
+        )
+    }
+}
+
+
+@Composable
+private fun TwoColumnRow(
+    start: @Composable () -> Unit,
+    end: @Composable () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(modifier = Modifier.weight(1f)) { start() }
+        Box(modifier = Modifier.weight(1f)) { end() }
+    }
 }
 
 @Composable
@@ -508,25 +857,50 @@ private fun OrganizationDetailTabItem(
 
 @Composable
 fun ChangeOrganizationStatusDialog(
-    initialStatus: OrganizationStatus,
+    initialStatus: OrganizationStatus = OrganizationStatus.ACTIVE,
+    visitSubjects: List<VisitSubjectEntity>,
     initialReason: String = "",
+    isSubmitting: Boolean = false,
     onDismiss: () -> Unit,
-    onConfirm: (status: OrganizationStatus, reason: String) -> Unit
+    onConfirm: (
+        status: OrganizationStatus,
+        deactiveDate: String?,
+        reason: String?,
+        visitDate: String?,
+        subjectVisitId: String?
+    ) -> Unit
 ) {
+    val statusEntries = remember {
+        OrganizationStatus.entries.filter { it != OrganizationStatus.INITIAL_REGISTRATION }
+    }
+    val statusTitles = statusEntries.map { stringResource(it.titleRes) }
+
     var selectedStatus by rememberSaveable { mutableStateOf(initialStatus) }
     var inactiveReason by rememberSaveable { mutableStateOf(initialReason) }
-    var isError by remember { mutableStateOf(false) }
+    var deactiveDateMillis by rememberSaveable { mutableStateOf(System.currentTimeMillis()) }
+    var visitDateMillis by rememberSaveable { mutableStateOf(System.currentTimeMillis()) }
+    var selectedSubjectId by rememberSaveable { mutableStateOf<String?>(null) }
 
-    // دریافت لیست Enum
-    val statusEntries = remember { OrganizationStatus.entries }
-    val statusTitles = statusEntries.map { stringResource(it.titleRes) }
+    var reasonError by remember { mutableStateOf(false) }
+    var subjectError by remember { mutableStateOf(false) }
+
+    var showDeactiveDatePicker by remember { mutableStateOf(false) }
+    var showVisitDatePicker by remember { mutableStateOf(false) }
+
+    val isInactive = selectedStatus == OrganizationStatus.INACTIVE
+    val isUrgentReferral = selectedStatus == OrganizationStatus.ORANGE
+
+    val deactiveDateIso = remember(deactiveDateMillis) { convertMillisToIso(deactiveDateMillis) }
+    val visitDateIso = remember(visitDateMillis) { convertMillisToIso(visitDateMillis) }
+
+    val visitDateDisplay = remember(visitDateMillis) { convertMillisToJalali(visitDateMillis) }
+    val deactiveDateDisplay =
+        remember(deactiveDateMillis) { convertMillisToJalali(deactiveDateMillis) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
@@ -534,7 +908,8 @@ fun ChangeOrganizationStatusDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
@@ -543,7 +918,6 @@ fun ChangeOrganizationStatusDialog(
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                // انتخاب وضعیت
                 DropdownSelectorField(
                     modifier = Modifier.fillMaxWidth(),
                     value = stringResource(selectedStatus.titleRes),
@@ -553,81 +927,183 @@ fun ChangeOrganizationStatusDialog(
                     isRequired = true,
                     onItemSelected = { selectedTitle ->
                         val index = statusTitles.indexOf(selectedTitle)
-
                         if (index != -1) {
-                            val newStatus = statusEntries[index]
-                            selectedStatus = newStatus
-
-                            if (newStatus != OrganizationStatus.INACTIVE) {
-                                inactiveReason = ""
-                                isError = false
-                            }
+                            selectedStatus = statusEntries[index]
+                            reasonError = false
+                            subjectError = false
                         }
                     }
                 )
 
-
-                // فیلد علت فقط در صورت انتخاب غیرفعال نمایش داده می‌شود
-                AnimatedVisibility(
-                    visible = selectedStatus == OrganizationStatus.INACTIVE,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
+                AnimatedVisibility(visible = isInactive) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        StatusDateRow(
+                            label = "تاریخ غیرفعال‌سازی: $deactiveDateDisplay",
+                            onClick = { showDeactiveDatePicker = true }
+                        )
                         CustomDescriptionField(
                             value = inactiveReason,
                             onValueChange = {
                                 inactiveReason = it
-                                if (it.trim().isNotBlank()) {
-                                    isError = false
-                                }
+                                reasonError = false
                             },
                             label = stringResource(R.string.label_inactivation_reason_field),
-                            placeholder = stringResource(R.string.hint_enter_inactivation_reason)
+                            placeholder = ""
                         )
-
-                        if (isError) {
+                        if (reasonError) {
                             Text(
                                 text = stringResource(R.string.error_inactivation_reason_required),
                                 color = MaterialTheme.colorScheme.error,
-                                style = typography.labelSmall,
-                                modifier = Modifier.padding(start = 8.dp)
+                                style = typography.labelSmall
                             )
                         }
                     }
                 }
 
-                // دکمه‌های تایید و انصراف
+                AnimatedVisibility(visible = isUrgentReferral) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        StatusDateRow(
+                            label = "تاریخ بازدید: $visitDateDisplay",
+                            onClick = { showVisitDatePicker = true }
+                        )
+                        DropdownSelectorField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = visitSubjects.firstOrNull { it.subjectVisitId == selectedSubjectId }?.title
+                                ?: "",
+                            label = "موضوع بازدید",
+                            placeholder = "",
+                            items = visitSubjects.mapNotNull { it.title },
+                            isRequired = true,
+                            onItemSelected = { title ->
+                                selectedSubjectId =
+                                    visitSubjects.find { it.title == title }?.subjectVisitId
+                                subjectError = false
+                            }
+                        )
+                        if (subjectError) {
+                            Text(
+                                text = "انتخاب موضوع بازدید الزامی است.",
+                                color = MaterialTheme.colorScheme.error,
+                                style = typography.labelSmall
+                            )
+                        }
+                    }
+                }
+
+                if (isSubmitting) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     CustomButton(
                         text = stringResource(R.string.label_registration),
+                        enabled = !isSubmitting,
                         onClick = {
-                            if (selectedStatus == OrganizationStatus.INACTIVE && inactiveReason.trim()
-                                    .isBlank()
-                            ) {
-                                isError = true
-                            } else {
-                                val finalReason =
-                                    if (selectedStatus == OrganizationStatus.INACTIVE) inactiveReason.trim() else ""
-                                onConfirm(selectedStatus, finalReason)
+                            when {
+                                isInactive && inactiveReason.trim().isBlank() -> {
+                                    reasonError = true
+                                }
+
+                                isUrgentReferral && selectedSubjectId == null -> {
+                                    subjectError = true
+                                }
+
+                                isInactive -> {
+                                    onConfirm(
+                                        selectedStatus,
+                                        deactiveDateIso,
+                                        inactiveReason.trim(),
+                                        null,
+                                        null
+                                    )
+                                }
+
+                                isUrgentReferral -> {
+                                    onConfirm(
+                                        selectedStatus,
+                                        null,
+                                        null,
+                                        visitDateIso,
+                                        selectedSubjectId
+                                    )
+                                }
+
+                                else -> {
+                                    onConfirm(selectedStatus, null, null, null, null)
+                                }
                             }
                         },
                         modifier = Modifier.weight(1f)
                     )
-
                     CustomOutlinedButton(
                         text = stringResource(R.string.label_cancel),
+                        enabled = !isSubmitting,
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
+        }
+    }
+
+    if (showDeactiveDatePicker) {
+        DatePickerDialog(
+            initialMillis = deactiveDateMillis,
+            onDismiss = { showDeactiveDatePicker = false },
+            onDateSelected = { jalali ->
+                deactiveDateMillis = jalaliToMillis(jalali)
+                showDeactiveDatePicker = false
+            }
+        )
+    }
+
+    if (showVisitDatePicker) {
+        DatePickerDialog(
+            initialMillis = visitDateMillis,
+            onDismiss = { showVisitDatePicker = false },
+            onDateSelected = { jalali ->
+                visitDateMillis = jalaliToMillis(jalali)
+                showVisitDatePicker = false
+            }
+        )
+    }
+}
+
+
+/** تبدیل شیء JalaliDate به میلی‌ثانیه */
+fun jalaliToMillis(jalali: ir.kitgroup.partnerManagement.core.ui.components.JalaliDate): Long {
+    return PersianDate().apply {
+        shYear = jalali.year
+        shMonth = jalali.month
+        shDay = jalali.day
+        hour = 0
+        minute = 0
+        second = 0
+    }.time
+}
+
+// تابع کمکی برای ردیف‌های تاریخ در دیالوگ
+@Composable
+private fun StatusDateRow(label: String, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, LocalPartnerManagementColors.current.border)
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.CalendarMonth,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = label, style = typography.bodyMedium)
         }
     }
 }
@@ -638,7 +1114,6 @@ private fun ActionButtons(
     onEdit: () -> Unit,
     onDetermination: () -> Unit
 ) {
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -673,4 +1148,26 @@ private fun ActionButtons(
             )
         )
     }
+}
+
+/** تبدیل millis به ISO-8601 (UTC) برای ارسال به API */
+fun convertMillisToIso(millis: Long): String {
+    val dateTime = Instant.ofEpochMilli(millis)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDateTime()
+    return dateTime.toInstant(ZoneOffset.UTC)
+        .atOffset(ZoneOffset.UTC)
+        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+}
+
+/** تبدیل millis به تاریخ شمسی برای نمایش */
+fun convertMillisToJalali(millis: Long): String {
+    val persianDate = PersianDate(millis)
+    return String.format(
+        java.util.Locale.US,
+        "%04d/%02d/%02d",
+        persianDate.shYear,
+        persianDate.shMonth,
+        persianDate.shDay
+    )
 }

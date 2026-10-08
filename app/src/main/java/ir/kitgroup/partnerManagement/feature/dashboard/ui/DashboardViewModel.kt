@@ -11,6 +11,10 @@ import ir.kitgroup.partnerManagement.core.repository.MeetingRepository
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.execute
+import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddContractUseCase
+import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddMeetingUseCase
+import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddOfferUseCase
+import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddOrganizationUseCase
 import ir.kitgroup.partnerManagement.feature.dashboard.repository.SyncRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +22,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
@@ -27,7 +32,13 @@ class DashboardViewModel @Inject constructor(
     private val syncRepository: SyncRepository,
     private val meetingRepository: MeetingRepository,
     private val statisticDao: StatisticDao,
-) : ViewModel() {
+    private val checkCanAddOrganizationUseCase: CheckCanAddOrganizationUseCase,
+    private val checkCanAddContractUseCase: CheckCanAddContractUseCase,
+    private val checkCanAddMeetingUseCase: CheckCanAddMeetingUseCase,
+    private val checkCanAddOfferUseCase: CheckCanAddOfferUseCase,
+
+
+    ) : ViewModel() {
 
     val syncState =
         MutableStateFlow<DataState<Unit>>(DataState.Idle)
@@ -96,4 +107,49 @@ class DashboardViewModel @Inject constructor(
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = emptyList()
             )
+
+
+    fun checkCanNavigateToAddOrganization(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val error = checkCanAddOrganizationUseCase()
+            if (error != null) {
+                _uiEvent.emit(UiEvent.ShowError(error))
+            } else {
+                onSuccess()
+            }
+        }
+    }
+
+    fun checkCanNavigateToAddContract(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val error = checkCanAddContractUseCase()
+            if (error != null) {
+                _uiEvent.emit(UiEvent.ShowError(error))
+            } else {
+                onSuccess()
+            }
+        }
+    }
+
+    fun checkCanNavigateToAddMeeting(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val error = checkCanAddMeetingUseCase()
+            if (error != null) {
+                _uiEvent.emit(UiEvent.ShowError(error))
+            } else {
+                onSuccess()
+            }
+        }
+    }
+
+    fun checkCanNavigateToAddOffer(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val error = checkCanAddOfferUseCase()
+            if (error != null) {
+                _uiEvent.emit(UiEvent.ShowError(error))
+            } else {
+                onSuccess()
+            }
+        }
+    }
 }

@@ -1,13 +1,13 @@
 package ir.kitgroup.partnerManagement.feature.offer.ui.offer_list
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,9 +30,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -45,11 +48,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanStatus
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
@@ -64,16 +67,50 @@ fun OfferListScreen(
     val appColors = LocalPartnerManagementColors.current
     val roleCode by sessionViewModel.roleCode.collectAsState()
 
-    val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
+    val currentRole = remember(roleCode) {
+        UserRole.fromCode(roleCode.toString())
+    }
+
     val isSupervisor = currentRole == UserRole.SUPERVISOR
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val snackbarHostState =
+        remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(
+                        event.message.asString(context)
+                    )
+                }
+
+                is UiEvent.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        event.error.asString(context)
+                    )
+                }
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         floatingActionButton = {
             if (isSupervisor) {
                 ExtendedFloatingActionButton(
-                    onClick = onAddClick,
-                    containerColor = LocalPartnerManagementColors.current.success,
+                    onClick = {
+                        viewModel.checkCanNavigateToAddOffer {
+                            onAddClick()
+                        }
+                    },
+                    containerColor = appColors.success,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
@@ -89,7 +126,9 @@ fun OfferListScreen(
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
+
                         Spacer(modifier = Modifier.width(8.dp))
+
                         Text(
                             text = stringResource(R.string.label_new_plan),
                             style = typography.titleLarge
@@ -99,55 +138,65 @@ fun OfferListScreen(
             }
         },
         floatingActionButtonPosition = FabPosition.Center
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.primary)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp
+            ),
+            color =
+            MaterialTheme.colorScheme.background
         ) {
-            CustomHeader(
-                title = R.string.label_offer_ticket_plans,
-                showBackButton = false
-            )
-
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                color = appColors.screenBackground
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 4.dp
+                    )
             ) {
+
                 if (offers.isEmpty()) {
+
                     EmptyState(
                         textRes = R.string.msg_no_item_found,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth()
                     )
+
                 } else {
+
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 16.dp,
-                            bottom = if (isSupervisor) {
-                                paddingValues.calculateBottomPadding() + 16.dp
-                            } else {
-                                16.dp
-                            }
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            vertical = 8.dp
+                        )
                     ) {
                         items(
                             items = offers,
-                            key = { plan -> plan.offerId }
-                        ) { plan ->
-                            OfferPlanListItem(
-                                plan = plan,
-                                onClick = { onOfferClick(plan) }
+                            key = { plan ->
+                                plan.offerId
+                            }
+                        ) { offer ->
+
+                            OfferListItem(
+                                offer = offer,
+                                onClick = {
+                                    onOfferClick(offer)
+                                }
                             )
                         }
+
+                        // فاصله برای اینکه آخرین کارت
+                        // زیر FAB قرار نگیرد
                         item {
-                            Spacer(modifier = Modifier.height(60.dp))
+                            Spacer(
+                                modifier = Modifier.height(60.dp)
+                            )
                         }
                     }
                 }
@@ -157,8 +206,8 @@ fun OfferListScreen(
 }
 
 @Composable
-private fun OfferPlanListItem(
-    plan: OfferEntity,
+private fun OfferListItem(
+    offer: OfferEntity,
     onClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -177,16 +226,16 @@ private fun OfferPlanListItem(
         )
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // ردیف هدر: نام طرح + برچسب وضعیت + فلش ناوبری
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = plan.title ?: "-",
+                    text = offer.title ?: "-",
                     style = typography.titleLarge,
                     color = appColors.textPrimary,
                     modifier = Modifier.weight(1f)
@@ -194,7 +243,9 @@ private fun OfferPlanListItem(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                StatusBadge(status = OfferPlanStatus.fromId(plan.statusOffer))
+                StatusBadge(
+                    status = OfferPlanStatus.fromId(offer.statusOffer)
+                )
 
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -206,35 +257,37 @@ private fun OfferPlanListItem(
                 )
             }
 
-            // ردیف اطلاعاتی: کد طرح
-            plan.code?.takeIf { it.isNotBlank() }?.let { code ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.label_offer_code) + ":",
-                        style = typography.bodySmall,
-                        color = appColors.textSecondary
-                    )
-                    Text(
-                        text = code,
-                        style = typography.labelMedium,
-                        color = appColors.textPrimary
+            offer.code
+                ?.takeIf { it.isNotBlank() }
+                ?.let { code ->
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.label_offer_code) + ":",
+                            style = typography.bodySmall,
+                            color = appColors.textSecondary
+                        )
+
+                        Text(
+                            text = code,
+                            style = typography.labelMedium,
+                            color = appColors.textPrimary
+                        )
+                    }
+
+                    HorizontalDivider(
+                        color = appColors.border.copy(alpha = 0.5f),
+                        thickness = 0.6.dp
                     )
                 }
 
-                HorizontalDivider(
-                    color = appColors.border.copy(alpha = 0.5f),
-                    thickness = 0.6.dp
-                )
-            }
-
-            // ردیف بازه زمانی با تبدیل به شمسی
             PlanDateRangeDisplay(
-                fromDate = formatJalaliDate(plan.fromDate),
-                toDate = formatJalaliDate(plan.toDate)
+                fromDate = formatJalaliDate(offer.fromDate),
+                toDate = formatJalaliDate(offer.toDate)
             )
         }
     }

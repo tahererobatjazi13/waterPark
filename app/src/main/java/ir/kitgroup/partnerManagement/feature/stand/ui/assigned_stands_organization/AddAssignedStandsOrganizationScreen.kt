@@ -185,7 +185,7 @@ fun AddAssignedStandsOrganizationScreen(
                 onBackClick = onBackClick
             )
         },
-        containerColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Surface(
             modifier = Modifier
@@ -195,7 +195,7 @@ fun AddAssignedStandsOrganizationScreen(
                 topStart = 24.dp,
                 topEnd = 24.dp
             ),
-            color = appColors.screenBackground
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier

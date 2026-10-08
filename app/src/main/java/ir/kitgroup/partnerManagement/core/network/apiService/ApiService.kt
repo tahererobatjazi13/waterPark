@@ -1,14 +1,27 @@
 package ir.kitgroup.partnerManagement.core.network.apiService
 
 
+import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
+import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
+import ir.kitgroup.partnerManagement.feature.contract.model.CreateContractRequest
+import ir.kitgroup.partnerManagement.feature.contract.model.TerminateActiveContractRequest
 import ir.kitgroup.partnerManagement.feature.dashboard.model.ConfirmLastSyncResponse
 import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataRequest
 import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataResponse
 import ir.kitgroup.partnerManagement.feature.login.model.LoginRequest
 import ir.kitgroup.partnerManagement.feature.login.model.LoginResponse
+import ir.kitgroup.partnerManagement.feature.meeting.model.ChangeStatusMeetingRequest
+import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
+import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.CreateOrganizationRequest
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -28,4 +41,62 @@ interface ApiService {
         @Query("userId") userId: String
     ): ConfirmLastSyncResponse
 
+
+    @POST("api/Organizations/create")
+    suspend fun createOrganization(
+        @Body request: CreateOrganizationRequest
+    ): Response<ModelResponse>
+
+    @PATCH("api/Organizations/update")
+    suspend fun updateOrganization(
+        @Body request: CreateOrganizationRequest
+    ): Response<ModelResponse>
+
+    @POST("api/Organizations/persons")
+    suspend fun addOrganizationPerson(
+        @Body request: AddOrganizationPersonRequest
+    ): Response<ModelResponse>
+
+    @POST("api/Organizations/Createcontracts")
+    suspend fun createContract(
+        @Body request: CreateContractRequest
+    ): Response<ModelResponse>
+
+    @PUT("api/Organizations/Updatecontracts")
+    suspend fun updateContract(
+        @Body request: CreateContractRequest
+    ): Response<ModelResponse>
+
+    @POST("api/Organizations/TerminateActiveContract")
+    suspend fun terminateActiveContract(
+        @Body request: TerminateActiveContractRequest
+    ): Response<ModelResponse>
+
+    @PATCH("api/Organizations/change-status")
+    suspend fun changeOrganizationStatus(
+        @Body request: ChangeOrganizationStatusRequest
+    ): Response<ModelResponse>
+
+
+    @GET("api/Sync/GetVisitorOrg/{organizationId}")
+    suspend fun getOrganizationVisitors(
+        @Path("organizationId") organizationId: String
+    ):  Response<List<VisitorOrganizationDto>>
+
+
+    @POST("api/Inspection/Meeting/create")
+    suspend fun createMeeting(
+        @Body request: CreateMeetingRequest
+    ): Response<ModelResponse>
+
+
+    @PUT("api/Inspection/Meeting/update")
+    suspend fun updateMeeting(
+        @Body request: CreateMeetingRequest
+    ): Response<ModelResponse>
+
+    @POST("api/Inspection/Meeting/change-status")
+    suspend fun changeMeetingStatus(
+        @Body request: ChangeStatusMeetingRequest
+    ): Response<ModelResponse>
 }

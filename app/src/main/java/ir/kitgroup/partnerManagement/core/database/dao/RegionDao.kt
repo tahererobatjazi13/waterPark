@@ -12,21 +12,20 @@ interface RegionDao {
     @Upsert
     suspend fun upsertAll(items: List<RegionEntity>)
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM regions
         WHERE cityId = :cityId
         ORDER BY name
-    """)
+    """
+    )
     fun observeByCity(cityId: String): Flow<List<RegionEntity>>
 
-    @Query("""
-        SELECT * 
-        FROM regions
-        WHERE regionId = :regionId
-        LIMIT 1
-    """)
-    fun observeById(regionId: String): Flow<RegionEntity?>
 
     @Query("DELETE FROM regions")
     suspend fun deleteAll()
+
+    @Query("SELECT COUNT(*) FROM regions")
+    suspend fun getCount(): Int
+
 }

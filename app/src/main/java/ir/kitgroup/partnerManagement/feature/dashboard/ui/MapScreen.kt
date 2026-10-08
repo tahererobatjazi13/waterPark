@@ -54,14 +54,16 @@ fun MapScreen(
 
     // راه‌اندازی و مدیریت چرخه حیات MapView و تنظیمات OSMdroid
     DisposableEffect(mapView) {
-        Configuration.getInstance().load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+        Configuration.getInstance()
+            .load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         Configuration.getInstance().userAgentValue = context.packageName
 
         mapView.onResume()
 
         onDispose {
             mapView.onPause()
-            Configuration.getInstance().save(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+            Configuration.getInstance()
+                .save(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
         }
     }
 
@@ -74,7 +76,7 @@ fun MapScreen(
                 onBackClick = onBackClick
             )
         },
-        containerColor = MaterialTheme.colorScheme.primary
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
 
         Box(
@@ -97,8 +99,8 @@ fun MapScreen(
                     view.overlays.clear()
 
                     organizations.forEach { org ->
-                        val lat = org.latitude?.toDoubleOrNull()
-                        val lon = org.longitude?.toDoubleOrNull()
+                        val lat = org.latitude
+                        val lon = org.longitude
 
                         if (lat != null && lon != null) {
                             val marker = Marker(view).apply {

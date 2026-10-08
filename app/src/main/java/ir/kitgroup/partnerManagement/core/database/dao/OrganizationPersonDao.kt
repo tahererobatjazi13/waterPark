@@ -19,6 +19,19 @@ interface OrganizationPersonDao {
         organizationId: String
     ): Flow<List<OrganizationPersonEntity>>
 
+    @Query(
+        """
+        SELECT *
+        FROM organization_persons
+        WHERE organizationId = :organizationId
+        ORDER BY fullName
+        """
+    )
+    fun observeByOrganizationId(
+        organizationId: String
+    ): Flow<List<OrganizationPersonEntity>>
+
+
     @Query("DELETE FROM organization_persons")
     suspend fun deleteAll()
 }

@@ -22,7 +22,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
@@ -55,13 +57,14 @@ import androidx.compose.material.icons.outlined.ConfirmationNumber
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Storefront
-import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
+import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun OrganizationBasicInfoTabContent(
-    organization: OrganizationWithDetail
+    organization: OrganizationWithDetail,
+    activeVisitorName: String? = null
 ) {
     Column(
         modifier = Modifier
@@ -71,7 +74,9 @@ fun OrganizationBasicInfoTabContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         SectionTitle(stringResource(R.string.label_organization_basic_information))
-        BasicInfoSection(organization)
+        BasicInfoSection(
+            organization, activeVisitorName = activeVisitorName
+        )
 
         SectionTitle(stringResource(R.string.label_contact_information))
         ContactInfoSection(organization)
@@ -99,7 +104,8 @@ fun OrganizationBasicInfoTabContent(
 
 @Composable
 private fun BasicInfoSection(
-    item: OrganizationWithDetail
+    item: OrganizationWithDetail,
+    activeVisitorName: String? = null
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
@@ -126,6 +132,18 @@ private fun BasicInfoSection(
                     color = colors.outlineVariant.copy(alpha = 0.4f)
                 )
 
+                if (!activeVisitorName.isNullOrBlank()) {
+                    InfoRowItem(
+                        title = "ویزیتور منتخب",
+                        value = activeVisitorName,
+                        icon = Icons.Filled.Badge
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        thickness = 0.8.dp,
+                        color = colors.outlineVariant.copy(alpha = 0.4f)
+                    )
+                }
                 InfoRowItem(
                     title = stringResource(R.string.label_organization_type),
                     value = item.organization.organizationTypeName.orEmpty(),
@@ -198,6 +216,25 @@ private fun BasicInfoSection(
                     StatusBadge(
                         status = OrganizationStatus.fromId(item.organization.status)
                     )
+                }
+
+
+                // نمایش وضعیت
+                val currentStatus = OrganizationStatus.fromId(item.organization.status)
+
+                // نمایش دلیل غیرفعال‌سازی در صورت غیرفعال بودن سازمان
+                if (currentStatus == OrganizationStatus.INACTIVE && !item.organization.reasonDeactive.isNullOrBlank()) {
+                    InfoRowItem(
+                        title = stringResource(R.string.label_inactivation_date),
+                        value = formatJalaliDate(item.organization.deactiveDate) ,
+                        icon = Icons.Filled.CalendarMonth
+                    )
+                    InfoRowItem(
+                        title = stringResource(R.string.label_inactivation_reason_title),
+                        value = item.organization.reasonDeactive,
+                        icon = Icons.Filled.Description
+                    )
+
                 }
             }
         }

@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui
+package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
 import androidx.compose.foundation.background
 import androidx.compose.material3.ExperimentalMaterial3Api

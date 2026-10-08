@@ -41,25 +41,26 @@ import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.navigation.Screen
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
+import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
-import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_ORGANIZATION_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.meeting.ui.DetailRow
 import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingTypeChip
 
 @Composable
 fun DashboardScreen(
     navController: NavController,
+    modifier: Modifier = Modifier,
     sessionViewModel: SessionViewModel = hiltViewModel(),
     dashboardViewModel: DashboardViewModel = hiltViewModel(),
     onSyncDataClick: () -> Unit = {},
@@ -68,7 +69,6 @@ fun DashboardScreen(
     val todayMeetings by dashboardViewModel.todayMeetings.collectAsStateWithLifecycle()
     val statistics by dashboardViewModel.statistics.collectAsStateWithLifecycle()
 
-    val fullName by sessionViewModel.fullName.collectAsState()
     val roleCode by sessionViewModel.roleCode.collectAsState()
 
     val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
@@ -92,6 +92,48 @@ fun DashboardScreen(
     val context =
         LocalContext.current
 
+    val currentBackStackEntry = remember(navController) {
+        navController.getBackStackEntry(BottomNavItem.Dashboard.route)
+    }
+
+    val shouldSyncAfterContractSave by
+    currentBackStackEntry
+        .savedStateHandle
+        .getStateFlow(
+            SYNC_AFTER_CONTRACT_SAVE,
+            false
+        )
+        .collectAsStateWithLifecycle()
+
+    val shouldSyncAfterOrganizationCreate by currentBackStackEntry
+        .savedStateHandle
+        .getStateFlow(
+            SYNC_AFTER_ORGANIZATION_SAVE,
+            false
+        ).collectAsStateWithLifecycle()
+
+    LaunchedEffect(shouldSyncAfterOrganizationCreate) {
+        if (shouldSyncAfterOrganizationCreate) {
+            // اول flag را خاموش می‌کنیم
+            currentBackStackEntry.savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = false
+            // سپس سینک را اجرا می‌کنیم
+            dashboardViewModel.onReceiveDataClick()
+        }
+    }
+    LaunchedEffect(
+        shouldSyncAfterContractSave
+    ) {
+        if (shouldSyncAfterContractSave) {
+
+            currentBackStackEntry
+                .savedStateHandle[
+                SYNC_AFTER_CONTRACT_SAVE
+            ] = false
+
+            dashboardViewModel
+                .onReceiveDataClick()
+        }
+    }
     LaunchedEffect(dashboardViewModel.uiEvent) {
         dashboardViewModel.uiEvent.collect { event ->
             when (event) {
@@ -147,61 +189,43 @@ fun DashboardScreen(
             accent = Red
         )
     )
+    val fullName by sessionViewModel.fullName.collectAsState()
 
+    val userFullName =
+        if (!fullName.isNullOrBlank()) {
+            stringResource(R.string.label_welcome_user, fullName!!.trim())
+        } else {
+            stringResource(R.string.nav_dashboard)
+        }
 
-    /*  val summaryItems = listOf(
-          SummaryCardData(
-              Icons.Filled.Domain,
-              Orange,
-              value = (statistics?.totalVisits ?: 0).toString(),
-              stringResource(R.string.label_total_views_today),
-              Orange
-          ),
-          SummaryCardData(
-              Icons.Filled.Person,
-              Green,
-              value = (statistics?.activeContractsCount ?: 0).toString(),
-              stringResource(R.string.label_in_person_visits),
-              Green
-          ),
-          SummaryCardData(
-              Icons.Filled.Call,
-              Blue,
-              "16",
-              stringResource(R.string.label_phone_calls),
-              Blue
-          )
-      )*/
-
-
-    Scaffold(
+    Scaffold(modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = {
             SnackbarHost(
                 hostState = snackbarHostState
             )
         }
-    ) { innerPadding ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(
-                    MaterialTheme.colorScheme.primary
-                )
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
-
-            DashboardHeader(fullName = fullName.orEmpty())
-
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                color = MaterialTheme.colorScheme.background
-            ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            )
+            {
+                CustomHeader(
+                    title = userFullName.toString(),
+                    showBackButton = false
+                )
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                        .fillMaxSize()
+                        .padding(start = 8.dp, end = 8.dp, top = 4.dp),
+                    contentPadding = PaddingValues(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // بخش عملیات همگام‌سازی و سینک داده‌ها
@@ -218,10 +242,28 @@ fun DashboardScreen(
                     item { Spacer(Modifier.width(6.dp)) }
                     item {
                         QuickActionsSection(
-                            onQuickContractClick = { navController.navigate(Screen.AddContract.route) },
-                            onQuickOrganizationClick = { navController.navigate(Screen.AddOrganization.route) },
-                            onQuickMeetingClick = { navController.navigate(Screen.AddMeeting.createRoute()) },
-                            onQuickContractOfferClick = { navController.navigate(Screen.AddContractOffer.route) }
+                            onQuickContractClick = {
+                                dashboardViewModel.checkCanNavigateToAddContract {
+                                    navController.navigate(Screen.AddContract.route)
+                                }
+                            },
+                            onQuickOrganizationClick = {
+                                dashboardViewModel.checkCanNavigateToAddOrganization {
+                                    navController.navigate(Screen.AddOrganization.route)
+                                }
+                            },
+
+                            onQuickMeetingClick = {
+                                dashboardViewModel.checkCanNavigateToAddMeeting {
+                                    navController.navigate(Screen.AddMeeting.createRoute())
+                                }
+                            },
+                            onQuickContractOfferClick =
+                            {
+                                dashboardViewModel.checkCanNavigateToAddOffer {
+                                    navController.navigate(Screen.AddContractOffer.route)
+                                }
+                            }
                         )
                     }
                     item { Spacer(Modifier.width(6.dp)) }
@@ -341,6 +383,7 @@ fun DashboardScreen(
                                  )
                              }*/
                 }
+
             }
         }
     }
@@ -399,7 +442,7 @@ private fun DataSyncSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -538,7 +581,7 @@ private fun SummarySection(
     Column(modifier = modifier) {
 
         SectionTitle(stringResource(R.string.label_summary_title))
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.height(6.dp))
 
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),

@@ -1,40 +1,78 @@
 package ir.kitgroup.partnerManagement.feature.meeting.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
-import androidx.navigation.navigation
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
+import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.meeting.ui.AddMeetingRoute
 import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingDetailScreen
 import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingsListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
-fun NavGraphBuilder.meetingNavGraph(navController: NavController) {
-
+fun NavGraphBuilder.meetingNavGraph(
+    navController: NavController
+) {
     navigation(
         startDestination = BottomNavItem.Meetings.route,
-        route = "Visit_graph"
+        route = "meeting_graph" // هماهنگ با isMainSection در AppNavigation
     ) {
-        // لیست بازدید ها
-        composable(BottomNavItem.Meetings.route) {
-            MeetingsListScreen(
-                onMeetingClick = { meetingId ->
-                    navController.navigate(Screen.MeetingDetail.createRoute(meetingId))
-                },
-                onAddMeetingClick = {
-                    navController.navigate(Screen.AddMeeting.createRoute())
-                },
-                onEditMeetingClick = { meetingId ->
-                    navController.navigate(Screen.AddMeeting.createRoute(meetingId))
-                }
-            )
+        // =====================================================
+        // Meetings - Main Tab
+        // =====================================================
+        composable(
+            route = BottomNavItem.Meetings.route,
+            enterTransition = { fadeIn(tween(250)) },
+            exitTransition = { fadeOut(tween(200)) }
+        ) {
+            val appColors = LocalPartnerManagementColors.current
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(appColors.screenBackground)
+            ) {
+                CustomHeader(
+                    title = stringResource(R.string.nav_meetings),
+                    showBackButton = false
+                )
+
+                MeetingsListScreen(
+                    onMeetingClick = { meetingId ->
+                        navController.navigate(
+                            Screen.MeetingDetail.createRoute(meetingId)
+                        )
+                    },
+                    onAddMeetingClick = {
+                        navController.navigate(
+                            Screen.AddMeeting.createRoute()
+                        )
+                    },
+                    onEditMeetingClick = { meetingId ->
+                        navController.navigate(
+                            Screen.AddMeeting.createRoute(meetingId)
+                        )
+                    }
+                )
+            }
         }
 
-
-        // صفحه جزئیات بازدید
+        // =====================================================
+        // Meeting Detail
+        // =====================================================
         composable(
             route = Screen.MeetingDetail.route,
             arguments = listOf(
@@ -43,16 +81,34 @@ fun NavGraphBuilder.meetingNavGraph(navController: NavController) {
                     nullable = true
                     defaultValue = null
                 }
-            )
+            ),
+            enterTransition = { fadeIn(tween(250)) },
+            exitTransition = { fadeOut(tween(200)) },
+            popEnterTransition = { fadeIn(tween(250)) },
+            popExitTransition = { fadeOut(tween(200)) }
         ) { backStackEntry ->
             val meetingId = backStackEntry.arguments?.getString("meetingId")
-
             MeetingDetailScreen(
-                meetingId = meetingId!!,
-                onBackClick = { navController.popBackStack() }
+                meetingId = meetingId.orEmpty(),
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onEditClick = { meetingId ->
+                    navController.navigate(
+                        Screen.EditMeeting.createRoute(
+                            meetingId
+                        )
+                    )
+                },
+                onStatusChanged = {
+                    // در صورت نیاز به رفرش یا بازگشت
+                },
             )
         }
-        // صفحه ثبت / ویرایش بازدید
+
+        // =====================================================
+        // Add / Edit Meeting
+        // =====================================================
         composable(
             route = "${Screen.AddMeeting.route}?meetingId={meetingId}&preselectedOrganizationId={preselectedOrganizationId}",
             arguments = listOf(
@@ -66,12 +122,29 @@ fun NavGraphBuilder.meetingNavGraph(navController: NavController) {
                     nullable = true
                     defaultValue = null
                 }
-            )
+            ),
+            enterTransition = { fadeIn(tween(250)) },
+            exitTransition = { fadeOut(tween(200)) },
+            popEnterTransition = { fadeIn(tween(250)) },
+            popExitTransition = { fadeOut(tween(200)) }
         ) {
             AddMeetingRoute(
-                onBackClick = { navController.popBackStack() },
-                onSubmitClick = { meeting ->
+                onBackClick = {
                     navController.popBackStack()
+                }, onSaved = {
+
+                    navController
+                        .getBackStackEntry(
+                            BottomNavItem.Dashboard.route
+                        )
+                        .savedStateHandle[
+                        SYNC_AFTER_CONTRACT_SAVE
+                    ] = true
+
+                    navController.popBackStack(
+                        BottomNavItem.Dashboard.route,
+                        inclusive = false
+                    )
                 }
             )
         }

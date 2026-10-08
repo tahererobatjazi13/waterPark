@@ -1,18 +1,9 @@
 package ir.kitgroup.partnerManagement.feature.meeting.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -24,116 +15,286 @@ import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Subject
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
-import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
-import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionCard
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
-import ir.kitgroup.partnerManagement.core.ui.components.Rating
-import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
-import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
+import ir.kitgroup.partnerManagement.core.ui.components.*
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
+import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-
 
 @Composable
 fun MeetingDetailScreen(
     meetingId: String,
     onBackClick: () -> Unit,
+    onEditClick: (String) -> Unit,
+    onStatusChanged: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MeetingDetailViewModel = hiltViewModel()
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val context = LocalContext.current
 
-    val meeting by viewModel.meeting.collectAsState()
+    val meeting by viewModel.meeting.collectAsStateWithLifecycle()
+    val isUpdatingStatus by viewModel.isUpdatingStatus.collectAsStateWithLifecycle()
+    val statusUpdateState by viewModel.statusUpdateState.collectAsStateWithLifecycle()
+
+    var showStatusDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(meetingId) {
-        viewModel.observeMeetingById(meetingId)
-    }
-    val currentMeeting = meeting ?: run {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "بازدید پیدا نشد",
-                color = appColors.textSecondary
-            )
+        if (meetingId.isNotBlank()) {
+            viewModel.observeMeetingById(meetingId)
         }
-
-        return
     }
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
-    ) {
-        CustomHeader(
-            title = R.string.label_meeting_details,
-            showBackButton = true,
-            onBackClick = onBackClick
-        )
+
+    // بازخورد به کاربر پس از موفقیت یا خطا در تغییر وضعیت
+    LaunchedEffect(statusUpdateState) {
+        when (val state = statusUpdateState) {
+            is DataState.Success -> {
+                showStatusDialog = false
+                viewModel.resetStatusState()
+                Toast.makeText(context, "وضعیت بازدید با موفقیت تغییر یافت", Toast.LENGTH_SHORT).show()
+                onStatusChanged()
+            }
+            is DataState.Error -> {
+                Toast.makeText(context, state.error.asString(context), Toast.LENGTH_LONG).show()
+                viewModel.resetStatusState()
+            }
+            else -> Unit
+        }
+    }
+
+    val currentMeeting = meeting
+
+    Scaffold(
+        topBar = {
+            CustomHeader(
+                title = R.string.label_meeting_details,
+                showBackButton = true,
+                onBackClick = onBackClick
+            )
+        },
+        bottomBar = {
+            if (currentMeeting != null) {
+                Surface(
+                    color = appColors.screenBackground,
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // دکمه ویرایش بازدید
+                        CustomButton(
+                            text = stringResource(R.string.label_edit),
+                            onClick = { onEditClick(currentMeeting.meeting.meetingId) },
+                            fillMaxWidth = false,
+                            modifier = Modifier.weight(1f),
+                            height = 42.dp,
+                            cornerRadius = 12.dp,
+                            textStyle = typography.titleLarge,
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+
+                        // دکمه تعیین وضعیت بازدید
+                        CustomButton(
+                            text = stringResource(R.string.label_status),
+                            onClick = {
+                                if (!isUpdatingStatus) {
+                                    showStatusDialog = true
+                                }
+                            },
+                            fillMaxWidth = false,
+                            modifier = Modifier.weight(1f),
+                            height = 42.dp,
+                            cornerRadius = 12.dp,
+                            textStyle = typography.titleLarge,
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = appColors.cardBackground,
+                                contentColor = appColors.textPrimary
+                            ),
+                           // border = BorderStroke(1.dp, appColors.border)
+                        )
+                    }
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+
         Surface(
-            modifier = Modifier.fillMaxSize(),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    bottom = innerPadding.calculateBottomPadding()
+                ),
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             color = appColors.screenBackground
         ) {
+            if (currentMeeting == null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    OrganizationInfoCard(item = currentMeeting)
+
+                    Spacer(Modifier.height(12.dp))
+
+                    VisitorInfoCard(item = currentMeeting)
+
+                    Spacer(Modifier.height(12.dp))
+
+                    SectionTitle(stringResource(R.string.label_location))
+
+                    Spacer(Modifier.height(8.dp))
+
+                    LocationCard()
+
+                    currentMeeting.meeting.description?.takeIf { it.isNotBlank() }?.let { desc ->
+                        Spacer(Modifier.height(12.dp))
+
+                        SectionTitle(stringResource(R.string.label_description))
+
+                        Spacer(Modifier.height(8.dp))
+
+                        CustomDescriptionCard(desc)
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+                }
+            }
+        }
+    }
+
+    // دیالوگ تغییر وضعیت بازدید
+    if (showStatusDialog && currentMeeting != null) {
+        val initialStatus = MeetingStatus.fromId(currentMeeting.meeting.status) ?: MeetingStatus.entries.first()
+        ChangeMeetingStatusDialog(
+            initialStatus = initialStatus,
+            isSaving = isUpdatingStatus,
+            onDismiss = { showStatusDialog = false },
+            onConfirm = { selectedStatus ->
+               /* viewModel.updateMeetingStatus(
+                    meetingId = currentMeeting.meeting.meetingId,
+                    newStatus = selectedStatus.id
+                ) {
+                    // با استفاده از اثر LaunchedEffect رویداد موفقیت اجرا می‌شود
+                }*/
+            }
+        )
+    }
+}
+
+/**
+ * دیالوگ انتخاب وضعیت جدید بازدید
+ */
+@Composable
+fun ChangeMeetingStatusDialog(
+    initialStatus: MeetingStatus,
+    isSaving: Boolean = false,
+    onDismiss: () -> Unit,
+    onConfirm: (MeetingStatus) -> Unit
+) {
+    var selectedStatus by rememberSaveable { mutableStateOf(initialStatus) }
+    val statusEntries = remember { MeetingStatus.entries }
+    val statusTitles = statusEntries.map { stringResource(it.titleRes) }
+
+    Dialog(
+        onDismissRequest = {
+            if (!isSaving) onDismiss()
+        }
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OrganizationInfoCard(item = currentMeeting)
+                Text(
+                    text = "تعیین وضعیت بازدید",
+                    style = typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
-                Spacer(Modifier.height(12.dp))
+                DropdownSelectorField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = stringResource(selectedStatus.titleRes),
+                    label = stringResource(R.string.label_status),
+                    placeholder = "",
+                    items = statusTitles,
+                    isRequired = true,
+                    onItemSelected = { selectedTitle ->
+                        val index = statusTitles.indexOf(selectedTitle)
+                        if (index >= 0) {
+                            selectedStatus = statusEntries[index]
+                        }
+                    }
+                )
 
-                VisitorInfoCard(item = currentMeeting)
+                if (isSaving) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
 
-                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CustomButton(
+                        text = stringResource(R.string.label_registration),
+                        enabled = !isSaving,
+                        onClick = { onConfirm(selectedStatus) },
+                        modifier = Modifier.weight(1f)
+                    )
 
-                SectionTitle(stringResource(R.string.label_location))
-
-                Spacer(Modifier.height(8.dp))
-
-                LocationCard()
-
-                Spacer(Modifier.height(12.dp))
-
-                SectionTitle(stringResource(R.string.label_description))
-
-                Spacer(Modifier.height(8.dp))
-
-                CustomDescriptionCard(currentMeeting.meeting.description!!)
-
-                Spacer(Modifier.height(80.dp))
+                    CustomOutlinedButton(
+                        text = stringResource(R.string.label_cancel),
+                        enabled = !isSaving,
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
@@ -152,16 +313,12 @@ private fun OrganizationInfoCard(item: MeetingWithDetail) {
             .filter { it.isNotBlank() }
             .joinToString("، ")
             .ifBlank { "-" }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColors.cardBackground
-        ),
-        border = BorderStroke(
-            width = 0.7.dp,
-            color = appColors.border
-        )
+        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
+        border = BorderStroke(width = 0.7.dp, color = appColors.border)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -171,23 +328,15 @@ private fun OrganizationInfoCard(item: MeetingWithDetail) {
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.Start
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = item.organizationName,
-                        style = typography.titleLarge,
-                        color = appColors.textPrimary
-                    )
-                }
+                Text(
+                    text = item.organizationName,
+                    style = typography.titleLarge,
+                    color = appColors.textPrimary
+                )
 
                 Spacer(Modifier.height(6.dp))
 
-                LocationRow(
-                    location = locationText
-                )
+                LocationRow(location = locationText)
 
                 Spacer(Modifier.height(8.dp))
 
@@ -204,13 +353,8 @@ private fun VisitorInfoCard(item: MeetingWithDetail) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColors.cardBackground
-        ),
-        border = BorderStroke(
-            width = 0.7.dp,
-            color = appColors.border
-        )
+        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
+        border = BorderStroke(width = 0.7.dp, color = appColors.border)
     ) {
         Column {
             val meetingType = MeetingType.fromValue(item.meeting.type)
@@ -220,7 +364,6 @@ private fun VisitorInfoCard(item: MeetingWithDetail) {
                 value = stringResource(id = meetingType.titleRes),
                 icon = meetingType.icon
             )
-
 
             HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
 
@@ -262,9 +405,7 @@ private fun VisitorInfoCard(item: MeetingWithDetail) {
                 icon = Icons.Default.Schedule
             )
 
-            HorizontalDivider(
-                color = appColors.border.copy(alpha = 0.5f)
-            )
+            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
 
             InfoRow(
                 label = stringResource(R.string.label_visit_status),
@@ -291,9 +432,7 @@ private fun InfoRow(
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
@@ -314,7 +453,6 @@ private fun InfoRow(
 
         if (status != null) {
             StatusBadge(status = MeetingStatus.fromId(status))
-
         } else {
             Text(
                 text = value ?: "-",
@@ -335,13 +473,8 @@ private fun LocationCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColors.cardBackground
-        ),
-        border = BorderStroke(
-            width = 0.7.dp,
-            color = appColors.border
-        )
+        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
+        border = BorderStroke(width = 0.7.dp, color = appColors.border)
     ) {
         Box(
             modifier = Modifier
@@ -369,17 +502,5 @@ private fun LocationCard() {
                     .align(Alignment.TopEnd)
             )
         }
-    }
-}
-
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun MeetingDetailScreenPreview() {
-    AppScreenPreview {
-        MeetingDetailScreen(
-            meetingId = "",
-            onBackClick = {}
-        )
     }
 }

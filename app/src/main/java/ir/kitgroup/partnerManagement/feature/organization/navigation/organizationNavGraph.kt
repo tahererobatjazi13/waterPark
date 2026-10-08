@@ -1,14 +1,28 @@
 package ir.kitgroup.partnerManagement.feature.organization.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
-import androidx.navigation.navigation
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
+import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_ORGANIZATION_SAVE
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.organization.ui.AddOrganizationScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.AssignVisitorScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddOrganizationScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.MapScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.OrganizationDetailScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationsListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
@@ -22,30 +36,77 @@ fun NavGraphBuilder.organizationNavGraph(
     ) {
 
         // لیست سازمان‌ها
-        composable(BottomNavItem.Organizations.route) {
-            OrganizationsListScreen(
-                onNavigateToDetail = { organizationId ->
-                    navController.navigate(
-                        Screen.OrganizationDetail.createRoute(organizationId)
-                    )
-                },
-                onNavigateToAdd = {
-                    navController.navigate(
-                        Screen.AddOrganization.route
-                    )
-                }
-            )
+        composable(
+            route = BottomNavItem.Organizations.route,
+            enterTransition = { fadeIn(tween(250)) },
+            exitTransition = { fadeOut(tween(200)) }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+
+                CustomHeader(
+                    title = stringResource(R.string.nav_organizations),
+                    showBackButton = false
+                )
+
+                OrganizationsListScreen(
+                    navController = navController,
+                    onNavigateToDetail = { organizationId ->
+                        navController.navigate(
+                            Screen.OrganizationDetail.createRoute(organizationId)
+                        )
+                    },
+                    onNavigateToAdd = {
+                        navController.navigate(
+                            Screen.AddOrganization.route
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                )
+            }
         }
 
         // افزودن سازمان
         composable(
-            route = Screen.AddOrganization.route
-        ) {
+            route = Screen.AddOrganization.route,
+            enterTransition = { fadeIn(tween(250)) },
+            exitTransition = { fadeOut(tween(200)) },
+            popEnterTransition = { fadeIn(tween(250)) },
+            popExitTransition = { fadeOut(tween(200)) }
+        ) { backStackEntry ->
+
+            val latitude = backStackEntry.savedStateHandle
+                .get<Any>("selected_latitude")?.toString()?.toDoubleOrNull()
+
+            val longitude = backStackEntry.savedStateHandle
+                .get<Any>("selected_longitude")?.toString()?.toDoubleOrNull()
+
             AddOrganizationScreen(
                 organizationId = null,
                 onBack = {
                     navController.popBackStack()
-                }
+                },
+                onSuccessCreate = {
+                    // تنظیم پرچم برای لیست سازمان‌ها
+                    navController.getBackStackEntry(BottomNavItem.Organizations.route)
+                        .savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = true
+
+                    // بازگشت به لیست سازمان‌ها
+                    navController.popBackStack(
+                        BottomNavItem.Organizations.route,
+                        inclusive = false
+                    )
+                },
+                onSelectLocation = {
+                    navController.navigate("map_screen")
+                },
+                selectedLatitude = latitude,
+                selectedLongitude = longitude
             )
         }
 
@@ -63,11 +124,33 @@ fun NavGraphBuilder.organizationNavGraph(
 
             val organizationId = backStackEntry.arguments?.getString("organizationId")
 
+            val latitude = backStackEntry.savedStateHandle
+                .get<Any>("selected_latitude")?.toString()?.toDoubleOrNull()
+
+            val longitude = backStackEntry.savedStateHandle
+                .get<Any>("selected_longitude")?.toString()?.toDoubleOrNull()
+
             AddOrganizationScreen(
                 organizationId = organizationId,
                 onBack = {
                     navController.popBackStack()
-                }
+                },
+                onSuccessCreate = {
+                    // تنظیم پرچم برای لیست سازمان‌ها
+                    navController.getBackStackEntry(BottomNavItem.Organizations.route)
+                        .savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = true
+
+                    // بازگشت به لیست سازمان‌ها
+                    navController.popBackStack(
+                        BottomNavItem.Organizations.route,
+                        inclusive = false
+                    )
+                },
+                onSelectLocation = {
+                    navController.navigate("map_screen")
+                },
+                selectedLatitude = latitude,
+                selectedLongitude = longitude
             )
         }
 
@@ -91,7 +174,15 @@ fun NavGraphBuilder.organizationNavGraph(
                 onBack = {
                     navController.popBackStack()
                 },
+                onStatusChangeSuccess = {
+                    navController.getBackStackEntry(BottomNavItem.Organizations.route)
+                        .savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = true
 
+                    navController.popBackStack(
+                        BottomNavItem.Organizations.route,
+                        inclusive = false
+                    )
+                },
                 onEditClick = {
                     navController.navigate(
                         Screen.EditOrganization.createRoute(
@@ -191,5 +282,12 @@ fun NavGraphBuilder.organizationNavGraph(
                 }
             )
         }
+    }
+    composable("map_screen") {
+        MapScreen(
+            navController = navController,
+            onBackClick = { navController.popBackStack() },
+
+            )
     }
 }

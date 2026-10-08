@@ -1,10 +1,23 @@
 package ir.kitgroup.partnerManagement.feature.offer.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddOfferScreen
@@ -17,21 +30,45 @@ import ir.kitgroup.partnerManagement.navigation.Screen
 fun NavGraphBuilder.offerNavGraph(navController: NavController) {
 
     //  لیست کلی آفرها
-    composable(BottomNavItem.Offers.route) {
-        OfferListScreen(
-            onAddClick = {
-                navController.navigate(Screen.AddOffer.route)
-            },
-            onOfferClick = { offer ->
-                navController.navigate(
-                    Screen.OfferDetailList.createRoute(offer.offerId)
-                )
-            }
-        )
+    composable(
+        route = BottomNavItem.Offers.route,
+        enterTransition = { fadeIn(tween(250)) },
+        exitTransition = { fadeOut(tween(200)) },
+        popEnterTransition = { fadeIn(tween(250)) },
+        popExitTransition = { fadeOut(tween(200)) }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+
+            CustomHeader(
+                title = stringResource(R.string.nav_plan_offer),
+                showBackButton = false
+            )
+
+            OfferListScreen(
+                onAddClick = {
+                    navController.navigate(Screen.AddOffer.route)
+                },
+                onOfferClick = { offer ->
+                    navController.navigate(
+                        Screen.OfferDetailList.createRoute(offer.offerId)
+                    )
+                }
+            )
+        }
     }
 
     // افزودن  طرح جدید
-    composable(Screen.AddOffer.route) {
+    composable(
+        route = Screen.AddOffer.route,
+        enterTransition = { fadeIn(tween(250)) },
+        exitTransition = { fadeOut(tween(200)) },
+        popEnterTransition = { fadeIn(tween(250)) },
+        popExitTransition = { fadeOut(tween(200)) }
+    ) {
         AddOfferScreen(
             onBackClick = { navController.popBackStack() },
             onSaveClick = {
@@ -53,9 +90,9 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
                     Screen.AddOfferDetail.createRoute(planTitle)
                 )
             },
-            onOfferTicketPlanLineClick = { item  ->
+            onOfferTicketPlanLineClick = { item ->
                 navController.navigate(
-                         Screen.OfferDetail.createRoute(item.offerDetail.offerDetailId)
+                    Screen.OfferDetail.createRoute(item.offerDetail.offerDetailId)
                 )
             }
         )
@@ -96,5 +133,6 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
             onBackClick = { navController.popBackStack() }
         )
     }
+
 
 }

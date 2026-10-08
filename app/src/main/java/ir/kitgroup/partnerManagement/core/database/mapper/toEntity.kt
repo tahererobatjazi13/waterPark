@@ -171,6 +171,7 @@ fun OfferDetailDto.toEntity(): OfferDetailEntity {
 fun OrganizationDto.toEntity(): OrganizationEntity {
     return OrganizationEntity(
         organizationId = this.organizationId,
+        activeVisitorId = this.activeVisitorId,
         name = this.name,
         ownerName = this.ownerName,
         code = this.code,
@@ -437,13 +438,15 @@ fun VisitorDto.toEntity(): VisitorEntity {
 
 fun VisitorOrganizationDto.toEntity(): VisitorOrganizationEntity {
     return VisitorOrganizationEntity(
-        visitorOrganizationId = visitorOrganizationId,
-        name = name,
-        dateEnd = dateEnd,
-        dateStart = dateStart,
-        organizationId = organizationId,
+        visitorOrganizationId = orgVisitorId.orEmpty(),
         visitorId = visitorId,
-        statusRelation = statusRelation
+        organizationId = organizationId,
+        statusRelation = statusRelation,
+        statusRelationName = statusRelationName,
+        dateStart = dateStart,
+        dateEnd = dateEnd,
+        name = name,
+        status = status
     )
 }
 

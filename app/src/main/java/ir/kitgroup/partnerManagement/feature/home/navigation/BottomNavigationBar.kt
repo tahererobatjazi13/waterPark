@@ -28,11 +28,11 @@ fun BottomNavigationBar(
     navController: NavController
 ) {
     val items: List<BottomNavItem> = listOf(
-        BottomNavItem.Profile,
-        BottomNavItem.Offers,
-        BottomNavItem.Meetings,
+        BottomNavItem.Dashboard,
         BottomNavItem.Organizations,
-        BottomNavItem.Dashboard
+        BottomNavItem.Meetings,
+        BottomNavItem.Offers,
+        BottomNavItem.Profile
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -52,15 +52,10 @@ fun BottomNavigationBar(
                 NavigationBarItem(
                     selected = currentRoute == item.route,
                     onClick = {
-                        if (currentRoute != item.route) {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
+                        navigateToTab(
+                            navController = navController,
+                            route = item.route
+                        )
                     },
                     icon = {
                         Icon(
@@ -86,5 +81,21 @@ fun BottomNavigationBar(
                 )
             }
         }
+    }
+}
+fun navigateToTab(
+    navController: NavController,
+    route: String
+) {
+    navController.navigate(route) {
+
+        popUpTo(
+            navController.graph.findStartDestination().id
+        ) {
+            saveState = true
+        }
+
+        launchSingleTop = true
+        restoreState = true
     }
 }
