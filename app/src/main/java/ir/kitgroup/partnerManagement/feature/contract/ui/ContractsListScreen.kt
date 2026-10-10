@@ -33,7 +33,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun ContractsListScreen(
-    onBackClick: () -> Unit,
     onAddClick: () -> Unit,
     onContractClick: (ContractEntity) -> Unit,
     viewModel: ContractsViewModel = hiltViewModel()
@@ -42,13 +41,6 @@ fun ContractsListScreen(
     val contracts by viewModel.contracts.collectAsState()
 
     Scaffold(
-        topBar = {
-            CustomHeader(
-                title = R.string.label_contract_organization,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(

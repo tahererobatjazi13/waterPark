@@ -32,10 +32,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.PersonAddAlt1
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -48,7 +46,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 
 @Composable
 fun AdvertisingStandMenuScreen(
-    onBackClick: () -> Unit,
     onManageItemsClick: () -> Unit,
     onStandAssignmentVisitorClick: () -> Unit,
     onStandAssignmentOrganizationClick: () -> Unit,
@@ -63,13 +60,7 @@ fun AdvertisingStandMenuScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            CustomHeader(
-                title = R.string.label_advertising_stands,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
 
@@ -134,7 +125,7 @@ private fun AdvertisingMenuContent(
             }
         }
 
-        item {
+  /*      item {
             AdvertisingMenuCard(
                 titleRes = R.string.label_assignment_advertising_stand,
                 subtitleRes = R.string.label_assignment_stands_to_visitor,
@@ -143,7 +134,7 @@ private fun AdvertisingMenuContent(
                 iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 onClick = onStandAssignmentVisitorClick
             )
-        }
+        }*/
 
         item {
             AdvertisingMenuCard(
@@ -246,7 +237,6 @@ private fun AdvertisingMenuCard(
 private fun AdvertisingStandMenuScreenPreview() {
     AppScreenPreview {
         AdvertisingStandMenuScreen(
-            onBackClick = {},
             onManageItemsClick = {},
             onStandAssignmentVisitorClick = {},
             onStandAssignmentOrganizationClick = {}

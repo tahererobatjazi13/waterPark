@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
 import androidx.compose.material3.MaterialTheme.typography
@@ -44,7 +43,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun AssignedStandsOrganizationListScreen(
-    onBackClick: () -> Unit,
     onNewAssignmentOrganizationClick: () -> Unit,
     onViewItemDetailsClick: (AssignedStandWithDetail) -> Unit,
     modifier: Modifier = Modifier,
@@ -68,13 +66,7 @@ fun AssignedStandsOrganizationListScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CustomHeader(
-                title = R.string.label_assignment_advertising_stand,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
+
     ) { innerPadding ->
         Surface(
             modifier = Modifier
@@ -375,7 +367,6 @@ fun DetailItem(label: String, value: String, icon: ImageVector) {
 private fun AssignedStandsOrganizationListScreenPreview() {
     AppScreenPreview {
         AssignedStandsOrganizationListScreen(
-            onBackClick = {},
             onNewAssignmentOrganizationClick = {},
             onViewItemDetailsClick = {}
         )

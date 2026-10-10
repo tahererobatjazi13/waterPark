@@ -26,7 +26,7 @@ import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationListBot
 import saman.zamani.persiandate.PersianDate
 import java.util.Calendar
 import java.util.Locale
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMeetingRoute(
     onBackClick: () -> Unit,
@@ -36,22 +36,36 @@ fun AddMeetingRoute(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
-    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+
+    // val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val organizationPersons by
     viewModel.organizationPersons.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val isEditMode = viewModel.meetingId != null
 
     LaunchedEffect(Unit) {
-
         viewModel.saveSuccess.collect {
+          /*  val message = if (isEditMode) "بازدید با موفقیت ویرایش شد" else "بازدید با موفقیت ثبت شد"
+
+            // نمایش اسنک‌بار در همین فرم
+            val result = snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )*/
+
+            // بعد از نمایش (یا بستن شدن اسنک‌بار) خروج انجام شود
             onSaved()
         }
     }
 
-    LaunchedEffect(errorMessage) {
-        if (!errorMessage.isNullOrBlank()) {
-
-            // اینجا می‌توانی Toast یا Snackbar استفاده کنی
-            viewModel.clearError()
+    // لیسنر مستقیم SharedFlow خطایاب
+    LaunchedEffect(Unit) {
+        viewModel.errorMessage.collect { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
         }
     }
 
@@ -67,6 +81,7 @@ fun AddMeetingRoute(
         uiState.organizations,
         visitSubjects =
         uiState.visitSubjects,
+        snackbarHostState = snackbarHostState,
         isSaving = isSaving,
         onBackClick = onBackClick,
         onSubmitClick = viewModel::createMeeting,
@@ -77,10 +92,11 @@ fun AddMeetingRoute(
             )
         },
 
-    )
+        )
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMeetingScreen(
     meetingId: String?,
@@ -89,6 +105,7 @@ fun AddMeetingScreen(
     existingMeeting: MeetingWithDetail? = null,
     organizationsList: List<OrganizationWithDetail> = emptyList(),
     visitSubjects: List<VisitSubjectEntity> = emptyList(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     isSaving: Boolean = false,
     onBackClick: () -> Unit,
     onSubmitClick: (MeetingEntity) -> Unit = {},
@@ -272,13 +289,13 @@ fun AddMeetingScreen(
     rememberSaveable {
         mutableStateOf(initialTime)
     }
-    /*
+
         val timePickerState =
             rememberTimePickerState(
                 initialHour = currentHour,
                 initialMinute = currentMinute,
                 is24Hour = true
-            )*/
+            )
 
     // -----------------------------
     // بازدید کننده
@@ -378,7 +395,7 @@ fun AddMeetingScreen(
             selectedSubjectVisitId =
                 entity.subjectVisitId
 
-            entity.visitDate
+            entity.visitRealDate
                 ?.takeIf {
                     it.isNotBlank()
                 }
@@ -434,7 +451,9 @@ fun AddMeetingScreen(
                 onBackClick
             )
         },
-
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         containerColor =
         MaterialTheme.colorScheme.background
 
@@ -621,15 +640,15 @@ fun AddMeetingScreen(
                         onDateClick = {
                             showVisitScheduledDatePicker =
                                 true
-                        },
-
-                        time =
-                        visitScheduledTime,
-
-                        onTimeClick = {
-                            showVisitScheduledTimePicker =
-                                true
                         }
+
+                        /*   time =
+                           visitScheduledTime,
+
+                           onTimeClick = {
+                               showVisitScheduledTimePicker =
+                                   true
+                           }*/
                     )
 
                     DropdownSelectorField(
@@ -668,9 +687,6 @@ fun AddMeetingScreen(
                         }
                     }
                 if (!isScheduledInPersonVisit) {
-
-
-
                     DropdownSelectorField(
 
                         value =
@@ -689,7 +705,7 @@ fun AddMeetingScreen(
                         items =
                         organizationPersonNames,
 
-                        isRequired = true,
+                        isRequired = false,
 
                         onItemSelected = { selectedName ->
 
@@ -834,129 +850,54 @@ fun AddMeetingScreen(
                     modifier =
                     Modifier.height(8.dp)
                 )
-
-                // =====================================================
-                // ثبت / ویرایش
-                // =====================================================
-
+// =====================================================
+// ثبت / ویرایش
+// =====================================================
                 CustomButton(
-
-                    text =
-                    when {
-
-                        isSaving ->
-                            if (isEditMode) {
-                                "در حال ویرایش..."
-                            } else {
-                                "در حال ثبت..."
-                            }
-
-                        isEditMode ->
-                            stringResource(
-                                R.string.label_edit_visit
-                            )
-
-                        else ->
-                            stringResource(
-                                R.string.label_submit_visit
-                            )
+                    text = when {
+                        isSaving -> if (isEditMode) "در حال ویرایش..." else "در حال ثبت..."
+                        isEditMode -> stringResource(R.string.label_edit_visit)
+                        else -> stringResource(R.string.label_submit_visit)
                     },
-
                     onClick = {
+                        if (isSaving) return@CustomButton
 
-                        if (isSaving) {
-                            return@CustomButton
-                        }
+                        val orgId = selectedOrganization?.organization?.organizationId
+                            ?: preselectedOrganizationId
+                            ?: ""
 
-                        val orgId =
-                            selectedOrganization
-                                ?.organization
-                                ?.organizationId
-                                ?: preselectedOrganizationId
-                                ?: ""
+                        val subjectId = selectedSubjectVisitId ?: ""
 
-                        if (orgId.isBlank()) {
-                            return@CustomButton
-                        }
-
-                        val subjectId =
-                            selectedSubjectVisitId
-
-                        if (
-                            subjectId.isNullOrBlank()
-                        ) {
-                            return@CustomButton
-                        }
-
-                        val entityToSave =
-                            MeetingEntity(
-
-                                meetingId =
-                                meetingId
-                                    ?: java.util.UUID
-                                        .randomUUID()
-                                        .toString(),
-
-                                subjectVisitId =
-                                subjectId,
-
-                                subjectVisitName =
-                                selectedVisitSubject
-                                    ?.title,
-
-                                organizationId =
-                                orgId,
-
-                                visitorId =
-                                visitorName
-                                    .ifBlank {
-                                        null
-                                    },
-                                organizationPersonId =
-                                selectedOrganizationPersonId,
-
-                                organizationPersonName =
-                                selectedOrganizationPersonName
-                                    .ifBlank {
-                                        null
-                                    },
-                                type =
-                                selectedVisitType
-                                    .value,
-
-                                status =
-                                selectedStatus.id,
-
-                                visitDate =
-                                visitRealDate,
-
-                                visitTime =
-                                visitRealTime,
-
-                                description =
-                                description,
-
-                                latitude =
-                                currentLatitude,
-
-                                longitude =
-                                currentLongitude,
-
-                                stateCode = 0
-                            )
-
-                        onSubmitClick(
-                            entityToSave
+                        val entityToSave = MeetingEntity(
+                            meetingId = meetingId ?: java.util.UUID.randomUUID().toString(),
+                            subjectVisitId = subjectId,
+                            subjectVisitName = selectedVisitSubject?.title,
+                            organizationId = orgId,
+                            visitorId = visitorName.takeIf {
+                                it.isNotBlank() && it != "00000000-0000-0000-0000-000000000000"
+                            },
+                            organizationPersonId = selectedOrganizationPersonId.takeIf {
+                                !it.isNullOrBlank() && it != "00000000-0000-0000-0000-000000000000"
+                            },
+                            organizationPersonName = selectedOrganizationPersonName.ifBlank { null },
+                            type = selectedVisitType.value,
+                            status = selectedStatus.id,
+                            visitDate = if (isScheduledInPersonVisit) visitScheduledDate else visitRealDate,
+                            visitRealDate = visitRealDate,
+                            visitTime = visitRealTime,
+                            description = description,
+                            latitude = currentLatitude,
+                            longitude = currentLongitude,
+                            stateCode = 0
                         )
+
+                        onSubmitClick(entityToSave)
                     },
-
-                    modifier =
-                    Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            top = 10.dp
-                        )
+                        .padding(top = 10.dp)
                 )
+
             }
         }
     }
@@ -964,37 +905,24 @@ fun AddMeetingScreen(
     // =========================================================
     // Time Picker - Real
     // =========================================================
-    /*
-        if (
-            showVisitRealTimePicker
-        ) {
 
-            TimePickerDialog(
-
-                timePickerState =
-                timePickerState,
-
-                onConfirm = { hour,
-                              minute ->
-
-                    visitRealTime =
-                        String.format(
-                            Locale.US,
-                            "%02d:%02d",
-                            hour,
-                            minute
-                        )
-
-                    showVisitRealTimePicker =
-                        false
-                },
-
-                onDismiss = {
-                    showVisitRealTimePicker =
-                        false
-                }
-            )
-        }*/
+    if (showVisitRealTimePicker) {
+        TimePickerDialog(
+            timePickerState = timePickerState,
+            onConfirm = { hour, minute ->
+                visitRealTime = String.format(
+                    Locale.US,
+                    "%02d:%02d",
+                    hour,
+                    minute
+                )
+                showVisitRealTimePicker = false
+            },
+            onDismiss = {
+                showVisitRealTimePicker = false
+            }
+        )
+    }
 
     // =========================================================
     // Date Picker - Real

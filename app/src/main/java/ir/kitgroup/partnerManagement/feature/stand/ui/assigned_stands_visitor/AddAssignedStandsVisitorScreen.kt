@@ -46,7 +46,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDateTimeFields
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
@@ -65,7 +64,6 @@ import java.util.Locale
 
 @Composable
 fun AddAssignedStandsVisitorScreen(
-    onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -151,13 +149,7 @@ fun AddAssignedStandsVisitorScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            CustomHeader(
-                title = R.string.label_allocation_record,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Surface(
@@ -491,7 +483,6 @@ private fun CounterButton(
 private fun AddAssignedStandsVisitorScreenPreview() {
     AppScreenPreview {
         AddAssignedStandsVisitorScreen(
-            onBackClick = {},
             onSaveClick = {}
         )
     }

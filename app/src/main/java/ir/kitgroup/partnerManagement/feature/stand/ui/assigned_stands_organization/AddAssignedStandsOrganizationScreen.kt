@@ -50,7 +50,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDateTimeFields
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.CustomSelectorField
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
@@ -67,7 +66,6 @@ import java.util.Locale
 
 @Composable
 fun AddAssignedStandsOrganizationRoute(
-    onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AddAssignedStandsOrganizationViewModel = hiltViewModel()
@@ -78,7 +76,6 @@ fun AddAssignedStandsOrganizationRoute(
         preselectedOrganizationId = viewModel.preselectedOrganizationId,
         preselectedOrganization = uiState.preselectedOrganization,
         organizationsList = uiState.organizations,
-        onBackClick = onBackClick,
         onSaveClick = onSaveClick,
         modifier = modifier
     )
@@ -89,7 +86,6 @@ fun AddAssignedStandsOrganizationScreen(
     preselectedOrganizationId: String? = null,
     preselectedOrganization: OrganizationWithDetail? = null,
     organizationsList: List<OrganizationWithDetail> = emptyList(),
-    onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -178,13 +174,7 @@ fun AddAssignedStandsOrganizationScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            CustomHeader(
-                title = R.string.label_allocation_record,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Surface(
@@ -530,7 +520,6 @@ private fun AddAssignedStandsOrganizationScreenPreview() {
             preselectedOrganizationId = null,
             preselectedOrganization = null,
             organizationsList = emptyList(),
-            onBackClick = {},
             onSaveClick = {}
         )
     }

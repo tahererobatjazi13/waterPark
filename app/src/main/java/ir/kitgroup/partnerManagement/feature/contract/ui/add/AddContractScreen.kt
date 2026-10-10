@@ -40,7 +40,6 @@ import java.util.Locale
 
 @Composable
 fun AddContractRoute(
-    onBackClick: () -> Unit,
     onSaved: () -> Unit,
     viewModel: AddContractViewModel = hiltViewModel()
 ) {
@@ -80,9 +79,6 @@ fun AddContractRoute(
         onMessageShown =
         viewModel::clearMessage,
 
-        onBackClick =
-        onBackClick,
-
         onSaveClick = { request ->
 
             viewModel.saveContract(
@@ -114,7 +110,6 @@ fun AddContractScreen(
 
     onMessageShown: () -> Unit = {},
 
-    onBackClick: () -> Unit,
 
     onSaveClick:
         (AddContractFormState) -> Unit
@@ -262,13 +257,7 @@ fun AddContractScreen(
 
 
     Scaffold(
-        topBar = {
-            CustomHeader(
-                title = R.string.label_contract_organization,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
@@ -562,7 +551,6 @@ private fun AddContractScreenPreview() {
             preselectedOrganizationId = null,
             preselectedOrganization = null,
             organizationsList = emptyList(),
-            onBackClick = {},
             onSaveClick = {}
         )
     }

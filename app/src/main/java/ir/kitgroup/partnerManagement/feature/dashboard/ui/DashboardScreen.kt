@@ -331,19 +331,19 @@ fun DashboardScreen(
                                 item = item,
                                 isSupervisor = isSupervisor,
                                 onClick = {
-                                    if (isEditableScheduledPhysicalVisit) {
-                                        navController.navigate(
-                                            Screen.AddMeeting.createRoute(
-                                                meetingId = meetingEntity.meetingId
+                                    /*    if (isEditableScheduledPhysicalVisit) {
+                                            navController.navigate(
+                                                Screen.AddMeeting.createRoute(
+                                                    meetingId = meetingEntity.meetingId
+                                                )
                                             )
+                                        } else {*/
+                                    navController.navigate(
+                                        Screen.MeetingDetail.createRoute(
+                                            meetingId = meetingEntity.meetingId
                                         )
-                                    } else {
-                                        navController.navigate(
-                                            Screen.MeetingDetail.createRoute(
-                                                meetingId = meetingEntity.meetingId
-                                            )
-                                        )
-                                    }
+                                    )
+                                    // }
                                 }
                             )
                         }
@@ -927,11 +927,17 @@ fun MeetingCard(
                     text = item.organizationName
                 )
                 if (isSupervisor && !item.meeting.visitorId.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    DetailRow(
-                        icon = Icons.Default.Person,
-                        text = item.visitorName
-                    )
+                    val hasVisitor = !item.meeting.visitorName.isNullOrBlank() &&
+                            item.meeting.visitorId != null
+
+                    if (hasVisitor) {
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        DetailRow(
+                            icon = Icons.Default.Person,
+                            text = item.visitorName
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))

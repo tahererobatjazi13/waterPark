@@ -557,12 +557,17 @@ fun MeetingCard(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                DetailRow(
-                    icon = Icons.Default.Person,
-                    text = item.visitorName
-                )
+                val hasVisitor = !item.meeting.visitorName.isNullOrBlank() &&
+                        item.meeting.visitorId != null
 
-                Spacer(modifier = Modifier.height(6.dp))
+                if (hasVisitor) {
+                    DetailRow(
+                        icon = Icons.Default.Person,
+                        text = item.visitorName
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                }
+
 
                 // نمایش تاریخ/زمان
                 val dateTimeText = buildString {
@@ -588,28 +593,28 @@ fun MeetingCard(
                         text = dateTimeText
                     )
 
-                    // اکشن‌ها
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ActionIconButton(
-                            icon = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.label_edit),
-                            onClick = onEditClick,
-                            tint = MaterialTheme.colorScheme.primary,
-                            backgroundColor = appColors.cardBackgroundAlt
-                        )
+                    /*       // اکشن‌ها
+                           Row(
+                               modifier = Modifier.fillMaxWidth(),
+                               horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                               verticalAlignment = Alignment.CenterVertically
+                           ) {
+                               ActionIconButton(
+                                   icon = Icons.Default.Edit,
+                                   contentDescription = stringResource(R.string.label_edit),
+                                   onClick = onEditClick,
+                                   tint = MaterialTheme.colorScheme.primary,
+                                   backgroundColor = appColors.cardBackgroundAlt
+                               )
 
-                        ActionIconButton(
-                            icon = Icons.Default.DeleteOutline,
-                            contentDescription = stringResource(R.string.label_delete),
-                            onClick = onDeleteClick,
-                            tint = MaterialTheme.colorScheme.error,
-                            backgroundColor = MaterialTheme.colorScheme.errorContainer
-                        )
-                    }
+                               ActionIconButton(
+                                   icon = Icons.Default.DeleteOutline,
+                                   contentDescription = stringResource(R.string.label_delete),
+                                   onClick = onDeleteClick,
+                                   tint = MaterialTheme.colorScheme.error,
+                                   backgroundColor = MaterialTheme.colorScheme.errorContainer
+                               )
+                           }*/
                 }
             }
         }

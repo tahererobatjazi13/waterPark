@@ -23,7 +23,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 
 @Composable
 fun AddContractOfferScreen(
-    onBackClick: () -> Unit,
     onSaveClick: () -> Unit = {}
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -50,13 +49,6 @@ fun AddContractOfferScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            CustomHeader(
-                title = R.string.label_contract_offer,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
@@ -225,7 +217,6 @@ fun AddContractOfferScreen(
 private fun AddContractOfferScreenPreview() {
     AppScreenPreview {
         AddContractOfferScreen(
-            onBackClick = {},
             onSaveClick = {}
         )
     }

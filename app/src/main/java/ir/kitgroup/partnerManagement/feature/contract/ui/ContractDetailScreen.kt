@@ -39,7 +39,6 @@ import java.util.Locale
 @Composable
 fun ContractDetailScreen(
     contractId: String?,
-    onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onStatusChanged: () -> Unit,
     viewModel: ContractDetailViewModel = hiltViewModel()
@@ -61,13 +60,7 @@ fun ContractDetailScreen(
     }
 
     Scaffold(
-        topBar = {
-            CustomHeader(
-                title = R.string.label_details,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         bottomBar = {
             if (contract != null) {
                 Surface(

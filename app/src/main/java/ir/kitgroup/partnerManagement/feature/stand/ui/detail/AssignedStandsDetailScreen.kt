@@ -47,10 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.database.entity.AssignedStandEntity
 import ir.kitgroup.partnerManagement.core.database.entity.StandTypeEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
@@ -61,7 +59,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun AssignedStandsDetailRoute(
-    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AssignedStandsDetailViewModel = hiltViewModel()
 ) {
@@ -70,7 +67,6 @@ fun AssignedStandsDetailRoute(
     allocationDetail?.let { detail ->
         AssignedStandsDetailScreen(
             allocationWithDetail = detail,
-            onBackClick = onBackClick,
             modifier = modifier
         )
     } ?: run {
@@ -90,7 +86,6 @@ fun AssignedStandsDetailRoute(
 @Composable
 fun AssignedStandsDetailScreen(
     allocationWithDetail: AssignedStandWithDetail,
-    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -100,13 +95,7 @@ fun AssignedStandsDetailScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CustomHeader(
-                title = R.string.label_assignment_details,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
+
     ) { innerPadding ->
         Surface(
             modifier = Modifier

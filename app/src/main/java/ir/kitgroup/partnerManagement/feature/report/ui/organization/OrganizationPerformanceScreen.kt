@@ -24,7 +24,6 @@ import ir.kitgroup.partnerManagement.feature.report.ui.organization.model.Collec
 
 @Composable
 fun OrganizationPerformanceScreen(
-    onBackClick: () -> Unit
 ) {
     val collections = listOf(
         CollectionPerformanceUi("1", "هتل هما ۱", 24, 5),
@@ -40,13 +39,7 @@ fun OrganizationPerformanceScreen(
     var endDate by remember { mutableStateOf("1403/02/31") }
 
     Scaffold(
-        topBar = {
-            CustomHeader(
-                title = R.string.label_organizations_report,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(

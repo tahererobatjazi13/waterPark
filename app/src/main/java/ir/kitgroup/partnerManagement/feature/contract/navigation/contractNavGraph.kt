@@ -1,110 +1,28 @@
 package ir.kitgroup.partnerManagement.feature.contract.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
+import ir.kitgroup.partnerManagement.core.ui.util.ThemeMode
 import ir.kitgroup.partnerManagement.feature.contract.ui.add.AddContractRoute
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractDetailScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractsListScreen
-import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.offer.ui.AddContractOfferScreen
+import ir.kitgroup.partnerManagement.feature.profile.ui.SettingsScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
-/*
-fun NavGraphBuilder.contractNavGraph(
-    navController: NavController
-) {
-
-    // لیست قراردادها
-    composable(
-        route = Screen.ContractsList.route
-    ) {
-        ContractsListScreen(
-            onBackClick = {
-                navController.popBackStack()
-            },
-
-            onAddClick = {
-                navController.navigate(
-                    Screen.AddContract.createRoute()
-                )
-            },
-
-            onContractClick = { contract ->
-                navController.navigate(
-                    Screen.ContractDetail.createRoute(
-                        contract.contractId
-                    )
-                )
-            }
-        )
-    }
-
-    // جزئیات قرارداد
-    composable(
-        route = Screen.ContractDetail.route,
-        arguments = listOf(
-            navArgument("contractId") {
-                type = NavType.StringType
-            }
-        )
-    ) {
-        ContractDetailScreen(
-            onBackClick = {
-                navController.popBackStack()
-            }
-        )
-    }
-
-    // افزودن قرارداد
-    composable(
-        route = "${Screen.AddContract.route}?${Screen.AddContract.ORGANIZATION_ID_ARGUMENT}={${Screen.AddContract.ORGANIZATION_ID_ARGUMENT}}",
-        arguments = listOf(
-            navArgument(Screen.AddContract.ORGANIZATION_ID_ARGUMENT) {
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            }
-        )
-    ) {
-        AddContractRoute(
-            onBackClick = {
-                navController.popBackStack()
-            },
-
-            onSaved = {
-
-                navController.navigate(
-                    BottomNavItem.Dashboard.route
-                ) {
-                    popUpTo(Screen.AddContract.route) {
-                        inclusive = true
-                    }
-
-                    launchSingleTop = true
-                }
-            }
-        )
-    }
-
-    // افزودن پیشنهاد قرارداد
-    composable(
-        route = Screen.AddContractOffer.route
-    ) {
-        AddContractOfferScreen(
-            onBackClick = {
-                navController.popBackStack()
-            },
-
-            onSaveClick = {
-                // ذخیره
-            }
-        )
-    }
-}*/
 
 fun NavGraphBuilder.contractNavGraph(
     navController: NavController
@@ -116,30 +34,58 @@ fun NavGraphBuilder.contractNavGraph(
 
     composable(
         route =
-        Screen.ContractsList.route
+        Screen.ContractsList.route,
+        enterTransition = {
+            EnterTransition.None
+        },
+        exitTransition = {
+            ExitTransition.None
+        },
+        popEnterTransition = {
+            EnterTransition.None
+        },
+        popExitTransition = {
+            ExitTransition.None
+        }
     ) {
 
-        ContractsListScreen(
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CustomHeader(
+                title = stringResource(
+                    R.string.label_contract_organization
+                ),
+                showBackButton = true,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
 
-            onBackClick = {
-                navController.popBackStack()
-            },
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
 
-            onAddClick = {
-              //  dashboardViewModel.checkCanNavigateToAddContract {
-                    navController.navigate(Screen.AddContract.route)
-              //  }
-            },
+                ContractsListScreen(
 
-            onContractClick = { contract ->
+                    onAddClick = {
+                        //  dashboardViewModel.checkCanNavigateToAddContract {
+                        navController.navigate(Screen.AddContract.route)
+                        //  }
+                    },
 
-                navController.navigate(
-                    Screen.ContractDetail.createRoute(
-                        contract.contractId
-                    )
+                    onContractClick = { contract ->
+
+                        navController.navigate(
+                            Screen.ContractDetail.createRoute(
+                                contract.contractId
+                            )
+                        )
+                    }
                 )
             }
-        )
+        }
+
     }
 
 
@@ -153,43 +99,70 @@ fun NavGraphBuilder.contractNavGraph(
             navArgument("contractId") {
                 type = NavType.StringType
             }
-        )
+        ),
+        enterTransition = {
+            EnterTransition.None
+        },
+        exitTransition = {
+            ExitTransition.None
+        },
+        popEnterTransition = {
+            EnterTransition.None
+        },
+        popExitTransition = {
+            ExitTransition.None
+        }
     ) { backStackEntry ->
 
         val contractId =
             backStackEntry.arguments
                 ?.getString("contractId")
 
-        ContractDetailScreen(
-            contractId = contractId,
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CustomHeader(
+                title = stringResource(
+                    R.string.label_details
+                ),
+                showBackButton = true,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
 
-            onBackClick = {
-                navController.popBackStack()
-            },
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                ContractDetailScreen(
+                    contractId = contractId,
 
-            onEditClick = {
-                navController.navigate(
-                    Screen.EditContract.createRoute(
-                        contractId!!
-                    )
-                )
-            },
+                    onEditClick = {
+                        navController.navigate(
+                            Screen.EditContract.createRoute(
+                                contractId!!
+                            )
+                        )
+                    },
 
-            onStatusChanged = {
-                navController
-                    .getBackStackEntry(
-                        BottomNavItem.Dashboard.route
-                    )
-                    .savedStateHandle[
-                    SYNC_AFTER_CONTRACT_SAVE
-                ] = true
+                    onStatusChanged = {
+                        navController
+                            .getBackStackEntry(
+                                BottomNavItem.Dashboard.route
+                            )
+                            .savedStateHandle[
+                            SYNC_AFTER_CONTRACT_SAVE
+                        ] = true
 
-                navController.popBackStack(
-                    BottomNavItem.Dashboard.route,
-                    inclusive = false
+                        navController.popBackStack(
+                            BottomNavItem.Dashboard.route,
+                            inclusive = false
+                        )
+                    }
                 )
             }
-        )
+        }
+
     }
 
     // ------------------------------------------------
@@ -217,31 +190,59 @@ fun NavGraphBuilder.contractNavGraph(
 
                 defaultValue = null
             }
-        )
+        ),
+        enterTransition = {
+            EnterTransition.None
+        },
+        exitTransition = {
+            ExitTransition.None
+        },
+        popEnterTransition = {
+            EnterTransition.None
+        },
+        popExitTransition = {
+            ExitTransition.None
+        }
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CustomHeader(
+                title = stringResource(
+                    R.string.label_contract_organization
+                ),
+                showBackButton = true,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
 
-        AddContractRoute(
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
 
-            onBackClick = {
-                navController.popBackStack()
-            },
+                AddContractRoute(
 
-            onSaved = {
+                    onSaved = {
 
-                navController
-                    .getBackStackEntry(
-                        BottomNavItem.Dashboard.route
-                    )
-                    .savedStateHandle[
-                    SYNC_AFTER_CONTRACT_SAVE
-                ] = true
+                        navController
+                            .getBackStackEntry(
+                                BottomNavItem.Dashboard.route
+                            )
+                            .savedStateHandle[
+                            SYNC_AFTER_CONTRACT_SAVE
+                        ] = true
 
-                navController.popBackStack(
-                    BottomNavItem.Dashboard.route,
-                    inclusive = false
+                        navController.popBackStack(
+                            BottomNavItem.Dashboard.route,
+                            inclusive = false
+                        )
+                    }
                 )
             }
-        )
+        }
+
+
     }
 
 
@@ -255,30 +256,56 @@ fun NavGraphBuilder.contractNavGraph(
             navArgument("contractId") {
                 type = NavType.StringType
             }
-        )
+        ),
+        enterTransition = {
+            EnterTransition.None
+        },
+        exitTransition = {
+            ExitTransition.None
+        },
+        popEnterTransition = {
+            EnterTransition.None
+        },
+        popExitTransition = {
+            ExitTransition.None
+        }
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CustomHeader(
+                title = stringResource(
+                    R.string.label_contract_organization
+                ),
+                showBackButton = true,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
 
-        AddContractRoute(
-            onBackClick = {
-                navController.popBackStack()
-            },
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                AddContractRoute(
+                    onSaved = {
 
-            onSaved = {
+                        navController
+                            .getBackStackEntry(
+                                BottomNavItem.Dashboard.route
+                            )
+                            .savedStateHandle[
+                            SYNC_AFTER_CONTRACT_SAVE
+                        ] = true
 
-                navController
-                    .getBackStackEntry(
-                        BottomNavItem.Dashboard.route
-                    )
-                    .savedStateHandle[
-                    SYNC_AFTER_CONTRACT_SAVE
-                ] = true
-
-                navController.popBackStack(
-                    BottomNavItem.Dashboard.route,
-                    inclusive = false
+                        navController.popBackStack(
+                            BottomNavItem.Dashboard.route,
+                            inclusive = false
+                        )
+                    }
                 )
             }
-        )
+        }
+
     }
 
 
@@ -288,18 +315,43 @@ fun NavGraphBuilder.contractNavGraph(
 
     composable(
         route =
-        Screen.AddContractOffer.route
+        Screen.AddContractOffer.route,
+        enterTransition = {
+            EnterTransition.None
+        },
+        exitTransition = {
+            ExitTransition.None
+        },
+        popEnterTransition = {
+            EnterTransition.None
+        },
+        popExitTransition = {
+            ExitTransition.None
+        }
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CustomHeader(
+                title = stringResource(
+                    R.string.label_contract_offer
+                ),
+                showBackButton = true,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
 
-        AddContractOfferScreen(
-
-            onBackClick = {
-                navController.popBackStack()
-            },
-
-            onSaveClick = {
-                // ...
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                AddContractOfferScreen(
+                    onSaveClick = {
+                        // ...
+                    }
+                )
             }
-        )
+        }
+
     }
 }

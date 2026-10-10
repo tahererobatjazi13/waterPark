@@ -42,7 +42,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 
 @Composable
 fun ReportMenuScreen(
-    onBackClick: () -> Unit,
     onVisitorClick: () -> Unit,
     onReportContractClick: () -> Unit,
     onCollectionPerformanceClick: () -> Unit,
@@ -50,13 +49,6 @@ fun ReportMenuScreen(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            CustomHeader(
-                title = R.string.label_reports,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Surface(
@@ -225,7 +217,6 @@ private fun AdvertisingMenuCard(
 private fun ReportMenuScreenLandscapePreview() {
     AppScreenPreview {
         ReportMenuScreen(
-            onBackClick = {},
             onVisitorClick = {},
             onReportContractClick = {},
             onCollectionPerformanceClick = {}

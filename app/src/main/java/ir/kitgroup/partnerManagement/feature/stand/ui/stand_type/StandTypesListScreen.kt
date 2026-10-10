@@ -28,7 +28,6 @@ import ir.kitgroup.partnerManagement.core.database.entity.StandTypeEntity
 import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -37,7 +36,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.InstallationType
 
 @Composable
 fun StandTypesListScreen(
-    onBackClick: () -> Unit,
     onAddItemClick: () -> Unit,
     onEditItemClick: (StandTypeEntity) -> Unit,
     onDeleteItemClick: (StandTypeEntity) -> Unit,
@@ -51,13 +49,6 @@ fun StandTypesListScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            CustomHeader(
-                title = R.string.label_managing_stands_items,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
@@ -345,7 +336,6 @@ private fun InfoBlockWithIcon(
 private fun StandTypesListScreenPreview() {
     AppScreenPreview {
         StandTypesListScreen(
-            onBackClick = {},
             onAddItemClick = {},
             onEditItemClick = {},
             onDeleteItemClick = {}

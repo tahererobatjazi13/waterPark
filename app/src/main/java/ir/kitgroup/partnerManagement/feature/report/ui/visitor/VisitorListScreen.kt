@@ -29,7 +29,6 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 
 @Composable
 fun VisitorListScreen(
-    onBackClick: () -> Unit,
     onReportItemClick: () -> Unit,
     onViewItemDetailsClick: (VisitorEntity) -> Unit,
     modifier: Modifier = Modifier,
@@ -41,13 +40,6 @@ fun VisitorListScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CustomHeader(
-                title = stringResource(R.string.label_visitor_list),
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
     ) { innerPadding ->
         Surface(
             modifier = Modifier

@@ -37,7 +37,6 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -49,7 +48,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun AssignedStandsVisitorListScreen(
-    onBackClick: () -> Unit,
     onNewAssignmentVisitorClick: () -> Unit,
     onViewItemDetailsClick: (AssignedStandWithDetail) -> Unit,
     modifier: Modifier = Modifier,
@@ -72,13 +70,7 @@ fun AssignedStandsVisitorListScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CustomHeader(
-                title = R.string.label_assignment_advertising_stand,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
+
     ) { innerPadding ->
         Surface(
             modifier = Modifier
@@ -408,7 +400,6 @@ private fun DetailItem(label: String, value: String, icon: ImageVector) {
 private fun AssignedStandsVisitorListScreenPreview() {
     AppScreenPreview {
         AssignedStandsVisitorListScreen(
-            onBackClick = {},
             onNewAssignmentVisitorClick = {},
             onViewItemDetailsClick = {}
         )

@@ -26,7 +26,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.Status
 
 @Composable
 fun ReportContractScreen(
-    onBackClick: () -> Unit,
     ui: ReportDashboardUi = demoReportDashboardUi()
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -43,13 +42,7 @@ fun ReportContractScreen(
     }
 
     Scaffold(
-        topBar = {
-            CustomHeader(
-                title = R.string.label_report_cooperation_agreement,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Surface(

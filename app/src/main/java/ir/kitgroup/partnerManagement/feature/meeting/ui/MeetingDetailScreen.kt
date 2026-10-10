@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Subject
@@ -70,13 +71,16 @@ fun MeetingDetailScreen(
             is DataState.Success -> {
                 showStatusDialog = false
                 viewModel.resetStatusState()
-                Toast.makeText(context, "وضعیت بازدید با موفقیت تغییر یافت", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "وضعیت بازدید با موفقیت تغییر یافت", Toast.LENGTH_SHORT)
+                    .show()
                 onStatusChanged()
             }
+
             is DataState.Error -> {
                 Toast.makeText(context, state.error.asString(context), Toast.LENGTH_LONG).show()
                 viewModel.resetStatusState()
             }
+
             else -> Unit
         }
     }
@@ -106,7 +110,7 @@ fun MeetingDetailScreen(
                     ) {
                         // دکمه ویرایش بازدید
                         CustomButton(
-                            text = stringResource(R.string.label_edit),
+                            text = stringResource(R.string.label_edit_visit),
                             onClick = { onEditClick(currentMeeting.meeting.meetingId) },
                             fillMaxWidth = false,
                             modifier = Modifier.weight(1f),
@@ -122,7 +126,7 @@ fun MeetingDetailScreen(
 
                         // دکمه تعیین وضعیت بازدید
                         CustomButton(
-                            text = stringResource(R.string.label_status),
+                            text = stringResource(R.string.label_determination_status),
                             onClick = {
                                 if (!isUpdatingStatus) {
                                     showStatusDialog = true
@@ -135,10 +139,9 @@ fun MeetingDetailScreen(
                             textStyle = typography.titleLarge,
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = appColors.cardBackground,
-                                contentColor = appColors.textPrimary
-                            ),
-                           // border = BorderStroke(1.dp, appColors.border)
+                                containerColor = appColors.error,
+                                contentColor = appColors.errorContainer
+                            )
                         )
                     }
                 }
@@ -177,13 +180,21 @@ fun MeetingDetailScreen(
 
                     VisitorInfoCard(item = currentMeeting)
 
-                    Spacer(Modifier.height(12.dp))
+                    val lat =
+                        currentMeeting.meeting.latitude?.replace(",", ".")?.toDoubleOrNull() ?: 0.0
+                    val lng =
+                        currentMeeting.meeting.longitude?.replace(",", ".")?.toDoubleOrNull() ?: 0.0
+                    val hasValidLocation = lat != 0.0 && lng != 0.0
 
-                    SectionTitle(stringResource(R.string.label_location))
+                    if (hasValidLocation) {
+                        Spacer(Modifier.height(12.dp))
 
-                    Spacer(Modifier.height(8.dp))
+                        SectionTitle(stringResource(R.string.label_location))
 
-                    LocationCard()
+                        Spacer(Modifier.height(8.dp))
+
+                        LocationCard()
+                    }
 
                     currentMeeting.meeting.description?.takeIf { it.isNotBlank() }?.let { desc ->
                         Spacer(Modifier.height(12.dp))
@@ -203,18 +214,19 @@ fun MeetingDetailScreen(
 
     // دیالوگ تغییر وضعیت بازدید
     if (showStatusDialog && currentMeeting != null) {
-        val initialStatus = MeetingStatus.fromId(currentMeeting.meeting.status) ?: MeetingStatus.entries.first()
+        val initialStatus =
+            MeetingStatus.fromId(currentMeeting.meeting.status) ?: MeetingStatus.entries.first()
         ChangeMeetingStatusDialog(
             initialStatus = initialStatus,
             isSaving = isUpdatingStatus,
             onDismiss = { showStatusDialog = false },
             onConfirm = { selectedStatus ->
-               /* viewModel.updateMeetingStatus(
-                    meetingId = currentMeeting.meeting.meetingId,
-                    newStatus = selectedStatus.id
-                ) {
-                    // با استفاده از اثر LaunchedEffect رویداد موفقیت اجرا می‌شود
-                }*/
+                /* viewModel.updateMeetingStatus(
+                     meetingId = currentMeeting.meeting.meetingId,
+                     newStatus = selectedStatus.id
+                 ) {
+                     // با استفاده از اثر LaunchedEffect رویداد موفقیت اجرا می‌شود
+                 }*/
             }
         )
     }
@@ -373,13 +385,30 @@ private fun VisitorInfoCard(item: MeetingWithDetail) {
                 icon = Icons.Default.Subject
             )
 
-            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
+            val hasVisitor = !item.meeting.visitorName.isNullOrBlank() &&
+                    item.meeting.visitorId !=null
 
-            InfoRow(
-                label = stringResource(R.string.label_visitor_name),
-                value = item.meeting.visitorName,
-                icon = Icons.Default.Badge
-            )
+            if (hasVisitor) {
+                HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
+
+                InfoRow(
+                    label = stringResource(R.string.label_visitor_name),
+                    value = item.meeting.visitorName,
+                    icon = Icons.Default.Badge
+                )
+            }
+            val hasPerson = !item.meeting.organizationPersonName.isNullOrBlank() &&
+                    item.meeting.organizationPersonId != null
+
+            if (hasPerson) {
+                HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
+
+                InfoRow(
+                    label = stringResource(R.string.label_organization_person) + ":",
+                    value = item.meeting.organizationPersonName,
+                    icon = Icons.Default.Badge
+                )
+            }
 
             HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
 

@@ -25,7 +25,6 @@ import ir.kitgroup.partnerManagement.feature.report.model.VisitorAnalysis
 @Composable
 fun VisitorAnalysisScreen(
     visitorId: String,
-    onBackClick: () -> Unit,
     onCallClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     analysisData: VisitorAnalysis = getDemoAnalysis(visitorId)
@@ -35,13 +34,6 @@ fun VisitorAnalysisScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CustomHeader(
-                title = R.string.label_visitor_performance_analysis,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
     ) { innerPadding ->
         Surface(
             modifier = Modifier
@@ -307,7 +299,6 @@ private fun VisitorAnalysisScreenPreview() {
     AppScreenPreview {
         VisitorAnalysisScreen(
             visitorId = "2",
-            onBackClick = {},
             onCallClick = {}
         )
     }

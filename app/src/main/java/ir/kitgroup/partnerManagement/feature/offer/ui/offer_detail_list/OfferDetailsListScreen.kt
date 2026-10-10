@@ -50,7 +50,6 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.database.model.OfferDetailWithProduct
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -62,7 +61,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun OfferDetailsListScreen(
-    onBackClick: () -> Unit,
     onAddClick: (planTitle: String) -> Unit,
     onOfferTicketPlanLineClick: (OfferDetailWithProduct) -> Unit,
     viewModel: OfferDetailsListViewModel = hiltViewModel()
@@ -72,13 +70,6 @@ fun OfferDetailsListScreen(
     val appColors = LocalPartnerManagementColors.current
 
     Scaffold(
-        topBar = {
-            CustomHeader(
-                title = R.string.label_offer_details,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
         bottomBar = {
             Surface(
                 color = appColors.cardBackground,

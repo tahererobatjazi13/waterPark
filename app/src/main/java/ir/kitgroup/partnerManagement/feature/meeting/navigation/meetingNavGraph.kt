@@ -93,11 +93,10 @@ fun NavGraphBuilder.meetingNavGraph(
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onEditClick = { meetingId ->
+                onEditClick = { id ->
+                    // اصلاح مسیر به AddMeeting که از قبل در همین گراف تعریف شده است
                     navController.navigate(
-                        Screen.EditMeeting.createRoute(
-                            meetingId
-                        )
+                        Screen.AddMeeting.createRoute(id)
                     )
                 },
                 onStatusChanged = {

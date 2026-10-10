@@ -124,6 +124,7 @@
     <string name="label_image_gallery">گالری تصویر</string>
     <string name="label_deactivation">غیرفعال‌سازی</string>
 
+    <string name="label_determination_status">تعیین وضعیت</string>
     <string name="label_determination_organization_status">تعیین وضعیت سازمان</string>
     <string name="label_edit_organization">ویرایش سازمان</string>
     <string name="label_quick_access">دسترسی سریع</string>
@@ -511,6 +512,7 @@
     <string name="label_consumption_comparison">مقایسه مصرف</string>
     <string name="label_delete_title">حذف %1$s</string>
     <string name="label_register_organization_warning">ثبت تذکر برای سازمان</string>
+    <string name="label_edit_organization_warning">ویرایش تذکر برای سازمان</string>
     <string name="label_warning_description">شرح تذکر</string>
     <string name="label_register_warning">ثبت تذکر</string>
     <string name="label_warnings_type">نوع تذکر</string>

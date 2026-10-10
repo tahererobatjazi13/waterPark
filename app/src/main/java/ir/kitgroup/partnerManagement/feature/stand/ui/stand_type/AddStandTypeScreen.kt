@@ -18,7 +18,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.CustomSelectorField
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.DisplayType
@@ -30,7 +29,6 @@ import java.util.UUID
 @Composable
 fun AddStandTypeScreen(
     itemId: String,
-    onBackClick: () -> Unit,
     onSaveClick: (StandTypeEntity) -> Unit,
     modifier: Modifier = Modifier,
     initialEntity: StandTypeEntity? = null
@@ -61,13 +59,7 @@ fun AddStandTypeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            CustomHeader(
-                title = if (isEditMode) R.string.label_edit_stand else R.string.label_add_new_stand,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
@@ -273,7 +265,6 @@ private fun AddStandTypeScreenPreview() {
     AppScreenPreview {
         AddStandTypeScreen(
             itemId = "new",
-            onBackClick = {},
             onSaveClick = {}
         )
     }

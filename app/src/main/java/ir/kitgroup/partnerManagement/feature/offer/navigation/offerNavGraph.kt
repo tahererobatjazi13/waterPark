@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -81,21 +82,51 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
         route = Screen.OfferDetailList.route,
         arguments = listOf(
             navArgument("offerId") { type = NavType.StringType }
-        )
+        ),
+        enterTransition = {
+            EnterTransition.None
+        },
+        exitTransition = {
+            ExitTransition.None
+        },
+        popEnterTransition = {
+            EnterTransition.None
+        },
+        popExitTransition = {
+            ExitTransition.None
+        }
     ) {
-        OfferDetailsListScreen(
-            onBackClick = { navController.popBackStack() },
-            onAddClick = { planTitle ->
-                navController.navigate(
-                    Screen.AddOfferDetail.createRoute(planTitle)
-                )
-            },
-            onOfferTicketPlanLineClick = { item ->
-                navController.navigate(
-                    Screen.OfferDetail.createRoute(item.offerDetail.offerDetailId)
+
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CustomHeader(
+                title = stringResource(
+                    R.string.label_offer_details
+                ),
+                showBackButton = true,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                OfferDetailsListScreen(
+                    onAddClick = { planTitle ->
+                        navController.navigate(
+                            Screen.AddOfferDetail.createRoute(planTitle)
+                        )
+                    },
+                    onOfferTicketPlanLineClick = { item ->
+                        navController.navigate(
+                            Screen.OfferDetail.createRoute(item.offerDetail.offerDetailId)
+                        )
+                    }
                 )
             }
-        )
+        }
     }
 
 

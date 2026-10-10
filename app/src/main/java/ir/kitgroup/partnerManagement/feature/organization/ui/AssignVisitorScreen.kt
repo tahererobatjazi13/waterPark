@@ -27,7 +27,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 @Composable
 fun AssignVisitorScreen(
     organizationId: String? = null,
-    onBack: () -> Unit,
     onSaveClick: () -> Unit = {},
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -69,13 +68,7 @@ fun AssignVisitorScreen(
         listOf("فعال", "غیر فعال", "ثبت متوقف")
     }
     Scaffold(
-        topBar = {
-            CustomHeader(
-                title = R.string.label_assigning_visitor_organization,
-                showBackButton = true,
-                onBackClick = onBack
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Surface(
@@ -209,7 +202,6 @@ private fun RegisterVisitScreenPreview() {
     AppScreenPreview {
         AssignVisitorScreen(
             organizationId = "",
-            onBack = {},
             onSaveClick = {})
     }
 }

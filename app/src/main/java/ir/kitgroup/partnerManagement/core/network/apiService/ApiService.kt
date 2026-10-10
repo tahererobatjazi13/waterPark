@@ -13,8 +13,11 @@ import ir.kitgroup.partnerManagement.feature.login.model.LoginResponse
 import ir.kitgroup.partnerManagement.feature.meeting.model.ChangeStatusMeetingRequest
 import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
 import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
+import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.CreateOrganizationRequest
+import ir.kitgroup.partnerManagement.feature.stand.model.ChangeAssignStandStatusRequest
+import ir.kitgroup.partnerManagement.feature.stand.model.CreateAssignStandRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -81,7 +84,7 @@ interface ApiService {
     @GET("api/Sync/GetVisitorOrg/{organizationId}")
     suspend fun getOrganizationVisitors(
         @Path("organizationId") organizationId: String
-    ):  Response<List<VisitorOrganizationDto>>
+    ): Response<List<VisitorOrganizationDto>>
 
 
     @POST("api/Inspection/Meeting/create")
@@ -99,4 +102,35 @@ interface ApiService {
     suspend fun changeMeetingStatus(
         @Body request: ChangeStatusMeetingRequest
     ): Response<ModelResponse>
+
+    @POST("api/Inspection/AssignWarnings/create")
+    suspend fun createOrganizationWarning(
+        @Body request: CreateOrganizationWarningRequest
+    ): Response<ModelResponse>
+
+
+    @PUT("api/Inspection/AssignWarnings/update")
+    suspend fun updateOrganizationWarning(
+        @Body request: CreateOrganizationWarningRequest
+    ): Response<ModelResponse>
+
+
+    @POST("api/Inspection/AssignStand/create")
+    suspend fun createAssignStand(
+        @Body request: CreateAssignStandRequest
+    ): Response<ModelResponse>
+
+
+    @PUT("api/Inspection/AssignStand/update")
+    suspend fun updateAssignStand(
+        @Body request: CreateAssignStandRequest
+    ): Response<ModelResponse>
+
+
+    @PATCH("api/Inspection/AssignStand/change-status")
+    suspend fun changeAssignStandStatus(
+        @Body request: ChangeAssignStandStatusRequest
+    ): Response<ModelResponse>
+
+
 }

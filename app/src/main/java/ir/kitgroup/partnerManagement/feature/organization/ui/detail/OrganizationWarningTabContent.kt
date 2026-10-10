@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,30 +16,30 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RateReview
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
-import androidx.compose.ui.text.style.TextOverflow
 import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
+import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
@@ -49,7 +48,8 @@ fun OrganizationWarningTabContent(
     warnings: List<WarningWithDetail>,
     isSupervisor: Boolean,
     onAddWarningClick: () -> Unit,
-    onDeleteWarningClick: (WarningWithDetail) -> Unit,
+    onEditWarningClick: (WarningWithDetail) -> Unit,
+    onDeleteWarningClick: (WarningWithDetail) -> Unit = {}, // جهت سازگاری در صورت نیاز
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -78,7 +78,6 @@ fun OrganizationWarningTabContent(
             EmptyState(
                 textRes = R.string.label_no_warning_added,
                 icon = Icons.Filled.RateReview,
-
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -96,6 +95,7 @@ fun OrganizationWarningTabContent(
                         index = index,
                         warning = item,
                         isSupervisor = isSupervisor,
+                        onEditClick = { onEditWarningClick(item) }, // 👈 ارسال آیتم به دیالوگ ویرایش
                         onDeleteClick = { onDeleteWarningClick(item) }
                     )
                 }
@@ -109,6 +109,7 @@ private fun OrganizationWarningCard(
     index: Int,
     warning: WarningWithDetail,
     isSupervisor: Boolean,
+    onEditClick: () -> Unit, // 👈 دکمه ویرایش
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -122,7 +123,7 @@ private fun OrganizationWarningCard(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            //هدر کارت
+            // هدر کارت
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -141,7 +142,7 @@ private fun OrganizationWarningCard(
                     ) {
                         Icon(
                             Icons.Default.RateReview,
-                            null,
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onTertiaryContainer,
                             modifier = Modifier.size(18.dp)
                         )
@@ -157,9 +158,21 @@ private fun OrganizationWarningCard(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     WarningScoreChip(score = warning.warning.score ?: 0)
+
+                    // دکمه ویرایش (جایگزین دکمه حذف)
+                    ActionIconButton(
+                        icon = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.label_edit),
+                        onClick = onEditClick,
+                        tint = MaterialTheme.colorScheme.primary,
+                        backgroundColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+
+                    /*
+                    // دکمه حذف موقتاً غیرفعال شد:
                     if (isSupervisor) {
                         ActionIconButton(
                             icon = Icons.Default.DeleteOutline,
@@ -169,6 +182,7 @@ private fun OrganizationWarningCard(
                             backgroundColor = MaterialTheme.colorScheme.errorContainer
                         )
                     }
+                    */
                 }
             }
 
@@ -193,8 +207,8 @@ private fun OrganizationWarningCard(
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
             }
-            // --- تاریخ و ثبت‌کننده ---
 
+            // --- تاریخ و ثبت‌کننده ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -217,6 +231,7 @@ private fun OrganizationWarningCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
                 // تاریخ
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -234,12 +249,10 @@ private fun OrganizationWarningCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                // ---------------------------------
             }
         }
     }
 }
-
 
 @Composable
 private fun WarningScoreChip(
@@ -247,14 +260,12 @@ private fun WarningScoreChip(
 ) {
     val isPositive = score > 0
 
-    // رنگ پس‌زمینه چیپ
     val chipColor = if (isPositive) {
         PartnerManagementTheme.colors.successContainer
     } else {
         PartnerManagementTheme.colors.errorContainer
     }
 
-    // رنگ متن
     val contentColor = if (isPositive) {
         PartnerManagementTheme.colors.success
     } else {

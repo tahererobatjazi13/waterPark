@@ -1,5 +1,6 @@
 package ir.kitgroup.partnerManagement.core.repository
 
+import android.util.Log
 import ir.kitgroup.partnerManagement.core.database.dao.MeetingDao
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
@@ -16,7 +17,7 @@ class MeetingRepository @Inject constructor(
     private val meetingDao: MeetingDao,
     private val apiService: ApiService,
 
-) {
+    ) {
 
     fun observeMeetingsByOrganization(
         organizationId: String
@@ -32,6 +33,7 @@ class MeetingRepository @Inject constructor(
     fun observeMeetingsByDate(date: String): Flow<List<MeetingWithDetail>> {
         return meetingDao.observeMeetingsByDate(date)
     }
+
     suspend fun deleteMeeting(meetingId: String) {
         meetingDao.deleteById(meetingId)
     }
@@ -123,10 +125,14 @@ class MeetingRepository @Inject constructor(
                 }
 
             } else {
-
                 val errorMessage = extractErrorMessage(
                     errorBody = response.errorBody()?.string(),
                     defaultMessage = "خطای سرور در ویرایش قرارداد: ${response.code()}"
+                )
+
+                Log.d(
+                    "MeetingRequestErrorMessage",
+                    errorMessage
                 )
                 Result.failure(
                     Exception(errorMessage)
@@ -139,7 +145,7 @@ class MeetingRepository @Inject constructor(
         }
     }
 
-   suspend fun changeStatusMeeting(
+    suspend fun changeStatusMeeting(
         request: ChangeStatusMeetingRequest
     ): Result<ModelResponse> {
 

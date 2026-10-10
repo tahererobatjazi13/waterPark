@@ -46,7 +46,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.DateRangeChip
 
 @Composable
 fun VisitorsPerformanceDashboardScreen(
-    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     ui: VisitorsDashboardUi = demoVisitorsDashboardUi(),
 ) {
@@ -66,14 +65,8 @@ fun VisitorsPerformanceDashboardScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CustomHeader(
-                title = R.string.label_visitors_performance_analysis,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        }
-    ) { innerPadding ->
+
+        ) { innerPadding ->
         Surface(
             modifier = Modifier
                 .fillMaxSize()
@@ -253,6 +246,7 @@ private fun KpiCard(
         }
     }
 }
+
 @Composable
 private fun VisitorsTable(
     rows: List<VisitorRowUi>,
@@ -600,7 +594,6 @@ private fun demoVisitorsDashboardUi(): VisitorsDashboardUi {
 @Composable
 private fun VisitorsPerformanceDashboardScreenPreview() {
     AppScreenPreview {
-        VisitorsPerformanceDashboardScreen(
-            onBackClick = {})
+        VisitorsPerformanceDashboardScreen()
     }
 }

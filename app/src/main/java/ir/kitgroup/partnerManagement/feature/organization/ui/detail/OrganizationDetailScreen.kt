@@ -92,12 +92,14 @@ import ir.kitgroup.partnerManagement.core.database.entity.VisitSubjectEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
+import ir.kitgroup.partnerManagement.core.network.BaseUrlProvider
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.PersonGenderType
 import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddPersonFormState
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.InactivationReasonDialog
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddOrganizationFormState
@@ -107,15 +109,16 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 
 
 @Composable
 fun OrganizationDetailScreen(
     organizationId: String,
-    onBack: () -> Unit,
     onEditClick: () -> Unit,
     onDisableClick: () -> Unit,
     onStatusChangeSuccess: () -> Unit,
+    onWarningSuccess: () -> Unit,
     onMeetingClick: (String) -> Unit,
     onAddMeetingClick: () -> Unit,
     onAssignVisitorClick: (String) -> Unit,
@@ -129,6 +132,9 @@ fun OrganizationDetailScreen(
     sessionViewModel: SessionViewModel = hiltViewModel(),
     organizationDetailViewModel: OrganizationDetailViewModel = hiltViewModel()
 ) {
+    lateinit var mainPreferences: MainPreferences
+
+
     val organization by organizationDetailViewModel.organization
         .collectAsState()
 
@@ -156,7 +162,16 @@ fun OrganizationDetailScreen(
         .collectAsStateWithLifecycle()
 
     var showAddPersonSheet by rememberSaveable { mutableStateOf(false) }
+    val warningTypes by organizationDetailViewModel
+        .observeWarningTypes()
 
+
+        .collectAsStateWithLifecycle(initialValue = emptyList())
+    var warningToEdit by remember { mutableStateOf<WarningWithDetail?>(null) }
+
+    /*    val addWarningState by organizationDetailViewModel
+            .addWarningState
+            .collectAsStateWithLifecycle()*/
 
     LaunchedEffect(organizationId) {
         organizationDetailViewModel.getOrganizationById(organizationId)
@@ -199,10 +214,15 @@ fun OrganizationDetailScreen(
 
     val activeVisitorName by organizationDetailViewModel.activeVisitorName.collectAsState()
 
-
     // متغیرهای وضعیت برای کنترل دیالوگ‌ها
     val statusUpdateState by organizationDetailViewModel.statusUpdateState
         .collectAsStateWithLifecycle()
+
+
+    val addWarningState by organizationDetailViewModel.addWarningState
+        .collectAsStateWithLifecycle()
+
+
     val visitSubjects by organizationDetailViewModel.visitSubjects
         .collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -254,6 +274,74 @@ fun OrganizationDetailScreen(
             else -> Unit
         }
     }
+
+
+    LaunchedEffect(addWarningState) {
+        when (val state = addWarningState) {
+
+            is DataState.Success -> {
+                showWarningDialog = false
+                organizationDetailViewModel.resetAddWarningState()
+                organizationDetailViewModel.observeOrganizationWarnings(organizationId)
+
+                Toast.makeText(
+                    context,
+                    "تذکر سازمان با موفقیت ثبت شد",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                onWarningSuccess()
+            }
+
+            is DataState.Error -> {
+                showWarningDialog = false
+
+                snackbarHostState.showSnackbar(
+                    state.error.asString(context)
+                )
+
+                organizationDetailViewModel.resetAddWarningState()
+            }
+
+            else -> Unit
+        }
+    }
+
+    /*
+      LaunchedEffect(addWarningState.successMessage) {
+          val message = addWarningState.successMessage
+              ?: return@LaunchedEffect
+
+          snackbarHostState.showSnackbar(message)
+
+          showWarningDialog = false
+
+          organizationDetailViewModel
+              .resetAddWarningState()
+
+          organizationDetailViewModel
+              .observeOrganizationWarnings(organizationId)
+      }
+      LaunchedEffect(addWarningState.errorMessage) {
+          val message = addWarningState.errorMessage
+              ?: return@LaunchedEffect
+
+          snackbarHostState.showSnackbar(message)
+
+          organizationDetailViewModel
+              .resetAddWarningState()
+      }
+
+      LaunchedEffect(addWarningState.errorMessage) {
+          val message = addWarningState.errorMessage
+              ?: return@LaunchedEffect
+
+          snackbarHostState.showSnackbar(message)
+
+          organizationDetailViewModel
+              .resetAddWarningState()
+      }
+  */
     LaunchedEffect(addPersonState) {
         when (val state = addPersonState) {
 
@@ -293,13 +381,7 @@ fun OrganizationDetailScreen(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
         },
-        topBar = {
-            CustomHeader(
-                title = R.string.label_details,
-                showBackButton = true,
-                onBackClick = onBack
-            )
-        },
+
         bottomBar = {
             Surface(
                 color = appColors.screenBackground,
@@ -422,12 +504,18 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.WARNING -> {
+
+// داخل فراخوانی OrganizationWarningTabContent:
                         OrganizationWarningTabContent(
                             warnings = warnings,
                             isSupervisor = isSupervisor,
-                            onAddWarningClick = { showWarningDialog = true },
-                            onDeleteWarningClick = { warnings ->
-                                warningPendingDelete = warnings
+                            onAddWarningClick = {
+                                warningToEdit = null // حالت ثبت جدید
+                                showWarningDialog = true
+                            },
+                            onEditWarningClick = { item ->
+                                warningToEdit = item // حالت ویرایش
+                                showWarningDialog = true
                             }
                         )
                     }
@@ -450,26 +538,34 @@ fun OrganizationDetailScreen(
             }
         }
     }
+
     if (showWarningDialog) {
         AddOrganizationWarningDialog(
+            warningTypes = warningTypes,
+            isSubmitting = addWarningState is DataState.Loading,
+
             onDismiss = {
                 showWarningDialog = false
+                organizationDetailViewModel.resetAddWarningState()
             },
-            onConfirm = { warningType, description ->
+            initialWarningId = warningToEdit?.warning?.warningTypeId,
+            initialDescription = warningToEdit?.warning?.description.orEmpty(),
+            onConfirm = { warningTypeId, description ->
 
-                organizationDetailViewModel.addWarning(
+                // شناسه‌های واقعی باید از اطلاعات جلسه و بازدیدکننده
+                // انتخاب‌شده در برنامه دریافت شوند.
+                organizationDetailViewModel.createOrganizationWarning(
                     organizationId = organizationId,
-                    organizationName = currentOrganization.organization.name,
-                    warningTypeId = warningType,
-                    warningTypeName = warningType,
-                    description = description
+                    warningId = warningTypeId,
+                    visitorId = "",
+                    meetingId = null,
+                    warningDate = Instant.now().toString(),
+                    description = description,
+                    warningRecordId=warningToEdit?.warning?.warningId
                 )
-
-                showWarningDialog = false
             }
         )
     }
-
     // دیالوگ تأیید حذف
     warningPendingDelete?.let { item ->
         DeleteConfirmationDialog(
@@ -574,6 +670,7 @@ fun OrganizationDetailScreen(
     }
 
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPersonBottomSheet(

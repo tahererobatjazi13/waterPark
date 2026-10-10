@@ -253,17 +253,6 @@ fun AddOrganizationScreen(
                 )
             )
         },
-        topBar = {
-            CustomHeader(
-                title = if (isEditMode) {
-                    R.string.label_edit_organization
-                } else {
-                    R.string.label_add_new_organization
-                },
-                showBackButton = true,
-                onBackClick = onBack
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 

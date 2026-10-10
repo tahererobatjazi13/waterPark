@@ -11,7 +11,7 @@ fun Status.toDisplayName(): String = when (this) {
 
 /*
 git add .
-git commit -m "add post web_services"
+git commit -m "add meeting warning"
 git push -u origin master
 git push
 */

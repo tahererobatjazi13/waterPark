@@ -1,5 +1,11 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
+import android.content.ContentValues.TAG
+import androidx.lifecycle.viewModelScope
+
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +16,7 @@ import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEnti
 import ir.kitgroup.partnerManagement.core.database.entity.VisitSubjectEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
 import ir.kitgroup.partnerManagement.core.database.entity.WarningEntity
+import ir.kitgroup.partnerManagement.core.database.entity.WarningTypeEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedSerialWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
@@ -28,8 +35,11 @@ import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UiText
+import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
+import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -55,8 +65,9 @@ class OrganizationDetailViewModel @Inject constructor(
     private val visitorRepository: VisitorRepository,
     private val visitSubjectDao: VisitSubjectDao,
     private val apiService: ApiService,
+    private val mainPreferences: MainPreferences
 
-    ) : ViewModel() {
+) : ViewModel() {
 
     private val _statusUpdateState = MutableStateFlow<DataState<Unit>>(DataState.Idle)
     val statusUpdateState = _statusUpdateState.asStateFlow()
@@ -397,4 +408,96 @@ class OrganizationDetailViewModel @Inject constructor(
         _addPersonState.value = DataState.Idle
     }
 
+
+    private val _addWarningState = MutableStateFlow<DataState<Unit>>(DataState.Idle)
+    val addWarningState = _addWarningState.asStateFlow()
+
+    /*    private val _addWarningState =
+            MutableStateFlow(AddOrganizationWarningState())
+
+        val addWarningState: StateFlow<AddOrganizationWarningState> =
+            _addWarningState.asStateFlow()*/
+
+    fun observeWarningTypes(): Flow<List<WarningTypeEntity>> =
+        warningRepository.observeWarningTypes()
+
+
+    fun createOrganizationWarning(
+        organizationId: String,
+        warningId: String,
+        visitorId: String,
+        meetingId: String? = null,
+        warningDate: String,
+        description: String,
+        isEdit: Boolean = false,
+        warningRecordId: String? = null
+    ) {
+        viewModelScope.launch {
+            _addWarningState.value = DataState.Loading
+
+            try {
+                val actualVisitorId = visitorId.ifBlank {
+                    mainPreferences.getVisitorId()
+                }
+                val request = CreateOrganizationWarningRequest(
+                    organizationWarningId = warningRecordId,
+                    organizationId = organizationId,
+                    warningId = warningId,
+                    visitorId = actualVisitorId,
+                    meetingId = meetingId,
+                    warningDate = warningDate,
+                    description = description.trim()
+                )
+
+                Log.d("ChangeOrganizationStatusRequest", request.toString())
+                val isEditMode: Boolean =
+                    !warningRecordId.isNullOrBlank()
+
+                val result = if (isEditMode) {
+                    warningRepository.updateOrganizationWarning(request)
+                } else {
+                    warningRepository.createOrganizationWarning(request)
+                }
+
+                result.onSuccess {
+                    _addWarningState.value = DataState.Success(Unit)
+                    _statusUiEvent.emit(
+                        UiEvent.ShowMessage(
+                            UiText.DynamicString("تذکر با موفقیت ثبت شد.")
+                        )
+                    )
+                    Log.d("createOrganizationWarning1", "ok")
+
+                }.onFailure { error ->
+                    val message = error.localizedMessage ?: "خطا در ثبت تذکر"
+                    _addWarningState.value = DataState.Error(UiText.DynamicString(message))
+                    _statusUiEvent.emit(
+                        UiEvent.ShowError(UiText.DynamicString(message))
+                    )
+                    Log.d("createOrganizationWarning2", "ok")
+
+                }
+            } catch (e: Exception) {
+
+                // در صورتی که تابع ریپازیتوری اکولایز نشده باشد یا Exception پرتاب کند
+                val message = e.localizedMessage ?: "خطای ناشناخته در برقراری ارتباط با سرور"
+                _addWarningState.value = DataState.Error(UiText.DynamicString(message))
+                _statusUiEvent.emit(
+                    UiEvent.ShowError(UiText.DynamicString(message))
+                )
+            }
+        }
+    }
+
+
+    /*
+        fun resetAddWarningState() {
+            _addWarningState.value = AddOrganizationWarningState()
+        }
+    */
+
+
+    fun resetAddWarningState() {
+        _addWarningState.value = DataState.Idle
+    }
 }

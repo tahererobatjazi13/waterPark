@@ -11,11 +11,13 @@ import ir.kitgroup.partnerManagement.core.database.dao.VisitSubjectDao
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
 import ir.kitgroup.partnerManagement.core.repository.MeetingRepository
+import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.core.ui.util.jalaliToGregorian
 import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,7 +25,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,6 +34,7 @@ class AddMeetingViewModel @Inject constructor(
     private val visitSubjectDao: VisitSubjectDao,
     private val organizationPersonDao: OrganizationPersonDao,
     private val meetingRepository: MeetingRepository,
+    private val mainPreferences: MainPreferences,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -51,11 +53,9 @@ class AddMeetingViewModel @Inject constructor(
     val isSaving: StateFlow<Boolean> =
         _isSaving.asStateFlow()
 
-    private val _errorMessage =
-        MutableStateFlow<String?>(null)
-
-    val errorMessage: StateFlow<String?> =
-        _errorMessage.asStateFlow()
+    // تعریف errorMessage به صورت SharedFlow
+    private val _errorMessage = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val errorMessage: SharedFlow<String> = _errorMessage.asSharedFlow()
 
     private val _saveSuccess =
         MutableSharedFlow<String>(
@@ -68,7 +68,7 @@ class AddMeetingViewModel @Inject constructor(
     private val meetingFlow =
         if (!meetingId.isNullOrBlank()) {
             meetingRepository.observeMeetingById(
-                meetingId!!
+                meetingId
             )
         } else {
             flowOf(null)
@@ -109,163 +109,70 @@ class AddMeetingViewModel @Inject constructor(
             AddMeetingUiState()
         )
 
-    fun createMeeting(
-        meeting: MeetingEntity
-    ) {
+    fun createMeeting(meeting: MeetingEntity) {
+        if (_isSaving.value) return
 
-        if (_isSaving.value) {
+        // اعتبارسنجی سازمان
+        if (meeting.organizationId!!.isBlank()) {
+            _errorMessage.tryEmit("لطفاً سازمان را انتخاب کنید.")
             return
         }
 
-        // -----------------------------
-        // Validation
-        // -----------------------------
-
-        if (meeting.organizationId.isNullOrBlank()) {
-
-            _errorMessage.value =
-                "لطفاً سازمان را انتخاب کنید."
-
-            return
-        }
-
-        if (meeting.subjectVisitId.isNullOrBlank()) {
-
-            _errorMessage.value =
-                "لطفاً موضوع بازدید را انتخاب کنید."
+        // اعتبارسنجی موضوع بازدید
+        if (meeting.subjectVisitId!!.isBlank()) {
+            _errorMessage.tryEmit("لطفاً موضوع بازدید را انتخاب کنید.")
             return
         }
 
         viewModelScope.launch {
-
+            val visitorId = mainPreferences.getVisitorId()
             _isSaving.value = true
-            _errorMessage.value = null
-
             try {
-
-                val request =
-                    CreateMeetingRequest(
-
-                        meetingId =
-                        if (isEditMode) {
-                            meetingId
-                        } else {
-                            null
-                        },
-
-                        organizationId =
-                        meeting.organizationId,
-                        organizationPersonId =
-                        meeting.organizationPersonId,
-
-                        visitorId =
-                        meeting.visitorId,
-
-                        subjectVisitId =
-                        meeting.subjectVisitId,
-
-                        description =
-                        meeting.description,
-
-                        visitDate =
-                        jalaliToGregorian(
-                            meeting.visitDate.orEmpty()
-                        ),
-
-                        status =
-                        meeting.status!!,
-
-                        type =
-                        meeting.type!!,
-
-                        latitude =
-                        meeting.latitude
-                            ?.replace(",", ".")
-                            ?.toDoubleOrNull(),
-
-                        longitude =
-                        meeting.longitude
-                            ?.replace(",", ".")
-                            ?.toDoubleOrNull()
-                    )
+                val request = CreateMeetingRequest(
+                    meetingId = if (isEditMode) meetingId else null,
+                    organizationId = meeting.organizationId,
+                    organizationPersonId = meeting.organizationPersonId,
+                    visitorId = visitorId,
+                    subjectVisitId = meeting.subjectVisitId,
+                    description = meeting.description,
+                    visitDate = jalaliToGregorian(meeting.visitDate.orEmpty()),
+                    visitRealDate = jalaliToGregorian(meeting.visitRealDate.orEmpty()),
+                    visitTime = meeting.visitTime,
+                    status = meeting.status ?: 0,
+                    type = meeting.type ?: 0,
+                    latitude = meeting.latitude?.replace(",", ".")?.toDoubleOrNull(),
+                    longitude = meeting.longitude?.replace(",", ".")?.toDoubleOrNull()
+                )
 
                 Log.d(
                     "MeetingRequest",
                     request.toString()
                 )
+                val result = if (isEditMode) {
+                    meetingRepository.updateMeeting(request)
+                } else {
+                    meetingRepository.createMeeting(request)
+                }
 
-                val result =
-                    if (isEditMode) {
-
-                        // ویرایش
-                        meetingRepository.updateMeeting(
-                            request
-                        )
-
-                    } else {
-
-                        // افزودن
-                        meetingRepository.createMeeting(
-                            request
-                        )
-                    }
-
-                result
-                    .onSuccess { response ->
-
-                        Log.d(
-                            "MeetingResponse",
-                            response.toString()
-                        )
-
-                        _saveSuccess.emit(
-                            response.message
-                                ?: if (isEditMode) {
-                                    "بازدید با موفقیت ویرایش شد."
-                                } else {
-                                    "بازدید با موفقیت ثبت شد."
-                                }
-                        )
-                    }
-                    .onFailure { error ->
-
-                        Log.e(
-                            "MeetingSave",
-                            "خطا در ذخیره بازدید",
-                            error
-                        )
-
-                        _errorMessage.value =
-                            error.message
-                                ?: if (isEditMode) {
-                                    "خطا در ویرایش بازدید"
-                                } else {
-                                    "خطا در ثبت بازدید"
-                                }
-                    }
-
+                result.onSuccess { response ->
+                    _saveSuccess.emit(
+                        response.message
+                            ?: if (isEditMode) "بازدید با موفقیت ویرایش شد." else "بازدید با موفقیت ثبت شد."
+                    )
+                }.onFailure { error ->
+                    _errorMessage.emit(
+                        error.message
+                            ?: if (isEditMode) "خطا در ویرایش بازدید" else "خطا در ثبت بازدید"
+                    )
+                }
             } catch (e: Exception) {
-
-                Log.e(
-                    "MeetingSave",
-                    "Exception",
-                    e
-                )
-
-                _errorMessage.value =
-                    e.message
-                        ?: "خطای نامشخص در ذخیره بازدید"
-
+                _errorMessage.emit(e.message ?: "خطای نامشخص در ذخیره بازدید")
             } finally {
-
                 _isSaving.value = false
             }
         }
     }
 
-    fun clearError() {
-        _errorMessage.value = null
-    }
 
     private val _organizationPersons =
         MutableStateFlow<List<OrganizationPersonEntity>>(emptyList())
@@ -283,7 +190,6 @@ class AddMeetingViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-
             organizationPersonDao
                 .observeByOrganizationId(organizationId)
                 .collect { persons ->
