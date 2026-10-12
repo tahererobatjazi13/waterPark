@@ -667,13 +667,13 @@ private fun QuickActionsSection(
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+
             QuickActionCard(
-                title = stringResource(R.string.label_contract),
-                icon = Icons.Filled.AssignmentTurnedIn,
-                onClick = onQuickContractClick,
+                title = stringResource(R.string.label_register_visit),
+                icon = Icons.Filled.FactCheck,
+                onClick = onQuickMeetingClick,
                 modifier = Modifier.weight(1f)
             )
-
             QuickActionCard(
                 title = stringResource(R.string.label_add_new_organization),
                 icon = Icons.Filled.AddBusiness,
@@ -682,13 +682,13 @@ private fun QuickActionsSection(
             )
         }
 
-        Row(
+     /*   Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             QuickActionCard(
-                title = stringResource(R.string.label_register_visit),
-                icon = Icons.Filled.FactCheck,
-                onClick = onQuickMeetingClick,
+                title = stringResource(R.string.label_contract),
+                icon = Icons.Filled.AssignmentTurnedIn,
+                onClick = onQuickContractClick,
                 modifier = Modifier.weight(1f)
             )
             QuickActionCard(
@@ -697,7 +697,7 @@ private fun QuickActionsSection(
                 onClick = onQuickContractOfferClick,
                 modifier = Modifier.weight(1f)
             )
-        }
+        }*/
     }
 }
 

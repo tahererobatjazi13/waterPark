@@ -31,14 +31,18 @@ import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_STAND_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
 
 
 @Composable
@@ -46,12 +50,28 @@ fun AssignedStandsOrganizationListScreen(
     onNewAssignmentOrganizationClick: () -> Unit,
     onViewItemDetailsClick: (AssignedStandWithDetail) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: AssignedStandsOrganizationViewModel = hiltViewModel()
+    shouldRefreshAndSync: Boolean = false,
+    onRefreshHandled: () -> Unit = {},
+    viewModel: AssignedStandsOrganizationViewModel = hiltViewModel(),
+    dashboardViewModel: DashboardViewModel = hiltViewModel()
 ) {
+
     val appColors = LocalPartnerManagementColors.current
     var selectedTab by rememberSaveable { mutableStateOf(AllocationFilterTab.All) }
 
     val advertisingStandAssignments by viewModel.assignments.collectAsStateWithLifecycle()
+
+    // اجرای همگام‌سازی و سپس رفرش لیست محلی
+    LaunchedEffect(shouldRefreshAndSync) {
+        if (shouldRefreshAndSync) {
+            // ۱. ابتدا فراخوانی متد همگام‌سازی سرور
+            dashboardViewModel.onReceiveDataClick()
+            // ۲. بازخوانی اطلاعات جدید در لیست از دیتابیس لوکال
+            viewModel.loadAssignedStands()
+            // ۳. خاموش کردن فلگ در SavedStateHandle
+            onRefreshHandled()
+        }
+    }
 
     val filteredAllocations = remember(selectedTab, advertisingStandAssignments) {
         when (selectedTab) {
@@ -63,11 +83,12 @@ fun AssignedStandsOrganizationListScreen(
         }
     }
 
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
 
-    ) { innerPadding ->
+        ) { innerPadding ->
         Surface(
             modifier = Modifier
                 .fillMaxSize()

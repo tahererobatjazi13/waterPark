@@ -336,9 +336,9 @@ fun NavGraphBuilder.organizationNavGraph(
                         },
                         onAddTicketOfferClick = {
                             navController.navigate(
-                                Screen.AddContractOffer.route
+                                Screen.AddContractOffer.createRoute(organizationId)
                             )
-                        }
+                        }, navController = navController
                     )
                 }
             }

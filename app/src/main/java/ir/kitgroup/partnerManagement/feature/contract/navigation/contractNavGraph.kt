@@ -15,13 +15,13 @@ import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
-import ir.kitgroup.partnerManagement.core.ui.util.ThemeMode
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_SERIAL_OFFER_SAVE
 import ir.kitgroup.partnerManagement.feature.contract.ui.add.AddContractRoute
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractDetailScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractsListScreen
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.offer.ui.AddContractOfferScreen
-import ir.kitgroup.partnerManagement.feature.profile.ui.SettingsScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.AssignedSerialDetailScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.AddContractOfferScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 fun NavGraphBuilder.contractNavGraph(
@@ -314,8 +314,13 @@ fun NavGraphBuilder.contractNavGraph(
     // ------------------------------------------------
 
     composable(
-        route =
-        Screen.AddContractOffer.route,
+        route = Screen.AddContractOffer.route,
+        arguments = listOf(
+            navArgument("organizationId") {
+                type = NavType.StringType
+                nullable = true
+            }
+        ),
         enterTransition = {
             EnterTransition.None
         },
@@ -328,7 +333,9 @@ fun NavGraphBuilder.contractNavGraph(
         popExitTransition = {
             ExitTransition.None
         }
-    ) {
+    ) { backStackEntry ->
+        val organizationId = backStackEntry.arguments?.getString("organizationId")
+
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -346,12 +353,39 @@ fun NavGraphBuilder.contractNavGraph(
                 modifier = Modifier.fillMaxSize()
             ) {
                 AddContractOfferScreen(
-                    onSaveClick = {
-                        // ...
+                    organizationId = organizationId,
+                    onSaveSuccess = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(SYNC_AFTER_SERIAL_OFFER_SAVE, true)
+
+                        navController.popBackStack()
                     }
                 )
             }
         }
 
     }
+    composable(
+        route = Screen.AssignedSerialDetail.route,
+        arguments = listOf(
+            navArgument("serialId") { type = NavType.StringType }
+        )
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            CustomHeader(
+                title = stringResource(R.string.label_ticket_offer_detail),
+                showBackButton = true,
+                onBackClick = { navController.popBackStack() }
+            )
+
+            AssignedSerialDetailScreen(
+                onEditClick = { id ->
+                    navController.navigate(Screen.AddContractOffer.createRoute(organizationId = id))
+                }
+            )
+        }
+    }
+
+
 }

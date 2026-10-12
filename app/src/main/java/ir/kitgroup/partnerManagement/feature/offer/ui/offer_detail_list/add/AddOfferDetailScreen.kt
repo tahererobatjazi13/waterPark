@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui
+package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.add
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -19,8 +19,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.database.entity.OfferDetailEntity
 import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.CommissionType
@@ -28,29 +28,55 @@ import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
 import ir.kitgroup.partnerManagement.core.ui.util.GenderType
 import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanLineStatus
 import ir.kitgroup.partnerManagement.core.ui.util.PersonCategory
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 
 @Composable
 fun AddOfferDetailScreen(
+    offerDetailId: String,               // <-- پارامتر جدید: شناسه واقعی آفر
     initialPlanHeader: String = "",
-    onBackClick: () -> Unit,
-    onSaveClick: (OfferDetailEntity) -> Unit = {}
+    viewModel: AddOfferDetailViewModel = hiltViewModel(),
+    onSaveSuccess: () -> Unit // <-- کال‌بک بازگشت پس از ثبت موفق
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     val appColors = LocalPartnerManagementColors.current
 
     val planHeaderName = initialPlanHeader
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     var productServiceId by rememberSaveable { mutableStateOf("") }
     var productServiceName by rememberSaveable { mutableStateOf("") }
     var isProductServiceExpanded by remember { mutableStateOf(false) }
-    val mockProductServiceList = remember {
-        listOf(
-            Pair("1", "بلیط بزرگسال"),
-            Pair("2", "بلیط خردسال")
-        )
+
+
+    val saveMessage by viewModel.saveMessage.collectAsState(initial = null)
+
+// مشاهده تغییرات پیام ذخیره سازی
+    LaunchedEffect(saveMessage) {
+        saveMessage?.let { message ->
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT)
+                .show()
+            onSaveSuccess()
+
+        }
     }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    val context = androidx.compose.ui.platform.LocalContext.current
 
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(event.message.asString(context))
+                    onSaveSuccess()
+                }
+
+                is UiEvent.ShowError -> {
+                    snackbarHostState.showSnackbar(event.error.asString(context))
+                }
+            }
+        }
+    }
 // تعریف لیست‌ها و Map بر مبنای متون ترجمه‌شده
     val personCategoryMap = remember(context) {
         PersonCategory.entries.associateBy { context.getString(it.titleRes) }
@@ -84,16 +110,32 @@ fun AddOfferDetailScreen(
     var discountAmount by rememberSaveable { mutableStateOf("") }
 
     var selectedStatus by rememberSaveable { mutableStateOf(OfferPlanLineStatus.ACTIVE) }
+    val isSaving by viewModel.isSaving.collectAsState()
+// سینک کردن مقادیر دیتابیس با فیلدهای فرم در حالت ویرایش
+    LaunchedEffect(uiState.isEditMode, uiState.offerTicketPlanLineId) {
+        if (uiState.isEditMode) {
+            productServiceId = uiState.productServiceId
+            productServiceName = uiState.productServiceName
+
+            selectedPersonCategory = PersonCategory.fromId(uiState.personCategory)
+            selectedGender = GenderType.fromId(uiState.gender)
+
+            selectedCommissionType = CommissionType.fromId(uiState.commissionType)
+            commissionPercent = uiState.commissionPercent
+            commissionAmount = uiState.commissionAmount
+
+            selectedDiscountType = DiscountType.fromId(uiState.discountType)
+            discountPercent = uiState.discountPercent
+            discountAmount = uiState.discountAmount
+
+            selectedStatus = OfferPlanLineStatus.fromId(uiState.status)
+        }
+    }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            CustomHeader(
-                title = R.string.label_offer_product_service,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
@@ -144,9 +186,11 @@ fun AddOfferDetailScreen(
                                 .fillMaxWidth(0.9f)
                                 .background(appColors.cardBackground)
                         ) {
-                            mockProductServiceList.forEachIndexed { index, item ->
+                            // استفاده از لیست واقعی به جای mock
+                            uiState.availableProducts.forEachIndexed { index, product ->
                                 val backgroundColor =
                                     if (index % 2 == 0) appColors.cardBackground else appColors.cardBackgroundAlt
+
                                 Surface(
                                     modifier = Modifier.fillMaxWidth(),
                                     color = backgroundColor
@@ -154,14 +198,15 @@ fun AddOfferDetailScreen(
                                     DropdownMenuItem(
                                         text = {
                                             Text(
-                                                text = item.second,
+                                                text = product.name ?: "", // استفاده از نام واقعی
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 color = appColors.textPrimary
                                             )
                                         },
                                         onClick = {
-                                            productServiceId = item.first
-                                            productServiceName = item.second
+                                            productServiceId =
+                                                product.productId // استفاده از ID واقعی
+                                            productServiceName = product.name ?: ""
                                             isProductServiceExpanded = false
                                         }
                                     )
@@ -315,51 +360,35 @@ fun AddOfferDetailScreen(
                             }
                         }
                     )
-
-
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                // دکمه ثبت
+                // در داخل AddOfferDetailScreen
                 CustomButton(
-                    text = stringResource(R.string.label_registration),
+                    text = if (isSaving) "در حال ثبت..." else stringResource(R.string.label_registration),
+                    enabled = !isSaving,
                     onClick = {
-                        val lineEntity = OfferDetailEntity(
-                            offerDetailId = "1",
-                            offerId = "1",
-                            productId = "1",
-                            productName = "آفر بلیط بزرگسال",
-                            discountType = 1, // بدون تخفیف
-                            discountTypeName = "درصدی", // بدون تخفیف
-                            discountPercent = null,
-                            discountAmount = null,
-                            commissionType = 1, // درصدی
-                            commissionTypeName = "مبلغ ثابت",
-                            commissionPercent = 5.0,
-                            commissionAmount = null,
-                            personCategory = 1, // کودک
-                            personCategoryName = "بزرگسال", // کودک
-                            gender = 1, // نیاز نیست
-                            genderName = "نیاز نیست", // نیاز نیست=
-                            status = 1,
-                            statusName = "فعال"
+                        val discountPercentInt = discountPercent.toIntOrNull() ?: 0
+                        val discountAmountInt = discountAmount.toIntOrNull() ?: 0
+                        val commissionPercentInt = commissionPercent.toIntOrNull() ?: 0
+                        val commissionAmountInt = commissionAmount.toIntOrNull() ?: 0
+
+                        // فراخوانی متد ViewModel
+                        viewModel.saveOfferDetail(
+                            offerTicketPlanLineId = if (uiState.isEditMode) uiState.offerTicketPlanLineId else null,
+                            offerTicketPlanId = if (uiState.isEditMode) uiState.offerTicketPlanId else offerDetailId,
+                            productServiceId = productServiceId,
+                            discountType = selectedDiscountType.id,
+                            discountPercent = discountPercentInt,
+                            discountAmount = discountAmountInt,
+                            commissionType = selectedCommissionType.id,
+                            commissionPercent = commissionPercentInt,
+                            commissionAmount = commissionAmountInt,
+                            personCategory = selectedPersonCategory.id,
+                            gender = selectedGender.id,
+                            status = selectedStatus.id,
+                            isEdit = uiState.isEditMode
                         )
-                        /* val lineEntity = OfferDetailEntity(
-                             offerTicketPlanLineId = UUID.randomUUID().toString(),
-                             offerTicketPlanId = planHeaderName,
-                             name = productServiceName.ifBlank { planHeaderName },
-                             productServiceId = productServiceId,
-                             personCategory = selectedPersonCategory.id,
-                             gender = selectedGender.id,
-                             commissionType = selectedCommissionType.id,
-                             commissionPercent = if (selectedCommissionType == CommissionType.PERCENTAGE) commissionPercent else null,
-                             commissionAmount = if (selectedCommissionType == CommissionType.FIXED_AMOUNT) commissionAmount else null,
-                             discountType = selectedDiscountType.id,
-                             discountPercent = if (selectedDiscountType == DiscountType.PERCENTAGE) discountPercent else null,
-                             discountAmount = if (selectedDiscountType == DiscountType.FIXED_AMOUNT) discountAmount else null,
-                             status = selectedStatus.id
-                         )*/
-                        onSaveClick(lineEntity)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -367,17 +396,5 @@ fun AddOfferDetailScreen(
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun AddOfferDetailScreenPreview() {
-    AppScreenPreview {
-        AddOfferDetailScreen(
-            initialPlanHeader = "طرح تابستانه",
-            onBackClick = {},
-            onSaveClick = {}
-        )
     }
 }

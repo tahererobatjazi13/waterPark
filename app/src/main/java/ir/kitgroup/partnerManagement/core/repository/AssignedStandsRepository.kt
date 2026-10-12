@@ -7,8 +7,6 @@ import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
 import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
 import ir.kitgroup.partnerManagement.core.ui.util.extractErrorMessage
-import ir.kitgroup.partnerManagement.feature.meeting.model.ChangeStatusMeetingRequest
-import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
 import ir.kitgroup.partnerManagement.feature.stand.model.ChangeAssignStandStatusRequest
 import ir.kitgroup.partnerManagement.feature.stand.model.CreateAssignStandRequest
 import kotlinx.coroutines.flow.Flow

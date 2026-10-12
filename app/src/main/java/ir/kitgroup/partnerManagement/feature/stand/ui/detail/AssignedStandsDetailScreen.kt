@@ -25,77 +25,151 @@ import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.StandTypeEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
+import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
+import ir.kitgroup.partnerManagement.core.ui.components.CustomOutlinedButton
+import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
+import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
 import ir.kitgroup.partnerManagement.core.ui.util.StandType
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
+
 @Composable
 fun AssignedStandsDetailRoute(
+    onEditClick: (String) -> Unit = {},
+    onStatusChanged: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: AssignedStandsDetailViewModel = hiltViewModel()
-) {
-    val allocationDetail by viewModel.standDetail.collectAsStateWithLifecycle()
+) { val allocationDetail by viewModel.standDetail.collectAsStateWithLifecycle()
+    val isUpdatingStatus by viewModel.isUpdatingStatus.collectAsStateWithLifecycle()
 
     allocationDetail?.let { detail ->
         AssignedStandsDetailScreen(
             allocationWithDetail = detail,
+            onEditClick = onEditClick,
+            onStatusChanged = onStatusChanged,
+            isUpdatingStatus = isUpdatingStatus,
             modifier = modifier
         )
-    } ?: run {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(LocalPartnerManagementColors.current.screenBackground),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+    } ?: Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(LocalPartnerManagementColors.current.screenBackground),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary
+        )
     }
+
+
 }
 
 @Composable
 fun AssignedStandsDetailScreen(
     allocationWithDetail: AssignedStandWithDetail,
+    onEditClick: (String) -> Unit,
+    onStatusChanged: (Int) -> Unit,
+    isUpdatingStatus: Boolean = false,
     modifier: Modifier = Modifier
+
 ) {
     val appColors = LocalPartnerManagementColors.current
     val allocation = allocationWithDetail.assignedStand
     val standType = allocationWithDetail.standType
+    val standCount = allocationWithDetail.assignedStand.count
+    var showStatusDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
 
+        bottomBar = {
+            if (allocationWithDetail != null) {
+                Surface(
+                    color = appColors.screenBackground,
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // دکمه ویرایش بازدید
+                        CustomButton(
+                            text = stringResource(R.string.label_edit_stand),
+                            onClick = { onEditClick(allocationWithDetail.assignedStand.assignedStandId) },
+                            fillMaxWidth = false,
+                            modifier = Modifier.weight(1f),
+                            height = 42.dp,
+                            cornerRadius = 12.dp,
+                            textStyle = typography.titleLarge,
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+
+                        // دکمه تعیین وضعیت بازدید
+                        CustomButton(
+                            text = stringResource(R.string.label_determination_status),
+                            onClick = {
+                                if (!isUpdatingStatus) {
+                                    showStatusDialog = true
+                                }
+                            },
+                            fillMaxWidth = false,
+                            modifier = Modifier.weight(1f),
+                            height = 42.dp,
+                            cornerRadius = 12.dp,
+                            textStyle = typography.titleLarge,
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = appColors.error,
+                                contentColor = appColors.errorContainer
+                            )
+                        )
+                    }
+                }
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
             modifier = Modifier
@@ -144,7 +218,7 @@ fun AssignedStandsDetailScreen(
                 // ۴. جزئیات کامل نوع استند واکشی‌شده از دیتابیس (Relation)
                 item {
                     if (standType != null) {
-                        AllocatedStandItemCard(item = standType)
+                        AllocatedStandItemCard(item = standType,standCount!!)
                     } else {
                         EmptyAllocatedItemsCard()
                     }
@@ -160,6 +234,100 @@ fun AssignedStandsDetailScreen(
                             )
                         }
                     }
+            }
+        }
+    }
+
+
+    // دیالوگ تغییر وضعیت بازدید
+    if (showStatusDialog && allocationWithDetail != null) {
+        val initialStatus =
+            MeetingStatus.fromId(allocationWithDetail.assignedStand.statusAssign) ?: MeetingStatus.entries.first()
+        ChangeAssignedStandStatusDialog(
+            initialStatus = initialStatus,
+            isSaving = isUpdatingStatus,
+            onDismiss = { showStatusDialog = false },
+            onConfirm = { selectedStatus ->
+                onStatusChanged(selectedStatus.id)
+            }
+        )
+    }
+}
+/**
+ * دیالوگ انتخاب وضعیت جدید بازدید
+ */
+@Composable
+fun ChangeAssignedStandStatusDialog(
+    initialStatus: MeetingStatus,
+    isSaving: Boolean = false,
+    onDismiss: () -> Unit,
+    onConfirm: (MeetingStatus) -> Unit
+) {
+    var selectedStatus by rememberSaveable { mutableStateOf(initialStatus) }
+    val statusEntries = remember { MeetingStatus.entries }
+    val statusTitles = statusEntries.map { stringResource(it.titleRes) }
+
+    Dialog(
+        onDismissRequest = {
+            if (!isSaving) onDismiss()
+        }
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "تعیین وضعیت بازدید",
+                    style = typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                DropdownSelectorField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = stringResource(selectedStatus.titleRes),
+                    label = stringResource(R.string.label_status),
+                    placeholder = "",
+                    items = statusTitles,
+                    isRequired = true,
+                    onItemSelected = { selectedTitle ->
+                        val index = statusTitles.indexOf(selectedTitle)
+                        if (index >= 0) {
+                            selectedStatus = statusEntries[index]
+                        }
+                    }
+                )
+
+                if (isSaving) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CustomButton(
+                        text = stringResource(R.string.label_registration),
+                        enabled = !isSaving,
+                        onClick = { onConfirm(selectedStatus) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    CustomOutlinedButton(
+                        text = stringResource(R.string.label_cancel),
+                        enabled = !isSaving,
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
@@ -235,23 +403,26 @@ private fun AssignmentHeaderCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+/*
+                    text = "$assignmentTypeTitle | $assignmentModeTitle",
+*/
 
                     Text(
-                        text = "$assignmentTypeTitle | $assignmentModeTitle",
+                        text = "$assignmentModeTitle",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    allocation.statusAssign?.let { statusId ->
+                        StatusBadge(status = StandAssignmentStatus.fromId(statusId))
+                    }
                 }
 
-                allocation.statusAssign?.let { statusId ->
-                    StatusBadge(status = StandAssignmentStatus.fromId(statusId))
-                }
             }
 
-            HorizontalDivider(
+     /*       HorizontalDivider(
                 thickness = 0.7.dp,
                 color = appColors.border
             )
@@ -271,7 +442,7 @@ private fun AssignmentHeaderCard(
                     value = (allocation.count ?: 0).toString(),
                     modifier = Modifier.weight(1f)
                 )
-            }
+            }*/
         }
     }
 }
@@ -473,7 +644,7 @@ private fun AllocatedItemsSectionHeader(
             modifier = Modifier.weight(1f)
         )
 
-        Text(
+       /* Text(
             text = stringResource(
                 R.string.label_items_count_summary,
                 itemTypesCount,
@@ -481,13 +652,14 @@ private fun AllocatedItemsSectionHeader(
             ),
             style = MaterialTheme.typography.labelMedium,
             color = appColors.textSecondary
-        )
+        )*/
     }
 }
 
 @Composable
 private fun AllocatedStandItemCard(
     item: StandTypeEntity,
+    standCount: Int,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -559,7 +731,7 @@ private fun AllocatedStandItemCard(
                     )
                 }
 
-                if (!item.code.isNullOrBlank()) {
+           //     if (!item.code.isNullOrBlank()) {
                     Box(
                         modifier = Modifier
                             .background(
@@ -569,12 +741,12 @@ private fun AllocatedStandItemCard(
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = item.code,
-                            style = MaterialTheme.typography.labelSmall,
+                            text = standCount.toString(),
+                            style = MaterialTheme.typography.titleLarge,
                             color = appColors.textSecondary
                         )
                     }
-                }
+              //  }
             }
         }
     }

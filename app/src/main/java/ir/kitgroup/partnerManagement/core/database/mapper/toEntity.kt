@@ -172,6 +172,7 @@ fun OrganizationDto.toEntity(): OrganizationEntity {
     return OrganizationEntity(
         organizationId = this.organizationId,
         activeVisitorId = this.activeVisitorId,
+        activeContractId = this.activeContractId,
         name = this.name,
         ownerName = this.ownerName,
         code = this.code,

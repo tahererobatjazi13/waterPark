@@ -21,6 +21,20 @@ const val SYNC_AFTER_ORGANIZATION_SAVE =
 const val SYNC_AFTER_CONTRACT_SAVE =
     "sync_after_contract_save"
 
+const val SYNC_AFTER_STAND_SAVE =
+    "sync_after_stand_save"
+
+
+const val SYNC_AFTER_OFFER_SAVE =
+    "sync_after_offer_save"
+
+
+const val SYNC_AFTER_OFFER_DETAIL_SAVE =
+    "sync_after_offer_detail_save"
+
+const val SYNC_AFTER_SERIAL_OFFER_SAVE =
+    "sync_after_serial_offer_save"
+
 enum class ThemeMode {
     LIGHT,
     DARK,

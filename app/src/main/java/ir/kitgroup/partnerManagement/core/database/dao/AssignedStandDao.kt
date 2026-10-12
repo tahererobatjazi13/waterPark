@@ -6,6 +6,7 @@ import androidx.room.Upsert
 import ir.kitgroup.partnerManagement.core.database.entity.AssignedStandEntity
 import kotlinx.coroutines.flow.Flow
 import androidx.room.Transaction
+import androidx.room.Update
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 
 @Dao
@@ -34,4 +35,27 @@ interface AssignedStandDao {
 
     @Query("DELETE FROM assigned_stands")
     suspend fun deleteAll()
+
+
+    @Update
+    suspend fun update(item: AssignedStandEntity)
+
+    @Query("""
+    UPDATE assigned_stands
+    SET statusAssign = :status
+    WHERE assignedStandId = :assignedStandId
+""")
+    suspend fun updateStatus(
+        assignedStandId: String,
+        status: Int
+    )
+
+    @Query("""
+    SELECT * FROM assigned_stands
+    WHERE assignedStandId = :assignedStandId
+    LIMIT 1
+""")
+    suspend fun getById(
+        assignedStandId: String
+    ): AssignedStandEntity?
 }

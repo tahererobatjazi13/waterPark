@@ -19,6 +19,8 @@ data class OrganizationEntity(
 
     val activeVisitorId: String? = null,
 
+    val activeContractId: String? = null,
+
     val name: String? = null,
 
     val ownerName: String? = null,

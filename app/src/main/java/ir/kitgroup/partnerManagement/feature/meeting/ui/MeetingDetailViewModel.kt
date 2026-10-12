@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.repository.MeetingRepository
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.UiText
 import ir.kitgroup.partnerManagement.feature.meeting.model.ChangeStatusMeetingRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,7 @@ class MeetingDetailViewModel @Inject constructor(
 
     private val _statusUpdateState = MutableStateFlow<DataState<Unit>?>(null)
     val statusUpdateState: StateFlow<DataState<Unit>?> = _statusUpdateState.asStateFlow()
+
     fun observeMeetingById(meetingId: String) {
         viewModelScope.launch {
             meetingRepository
@@ -40,7 +42,30 @@ class MeetingDetailViewModel @Inject constructor(
     /**
      * تغییر وضعیت جلسه/بازدید با دریافت بدنه کامل درخواست
      */
-/*
+
+    /**
+     * تغییر وضعیت جلسه/بازدید با استفاده از مقادیر پایه
+     */
+    fun changeStatusMeeting(
+        meetingId: String,
+        newStatus: Int,
+        onSuccess: () -> Unit = {}
+    ) {
+        val currentMeeting = _meeting.value?.meeting
+        val request = ChangeStatusMeetingRequest(
+            meetingId = meetingId,
+            status = newStatus,
+            visitRealDate = currentMeeting?.visitRealDate,
+            latitude = currentMeeting?.latitude?.replace(",", ".")?.toDoubleOrNull(),
+            longitude = currentMeeting?.longitude?.replace(",", ".")?.toDoubleOrNull(),
+            description = currentMeeting?.description
+        )
+        updateMeetingStatus(request, onSuccess)
+    }
+
+    /**
+     * تغییر وضعیت جلسه/بازدید با دریافت بدنه کامل درخواست
+     */
     fun updateMeetingStatus(
         request: ChangeStatusMeetingRequest,
         onSuccess: () -> Unit
@@ -56,7 +81,7 @@ class MeetingDetailViewModel @Inject constructor(
 
                 result.onSuccess {
                     _statusUpdateState.value = DataState.Success(Unit)
-                    observeMeetingById(request.meetingId)
+                    request.meetingId?.let { id -> observeMeetingById(id) }
                     onSuccess()
                 }.onFailure { error ->
                     _statusUpdateState.value = DataState.Error(
@@ -72,7 +97,6 @@ class MeetingDetailViewModel @Inject constructor(
             }
         }
     }
-*/
 
 
     fun resetStatusState() {

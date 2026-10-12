@@ -87,6 +87,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitSubjectEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
@@ -104,6 +105,7 @@ import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddPersonFormSt
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.InactivationReasonDialog
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddOrganizationFormState
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddPersonFormState
+import ir.kitgroup.partnerManagement.navigation.Screen
 import saman.zamani.persiandate.PersianDate
 import java.time.Instant
 import java.time.ZoneId
@@ -130,7 +132,8 @@ fun OrganizationDetailScreen(
     onContractClick: (ContractEntity) -> Unit,
     onAddTicketOfferClick: () -> Unit,
     sessionViewModel: SessionViewModel = hiltViewModel(),
-    organizationDetailViewModel: OrganizationDetailViewModel = hiltViewModel()
+    organizationDetailViewModel: OrganizationDetailViewModel = hiltViewModel(),
+            navController: NavController
 ) {
     lateinit var mainPreferences: MainPreferences
 
@@ -213,6 +216,7 @@ fun OrganizationDetailScreen(
     var visitorToDelete by remember { mutableStateOf<VisitorOrganizationEntity?>(null) }
 
     val activeVisitorName by organizationDetailViewModel.activeVisitorName.collectAsState()
+    val activeContractName by organizationDetailViewModel.activeContractName.collectAsState()
 
     // متغیرهای وضعیت برای کنترل دیالوگ‌ها
     val statusUpdateState by organizationDetailViewModel.statusUpdateState
@@ -448,7 +452,8 @@ fun OrganizationDetailScreen(
                     OrganizationDetailTab.BASIC_INFO -> {
                         OrganizationBasicInfoTabContent(
                             organization = currentOrganization,
-                            activeVisitorName = activeVisitorName
+                            activeVisitorName = activeVisitorName,
+                                    activeContractName = activeContractName
                         )
                     }
 
@@ -491,14 +496,16 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.SERIALS -> {
+
                         OrganizationSerialsTabContent(
                             serials = assignedSerials,
                             onAddTicketClick = {
                                 onAddTicketOfferClick()
                             },
                             onTicketClick = { ticket ->
-                                // اکشن در صورت نیاز به روت خارجی یا کار با دیتای آیتم انتخابی
-                            },
+                                navController.navigate(
+                                    Screen.AssignedSerialDetail.createRoute(ticket.assignedSerial.serialAssignmentId)
+                                )                            },
                             modifier = Modifier.fillMaxSize()
                         )
                     }

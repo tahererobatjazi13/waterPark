@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.core.network.apiService
 
-
 import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
 import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
 import ir.kitgroup.partnerManagement.feature.contract.model.CreateContractRequest
@@ -12,6 +11,9 @@ import ir.kitgroup.partnerManagement.feature.login.model.LoginRequest
 import ir.kitgroup.partnerManagement.feature.login.model.LoginResponse
 import ir.kitgroup.partnerManagement.feature.meeting.model.ChangeStatusMeetingRequest
 import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
+import ir.kitgroup.partnerManagement.feature.offer.model.CreateOfferDetailPlanRequest
+import ir.kitgroup.partnerManagement.feature.offer.model.CreateOfferPlanRequest
+import ir.kitgroup.partnerManagement.feature.offer.model.CreateSerialOfferRequest
 import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
 import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
@@ -20,6 +22,7 @@ import ir.kitgroup.partnerManagement.feature.stand.model.ChangeAssignStandStatus
 import ir.kitgroup.partnerManagement.feature.stand.model.CreateAssignStandRequest
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -130,6 +133,50 @@ interface ApiService {
     @PATCH("api/Inspection/AssignStand/change-status")
     suspend fun changeAssignStandStatus(
         @Body request: ChangeAssignStandStatusRequest
+    ): Response<ModelResponse>
+
+    @POST("api/promotion-ticket/offer-plan/Create")
+    suspend fun createOfferPlan(
+        @Body request: CreateOfferPlanRequest
+    ): Response<ModelResponse>
+
+
+    @PUT("api/promotion-ticket/offer-plan/Update")
+    suspend fun updateOfferPlan(
+        @Body request: CreateOfferPlanRequest
+    ): Response<ModelResponse>
+
+    @POST("api/promotion-ticket/offer-detailplan/Create")
+    suspend fun createOfferDetailPlan(
+        @Body request: CreateOfferDetailPlanRequest
+    ): Response<ModelResponse>
+
+    @PUT("api/promotion-ticket/offer-detailplan/Update")
+    suspend fun updateOfferDetailPlan(
+        @Body request: CreateOfferDetailPlanRequest
+    ): Response<ModelResponse>
+
+    @DELETE("api/promotion-ticket/offer-detailplan/Delete{id}")
+    suspend fun deleteOfferDetailPlan(
+        @Path("id") offerTicketPlanLineId: String
+    ): Response<ModelResponse>
+
+    @POST("api/promotion-ticket/AssignSerialOffer")
+    suspend fun assignSerialOffer(
+        @Body request: CreateSerialOfferRequest
+    ): Response<ModelResponse>
+
+
+    @PUT("api/promotion-ticket/UpdateSerialOffer")
+    suspend fun updateSerialOffer(
+        @Body request: CreateSerialOfferRequest
+    ): Response<ModelResponse>
+
+
+    @PATCH("api/promotion-ticket/change-status/{id}/status")
+    suspend fun serialOfferChangeStatus(
+        @Path("id") id: String,
+        @Query("status") status: String
     ): Response<ModelResponse>
 
 

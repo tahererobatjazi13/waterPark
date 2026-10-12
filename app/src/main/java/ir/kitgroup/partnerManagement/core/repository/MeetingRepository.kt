@@ -140,7 +140,6 @@ class MeetingRepository @Inject constructor(
             }
 
         } catch (e: Exception) {
-
             Result.failure(e)
         }
     }
@@ -148,48 +147,26 @@ class MeetingRepository @Inject constructor(
     suspend fun changeStatusMeeting(
         request: ChangeStatusMeetingRequest
     ): Result<ModelResponse> {
-
         return try {
+            val response = apiService.changeMeetingStatus(request)
 
-            val response =
-                apiService.changeMeetingStatus(request)
-
-            if (
-                response.isSuccessful &&
-                response.body() != null
-            ) {
-
-                val body =
-                    response.body()!!
-
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
                 if (body.success) {
-
                     Result.success(body)
-
                 } else {
-
                     Result.failure(
-                        Exception(
-                            body.message
-                                ?: "خطا در خاتمه دادن قرارداد"
-                        )
+                        Exception(body.message ?: "خطا در تغییر وضعیت بازدید")
                     )
                 }
-
             } else {
-
                 val errorMessage = extractErrorMessage(
                     errorBody = response.errorBody()?.string(),
-                    defaultMessage = "خطای سرور در  خاتمه دادن قرارداد: ${response.code()}"
+                    defaultMessage = "خطای سرور در تغییر وضعیت بازدید: ${response.code()}"
                 )
-
-                Result.failure(
-                    Exception(errorMessage)
-                )
+                Result.failure(Exception(errorMessage))
             }
-
         } catch (e: Exception) {
-
             Result.failure(e)
         }
     }

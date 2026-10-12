@@ -100,7 +100,7 @@ private fun AdvertisingItemsContent(
     Column(
         modifier = modifier.padding(16.dp)
     ) {
-        CustomButton(
+      /*  CustomButton(
             text = stringResource(R.string.label_add_new_stand),
             onClick = onAddItemClick,
             modifier = Modifier
@@ -111,7 +111,7 @@ private fun AdvertisingItemsContent(
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ),
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))*/
 
         if (items.isEmpty()) {
             EmptyState(

@@ -94,6 +94,7 @@
     <string name="label_images">تصاویر</string>
     <string name="label_submit_visit">ثبت بازدید</string>
     <string name="label_edit_visit">ویرایش بازدید</string>
+    <string name="label_edit_stand">ویرایش استند</string>
     <string name="label_visit">بازدید</string>
     <string name="label_organization_grade">گرید سازمان</string>
     <string name="label_phone">تلفن</string>
@@ -144,7 +145,6 @@
     <string name="label_advertising_stands">استندهای تبلیغاتی</string>
     <string name="label_managing_stands_items">مدیریت استندهای تبلیغاتی</string>
     <string name="label_add_new_stand">افزودن استند جدید</string>
-    <string name="label_edit_stand">ویرایش استند</string>
     <string name="label_stand_name">نام استند</string>
     <string name="label_stand_type">نوع استند</string>
     <string name="label_stand">استند</string>
@@ -525,7 +525,7 @@
     <string name="label_assignment_details">جزئیات تخصیص استند</string>
     <string name="label_assignment_information">اطلاعات تخصیص</string>
 
-    <string name="label_allocated_stands">استندهای تخصیص‌یافته</string>
+    <string name="label_allocated_stands">استند تخصیص‌یافته</string>
     <string name="label_item_types_count">تعداد انواع استند</string>
     <string name="label_total_allocated_count">تعداد کل استندها</string>
     <string name="label_welcome_user">%1$s خوش آمدی</string>

@@ -91,7 +91,7 @@ sealed class Screen(val route: String) {
     data object AssignedStandsOrganizationList :
         Screen("assigned_stands_organization_list")
 
-    data object AddAssignedStandsOrganization:
+/*    data object AddAssignedStandsOrganization:
         Screen("add_assigned_stands_organization?organizationId={organizationId}") {
         fun createRoute(organizationId: String? = null): String {
             return if (organizationId != null) {
@@ -99,6 +99,17 @@ sealed class Screen(val route: String) {
             } else {
                 "add_assigned_stands_organization"
             }
+        }
+    }*/
+    // در فایل Screen.kt:
+    object AddAssignedStandsOrganization {
+        const val route = "add_assigned_stands_org?organizationId={organizationId}&assignedStandId={assignedStandId}"
+
+        fun createRoute(organizationId: String? = null, assignedStandId: String? = null): String {
+            val orgParam = organizationId?.let { "organizationId=$it" } ?: ""
+            val standParam = assignedStandId?.let { "assignedStandId=$it" } ?: ""
+            val query = listOf(orgParam, standParam).filter { it.isNotEmpty() }.joinToString("&")
+            return if (query.isNotEmpty()) "add_assigned_stands_org?$query" else "add_assigned_stands_org"
         }
     }
 
@@ -157,10 +168,27 @@ sealed class Screen(val route: String) {
             return "edit_contract/$contractId"
         }
     }
-    data object AddContractOffer : Screen("add_contract_Offer")
+        data object AddContractOffer : Screen("add_contract_offer?organizationId={organizationId}") {
+            fun createRoute(organizationId: String? = null): String {
+                return if (!organizationId.isNullOrBlank()) {
+                    "add_contract_offer?organizationId=$organizationId"
+                } else {
+                    "add_contract_offer"
+                }
+            }
+        }
+
+    data object AssignedSerialDetail : Screen("assigned_serial_detail/{serialId}") {
+        fun createRoute(serialId: String) = "assigned_serial_detail/$serialId"
+    }
 
     // add Offer
     data object AddOffer : Screen("add_Offer")
+
+    object EditOffer : Screen("edit_offer/{offerId}") {
+        fun createRoute(offerId: String): String =
+            "edit_offer/$offerId"
+    }
 
     // offer detail list
     data object OfferDetailList : Screen("offer_detail_list/{offerId}") {
@@ -168,13 +196,19 @@ sealed class Screen(val route: String) {
     }
 
     // add Offer detail
-    data object AddOfferDetail : Screen("add_offer_detail/{offerTicketPlanLineName}") {
-        fun createRoute(planTitle: String): String {
-            val encodedTitle = java.net.URLEncoder.encode(planTitle.ifBlank { " " }, "UTF-8")
-            return "add_offer_detail/$encodedTitle"
+    object AddOfferDetail : Screen("add_offer_detail/{offerTicketPlanId}/{offerTicketPlanName}") {
+        fun createRoute(offerTicketPlanId: String, offerTicketPlanName: String): String {
+            val encodedName = runCatching {
+                java.net.URLEncoder.encode(offerTicketPlanName, "UTF-8")
+            }.getOrDefault(offerTicketPlanName)
+
+            return "add_offer_detail/$offerTicketPlanId/$encodedName"
         }
     }
 
+    data object EditOfferDetail : Screen("edit_offer_detail/{offerDetailId}") {
+        fun createRoute(offerDetailId: String): String = "edit_offer_detail/$offerDetailId"
+    }
 
     // offer detail
     data object OfferDetail : Screen("offer_detail/{offerDetailId}") {

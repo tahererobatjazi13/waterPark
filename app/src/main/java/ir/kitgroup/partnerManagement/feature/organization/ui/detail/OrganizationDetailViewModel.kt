@@ -78,6 +78,11 @@ class OrganizationDetailViewModel @Inject constructor(
     private val _activeVisitorName = MutableStateFlow<String?>(null)
     val activeVisitorName: StateFlow<String?> = _activeVisitorName.asStateFlow()
 
+    private val _activeContractName= MutableStateFlow<String?>(null)
+    val activeContractName: StateFlow<String?> = _activeContractName.asStateFlow()
+
+
+
     private val _organization =
         MutableStateFlow<OrganizationWithDetail?>(null)
 
@@ -91,10 +96,20 @@ class OrganizationDetailViewModel @Inject constructor(
                 .collect { organization ->
                     _organization.value = organization
                     val activeVisitorId = organization?.organization?.activeVisitorId
+                    val activeContractId = organization?.organization?.activeContractId
                     if (!activeVisitorId.isNullOrBlank()) {
                         visitorRepository.getAllVisitors().collect { visitors ->
                             _activeVisitorName.value =
                                 visitors.firstOrNull { it.visitorId == activeVisitorId }?.name
+                        }
+                    } else {
+                        _activeVisitorName.value = null
+                    }
+
+                    if (!activeContractId.isNullOrBlank()) {
+                        contractRepository.observeAllContracts().collect { contracts ->
+                            _activeContractName.value =
+                                contracts.firstOrNull { it.contractId == activeContractId }?.title
                         }
                     } else {
                         _activeVisitorName.value = null

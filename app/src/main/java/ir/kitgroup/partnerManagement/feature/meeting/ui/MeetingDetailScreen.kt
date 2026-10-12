@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Subject
@@ -44,7 +43,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 @Composable
 fun MeetingDetailScreen(
     meetingId: String,
-    onBackClick: () -> Unit,
     onEditClick: (String) -> Unit,
     onStatusChanged: () -> Unit,
     modifier: Modifier = Modifier,
@@ -88,13 +86,7 @@ fun MeetingDetailScreen(
     val currentMeeting = meeting
 
     Scaffold(
-        topBar = {
-            CustomHeader(
-                title = R.string.label_meeting_details,
-                showBackButton = true,
-                onBackClick = onBackClick
-            )
-        },
+
         bottomBar = {
             if (currentMeeting != null) {
                 Surface(
@@ -221,15 +213,14 @@ fun MeetingDetailScreen(
             isSaving = isUpdatingStatus,
             onDismiss = { showStatusDialog = false },
             onConfirm = { selectedStatus ->
-                /* viewModel.updateMeetingStatus(
-                     meetingId = currentMeeting.meeting.meetingId,
-                     newStatus = selectedStatus.id
-                 ) {
-                     // با استفاده از اثر LaunchedEffect رویداد موفقیت اجرا می‌شود
-                 }*/
+                viewModel.changeStatusMeeting(
+                    meetingId = currentMeeting.meeting.meetingId,
+                    newStatus = selectedStatus.id
+                )
             }
         )
     }
+
 }
 
 /**

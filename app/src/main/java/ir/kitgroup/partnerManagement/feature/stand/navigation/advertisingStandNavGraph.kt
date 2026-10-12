@@ -5,8 +5,10 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -14,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
+import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_STAND_SAVE
 import ir.kitgroup.partnerManagement.feature.stand.ui.AdvertisingStandMenuScreen
 import ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_organization.AddAssignedStandsOrganizationScreen
 import ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_organization.AssignedStandsOrganizationListScreen
@@ -267,9 +270,12 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
         },
         popExitTransition = {
             ExitTransition.None
-        }) {
+        }) { backStackEntry ->
 
-
+        // شنود سیگنال سینک و رفرش از SavedStateHandle همین Entry
+        val shouldRefreshAndSync by backStackEntry.savedStateHandle
+            .getStateFlow(SYNC_AFTER_STAND_SAVE, false)
+            .collectAsStateWithLifecycle()
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -286,6 +292,10 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 AssignedStandsOrganizationListScreen(
+                    shouldRefreshAndSync = shouldRefreshAndSync,
+                    onRefreshHandled = {
+                        backStackEntry.savedStateHandle[SYNC_AFTER_STAND_SAVE] = false
+                    },
                     onNewAssignmentOrganizationClick = {
                         navController.navigate(Screen.AddAssignedStandsOrganization.createRoute())
                     },
@@ -297,7 +307,6 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                 )
             }
         }
-
     }
 
     //ثبت تخصیص به سازمان
@@ -305,6 +314,11 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
         route = Screen.AddAssignedStandsOrganization.route,
         arguments = listOf(
             navArgument("organizationId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            },
+            navArgument("assignedStandId") {
                 type = NavType.StringType
                 nullable = true
                 defaultValue = null
@@ -324,31 +338,37 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
         }
     ) { backStackEntry ->
         val organizationId = backStackEntry.arguments?.getString("organizationId")
+        val assignedStandId = backStackEntry.arguments?.getString("assignedStandId")
+        val isEditMode = !assignedStandId.isNullOrBlank()
 
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
             CustomHeader(
                 title = stringResource(
-                    R.string.label_allocation_record
+                    if (isEditMode) R.string.label_edit_stand else R.string.label_allocation_record
                 ),
                 showBackButton = true,
-                onBackClick = {
-                    navController.popBackStack()
-                }
+                onBackClick = { navController.popBackStack() }
             )
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-
                 AddAssignedStandsOrganizationScreen(
-                    preselectedOrganizationId = organizationId,
-                    onSaveClick = { navController.popBackStack() }
+                    organizationId = organizationId,
+                    assignedStandId = assignedStandId,
+                    onSuccessSave = {
+                        // ۱. تنظیم فلگ در صفحه قبل (لیست تخصیص استند سازمان)
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(SYNC_AFTER_STAND_SAVE, true)
+
+                        // ۲. بازگشت مستقیم به همان صفحه لیست بدون رفتن به داشبورد
+                        navController.popBackStack()
+                    }
                 )
             }
         }
-
-
     }
 
     // مشاهده جزئیات تخصیص (سازمانی یا ویزیتوری)
@@ -386,8 +406,13 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                 modifier = Modifier.fillMaxSize()
             ) {
 
-                AssignedStandsDetailRoute()
-            }
+                AssignedStandsDetailRoute(
+                    onEditClick = { assignedStandId ->
+                        navController.navigate(
+                            Screen.AddAssignedStandsOrganization.createRoute(assignedStandId = assignedStandId)
+                        )
+                    }
+                )            }
         }
 
 

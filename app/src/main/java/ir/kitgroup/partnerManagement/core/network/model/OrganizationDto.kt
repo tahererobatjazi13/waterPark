@@ -9,6 +9,8 @@ data class OrganizationDto(
 
     val activeVisitorId: String?,
 
+    val activeContractId: String?,
+
     val name: String?,
 
     val ownerName: String?,

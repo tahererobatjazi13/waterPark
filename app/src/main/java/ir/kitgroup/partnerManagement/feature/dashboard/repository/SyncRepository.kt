@@ -82,12 +82,19 @@ class SyncRepository @Inject constructor(
                 systemUserId = systemUserId,
                 visitorId = visitorId,
                 roleCode = roleCode,
+                // لیست‌های اصلی
                 pendingOrganizations = emptyList(),
                 pendingPersons = emptyList(),
                 pendingMeetings = emptyList(),
                 pendingWarnings = emptyList(),
-                pendingAssignedStands = emptyList()
+                pendingOrgStatusChanges = emptyList(),
+                pendingContracts = emptyList(),
+                pendingContractTerminations = emptyList(),
+                pendingMeetingStatusChanges = emptyList(),
+                pendingUpdateStands = emptyList(),
+                pendingStandStatusChanges = emptyList()
             )
+
             //  دریافت داده از وب‌سرویس
             val response = apiService.syncData(request)
 

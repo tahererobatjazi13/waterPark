@@ -282,7 +282,7 @@ private fun BasicGeneralSection(
 
                     TextButton(
                         onClick = {
-                            showSerialsDetailSheet = true
+                          //  showSerialsDetailSheet = true
                         },
                         contentPadding = PaddingValues(
                             horizontal = 10.dp,
@@ -344,7 +344,7 @@ private fun BasicGeneralSection(
         // =========================
         // Serial details
         // =========================
-        if (showSerialsDetailSheet) {
+       /* if (showSerialsDetailSheet) {
             SerialsDetailBottomSheet(
                 totalAssigned = assignedSerials,
                 issuedCount = issuedSerials,
@@ -355,7 +355,7 @@ private fun BasicGeneralSection(
                     showSerialsDetailSheet = false
                 }
             )
-        }
+        }*/
     }
 }
 

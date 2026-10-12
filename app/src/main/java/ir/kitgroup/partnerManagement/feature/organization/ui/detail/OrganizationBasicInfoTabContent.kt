@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.ManageAccounts
@@ -64,7 +65,8 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 @Composable
 fun OrganizationBasicInfoTabContent(
     organization: OrganizationWithDetail,
-    activeVisitorName: String? = null
+    activeVisitorName: String? = null,
+    activeContractName: String? = null
 ) {
     Column(
         modifier = Modifier
@@ -75,7 +77,9 @@ fun OrganizationBasicInfoTabContent(
     ) {
         SectionTitle(stringResource(R.string.label_organization_basic_information))
         BasicInfoSection(
-            organization, activeVisitorName = activeVisitorName
+            organization,
+            activeVisitorName = activeVisitorName,
+            activeContractName = activeContractName
         )
 
         SectionTitle(stringResource(R.string.label_contact_information))
@@ -105,7 +109,8 @@ fun OrganizationBasicInfoTabContent(
 @Composable
 private fun BasicInfoSection(
     item: OrganizationWithDetail,
-    activeVisitorName: String? = null
+    activeVisitorName: String? = null,
+    activeContractName: String? = null
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
@@ -137,6 +142,19 @@ private fun BasicInfoSection(
                         title = "ویزیتور منتخب",
                         value = activeVisitorName,
                         icon = Icons.Filled.Badge
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        thickness = 0.8.dp,
+                        color = colors.outlineVariant.copy(alpha = 0.4f)
+                    )
+                }
+
+                if (!activeContractName.isNullOrBlank()) {
+                    InfoRowItem(
+                        title = "قراداد فعال",
+                        value = activeContractName,
+                        icon = Icons.Filled.Handshake
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 12.dp),
@@ -226,7 +244,7 @@ private fun BasicInfoSection(
                 if (currentStatus == OrganizationStatus.INACTIVE && !item.organization.reasonDeactive.isNullOrBlank()) {
                     InfoRowItem(
                         title = stringResource(R.string.label_inactivation_date),
-                        value = formatJalaliDate(item.organization.deactiveDate) ,
+                        value = formatJalaliDate(item.organization.deactiveDate),
                         icon = Icons.Filled.CalendarMonth
                     )
                     InfoRowItem(

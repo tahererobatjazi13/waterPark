@@ -106,7 +106,7 @@ fun NavGraphBuilder.reportNavGraph(navController: NavController) {
                         navController.navigate(Screen.VisitorsPerformance.route)
                     },
                     onViewItemDetailsClick = { visitor ->
-                        navController.navigate("visitor_analysis/${visitor.visitorId}")
+                      //  navController.navigate("visitor_analysis/${visitor.visitorId}")
                     })
             }
         }

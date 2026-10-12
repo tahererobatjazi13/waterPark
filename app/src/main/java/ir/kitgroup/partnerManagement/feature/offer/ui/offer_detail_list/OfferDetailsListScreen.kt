@@ -36,6 +36,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -46,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.database.model.OfferDetailWithProduct
@@ -58,17 +61,45 @@ import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
 import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanLineStatus
 import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
 
 @Composable
 fun OfferDetailsListScreen(
-    onAddClick: (planTitle: String) -> Unit,
+    shouldRefreshAndSync: Boolean = false,
+    onRefreshHandled: () -> Unit = {},
+    onAddClick: (planId: String, planTitle: String) -> Unit, // <-- امضای دو پارامتری
     onOfferTicketPlanLineClick: (OfferDetailWithProduct) -> Unit,
-    viewModel: OfferDetailsListViewModel = hiltViewModel()
-) {
-    val headerOffer by viewModel.headerOffer.collectAsStateWithLifecycle()
-    val offerLines by viewModel.offerLines.collectAsStateWithLifecycle()
-    val appColors = LocalPartnerManagementColors.current
+    viewModel: OfferDetailsListViewModel = hiltViewModel(),
+    dashboardViewModel: DashboardViewModel = hiltViewModel(),
+    navController: NavController,
 
+    ) {
+    val headerOffer by viewModel.headerOffer.collectAsStateWithLifecycle()
+    val offerLines by viewModel.offerDetails.collectAsStateWithLifecycle()
+    val appColors = LocalPartnerManagementColors.current
+// در ابتدای OfferDetailsListScreen:
+ /*   val backStackEntry = navController.currentBackStackEntry
+    val shouldRefresh = backStackEntry?.savedStateHandle?.getStateFlow("should_refresh_lines", false)?.collectAsState()
+
+    LaunchedEffect(shouldRefresh?.value) {
+        if (shouldRefresh?.value == true) {
+            // ۱. ریست فلگ برای جلوگیری از فراخوانی مکرر
+            backStackEntry!!.savedStateHandle["should_refresh_lines"] = false
+
+            // ۲. فراخوانی متد همگام‌سازی یا لود مجدد از سرور/دیتابیس در ViewModel صفحه لیست
+            viewModel.refreshDetails() // یا viewModel.fetchOfferLinesFromRemote()
+        }
+    }*/
+    LaunchedEffect(shouldRefreshAndSync) {
+        if (shouldRefreshAndSync) {
+            // ۱. ابتدا فراخوانی متد همگام‌سازی سرور
+            dashboardViewModel.onReceiveDataClick()
+            // ۲. بازخوانی اطلاعات جدید در لیست از دیتابیس لوکال
+           viewModel.loadOfferDetails()
+            // ۳. خاموش کردن فلگ در SavedStateHandle
+            onRefreshHandled()
+        }
+    }
     Scaffold(
         bottomBar = {
             Surface(
@@ -83,9 +114,15 @@ fun OfferDetailsListScreen(
                     CustomButton(
                         text = stringResource(R.string.label_new_plan_detail),
                         onClick = {
-                            val title = headerOffer?.title?.takeIf { it.isNotBlank() } ?: ""
-                            onAddClick(title)
+                            val plan = headerOffer
+                            val planId = plan?.offerId.orEmpty()
+                            val title = plan?.title?.takeIf { it.isNotBlank() }.orEmpty()
+
+                            if (planId.isNotBlank()) {
+                                onAddClick(planId, title)
+                            }
                         },
+
                         fillMaxWidth = true,
                         height = 48.dp,
                         textStyle = typography.titleLarge,
@@ -117,39 +154,45 @@ fun OfferDetailsListScreen(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else {
-                if (offerLines.isEmpty()) {
-                    EmptyState(
-                        textRes = R.string.msg_no_offers_details_found,
-                        icon = Icons.Outlined.Inbox,
-                        modifier = Modifier
-                            .fillMaxSize()
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        contentPadding = PaddingValues(
-                            top = 16.dp,
-                            bottom = innerPadding.calculateBottomPadding() + 16.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        item {
-                            PlanHeaderSummarySection(plan = currentHeader)
-                            Spacer(modifier = Modifier.height(10.dp))
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(
+                        top = 16.dp,
+                        bottom = innerPadding.calculateBottomPadding() + 16.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // هدر طرح همیشه نمایش داده می‌شود
+                    item(key = "header_summary") {
+                        PlanHeaderSummarySection(plan = currentHeader)
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.label_offer_detail_list),
-                                    style = typography.labelLarge,
-                                    color = appColors.textPrimary
-                                )
-                            }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.label_offer_detail_list),
+                                style = typography.labelLarge,
+                                color = appColors.textPrimary
+                            )
                         }
+                    }
+
+                    // در صورتی که سطری وجود نداشته باشد، وضعیت خالی داخل خود لیست نمایش داده می‌شود
+                    if (offerLines.isEmpty()) {
+                        item(key = "empty_state") {
+                            EmptyState(
+                                textRes = R.string.msg_no_offers_details_found,
+                                icon = Icons.Outlined.Inbox,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 48.dp)
+                            )
+                        }
+                    } else {
                         itemsIndexed(
                             items = offerLines,
                             key = { _, item -> item.offerDetail.offerDetailId }
