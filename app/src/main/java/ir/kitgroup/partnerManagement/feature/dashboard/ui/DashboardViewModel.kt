@@ -67,7 +67,7 @@ class DashboardViewModel @Inject constructor(
 
     fun onSendDataClick() {
 
-        execute(
+    /*    execute(
             stateFlow = uploadState,
             eventFlow = _uiEvent,
             successMessageRes =
@@ -75,7 +75,7 @@ class DashboardViewModel @Inject constructor(
             action = {
                 Result.success(Unit)
             }
-        )
+        )*/
     }
 
     val statistics: StateFlow<StatisticEntity?> = statisticDao.observe()

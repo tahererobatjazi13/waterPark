@@ -27,6 +27,16 @@ interface ContractDao {
         organizationId: String
     ): Flow<List<ContractEntity>>
 
+    @Query("""
+    SELECT * FROM contracts
+    WHERE organizationId = :organizationId
+      AND status = 1
+    ORDER BY startDate DESC
+""")
+    fun observeActiveByOrganization(
+        organizationId: String
+    ): Flow<List<ContractEntity>>
+
     @Query("SELECT * FROM contracts WHERE contractId = :contractId LIMIT 1")
     fun observeById(contractId: String): Flow<ContractEntity?>
 

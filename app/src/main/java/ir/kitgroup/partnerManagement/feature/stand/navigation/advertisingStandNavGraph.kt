@@ -405,17 +405,17 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-
                 AssignedStandsDetailRoute(
                     onEditClick = { assignedStandId ->
                         navController.navigate(
                             Screen.AddAssignedStandsOrganization.createRoute(assignedStandId = assignedStandId)
                         )
+                    },
+                    onNavigateBack = {
+                        navController.popBackStack()
                     }
-                )            }
+                )
+            }
         }
-
-
-
     }
 }

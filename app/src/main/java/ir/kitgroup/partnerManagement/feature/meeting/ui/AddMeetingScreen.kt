@@ -18,14 +18,18 @@ import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEnti
 import ir.kitgroup.partnerManagement.core.database.entity.VisitSubjectEntity
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
+import ir.kitgroup.partnerManagement.core.ui.util.UserRole
+import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationListBottomSheet
 import saman.zamani.persiandate.PersianDate
 import java.util.Calendar
 import java.util.Locale
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMeetingRoute(
@@ -46,13 +50,13 @@ fun AddMeetingRoute(
 
     LaunchedEffect(Unit) {
         viewModel.saveSuccess.collect {
-          /*  val message = if (isEditMode) "بازدید با موفقیت ویرایش شد" else "بازدید با موفقیت ثبت شد"
+            /*  val message = if (isEditMode) "بازدید با موفقیت ویرایش شد" else "بازدید با موفقیت ثبت شد"
 
-            // نمایش اسنک‌بار در همین فرم
-            val result = snackbarHostState.showSnackbar(
-                message = message,
-                duration = SnackbarDuration.Short
-            )*/
+              // نمایش اسنک‌بار در همین فرم
+              val result = snackbarHostState.showSnackbar(
+                  message = message,
+                  duration = SnackbarDuration.Short
+              )*/
 
             // بعد از نمایش (یا بستن شدن اسنک‌بار) خروج انجام شود
             onSaved()
@@ -68,31 +72,26 @@ fun AddMeetingRoute(
             )
         }
     }
-
     AddMeetingScreen(
         meetingId = viewModel.meetingId,
-        preselectedOrganizationId =
-        viewModel.preselectedOrganizationId,
-        preselectedOrganization =
-        uiState.preloadedOrganization,
-        existingMeeting =
-        uiState.existingMeeting,
-        organizationsList =
-        uiState.organizations,
-        visitSubjects =
-        uiState.visitSubjects,
+        preselectedOrganizationId = viewModel.preselectedOrganizationId,
+        preselectedOrganization = uiState.preloadedOrganization,
+        existingMeeting = uiState.existingMeeting,
+        organizationsList = uiState.organizations,
+        visitSubjects = uiState.visitSubjects,
         snackbarHostState = snackbarHostState,
         isSaving = isSaving,
+        allVisitors = uiState.allVisitors,
+        defaultVisitorId = uiState.defaultVisitorId,
+        defaultVisitorName = uiState.defaultVisitorName,
         onBackClick = onBackClick,
         onSubmitClick = viewModel::createMeeting,
         organizationPersons = organizationPersons,
         onOrganizationSelected = {
-            viewModel.loadOrganizationPersons(
-                it.organization.organizationId
-            )
-        },
+            viewModel.loadOrganizationPersons(it.organization.organizationId)
+        }
+    )
 
-        )
 }
 
 
@@ -106,17 +105,38 @@ fun AddMeetingScreen(
     organizationsList: List<OrganizationWithDetail> = emptyList(),
     visitSubjects: List<VisitSubjectEntity> = emptyList(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    allVisitors: List<VisitorItem> = emptyList(),
+    defaultVisitorId: String? = null,
+    defaultVisitorName: String? = null,
     isSaving: Boolean = false,
     onBackClick: () -> Unit,
     onSubmitClick: (MeetingEntity) -> Unit = {},
     organizationPersons: List<OrganizationPersonEntity> = emptyList(),
 
     onOrganizationSelected: (OrganizationWithDetail) -> Unit = {},
+    sessionViewModel: SessionViewModel = hiltViewModel(),
 ) {
+    val roleCode by sessionViewModel.roleCode.collectAsState()
 
+    val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
+    val isSupervisor = currentRole == UserRole.SUPERVISOR
 
+    var selectedVisitorId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedVisitorName by rememberSaveable { mutableStateOf("") }
     val isFromOrganizationDetail =
-        preselectedOrganizationId != null
+        !preselectedOrganizationId.isNullOrBlank() || preselectedOrganization != null
+
+
+    // ست کردن اولیه نام بازاریاب از اطلاعات دریافتی
+    LaunchedEffect(defaultVisitorId, defaultVisitorName) {
+        if (selectedVisitorId.isNullOrBlank() && !defaultVisitorId.isNullOrBlank()) {
+            selectedVisitorId = defaultVisitorId
+            selectedVisitorName = defaultVisitorName.orEmpty()
+        } else if (selectedVisitorName.isBlank() && !defaultVisitorName.isNullOrBlank()) {
+            selectedVisitorName = defaultVisitorName
+        }
+    }
+
 
     val isEditMode =
         meetingId != null
@@ -290,31 +310,12 @@ fun AddMeetingScreen(
         mutableStateOf(initialTime)
     }
 
-        val timePickerState =
-            rememberTimePickerState(
-                initialHour = currentHour,
-                initialMinute = currentMinute,
-                is24Hour = true
-            )
-
-    // -----------------------------
-    // بازدید کننده
-    // -----------------------------
-
-    var visitorName by
-    rememberSaveable {
-        mutableStateOf("")
-    }
-
-    val visitorsList =
-        remember {
-            listOf(
-                "علی علوی",
-                "رضا رضایی",
-                "محمد محمدی",
-                "حسین حسینی"
-            )
-        }
+    val timePickerState =
+        rememberTimePickerState(
+            initialHour = currentHour,
+            initialMinute = currentMinute,
+            is24Hour = true
+        )
 
 // -----------------------------
 // شخص سازمان
@@ -372,63 +373,51 @@ fun AddMeetingScreen(
     // بارگذاری حالت ویرایش
     // -----------------------------
 
-    LaunchedEffect(
-        existingMeeting,
-        visitSubjects
-    ) {
-
+    // ۳. اصلاح LaunchedEffect مربوط به حالت ویرایش (Edit Mode):
+    LaunchedEffect(existingMeeting, visitSubjects, allVisitors) {
         existingMeeting?.let { item ->
+            val entity = item.meeting
 
-            val entity =
-                item.meeting
+            val targetVisitorId = entity.visitorId
+                ?: item.organization?.activeVisitorId
+                ?: item.organization?.visitorId
 
-            selectedVisitType =
-                MeetingType.fromValue(
-                    entity.type
-                )
+            selectedVisitorId = targetVisitorId
+            selectedVisitorName = entity.visitorName?.takeIf { it.isNotBlank() }
+                ?: allVisitors.firstOrNull { it.id == targetVisitorId }?.fullName
+                    .orEmpty()
 
-            selectedStatus =
-                MeetingStatus.fromId(
-                    entity.status
-                )
+            selectedVisitType = MeetingType.fromValue(entity.type)
+            selectedStatus = MeetingStatus.fromId(entity.status)
+            selectedSubjectVisitId = entity.subjectVisitId
 
-            selectedSubjectVisitId =
-                entity.subjectVisitId
-
-            entity.visitRealDate
-                ?.takeIf {
-                    it.isNotBlank()
+            // تبدیل تاریخ برنامه‌ریزی شده به شمسی در حالت ویرایش
+            entity.visitDate
+                ?.takeIf { it.isNotBlank() }
+                ?.let { dateStr ->
+                    visitScheduledDate = formatJalaliDate(dateStr)
                 }
-                ?.let {
-                    visitRealDate = it
+
+            // تبدیل تاریخ واقعی به شمسی در حالت ویرایش
+            entity.visitRealDate
+                ?.takeIf { it.isNotBlank() }
+                ?.let { dateStr ->
+                    visitRealDate = formatJalaliDate(dateStr)
                 }
 
             entity.visitTime
-                ?.takeIf {
-                    it.isNotBlank()
-                }
+                ?.takeIf { it.isNotBlank() }
                 ?.let {
                     visitRealTime = it
                 }
 
-            description =
-                entity.description.orEmpty()
-
-            currentLatitude =
-                entity.latitude
-
-            currentLongitude =
-                entity.longitude
-            selectedOrganizationPersonId =
-                entity.organizationPersonId
-
-            selectedOrganizationPersonName =
-                entity.organizationPersonName.orEmpty()
-            visitorName =
-                entity.visitorId.orEmpty()
+            description = entity.description.orEmpty()
+            currentLatitude = entity.latitude
+            currentLongitude = entity.longitude
+            selectedOrganizationPersonId = entity.organizationPersonId
+            selectedOrganizationPersonName = entity.organizationPersonName.orEmpty()
         }
     }
-
     Scaffold(
 
         modifier =
@@ -640,7 +629,7 @@ fun AddMeetingScreen(
                         onDateClick = {
                             showVisitScheduledDatePicker =
                                 true
-                        }
+                        }, showTime = false
 
                         /*   time =
                            visitScheduledTime,
@@ -651,30 +640,26 @@ fun AddMeetingScreen(
                            }*/
                     )
 
-                    DropdownSelectorField(
+                    // =====================================================
+// بازاریاب
+// =====================================================
+                    if (isSupervisor) {
+                        // اگر سرپرست بود: می‌تواند از لیست همه بازاریاب‌ها انتخاب کند
+                        val visitorTitles = allVisitors.map { it.fullName }
 
-                        value =
-                        visitorName,
-
-                        label =
-                        stringResource(
-                            R.string.label_visitor_name
-                        ),
-
-                        placeholder =
-                        stringResource(
-                            R.string.hint_choose_visitor
-                        ),
-
-                        items =
-                        visitorsList,
-
-                        isRequired = true,
-
-                        onItemSelected = {
-                            visitorName = it
-                        }
-                    )
+                        DropdownSelectorField(
+                            value = selectedVisitorName,
+                            label = stringResource(R.string.label_visitor_name),
+                            placeholder = stringResource(R.string.hint_choose_visitor),
+                            items = visitorTitles,
+                            isRequired = true,
+                            onItemSelected = { name ->
+                                val visitor = allVisitors.firstOrNull { it.fullName == name }
+                                selectedVisitorId = visitor?.id
+                                selectedVisitorName = name
+                            }
+                        )
+                    }
                 }
 
                 // =====================================================
@@ -715,7 +700,7 @@ fun AddMeetingScreen(
                                 }
 
                             selectedOrganizationPersonId =
-                                selectedPerson?.mainPersonId
+                                selectedPerson?.orgPersonId
 
                             selectedOrganizationPersonName =
                                 selectedPerson?.fullName.orEmpty()
@@ -754,57 +739,57 @@ fun AddMeetingScreen(
                 // =====================================================
                 // وضعیت
                 // =====================================================
+                if (!isEditMode) {
 
-                val statusTitles =
-                    statusTypes.map {
-                        stringResource(
-                            id = it.titleRes
-                        )
-                    }
-
-                DropdownSelectorField(
-
-                    value =
-                    stringResource(
-                        id =
-                        selectedStatus
-                            .titleRes
-                    ),
-
-                    label =
-                    stringResource(
-                        R.string.label_visit_status
-                    ),
-
-                    placeholder = "",
-
-                    items =
-                    statusTitles,
-
-                    isRequired = false,
-
-                    onItemSelected = { selectedTitle ->
-
-                        val index =
-                            statusTitles
-                                .indexOf(
-                                    selectedTitle
-                                )
-
-                        if (index != -1) {
-
-                            selectedStatus =
-                                statusTypes[index]
+                    val statusTitles =
+                        statusTypes.map {
+                            stringResource(
+                                id = it.titleRes
+                            )
                         }
-                    }
-                )
 
+                    DropdownSelectorField(
+
+                        value =
+                        stringResource(
+                            id =
+                            selectedStatus
+                                .titleRes
+                        ),
+
+                        label =
+                        stringResource(
+                            R.string.label_visit_status
+                        ),
+
+                        placeholder = "",
+
+                        items =
+                        statusTitles,
+
+                        isRequired = false,
+
+                        onItemSelected = { selectedTitle ->
+
+                            val index =
+                                statusTitles
+                                    .indexOf(
+                                        selectedTitle
+                                    )
+
+                            if (index != -1) {
+
+                                selectedStatus =
+                                    statusTypes[index]
+                            }
+                        }
+                    )
+                }
                 // =====================================================
                 // توضیحات
                 // =====================================================
 
                 CustomDescriptionField(
-
                     label =
                     stringResource(
                         R.string.label_description
@@ -831,19 +816,19 @@ fun AddMeetingScreen(
                     isUnscheduledInPersonVisit
                 ) {
 
-                    ImageUploadField(
-                        label =
-                        stringResource(
-                            R.string.label_visit_image
-                        )
-                    )
+                    /*  ImageUploadField(
+                          label =
+                          stringResource(
+                              R.string.label_visit_image
+                          )
+                      )
 
-                    GpsLocationField(
-                        label =
-                        stringResource(
-                            R.string.label_register_gps
-                        )
-                    )
+                      GpsLocationField(
+                          label =
+                          stringResource(
+                              R.string.label_register_gps
+                          )
+                      )*/
                 }
 
                 Spacer(
@@ -873,15 +858,17 @@ fun AddMeetingScreen(
                             subjectVisitId = subjectId,
                             subjectVisitName = selectedVisitSubject?.title,
                             organizationId = orgId,
-                            visitorId = visitorName.takeIf {
-                                it.isNotBlank() && it != "00000000-0000-0000-0000-000000000000"
+                            visitorId = if (isSupervisor) {
+                                selectedVisitorId.takeIf { !it.isNullOrBlank() && it != "00000000-0000-0000-0000-000000000000" }
+                            } else {
+                                null
                             },
                             organizationPersonId = selectedOrganizationPersonId.takeIf {
                                 !it.isNullOrBlank() && it != "00000000-0000-0000-0000-000000000000"
                             },
                             organizationPersonName = selectedOrganizationPersonName.ifBlank { null },
                             type = selectedVisitType.value,
-                            status = selectedStatus.id,
+                            status = if (isEditMode) (existingMeeting?.meeting?.status ?: selectedStatus.id) else selectedStatus.id,
                             visitDate = if (isScheduledInPersonVisit) visitScheduledDate else visitRealDate,
                             visitRealDate = visitRealDate,
                             visitTime = visitRealTime,
@@ -1020,16 +1007,24 @@ fun AddMeetingScreen(
             },
 
             onItemSelected = { item ->
-
                 selectedOrganization = item
-
                 selectedOrganizationPersonId = null
                 selectedOrganizationPersonName = ""
 
-                onOrganizationSelected(item)
+                if (isSupervisor) {
+                    // دریافت ویزیتور فعال سازمان
+                    val targetVisitorId = item.organization.activeVisitorId
+                        ?: item.organization.visitorId
 
+                    selectedVisitorId = targetVisitorId
+                    // استخراج نام ویزیتور از لیست بازاریاب‌ها بر اساس ID
+                    selectedVisitorName =
+                        allVisitors.firstOrNull { it.id == targetVisitorId }?.fullName
+                            ?: ""
+                }
+
+                onOrganizationSelected(item)
                 showOrganizationSheet = false
-            }
-        )
+            })
     }
 }

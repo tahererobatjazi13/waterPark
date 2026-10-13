@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import ir.kitgroup.partnerManagement.core.ui.util.toEnglishDigits
 
 
 @HiltViewModel
@@ -62,18 +63,27 @@ class AddSerialOfferViewModel @Inject constructor(
     private fun observeOfferPlans() {
         offerPlanRepository.observeAll()
             .onEach { plans ->
+                val dropDownItems = plans.map { DropDownItem(id = it.offerId, title = it.title ?: "") }
                 _uiState.update { s ->
-                    s.copy(
-                        offerPlans = plans.map { DropDownItem(id = it.offerId, title = it.title!!) }
-                    )
+                    if (!s.isEditMode && s.selectedOfferPlanId.isNullOrBlank()) {
+                        val defaultPlan = dropDownItems.firstOrNull()
+                        s.copy(
+                            offerPlans = dropDownItems,
+                            selectedOfferPlanId = defaultPlan?.id,
+                            selectedOfferPlanTitle = defaultPlan?.title ?: ""
+                        )
+                    } else {
+                        s.copy(offerPlans = dropDownItems)
+                    }
                 }
             }
             .launchIn(viewModelScope)
     }
 
 
+
     private fun observeContracts(orgId: String) {
-        contractRepository.observeByOrganization(orgId)
+        contractRepository.observeActiveByOrganization(orgId)
             .onEach { contracts ->
                 val dropDownItems = contracts.map {
                     DropDownItem(
@@ -147,13 +157,19 @@ class AddSerialOfferViewModel @Inject constructor(
             )
         }
     }
+    // یک Event اختصاصی برای اتمام موفقیت‌آمیز
+    private val _saveSuccessEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val saveSuccessEvent = _saveSuccessEvent.asSharedFlow()
+
+// یا استفاده از UiEvent موجود در پروژه‌تان
 
     fun onSerialPrefixChange(v: String) = _uiState.update { it.copy(serialPrefix = v) }
+
     fun onCountSerialChange(v: String) =
-        _uiState.update { it.copy(countSerialText = v.filter(Char::isDigit)) }
+        _uiState.update { it.copy(countSerialText = v.toEnglishDigits().filter(Char::isDigit)) }
 
     fun onSerialFromChange(v: String) =
-        _uiState.update { it.copy(serialFromText = v.filter(Char::isDigit)) }
+        _uiState.update { it.copy(serialFromText = v.toEnglishDigits().filter(Char::isDigit)) }
 
     fun onStatusChange(statusId: Int) = _uiState.update { it.copy(selectedStatusId = statusId) }
 
@@ -164,8 +180,8 @@ class AddSerialOfferViewModel @Inject constructor(
         if (_isSaving.value) return
 
         val s = _uiState.value
-        val countSerial = s.countSerialText.toIntOrNull() ?: 0
-        val serialFrom = s.serialFromText.toIntOrNull() ?: 0
+        val countSerial = s.countSerialText.toEnglishDigits().toIntOrNull() ?: 0
+        val serialFrom = s.serialFromText.toEnglishDigits().toIntOrNull() ?: 0
 
         viewModelScope.launch {
             // اعتبارسنجی فیلدها با emit ایمن
@@ -178,7 +194,7 @@ class AddSerialOfferViewModel @Inject constructor(
                 return@launch
             }
             if (countSerial <= 0) {
-                _saveMessage.emit("تعداد سریال معتبر نیست.")
+                _saveMessage.emit("تعداد سریال را وراد کنید.")
                 return@launch
             }
             if (serialFrom <= 0) {
@@ -208,9 +224,12 @@ class AddSerialOfferViewModel @Inject constructor(
 
                 result.onSuccess { r ->
                     _saveMessage.emit(r.message ?: "عملیات با موفقیت انجام شد.")
+                    _saveSuccessEvent.emit(Unit) // فقط اینجا صفحه بسته شود
                 }.onFailure { e ->
                     _saveMessage.emit(e.message ?: "عملیات انجام نشد.")
+                    // صفحه بسته نمی‌شود
                 }
+
             } finally {
                 _isSaving.value = false
             }

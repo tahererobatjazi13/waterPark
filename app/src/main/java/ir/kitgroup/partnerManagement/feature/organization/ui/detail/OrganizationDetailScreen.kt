@@ -111,7 +111,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import javax.inject.Inject
 
 
 @Composable
@@ -133,7 +132,7 @@ fun OrganizationDetailScreen(
     onAddTicketOfferClick: () -> Unit,
     sessionViewModel: SessionViewModel = hiltViewModel(),
     organizationDetailViewModel: OrganizationDetailViewModel = hiltViewModel(),
-            navController: NavController
+    navController: NavController
 ) {
     lateinit var mainPreferences: MainPreferences
 
@@ -453,7 +452,7 @@ fun OrganizationDetailScreen(
                         OrganizationBasicInfoTabContent(
                             organization = currentOrganization,
                             activeVisitorName = activeVisitorName,
-                                    activeContractName = activeContractName
+                            activeContractName = activeContractName
                         )
                     }
 
@@ -496,16 +495,32 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.SERIALS -> {
-
                         OrganizationSerialsTabContent(
                             serials = assignedSerials,
                             onAddTicketClick = {
-                                onAddTicketOfferClick()
+                                val activeContractId = organization?.organization!!.activeContractId
+                                val hasActiveContract = !activeContractId.isNullOrBlank() &&
+                                        activeContractId != "00000000-0000-0000-0000-000000000000"
+
+                                if (hasActiveContract) {
+                                    onAddTicketOfferClick() // فراخوانی کالبک نویگیشن
+                                } else {
+                                    // نمایش پیام خطا با Toast یا Snackbar
+                                    Toast.makeText(
+                                        context,
+                                        "این سازمان قرارداد همکاری فعالی ندارد. ابتدا قرارداد ثبت کنید.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    // یا اگر در صفحه اسنک‌بار دارید:
+                                    // scope.launch { snackbarHostState.showSnackbar("این سازمان قرارداد همکاری فعالی ندارد.") }
+                                }
                             },
                             onTicketClick = { ticket ->
                                 navController.navigate(
                                     Screen.AssignedSerialDetail.createRoute(ticket.assignedSerial.serialAssignmentId)
-                                )                            },
+                                )
+                            },
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -568,7 +583,7 @@ fun OrganizationDetailScreen(
                     meetingId = null,
                     warningDate = Instant.now().toString(),
                     description = description,
-                    warningRecordId=warningToEdit?.warning?.warningId
+                    warningRecordId = warningToEdit?.warning?.warningId
                 )
             }
         )

@@ -21,6 +21,12 @@ class ContractRepository @Inject constructor(
         return contractDao.observeByOrganization(organizationId)
     }
 
+    fun observeActiveByOrganization(
+        organizationId: String
+    ): Flow<List<ContractEntity>> {
+        return contractDao.observeActiveByOrganization(organizationId)
+    }
+
     fun observeAllContracts(): Flow<List<ContractEntity>> =
         contractDao.observeAll()
 

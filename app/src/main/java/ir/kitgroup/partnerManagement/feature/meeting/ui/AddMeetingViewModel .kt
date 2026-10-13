@@ -8,13 +8,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.core.database.dao.OrganizationDao
 import ir.kitgroup.partnerManagement.core.database.dao.OrganizationPersonDao
 import ir.kitgroup.partnerManagement.core.database.dao.VisitSubjectDao
+import ir.kitgroup.partnerManagement.core.database.dao.VisitorDao
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
 import ir.kitgroup.partnerManagement.core.repository.MeetingRepository
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.core.ui.util.jalaliToGregorian
 import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,14 +36,15 @@ class AddMeetingViewModel @Inject constructor(
     private val organizationPersonDao: OrganizationPersonDao,
     private val meetingRepository: MeetingRepository,
     private val mainPreferences: MainPreferences,
+    private val visitorDao: VisitorDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     val meetingId: String? =
         savedStateHandle["meetingId"]
 
-    val preselectedOrganizationId: String? =
-        savedStateHandle["preselectedOrganizationId"]
+    val preselectedOrganizationId: String? = savedStateHandle.get<String>("organizationId")
+        ?.takeIf { it.isNotBlank() && it != "null" && it != "{organizationId}" }
 
     val isEditMode: Boolean =
         !meetingId.isNullOrBlank()
@@ -52,6 +54,30 @@ class AddMeetingViewModel @Inject constructor(
 
     val isSaving: StateFlow<Boolean> =
         _isSaving.asStateFlow()
+
+    private val _currentVisitorId = MutableStateFlow("")
+    private val _currentVisitorName = MutableStateFlow("")
+    private val _allVisitors = MutableStateFlow<List<VisitorItem>>(emptyList())
+
+    init {
+        loadUserSessionInfo()
+    }
+
+    private fun loadUserSessionInfo() {
+        viewModelScope.launch {
+            _currentVisitorId.value = mainPreferences.getVisitorId()
+        }
+    }
+
+    // دریافت لیست واقعی بازاریاب‌ها از دیتابیس و تبدیل به VisitorItem
+    private val allVisitorsFlow = visitorDao.observeAll().map { entities ->
+        entities.map { entity ->
+            VisitorItem(
+                id = entity.visitorId,
+                fullName = entity.name ?: entity.name.orEmpty()
+            )
+        }
+    }
 
     // تعریف errorMessage به صورت SharedFlow
     private val _errorMessage = MutableSharedFlow<String>(extraBufferCapacity = 1)
@@ -74,40 +100,49 @@ class AddMeetingViewModel @Inject constructor(
             flowOf(null)
         }
 
+
     val uiState: StateFlow<AddMeetingUiState> =
         combine(
             organizationDao.observeAll(),
             visitSubjectDao.observeAll(),
-            meetingFlow
-        ) { organizations, visitSubjects, meeting ->
+            meetingFlow, allVisitorsFlow,
+
+            _currentVisitorId
+        ) { organizations, visitSubjects, meeting, allVisitors, sessionVisitorId ->
 
             val effectiveOrganizationId =
-                meeting?.meeting?.organizationId
-                    ?: preselectedOrganizationId
+                meeting?.meeting?.organizationId ?: preselectedOrganizationId
 
-            val preselectedOrganization =
-                organizations.firstOrNull {
-                    it.organization.organizationId ==
-                            effectiveOrganizationId
-                }
+            val preselectedOrg = organizations.firstOrNull {
+                it.organization.organizationId == effectiveOrganizationId
+            }
+
+            val defaultVisitorId = preselectedOrg?.organization?.activeVisitorId
+                ?.takeIf { it.isNotBlank() && it != "00000000-0000-0000-0000-000000000000" }
+                ?: preselectedOrg?.organization?.visitorId
+                    ?.takeIf { it.isNotBlank() && it != "00000000-0000-0000-0000-000000000000" }
+                ?: sessionVisitorId
+            val defaultVisitorName = allVisitors
+                .firstOrNull { it.id == defaultVisitorId }
+                ?.fullName
+                .orEmpty()
 
             AddMeetingUiState(
                 organizations = organizations,
                 visitSubjects = visitSubjects,
-                preloadedOrganization =
-                preselectedOrganization,
-                existingMeeting =
-                meeting,
+                preloadedOrganization = preselectedOrg,
+                existingMeeting = meeting,
+                allVisitors = allVisitors,
+                defaultVisitorId = defaultVisitorId,
+                defaultVisitorName = defaultVisitorName,
                 isLoading = false
             )
-
         }.stateIn(
             scope = viewModelScope,
-            started =
-            SharingStarted.WhileSubscribed(5_000),
-            initialValue =
-            AddMeetingUiState()
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AddMeetingUiState()
         )
+
 
     fun createMeeting(meeting: MeetingEntity) {
         if (_isSaving.value) return
@@ -125,14 +160,17 @@ class AddMeetingViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val visitorId = mainPreferences.getVisitorId()
+
+            val sessionVisitorId = mainPreferences.getVisitorId()
+            val effectiveVisitorId =
+                meeting.visitorId.takeIf { !it.isNullOrBlank() } ?: sessionVisitorId
             _isSaving.value = true
             try {
                 val request = CreateMeetingRequest(
                     meetingId = if (isEditMode) meetingId else null,
                     organizationId = meeting.organizationId,
                     organizationPersonId = meeting.organizationPersonId,
-                    visitorId = visitorId,
+                    visitorId = effectiveVisitorId,
                     subjectVisitId = meeting.subjectVisitId,
                     description = meeting.description,
                     visitDate = jalaliToGregorian(meeting.visitDate.orEmpty()),

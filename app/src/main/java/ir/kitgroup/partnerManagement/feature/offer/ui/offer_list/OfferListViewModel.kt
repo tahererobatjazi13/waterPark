@@ -44,9 +44,8 @@ class OfferListViewModel @Inject constructor(
         }
     }
 
-
-    private val _offers = MutableStateFlow<List<OfferEntity>>(emptyList())
-    val offers: StateFlow<List<OfferEntity>> = _offers.asStateFlow()
+    private val _offers = MutableStateFlow<List<OfferEntity>?>(null)
+    val offers = _offers.asStateFlow()
 
 /*    // اتصال مستقیم به Flow دیتابیس با stateIn
     val offers: StateFlow<List<OfferEntity>> = repository.observeAll()

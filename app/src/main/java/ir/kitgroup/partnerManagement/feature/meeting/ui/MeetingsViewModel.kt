@@ -35,12 +35,12 @@ class MeetingsViewModel @Inject constructor(
             }
         }
     }
-    val allMeetings: StateFlow<List<MeetingWithDetail>> =
+    val allMeetings: StateFlow<List<MeetingWithDetail>?> =
         meetingRepository.observeAllMeetings()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyList()
+                initialValue = null
             )
 
 

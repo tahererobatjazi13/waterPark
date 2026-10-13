@@ -36,6 +36,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UiText
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
+import ir.kitgroup.partnerManagement.feature.dashboard.repository.SyncRepository
 import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
 import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
@@ -64,6 +65,7 @@ class OrganizationDetailViewModel @Inject constructor(
     private val assignedSerialsRepository: AssignedSerialsRepository,
     private val visitorRepository: VisitorRepository,
     private val visitSubjectDao: VisitSubjectDao,
+    private val syncRepository: SyncRepository,
     private val apiService: ApiService,
     private val mainPreferences: MainPreferences
 
@@ -388,7 +390,7 @@ class OrganizationDetailViewModel @Inject constructor(
 
             result
                 .onSuccess { response ->
-
+                    syncRepository.syncData()
                     Log.d(
                         "AddOrganizationPerson",
                         "success = ${response.success}, " +

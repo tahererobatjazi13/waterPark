@@ -69,7 +69,7 @@ fun OrganizationVisitorTabContent(
             Box(modifier = Modifier.weight(1f)) {
                 SectionTitle(title = stringResource(R.string.label_assignment_visitor_to_organization_list))
             }
-            FilledTonalButton(
+   /*         FilledTonalButton(
                 onClick = onAssignVisitorClick,
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
@@ -88,7 +88,7 @@ fun OrganizationVisitorTabContent(
                     text = stringResource(R.string.label_new_assigning),
                     style = typography.titleLarge
                 )
-            }
+            }*/
         }
 
         when (visitorsState) {

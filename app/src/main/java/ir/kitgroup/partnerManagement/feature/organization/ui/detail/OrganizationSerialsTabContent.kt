@@ -126,12 +126,12 @@ fun OrganizationSerialsTabContent(
     }
 
     // دیالوگ نمایش جزئیات کامل آفر با کلیک روی کارت
-    selectedTicketForDetail?.let { ticket ->
+   /* selectedTicketForDetail?.let { ticket ->
         TicketOfferDetailDialog(
             item = ticket,
             onDismiss = { selectedTicketForDetail = null }
         )
-    }
+    }*/
 }
 
 @Composable

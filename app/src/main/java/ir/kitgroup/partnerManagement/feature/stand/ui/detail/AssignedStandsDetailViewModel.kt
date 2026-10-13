@@ -8,6 +8,8 @@ import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.repository.AssignedStandsRepository
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.UiText
+import ir.kitgroup.partnerManagement.feature.stand.model.ChangeAssignStandStatusRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AssignedStandsDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    assignedStandsRepository: AssignedStandsRepository
+    private val assignedStandsRepository: AssignedStandsRepository
 ) : ViewModel() {
 
     private val assignedStandId: String = checkNotNull(savedStateHandle["assignedStandId"])
@@ -41,22 +43,12 @@ class AssignedStandsDetailViewModel @Inject constructor(
 
     private val _statusUpdateState = MutableStateFlow<DataState<Unit>?>(null)
     val statusUpdateState: StateFlow<DataState<Unit>?> = _statusUpdateState.asStateFlow()
-    /*
 
-    fun observeMeetingById(meetingId: String) {
-        viewModelScope.launch {
-            assignedStandsRepository
-                .observeMeetingById(meetingId)
-                .collect { meeting ->
-                    _meeting.value = meeting
-                }
-        }
-    }*/
 
-    /*
-    fun updateMeetingStatus(
-        request: ChangeStatusMeetingRequest,
-        onSuccess: () -> Unit
+  fun changeStatusAssignStand(
+      newStatusId: Int,
+      actualReturnDate: String? = null,
+      onSuccess: () -> Unit = {}
     ) {
         if (_isUpdatingStatus.value) return
 
@@ -65,27 +57,41 @@ class AssignedStandsDetailViewModel @Inject constructor(
             _statusUpdateState.value = DataState.Loading
 
             try {
-                val result = meetingRepository.changeStatusMeeting(request)
+                val currentDetail = standDetail.value?.assignedStand
+
+                val request = ChangeAssignStandStatusRequest(
+                    standAssignmentId = currentDetail!!.assignedStandId,
+                    organizationId = currentDetail.organizationId!!,
+                    status = newStatusId,
+                    actualReturnDate = actualReturnDate,
+                    deliveryToOrgDate = currentDetail.deliveryToOrgDate
+                )
+                val result = assignedStandsRepository.changeStatusAssignStand(request)
 
                 result.onSuccess {
                     _statusUpdateState.value = DataState.Success(Unit)
-                    observeMeetingById(request.meetingId)
                     onSuccess()
                 }.onFailure { error ->
                     _statusUpdateState.value = DataState.Error(
-                        UiText.DynamicString(error.localizedMessage ?: "خطا در تغییر وضعیت")
+                        UiText.DynamicString(error.localizedMessage ?: "خطا در تغییر وضعیت استند")
                     )
                 }
             } catch (e: Exception) {
                 _statusUpdateState.value = DataState.Error(
-                    UiText.DynamicString(e.localizedMessage ?: "خطای ناشناخته")
+                    UiText.DynamicString(e.localizedMessage ?: "خطای ناشناخته رخ داده است")
                 )
             } finally {
                 _isUpdatingStatus.value = false
             }
         }
     }
-*/
+
+
+
+
+
+
+
 
 
     fun resetStatusState() {

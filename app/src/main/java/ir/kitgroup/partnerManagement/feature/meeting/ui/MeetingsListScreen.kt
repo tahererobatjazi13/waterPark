@@ -65,6 +65,7 @@ import saman.zamani.persiandate.PersianDate
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
@@ -150,7 +151,7 @@ fun MeetingsListScreen(
         todayDate,
         allVisitorsLabel
     ) {
-        allMeetings.filter { item ->
+        allMeetings?.filter { item ->
 
             val matchesSearch =
                 searchQuery.isBlank() || item.subjectVisitName.contains(
@@ -254,35 +255,54 @@ fun MeetingsListScreen(
                     isDateFiltered = selectedStartDate != null
                 )
 
-                if (filteredItems.isEmpty()) {
-                    EmptyState(
-                        textRes = R.string.msg_no_item_found,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                    ) {
-                        items(
-                            items = filteredItems,
-                            key = { it.meeting.meetingId }
-                        ) { item ->
-                            MeetingCard(
-                                item = item,
-                                onClick = { onMeetingClick(item.meeting.meetingId) },
-                                onEditClick = { onEditMeetingClick(item.meeting.meetingId) },
-                                onDeleteClick = { visitPendingDelete = item }
+                when {
+                    filteredItems == null -> {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(36.dp),
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        item {
-                            Spacer(modifier = Modifier.height(80.dp))
+                    }
+
+                    filteredItems.isEmpty() -> {
+                        EmptyState(
+                            textRes = R.string.msg_no_item_found,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        )
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp)
+                        ) {
+                            items(
+                                items = filteredItems,
+                                key = { it.meeting.meetingId }
+                            ) { item ->
+                                MeetingCard(
+                                    item = item,
+                                    onClick = { onMeetingClick(item.meeting.meetingId) },
+                                    onEditClick = { onEditMeetingClick(item.meeting.meetingId) },
+                                    onDeleteClick = { visitPendingDelete = item }
+                                )
+                            }
+                            item {
+                                Spacer(modifier = Modifier.height(80.dp))
+                            }
                         }
                     }
                 }
+
             }
         }
     }

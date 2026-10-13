@@ -44,24 +44,27 @@ sealed class Screen(val route: String) {
 
     data object AddMeeting :
         Screen("add_meeting?meetingId={meetingId}&organizationId={organizationId}") {
+
         fun createRoute(
             meetingId: String? = null,
             organizationId: String? = null
         ): String {
             val params = mutableListOf<String>()
-            if (meetingId != null) {
+            if (!meetingId.isNullOrBlank()) {
                 params.add("meetingId=$meetingId")
             }
-            if (organizationId != null) {
+            if (!organizationId.isNullOrBlank()) {
                 params.add("organizationId=$organizationId")
             }
-            return if (params.isEmpty()) "add_meeting" else "add_meeting?${
-                params.joinToString(
-                    "&"
-                )
-            }"
+            return if (params.isEmpty()) {
+                "add_meeting"
+            } else {
+                "add_meeting?${params.joinToString("&")}"
+            }
         }
     }
+
+
 
 
     //  Stand Types
@@ -91,19 +94,20 @@ sealed class Screen(val route: String) {
     data object AssignedStandsOrganizationList :
         Screen("assigned_stands_organization_list")
 
-/*    data object AddAssignedStandsOrganization:
-        Screen("add_assigned_stands_organization?organizationId={organizationId}") {
-        fun createRoute(organizationId: String? = null): String {
-            return if (organizationId != null) {
-                "add_assigned_stands_organization?organizationId=$organizationId"
-            } else {
-                "add_assigned_stands_organization"
+    /*    data object AddAssignedStandsOrganization:
+            Screen("add_assigned_stands_organization?organizationId={organizationId}") {
+            fun createRoute(organizationId: String? = null): String {
+                return if (organizationId != null) {
+                    "add_assigned_stands_organization?organizationId=$organizationId"
+                } else {
+                    "add_assigned_stands_organization"
+                }
             }
-        }
-    }*/
+        }*/
     // در فایل Screen.kt:
     object AddAssignedStandsOrganization {
-        const val route = "add_assigned_stands_org?organizationId={organizationId}&assignedStandId={assignedStandId}"
+        const val route =
+            "add_assigned_stands_org?organizationId={organizationId}&assignedStandId={assignedStandId}"
 
         fun createRoute(organizationId: String? = null, assignedStandId: String? = null): String {
             val orgParam = organizationId?.let { "organizationId=$it" } ?: ""
@@ -135,6 +139,7 @@ sealed class Screen(val route: String) {
     data object ContractDetail : Screen("contract_detail/{contractId}") {
         fun createRoute(contractId: String) = "contract_detail/$contractId"
     }
+
     data object AddContract :
         Screen("addContract") {
 
@@ -159,6 +164,7 @@ sealed class Screen(val route: String) {
             }
         }
     }
+
     data object EditContract :
         Screen("edit_contract/{contractId}") {
 
@@ -168,15 +174,16 @@ sealed class Screen(val route: String) {
             return "edit_contract/$contractId"
         }
     }
-        data object AddContractOffer : Screen("add_contract_offer?organizationId={organizationId}") {
-            fun createRoute(organizationId: String? = null): String {
-                return if (!organizationId.isNullOrBlank()) {
-                    "add_contract_offer?organizationId=$organizationId"
-                } else {
-                    "add_contract_offer"
-                }
+
+    data object AddContractOffer : Screen("add_contract_offer?organizationId={organizationId}") {
+        fun createRoute(organizationId: String? = null): String {
+            return if (!organizationId.isNullOrBlank()) {
+                "add_contract_offer?organizationId=$organizationId"
+            } else {
+                "add_contract_offer"
             }
         }
+    }
 
     data object AssignedSerialDetail : Screen("assigned_serial_detail/{serialId}") {
         fun createRoute(serialId: String) = "assigned_serial_detail/$serialId"

@@ -11,7 +11,7 @@ fun Status.toDisplayName(): String = when (this) {
 
 /*
 git add .
-git commit -m "add offer warning serial"
+git commit -m "fix bug"
 git push -u origin master
 git push
 */

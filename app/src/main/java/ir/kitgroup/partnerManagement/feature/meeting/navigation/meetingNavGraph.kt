@@ -129,8 +129,19 @@ fun NavGraphBuilder.meetingNavGraph(
                             )
                         },
                         onStatusChanged = {
-                            // در صورت نیاز به رفرش یا بازگشت
-                        },
+
+                            navController
+                                .getBackStackEntry(
+                                    BottomNavItem.Dashboard.route
+                                )
+                                .savedStateHandle[
+                                SYNC_AFTER_CONTRACT_SAVE
+                            ] = true
+
+                            navController.popBackStack(
+                                BottomNavItem.Dashboard.route,
+                                inclusive = false
+                            )                        },
                     )
                 }
             }
@@ -141,7 +152,7 @@ fun NavGraphBuilder.meetingNavGraph(
         // Add / Edit Meeting
         // =====================================================
         composable(
-            route = "${Screen.AddMeeting.route}?meetingId={meetingId}&preselectedOrganizationId={preselectedOrganizationId}",
+            route = Screen.AddMeeting.route,
             arguments = listOf(
                 navArgument("meetingId") {
                     type = NavType.StringType

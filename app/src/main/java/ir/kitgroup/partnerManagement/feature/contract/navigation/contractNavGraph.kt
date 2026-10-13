@@ -364,7 +364,6 @@ fun NavGraphBuilder.contractNavGraph(
                 )
             }
         }
-
     }
     composable(
         route = Screen.AssignedSerialDetail.route,
@@ -386,6 +385,4 @@ fun NavGraphBuilder.contractNavGraph(
             )
         }
     }
-
-
 }

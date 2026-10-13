@@ -43,12 +43,19 @@ fun AddContractOfferScreen(
         ContractOfferStatus.entries.associateWith { context.getString(it.titleRes) }
     }
 
+
     LaunchedEffect(Unit) {
         viewModel.saveMessage.collect { msg ->
-           Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.saveSuccessEvent.collect {
             onSaveSuccess()
         }
     }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

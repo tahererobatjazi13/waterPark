@@ -178,27 +178,6 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
     }
 
 
-    fun changeAssignStandStatus(
-        request: ChangeAssignStandStatusRequest
-    ) {
-        viewModelScope.launch {
-            val result =
-                assignedStandsRepository.changeStatusAssignStand(request)
-
-            result
-                .onSuccess { response ->
-                    _saveMessage.emit(
-                        response.message ?: "وضعیت تخصیص استند تغییر کرد."
-                    )
-                }
-                .onFailure { error ->
-                    _saveMessage.emit(
-                        error.message ?: "تغییر وضعیت انجام نشد."
-                    )
-                }
-        }
-    }
-
     suspend fun updateLocal(item: AssignedStandEntity) =
         assignedStandDao.update(item)
 

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -27,11 +26,11 @@ import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
@@ -160,34 +159,54 @@ fun OfferListScreen(
                     .fillMaxSize()
                     .padding(start = 16.dp, end = 16.dp, top = 4.dp)
             ) {
-                if (offers.isEmpty()) {
-                    EmptyState(
-                        textRes = R.string.msg_no_item_found,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        items(
-                            items = offers,
-                            key = { plan -> plan.offerId }
-                        ) { offer ->
-                            OfferListItem(
-                                offer = offer,
-                                isSupervisor = isSupervisor,
-                                onClick = { onOfferClick(offer) },
-                                onEditClick = { onEditOfferClick(offer.offerId) }
+
+                when {
+                    offers == null -> {
+                        // ۱. داده‌ها هنوز از دیتابیس واکشی نشده‌اند -> لودینگ نمایش داده شود
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(36.dp),
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
+                    }
+                    offers!!.isEmpty() -> {
+                        // ۲. واکشی انجام شده و واقعاً خالی است -> EmptyState نمایش داده شود
+                        EmptyState(
+                            textRes = R.string.msg_no_item_found,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        )
+                    }
+                    else -> {
+                        // ۳. لیست پر است
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp)
+                        ) {
+                            items(
+                                items = offers!!,
+                                key = { plan -> plan.offerId }
+                            ) { offer ->
+                                OfferListItem(
+                                    offer = offer,
+                                    isSupervisor = isSupervisor,
+                                    onClick = { onOfferClick(offer) },
+                                    onEditClick = { onEditOfferClick(offer.offerId) }
+                                )
+                            }
 
-                        if (isSupervisor) {
-                            item {
-                                Spacer(modifier = Modifier.height(60.dp))
+                            if (isSupervisor) {
+                                item {
+                                    Spacer(modifier = Modifier.height(60.dp))
+                                }
                             }
                         }
                     }

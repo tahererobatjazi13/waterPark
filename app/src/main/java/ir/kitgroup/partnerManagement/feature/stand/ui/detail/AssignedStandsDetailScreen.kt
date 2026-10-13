@@ -73,17 +73,26 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 fun AssignedStandsDetailRoute(
     onEditClick: (String) -> Unit = {},
     onStatusChanged: (Int) -> Unit = {},
+    onNavigateBack: () -> Unit = {}, // اضافه شدن کال‌بک بازگشت
     modifier: Modifier = Modifier,
     viewModel: AssignedStandsDetailViewModel = hiltViewModel()
-) { val allocationDetail by viewModel.standDetail.collectAsStateWithLifecycle()
+) {
+    val allocationDetail by viewModel.standDetail.collectAsStateWithLifecycle()
     val isUpdatingStatus by viewModel.isUpdatingStatus.collectAsStateWithLifecycle()
 
     allocationDetail?.let { detail ->
         AssignedStandsDetailScreen(
             allocationWithDetail = detail,
             onEditClick = onEditClick,
-            onStatusChanged = onStatusChanged,
-            isUpdatingStatus = isUpdatingStatus,
+            onNavigateBack = onNavigateBack,
+            onStatusChanged = { newStatusId, onDismissDialog ->
+                viewModel.changeStatusAssignStand(
+                    newStatusId = newStatusId,
+                    onSuccess = {
+                        onDismissDialog()
+                    }
+                )
+            }, isUpdatingStatus = isUpdatingStatus,
             modifier = modifier
         )
     } ?: Box(
@@ -96,18 +105,16 @@ fun AssignedStandsDetailRoute(
             color = MaterialTheme.colorScheme.primary
         )
     }
-
-
 }
 
 @Composable
 fun AssignedStandsDetailScreen(
     allocationWithDetail: AssignedStandWithDetail,
     onEditClick: (String) -> Unit,
-    onStatusChanged: (Int) -> Unit,
+    onNavigateBack: () -> Unit,
+    onStatusChanged: (Int, () -> Unit) -> Unit,
     isUpdatingStatus: Boolean = false,
     modifier: Modifier = Modifier
-
 ) {
     val appColors = LocalPartnerManagementColors.current
     val allocation = allocationWithDetail.assignedStand
@@ -218,7 +225,7 @@ fun AssignedStandsDetailScreen(
                 // ۴. جزئیات کامل نوع استند واکشی‌شده از دیتابیس (Relation)
                 item {
                     if (standType != null) {
-                        AllocatedStandItemCard(item = standType,standCount!!)
+                        AllocatedStandItemCard(item = standType, standCount!!)
                     } else {
                         EmptyAllocatedItemsCard()
                     }
@@ -238,33 +245,34 @@ fun AssignedStandsDetailScreen(
         }
     }
 
-
-    // دیالوگ تغییر وضعیت بازدید
-    if (showStatusDialog && allocationWithDetail != null) {
-        val initialStatus =
-            MeetingStatus.fromId(allocationWithDetail.assignedStand.statusAssign) ?: MeetingStatus.entries.first()
+// دیالوگ تغییر وضعیت
+    if (showStatusDialog) {
+        val initialStatus = StandAssignmentStatus.fromId(allocation.statusAssign)
         ChangeAssignedStandStatusDialog(
             initialStatus = initialStatus,
             isSaving = isUpdatingStatus,
             onDismiss = { showStatusDialog = false },
             onConfirm = { selectedStatus ->
-                onStatusChanged(selectedStatus.id)
+                showStatusDialog = false
+                onStatusChanged(selectedStatus.id) {}
+                onNavigateBack()
             }
         )
     }
 }
+
 /**
  * دیالوگ انتخاب وضعیت جدید بازدید
  */
 @Composable
 fun ChangeAssignedStandStatusDialog(
-    initialStatus: MeetingStatus,
+    initialStatus: StandAssignmentStatus,
     isSaving: Boolean = false,
     onDismiss: () -> Unit,
-    onConfirm: (MeetingStatus) -> Unit
+    onConfirm: (StandAssignmentStatus) -> Unit
 ) {
     var selectedStatus by rememberSaveable { mutableStateOf(initialStatus) }
-    val statusEntries = remember { MeetingStatus.entries }
+    val statusEntries = remember { StandAssignmentStatus.entries }
     val statusTitles = statusEntries.map { stringResource(it.titleRes) }
 
     Dialog(
@@ -286,7 +294,7 @@ fun ChangeAssignedStandStatusDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "تعیین وضعیت بازدید",
+                    text = "تعیین وضعیت استند",
                     style = typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -305,7 +313,6 @@ fun ChangeAssignedStandStatusDialog(
                         }
                     }
                 )
-
                 if (isSaving) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
@@ -403,9 +410,9 @@ private fun AssignmentHeaderCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-/*
-                    text = "$assignmentTypeTitle | $assignmentModeTitle",
-*/
+                    /*
+                                        text = "$assignmentTypeTitle | $assignmentModeTitle",
+                    */
 
                     Text(
                         text = "$assignmentModeTitle",
@@ -422,27 +429,27 @@ private fun AssignmentHeaderCard(
 
             }
 
-     /*       HorizontalDivider(
-                thickness = 0.7.dp,
-                color = appColors.border
-            )
+            /*       HorizontalDivider(
+                       thickness = 0.7.dp,
+                       color = appColors.border
+                   )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                AssignmentSummaryItem(
-                    title = stringResource(R.string.label_item_types_count),
-                    value = if (allocationWithDetail.standType != null) "1" else "0",
-                    modifier = Modifier.weight(1f)
-                )
+                   Row(
+                       modifier = Modifier.fillMaxWidth(),
+                       horizontalArrangement = Arrangement.spacedBy(12.dp)
+                   ) {
+                       AssignmentSummaryItem(
+                           title = stringResource(R.string.label_item_types_count),
+                           value = if (allocationWithDetail.standType != null) "1" else "0",
+                           modifier = Modifier.weight(1f)
+                       )
 
-                AssignmentSummaryItem(
-                    title = stringResource(R.string.label_total_allocated_count),
-                    value = (allocation.count ?: 0).toString(),
-                    modifier = Modifier.weight(1f)
-                )
-            }*/
+                       AssignmentSummaryItem(
+                           title = stringResource(R.string.label_total_allocated_count),
+                           value = (allocation.count ?: 0).toString(),
+                           modifier = Modifier.weight(1f)
+                       )
+                   }*/
         }
     }
 }
@@ -644,15 +651,15 @@ private fun AllocatedItemsSectionHeader(
             modifier = Modifier.weight(1f)
         )
 
-       /* Text(
-            text = stringResource(
-                R.string.label_items_count_summary,
-                itemTypesCount,
-                totalCount
-            ),
-            style = MaterialTheme.typography.labelMedium,
-            color = appColors.textSecondary
-        )*/
+        /* Text(
+             text = stringResource(
+                 R.string.label_items_count_summary,
+                 itemTypesCount,
+                 totalCount
+             ),
+             style = MaterialTheme.typography.labelMedium,
+             color = appColors.textSecondary
+         )*/
     }
 }
 
@@ -731,22 +738,22 @@ private fun AllocatedStandItemCard(
                     )
                 }
 
-           //     if (!item.code.isNullOrBlank()) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = appColors.cardBackgroundAlt,
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = standCount.toString(),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = appColors.textSecondary
+                //     if (!item.code.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = appColors.cardBackgroundAlt,
+                            shape = RoundedCornerShape(8.dp)
                         )
-                    }
-              //  }
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = standCount.toString(),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = appColors.textSecondary
+                    )
+                }
+                //  }
             }
         }
     }
