@@ -1,25 +1,20 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.offer_list
+package ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.list
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ir.kitgroup.partnerManagement.core.database.dao.OfferDao
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
-import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.repository.OfferPlanRepository
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
-import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddMeetingUseCase
 import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddOfferUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

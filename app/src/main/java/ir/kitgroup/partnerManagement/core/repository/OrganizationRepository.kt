@@ -14,6 +14,7 @@ import ir.kitgroup.partnerManagement.core.database.mapper.toEntity
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
 import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
+import ir.kitgroup.partnerManagement.core.network.model.TicketIssueLineDto
 import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.CreateOrganizationRequest
@@ -150,6 +151,28 @@ class OrganizationRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+
+
+    suspend fun getOrganizationTicketIssue(
+        organizationId: String
+    ): Result<List<TicketIssueLineDto>> {
+        return try {
+            val response = apiService.getOrganizationTicketIssue(organizationId)
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                val errorMsg = response.errorBody()?.string()
+                    ?: "خطا در دریافت اطلاعات. کد: ${response.code()}"
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
     suspend fun addOrganizationPerson(
         request: AddOrganizationPersonRequest
     ): Result<ModelResponse> {

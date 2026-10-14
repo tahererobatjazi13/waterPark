@@ -313,6 +313,7 @@ fun ChangeAssignedStandStatusDialog(
                         }
                     }
                 )
+
                 if (isSaving) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }

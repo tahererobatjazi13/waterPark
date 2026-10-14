@@ -83,15 +83,13 @@ fun BottomNavigationBar(
         }
     }
 }
+
 fun navigateToTab(
     navController: NavController,
     route: String
 ) {
     navController.navigate(route) {
-
-        popUpTo(
-            navController.graph.findStartDestination().id
-        ) {
+        popUpTo(navController.graph.findStartDestination().id) {
             saveState = true
         }
 

@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer
+package ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.detail
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

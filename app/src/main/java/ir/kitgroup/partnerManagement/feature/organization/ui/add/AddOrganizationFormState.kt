@@ -36,8 +36,6 @@ class AddOrganizationFormState {
 
     val images = mutableStateListOf(
         R.drawable.ic_logo,
-        R.drawable.ic_logo,
-        R.drawable.ic_logo,
         R.drawable.ic_logo
     )
 

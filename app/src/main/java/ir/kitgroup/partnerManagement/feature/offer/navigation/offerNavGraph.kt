@@ -13,7 +13,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -24,14 +23,12 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_OFFER_DETAIL_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_OFFER_SAVE
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_STAND_SAVE
-import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.add.AddEditOfferScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.add.AddOfferDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail.OfferDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.OfferDetailsListScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.OfferListScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.list.OfferListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 

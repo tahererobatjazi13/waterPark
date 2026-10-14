@@ -3,26 +3,39 @@ package ir.kitgroup.partnerManagement.feature.profile.ui
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,8 +57,12 @@ import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CardMenuItem
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDialog
+import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
+import ir.kitgroup.partnerManagement.core.ui.components.FilterSection
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.theme.RedContent
+import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationsCard
+import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationsFiltersRow
 
 @Composable
 fun ProfileScreen(
@@ -65,46 +82,62 @@ fun ProfileScreen(
     val appColors = LocalPartnerManagementColors.current
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(appColors.screenBackground)
-            .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp
+            ),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(appColors.screenBackground)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
 
-        CenterSummaryCard(
-            centerName = centerName?.ifBlank { "—" } ?: "—",
-            onClick = onCenterClick
-        )
+                CenterSummaryCard(
+                    centerName = centerName?.ifBlank { "—" } ?: "—",
+                    onClick = onCenterClick
+                )
 
-        UserInfoCard(
-            fullName = fullName?.ifBlank { "—" } ?: "—",
-            personalCode = userName?.ifBlank { "—" } ?: "—",
-            mobile = userMobile?.ifBlank { "—" } ?: "—",
-            roleName = roleName?.ifBlank { "—" } ?: "—"
-        )
+                UserInfoCard(
+                    fullName = fullName?.ifBlank { "—" } ?: "—",
+                    personalCode = userName?.ifBlank { "—" } ?: "—",
+                    mobile = userMobile?.ifBlank { "—" } ?: "—",
+                    roleName = roleName?.ifBlank { "—" } ?: "—"
+                )
 
-        CardMenuItem(
-            icon = R.drawable.ic_setting,
-            title = R.string.label_settings,
-            containerColor = appColors.cardBackground,
-            contentColor = appColors.textPrimary,
-            onClick = onSettingsClick
-        )
+                CardMenuItem(
+                    icon = R.drawable.ic_setting,
+                    title = R.string.label_settings,
+                    containerColor = appColors.cardBackground,
+                    contentColor = appColors.textPrimary,
+                    onClick = onSettingsClick
+                )
 
-        Spacer(modifier = Modifier.size(8.dp))
+                Spacer(modifier = Modifier.size(8.dp))
 
-        CardMenuItem(
-            icon = R.drawable.ic_logout,
-            title = R.string.label_log_out_account,
-            containerColor = appColors.errorContainer,
-            contentColor = appColors.onErrorContainer,
-            onClick = { showLogoutDialog = true }
-        )
+                CardMenuItem(
+                    icon = R.drawable.ic_logout,
+                    title = R.string.label_log_out_account,
+                    containerColor = appColors.errorContainer,
+                    contentColor = appColors.onErrorContainer,
+                    onClick = { showLogoutDialog = true }
+                )
 
-        Spacer(modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.size(16.dp))
+            }
+        }
     }
+
 
     CustomDialog(
         isVisible = showLogoutDialog,

@@ -6,7 +6,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.size
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -158,7 +157,10 @@ fun OrganizationDetailScreen(
 
     val assignedSerials by organizationDetailViewModel.assignedSerials
         .collectAsStateWithLifecycle()
+
+
     val visitorsState by organizationDetailViewModel.visitorsState.collectAsStateWithLifecycle()
+    val ticketIssueState by organizationDetailViewModel.ticketIssueState.collectAsStateWithLifecycle()
 
     val addPersonState by organizationDetailViewModel.addPersonState
         .collectAsStateWithLifecycle()
@@ -184,6 +186,7 @@ fun OrganizationDetailScreen(
         organizationDetailViewModel.observeOrganizationAssignedStands(organizationId)
         organizationDetailViewModel.observeOrganizationAssignedSerials(organizationId)
         organizationDetailViewModel.fetchOrganizationVisitors(organizationId)
+        organizationDetailViewModel.fetchOrganizationTicketIssue(organizationId)
 
     }
 
@@ -493,6 +496,22 @@ fun OrganizationDetailScreen(
                                 onContractClick(contract)
                             })
                     }
+                    OrganizationDetailTab.WARNING -> {
+
+// داخل فراخوانی OrganizationWarningTabContent:
+                        OrganizationWarningTabContent(
+                            warnings = warnings,
+                            isSupervisor = isSupervisor,
+                            onAddWarningClick = {
+                                warningToEdit = null // حالت ثبت جدید
+                                showWarningDialog = true
+                            },
+                            onEditWarningClick = { item ->
+                                warningToEdit = item // حالت ویرایش
+                                showWarningDialog = true
+                            }
+                        )
+                    }
 
                     OrganizationDetailTab.SERIALS -> {
                         OrganizationSerialsTabContent(
@@ -525,19 +544,11 @@ fun OrganizationDetailScreen(
                         )
                     }
 
-                    OrganizationDetailTab.WARNING -> {
-
-// داخل فراخوانی OrganizationWarningTabContent:
-                        OrganizationWarningTabContent(
-                            warnings = warnings,
-                            isSupervisor = isSupervisor,
-                            onAddWarningClick = {
-                                warningToEdit = null // حالت ثبت جدید
-                                showWarningDialog = true
-                            },
-                            onEditWarningClick = { item ->
-                                warningToEdit = item // حالت ویرایش
-                                showWarningDialog = true
+                    OrganizationDetailTab.TICKET -> {
+                        OrganizationTicketIssueTabContent(
+                            ticketIssueState = ticketIssueState,
+                            onRetry = {
+                                organizationDetailViewModel.fetchOrganizationTicketIssue(organizationId)
                             }
                         )
                     }

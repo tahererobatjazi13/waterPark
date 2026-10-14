@@ -1,60 +1,134 @@
 package ir.kitgroup.partnerManagement.core.network.model
 
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
-@Serializable
 data class TicketIssueLineDto(
+    @SerializedName("ticketIssueLineId")
     val ticketIssueLineId: String,
 
-    val name: String? = null,
+    @SerializedName("ticketIssueId")
+    val ticketIssueId: String,
 
-    val consumedAgeCategory: Int? = null,
+    @SerializedName("serialNumber")
+    val serialNumber: String?,
 
-    val consumedDate: String? = null,
+    @SerializedName("issueNumber")
+    val issueNumber: String?,
 
-    val consumedGender: Int? = null,
+    @SerializedName("customerName")
+    val customerName: String?,
 
-    val discountPrice: String? = null,
+    @SerializedName("sourceCreate")
+    val sourceCreate: String?,
 
-    val gender: Int? = null,
+    @SerializedName("organizationId")
+    val organizationId: String?,
 
-    val personCategory: Int? = null,
+    @SerializedName("organizationName")
+    val organizationName: String?,
 
-    val productServiceId: String? = null,
+    @SerializedName("issuedOn")
+    val issuedOn: String?,
 
-    val serialNumber: Int? = null,
+    @SerializedName("contractOfferId")
+    val contractOfferId: String?,
 
-    val ticketIssueId: String? = null,
+    @SerializedName("productServiceId")
+    val productServiceId: String?,
 
-    val ticketStatus: Int? = null,
+    @SerializedName("productServiceName")
+    val productServiceName: String?,
 
-    val unitPrice: String? = null,
+    @SerializedName("finalProductServiceId")
+    val finalProductServiceId: String?,
 
-    val count: Int? = null,
+    @SerializedName("finalProductServiceName")
+    val finalProductServiceName: String?,
 
-    val realCount: Int? = null,
+    @SerializedName("recreationCenterPartId")
+    val recreationCenterPartId: String?,
 
-    val contractOfferId: String? = null,
+    @SerializedName("visitorId")
+    val visitorId: String?,
 
-    val sumPrice: String? = null,
+    @SerializedName("approvedById")
+    val approvedById: String?,
 
-    val finalProductServiceId: String? = null,
+    @SerializedName("ticketStatus")
+    val ticketStatus: Int?,
 
-    val finalCustomerType: Int? = null,
+    @SerializedName("ticketStatusName")
+    val ticketStatusName: String?,
 
-    val usageDate: String? = null,
+    @SerializedName("statusUsage")
+    val statusUsage: Int?,
 
-    val useTime: String? = null,
+    @SerializedName("statusUsageName")
+    val statusUsageName: String?,
 
-    val visitorId: String? = null,
+    @SerializedName("usageDate")
+    val usageDate: String?,
 
-    val recreationCenterPartId: String? = null,
+    @SerializedName("useTime")
+    val useTime: String?,
 
-    val totalCommission: String? = null,
+    @SerializedName("approvedDate")
+    val approvedDate: String?,
 
-    val statusUsage: Int? = null,
+    @SerializedName("personCategory")
+    val personCategory: Int?,
 
-    val approvedBy: String? = null,
+    @SerializedName("consumedAgeCategory")
+    val consumedAgeCategory: Int?,
 
-    val approvedDate: String? = null
+    @SerializedName("gender")
+    val gender: Int?,
+
+    @SerializedName("consumedGender")
+    val consumedGender: Int?,
+
+    @SerializedName("finalCustomerType")
+    val finalCustomerType: Int?,
+
+    @SerializedName("count")
+    val count: Int?,
+
+    @SerializedName("realCount")
+    val realCount: Int?,
+
+    @SerializedName("unitPrice")
+    val unitPrice: Long?,
+
+    @SerializedName("discountPrice")
+    val discountPrice: Long?,
+
+    @SerializedName("netPrice")
+    val netPrice: Long?,
+
+    @SerializedName("sumPrice")
+    val sumPrice: Long?,
+
+    @SerializedName("discountType")
+    val discountType: Int?,
+
+    @SerializedName("discountAmount")
+    val discountAmount: Double?,
+
+    @SerializedName("commissionType")
+    val commissionType: Int?,
+
+    @SerializedName("commissionAmount")
+    val commissionAmount: Long?,
+
+    @SerializedName("totalCommission")
+    val totalCommission: Long?,
+
+    @SerializedName("stateCode")
+    val stateCode: Int?,
+
+    @SerializedName("createdOn")
+    val createdOn: String?,
+
+    @SerializedName("modifiedOn")
+    val modifiedOn: String?
 )

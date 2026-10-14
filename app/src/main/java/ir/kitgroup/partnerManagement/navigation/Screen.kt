@@ -65,8 +65,6 @@ sealed class Screen(val route: String) {
     }
 
 
-
-
     //  Stand Types
     data object AdvertisingStandMenu : Screen("advertising_stand_menu")
 
@@ -94,17 +92,7 @@ sealed class Screen(val route: String) {
     data object AssignedStandsOrganizationList :
         Screen("assigned_stands_organization_list")
 
-    /*    data object AddAssignedStandsOrganization:
-            Screen("add_assigned_stands_organization?organizationId={organizationId}") {
-            fun createRoute(organizationId: String? = null): String {
-                return if (organizationId != null) {
-                    "add_assigned_stands_organization?organizationId=$organizationId"
-                } else {
-                    "add_assigned_stands_organization"
-                }
-            }
-        }*/
-    // در فایل Screen.kt:
+
     object AddAssignedStandsOrganization {
         const val route =
             "add_assigned_stands_org?organizationId={organizationId}&assignedStandId={assignedStandId}"

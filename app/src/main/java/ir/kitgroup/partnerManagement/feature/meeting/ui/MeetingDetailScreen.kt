@@ -39,6 +39,8 @@ import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.OrganizationImagesSection
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ImagesSection
 
 @Composable
 fun MeetingDetailScreen(
@@ -377,7 +379,7 @@ private fun VisitorInfoCard(item: MeetingWithDetail) {
             )
 
             val hasVisitor = !item.meeting.visitorName.isNullOrBlank() &&
-                    item.meeting.visitorId !=null
+                    item.meeting.visitorId != null
 
             if (hasVisitor) {
                 HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
@@ -433,6 +435,16 @@ private fun VisitorInfoCard(item: MeetingWithDetail) {
                 icon = Icons.Default.EventAvailable,
                 status = item.meeting.status
             )
+            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 14.dp),
+            ) {
+                SectionTitle(stringResource(R.string.label_images))
+                ImagesSection(images = listOf(R.drawable.ic_logo))
+            }
         }
     }
 }

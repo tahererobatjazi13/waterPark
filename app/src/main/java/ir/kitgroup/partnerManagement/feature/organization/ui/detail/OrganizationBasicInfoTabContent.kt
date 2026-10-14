@@ -98,9 +98,9 @@ fun OrganizationBasicInfoTabContent(
 
         /*SectionTitle(stringResource(R.string.label_description))
         CustomDescriptionCard(description = "این سازمان از مشتریان فعال است...")
-
+*/
         SectionTitle(stringResource(R.string.label_images))
-        ImagesSection(images = listOf(R.drawable.ic_logo))*/
+        ImagesSection(images = listOf(R.drawable.ic_logo))
 
         Spacer(Modifier.height(16.dp))
     }
@@ -558,7 +558,7 @@ private fun StatusInfoSection(
 
 
 @Composable
-private fun ImagesSection(
+fun ImagesSection(
     images: List<Int>
 ) {
     if (images.isEmpty()) {

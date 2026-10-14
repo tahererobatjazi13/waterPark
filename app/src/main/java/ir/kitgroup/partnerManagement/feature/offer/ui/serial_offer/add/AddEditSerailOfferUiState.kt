@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer
+package ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.add
 
 
 data class AddContractOfferUiState(

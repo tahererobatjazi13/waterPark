@@ -20,8 +20,8 @@ import ir.kitgroup.partnerManagement.feature.contract.ui.add.AddContractRoute
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractDetailScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.ContractsListScreen
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.AssignedSerialDetailScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.AddContractOfferScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.detail.AssignedSerialDetailScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.add.AddContractOfferScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 fun NavGraphBuilder.contractNavGraph(

@@ -1,5 +1,8 @@
 package ir.kitgroup.partnerManagement.feature.meeting.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -418,6 +421,24 @@ fun AddMeetingScreen(
             selectedOrganizationPersonName = entity.organizationPersonName.orEmpty()
         }
     }
+
+    val images = mutableStateListOf<Uri>()
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            /* if (formState.images.size < 10) {
+                 formState.images.add(it)
+             }*/
+        }
+    }
+    val openGallery = {
+        if (images.size < 10) {
+            galleryLauncher.launch("image/*")
+        }
+    }
+
+
     Scaffold(
 
         modifier =
@@ -816,19 +837,19 @@ fun AddMeetingScreen(
                     isUnscheduledInPersonVisit
                 ) {
 
-                    /*  ImageUploadField(
+                   ImageUploadField(
                           label =
                           stringResource(
                               R.string.label_visit_image
-                          )
+                          ),onClick={openGallery}
                       )
 
-                      GpsLocationField(
-                          label =
-                          stringResource(
-                              R.string.label_register_gps
-                          )
-                      )*/
+                    /*   GpsLocationField(
+                        label =
+                        stringResource(
+                            R.string.label_register_gps
+                        )
+                    )*/
                 }
 
                 Spacer(
@@ -1027,4 +1048,6 @@ fun AddMeetingScreen(
                 showOrganizationSheet = false
             })
     }
+
+
 }

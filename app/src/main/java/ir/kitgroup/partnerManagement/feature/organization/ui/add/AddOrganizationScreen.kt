@@ -54,18 +54,17 @@ import ir.kitgroup.partnerManagement.core.ui.util.OrganizationLevel
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationType
 import ir.kitgroup.partnerManagement.core.ui.util.Status
-import java.util.UUID
 import android.view.ViewGroup
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import ir.kitgroup.partnerManagement.core.ui.util.PersonGenderType
-import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 @Composable
 fun AddOrganizationScreen(
     organizationId: String?,
@@ -77,6 +76,8 @@ fun AddOrganizationScreen(
     onAddImage: () -> Unit = {},
     viewModel: AddOrganizationViewModel = hiltViewModel()
 ) {
+
+
 
     val cities by viewModel.cities.collectAsState()
     val regions by viewModel.regions.collectAsState()
@@ -224,7 +225,8 @@ fun AddOrganizationScreen(
                         "اطلاعات سازمان با موفقیت ویرایش شد"
                     }
 
-                android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT)
+                    .show()
 
                 viewModel.resetState()
                 onSuccessCreate()
@@ -233,7 +235,7 @@ fun AddOrganizationScreen(
             is DataState.Error -> {
                 snackbarHostState.showSnackbar(
                     message = state.error.asString(context),
-                    duration = androidx.compose.material3.SnackbarDuration.Long
+                    duration = SnackbarDuration.Long
                 )
                 viewModel.resetState()
             }
@@ -241,7 +243,22 @@ fun AddOrganizationScreen(
             else -> Unit
         }
     }
+    val images = mutableStateListOf<Uri>()
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+           /* if (formState.images.size < 10) {
+                formState.images.add(it)
+            }*/
+        }
+    }
 
+    val openGallery = {
+        if (formState.images.size < 10) {
+            galleryLauncher.launch("image/*")
+        }
+    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = {
@@ -277,7 +294,7 @@ fun AddOrganizationScreen(
                     formState.regionId = regionId
                 },
                 onSelectLocation = onSelectLocation,
-                onAddImage = onAddImage,
+                onAddImage = openGallery,
                 onRemoveImage = { index ->
                     formState.images.removeAt(index)
                 },
@@ -310,34 +327,34 @@ fun AddOrganizationScreen(
         }
     }
 
-/*
-    if (showAddPersonSheet) {
-        AddPersonBottomSheet(
-            personState = personState,
-            onDismiss = {
-                showAddPersonSheet = false
-            },
-            onSavePerson = {
-                if (personState.name.isNotBlank() && personState.mobile.isNotBlank()) {
-                    formState.organizationPersons.add(
-                        PersonEntity(
-                            personId = UUID.randomUUID().toString(),
-                            name = personState.name.trim(),
-                            description = personState.description.trim(),
-                            gender = personState.gender,
-                            mobile = personState.mobile.trim(),
-                            phone1 = personState.mobile.trim(),
-                            status = personState.status
-                        )
-                    )
-
-                    formState.resetPersonFields(personState)
+    /*
+        if (showAddPersonSheet) {
+            AddPersonBottomSheet(
+                personState = personState,
+                onDismiss = {
                     showAddPersonSheet = false
+                },
+                onSavePerson = {
+                    if (personState.name.isNotBlank() && personState.mobile.isNotBlank()) {
+                        formState.organizationPersons.add(
+                            PersonEntity(
+                                personId = UUID.randomUUID().toString(),
+                                name = personState.name.trim(),
+                                description = personState.description.trim(),
+                                gender = personState.gender,
+                                mobile = personState.mobile.trim(),
+                                phone1 = personState.mobile.trim(),
+                                status = personState.status
+                            )
+                        )
+
+                        formState.resetPersonFields(personState)
+                        showAddPersonSheet = false
+                    }
                 }
-            }
-        )
-    }
-*/
+            )
+        }
+    */
 }
 
 
@@ -394,11 +411,11 @@ private fun AddOrganizationContent(
 
         OrganizationDescriptionSection(state)
 
-        /* OrganizationImagesSection(
+        OrganizationImagesSection(
              images = state.images,
              onAddImage = onAddImage,
              onRemoveImage = onRemoveImage
-         )*/
+         )
 
         OrganizationFormActionButtons(
             isLoading = isLoading,
@@ -619,6 +636,7 @@ private fun TwoColumnRow(
         Box(modifier = Modifier.weight(1f)) { end() }
     }
 }
+
 @Composable
 fun InactivationReasonDialog(
     initialReason: String,
@@ -938,7 +956,7 @@ private fun OrganizationDescriptionSection(
 }
 
 @Composable
-private fun OrganizationImagesSection(
+ fun OrganizationImagesSection(
     images: List<Int>,
     onAddImage: () -> Unit,
     onRemoveImage: (Int) -> Unit
@@ -982,8 +1000,6 @@ private fun OrganizationFormActionButtons(
         )
     }
 }
-
-
 
 
 @Composable
@@ -1182,7 +1198,6 @@ fun personStatusToStatus(status: String): Status {
         else -> Status.INACTIVE
     }
 }
-
 
 
 @Composable

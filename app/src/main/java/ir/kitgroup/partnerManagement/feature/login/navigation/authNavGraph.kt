@@ -33,8 +33,6 @@ fun NavGraphBuilder.authNavGraph(
 
                 is SessionStatus.LoggedIn -> {
 
-                    delay(2000)
-
                     navController.navigate(
                         BottomNavItem.Dashboard.route
                     ) {

@@ -23,6 +23,7 @@ import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
+import ir.kitgroup.partnerManagement.core.network.model.TicketIssueLineDto
 import ir.kitgroup.partnerManagement.core.repository.AssignedSerialsRepository
 import ir.kitgroup.partnerManagement.core.repository.AssignedStandsRepository
 import ir.kitgroup.partnerManagement.core.repository.ContractRepository
@@ -315,6 +316,33 @@ class OrganizationDetailViewModel @Inject constructor(
             }
         }
     }
+
+    // درون OrganizationDetailViewModel:
+    private val _ticketIssueState =
+        MutableStateFlow<DataState<List<TicketIssueLineDto>>>(DataState.Idle)
+    val ticketIssueState: StateFlow<DataState<List<TicketIssueLineDto>>> =
+        _ticketIssueState.asStateFlow()
+
+    fun fetchOrganizationTicketIssue(organizationId: String) {
+        viewModelScope.launch {
+            _ticketIssueState.value = DataState.Loading
+
+            organizationRepository.getOrganizationTicketIssue(organizationId)
+                .onSuccess { ticketIssues ->
+                    _ticketIssueState.value = DataState.Success(ticketIssues)
+                }
+                .onFailure { error ->
+                    _ticketIssueState.value = DataState.Error(
+                        UiText.DynamicString(
+                            error.localizedMessage ?: "خطا در دریافت بلیط‌های سازمان"
+                        )
+                    )
+                }
+        }
+    }
+
+
+
 
 
     // درون OrganizationDetailViewModel:

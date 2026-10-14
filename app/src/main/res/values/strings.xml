@@ -484,6 +484,7 @@
     <string name="tab_visits">بازدیدها</string>
     <string name="tab_organization_persons">اشخاص</string>
     <string name="tab_organization_visitor">بازاریاب</string>
+    <string name="tab_organization_ticket">بلیط ها</string>
     <string name="tab_organization_stands">استندها</string>
     <string name="tab_organization_contracts">قراردادها</string>
     <string name="tab_organization_serials">سریال ها</string>

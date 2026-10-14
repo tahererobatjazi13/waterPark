@@ -171,11 +171,14 @@ enum class OrganizationDetailTab(
     CONTRACTS(
         titleRes = R.string.tab_organization_contracts
     ),
+    WARNING(
+        titleRes = R.string.tab_organization_warnings
+    ),
     SERIALS(
         titleRes = R.string.tab_organization_serials
     ),
-    WARNING(
-        titleRes = R.string.tab_organization_warnings
+    TICKET(
+        titleRes = R.string.tab_organization_ticket
     ),
     VISITOR(
         titleRes = R.string.tab_organization_visitor

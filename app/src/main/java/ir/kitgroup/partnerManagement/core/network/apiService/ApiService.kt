@@ -1,6 +1,7 @@
 package ir.kitgroup.partnerManagement.core.network.apiService
 
 import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
+import ir.kitgroup.partnerManagement.core.network.model.TicketIssueLineDto
 import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
 import ir.kitgroup.partnerManagement.feature.contract.model.CreateContractRequest
 import ir.kitgroup.partnerManagement.feature.contract.model.TerminateActiveContractRequest
@@ -32,11 +33,13 @@ import retrofit2.http.Query
 
 interface ApiService {
 
+    // Auth
     @POST("api/Auth/Login")
     suspend fun login(
         @Body request: LoginRequest
     ): Response<LoginResponse>
 
+    // Sync
     @POST("api/Sync/syncData")
     suspend fun syncData(
         @Body request: SyncDataRequest
@@ -47,7 +50,7 @@ interface ApiService {
         @Query("userId") userId: String
     ): ConfirmLastSyncResponse
 
-
+    // Organizations
     @POST("api/Organizations/create")
     suspend fun createOrganization(
         @Body request: CreateOrganizationRequest
@@ -56,6 +59,11 @@ interface ApiService {
     @PATCH("api/Organizations/update")
     suspend fun updateOrganization(
         @Body request: CreateOrganizationRequest
+    ): Response<ModelResponse>
+
+    @PATCH("api/Organizations/change-status")
+    suspend fun changeOrganizationStatus(
+        @Body request: ChangeOrganizationStatusRequest
     ): Response<ModelResponse>
 
     @POST("api/Organizations/persons")
@@ -78,23 +86,22 @@ interface ApiService {
         @Body request: TerminateActiveContractRequest
     ): Response<ModelResponse>
 
-    @PATCH("api/Organizations/change-status")
-    suspend fun changeOrganizationStatus(
-        @Body request: ChangeOrganizationStatusRequest
-    ): Response<ModelResponse>
-
-
     @GET("api/Sync/GetVisitorOrg/{organizationId}")
     suspend fun getOrganizationVisitors(
         @Path("organizationId") organizationId: String
     ): Response<List<VisitorOrganizationDto>>
 
+    @GET("api/TicketIssue/organizations/{organizationId}/lines")
+    suspend fun getOrganizationTicketIssue(
+        @Path("organizationId") organizationId: String
+    ): Response<List<TicketIssueLineDto>>
 
+
+    //Inspection
     @POST("api/Inspection/Meeting/create")
     suspend fun createMeeting(
         @Body request: CreateMeetingRequest
     ): Response<ModelResponse>
-
 
     @PUT("api/Inspection/Meeting/update")
     suspend fun updateMeeting(
@@ -106,40 +113,36 @@ interface ApiService {
         @Body request: ChangeStatusMeetingRequest
     ): Response<ModelResponse>
 
-    @POST("api/Inspection/AssignWarnings/create")
-    suspend fun createOrganizationWarning(
-        @Body request: CreateOrganizationWarningRequest
-    ): Response<ModelResponse>
-
-
-    @PUT("api/Inspection/AssignWarnings/update")
-    suspend fun updateOrganizationWarning(
-        @Body request: CreateOrganizationWarningRequest
-    ): Response<ModelResponse>
-
-
     @POST("api/Inspection/AssignStand/create")
     suspend fun createAssignStand(
         @Body request: CreateAssignStandRequest
     ): Response<ModelResponse>
-
 
     @PUT("api/Inspection/AssignStand/update")
     suspend fun updateAssignStand(
         @Body request: CreateAssignStandRequest
     ): Response<ModelResponse>
 
-
     @PATCH("api/Inspection/AssignStand/change-status")
     suspend fun changeAssignStandStatus(
         @Body request: ChangeAssignStandStatusRequest
     ): Response<ModelResponse>
 
+    @POST("api/Inspection/AssignWarnings/create")
+    suspend fun createOrganizationWarning(
+        @Body request: CreateOrganizationWarningRequest
+    ): Response<ModelResponse>
+
+    @PUT("api/Inspection/AssignWarnings/update")
+    suspend fun updateOrganizationWarning(
+        @Body request: CreateOrganizationWarningRequest
+    ): Response<ModelResponse>
+
+    //PromotionTicket
     @POST("api/promotion-ticket/offer-plan/Create")
     suspend fun createOfferPlan(
         @Body request: CreateOfferPlanRequest
     ): Response<ModelResponse>
-
 
     @PUT("api/promotion-ticket/offer-plan/Update")
     suspend fun updateOfferPlan(
@@ -166,18 +169,15 @@ interface ApiService {
         @Body request: CreateSerialOfferRequest
     ): Response<ModelResponse>
 
-
     @PUT("api/promotion-ticket/UpdateSerialOffer")
     suspend fun updateSerialOffer(
         @Body request: CreateSerialOfferRequest
     ): Response<ModelResponse>
-
 
     @PATCH("api/promotion-ticket/change-status/{id}/status")
     suspend fun serialOfferChangeStatus(
         @Path("id") id: String,
         @Query("status") status: String
     ): Response<ModelResponse>
-
 
 }

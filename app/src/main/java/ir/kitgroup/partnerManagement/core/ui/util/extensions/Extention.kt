@@ -11,7 +11,7 @@ fun Status.toDisplayName(): String = when (this) {
 
 /*
 git add .
-git commit -m "fix bug"
+git commit -m "add image box "
 git push -u origin master
 git push
 */

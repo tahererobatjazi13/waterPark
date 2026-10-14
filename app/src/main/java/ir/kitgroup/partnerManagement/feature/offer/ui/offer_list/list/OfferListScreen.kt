@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.offer_list
+package ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
@@ -62,6 +63,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
 
+
 @Composable
 fun OfferListScreen(
     onAddClick: () -> Unit,
@@ -71,9 +73,11 @@ fun OfferListScreen(
     onRefreshHandled: () -> Unit = {},
     viewModel: OfferListViewModel = hiltViewModel(),
     sessionViewModel: SessionViewModel = hiltViewModel(),
-    dashboardViewModel: DashboardViewModel = hiltViewModel()
+    dashboardViewModel: DashboardViewModel = hiltViewModel(),
+    modifier: Modifier = Modifier,
 
-) {
+
+    ) {
     val offers by viewModel.offers.collectAsStateWithLifecycle()
     val appColors = LocalPartnerManagementColors.current
     val roleCode by sessionViewModel.roleCode.collectAsStateWithLifecycle()
@@ -104,13 +108,15 @@ fun OfferListScreen(
             // ۱. ابتدا فراخوانی متد همگام‌سازی سرور
             dashboardViewModel.onReceiveDataClick()
             // ۲. بازخوانی اطلاعات جدید در لیست از دیتابیس لوکال
-           viewModel.loadOffers()
+            viewModel.loadOffers()
             // ۳. خاموش کردن فلگ در SavedStateHandle
             onRefreshHandled()
         }
     }
 
+
     Scaffold(
+        modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -151,7 +157,10 @@ fun OfferListScreen(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            shape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp
+            ),
             color = MaterialTheme.colorScheme.background
         ) {
             Column(
@@ -175,6 +184,7 @@ fun OfferListScreen(
                             )
                         }
                     }
+
                     offers!!.isEmpty() -> {
                         // ۲. واکشی انجام شده و واقعاً خالی است -> EmptyState نمایش داده شود
                         EmptyState(
@@ -184,6 +194,7 @@ fun OfferListScreen(
                                 .fillMaxWidth()
                         )
                     }
+
                     else -> {
                         // ۳. لیست پر است
                         LazyColumn(

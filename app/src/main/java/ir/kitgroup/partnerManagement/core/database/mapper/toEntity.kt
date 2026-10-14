@@ -391,6 +391,7 @@ fun TicketIssueDto.toEntity(): TicketIssueEntity {
     )
 }
 
+/*
 fun TicketIssueLineDto.toEntity(): TicketIssueLineEntity {
     return TicketIssueLineEntity(
         ticketIssueLineId = ticketIssueLineId,
@@ -422,6 +423,7 @@ fun TicketIssueLineDto.toEntity(): TicketIssueLineEntity {
         approvedDate = approvedDate
     )
 }
+*/
 
 
 fun VisitorDto.toEntity(): VisitorEntity {
