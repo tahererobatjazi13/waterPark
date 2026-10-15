@@ -6,10 +6,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.core.database.dao.OfferDao
 import ir.kitgroup.partnerManagement.core.database.dao.OfferDetailDao
-import ir.kitgroup.partnerManagement.core.database.entity.OfferDetailEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.database.model.OfferDetailWithProduct
-import ir.kitgroup.partnerManagement.core.repository.OfferDetailPlanRepository
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.repository.OfferDetailPlanRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -29,8 +28,7 @@ class OfferDetailViewModel @Inject constructor(
     offerDetailDao: OfferDetailDao,
     offerDao: OfferDao,
     private val repository: OfferDetailPlanRepository,
-
-    ) : ViewModel() {
+) : ViewModel() {
 
     val offerDetailId: String = checkNotNull(savedStateHandle["offerDetailId"])
 
@@ -44,7 +42,7 @@ class OfferDetailViewModel @Inject constructor(
         .flatMapLatest { detailWithProduct ->
             val offerId = detailWithProduct?.offerDetail?.offerId
             if (offerId != null) {
-                offerDao.observeById(offerId)
+                offerDao.observeOfferById(offerId)
             } else {
                 flowOf(null)
             }
@@ -87,5 +85,4 @@ class OfferDetailViewModel @Inject constructor(
                 }
         }
     }
-
 }

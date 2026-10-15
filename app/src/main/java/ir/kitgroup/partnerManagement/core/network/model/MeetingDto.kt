@@ -43,6 +43,8 @@ data class MeetingDto(
 
     val latitude: String?,
 
-    val stateCode: Int?
+    val stateCode: Int?,
+
+    val modifiedOn: String?
 
 )

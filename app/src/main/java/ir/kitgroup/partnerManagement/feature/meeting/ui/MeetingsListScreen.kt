@@ -77,7 +77,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
-import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
@@ -118,20 +117,20 @@ fun MeetingsListScreen(
     }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    val snackbarHostState =
+    val snackBarHostState =
         remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel.uiEvent) {
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowMessage -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         event.message.asString(context)
                     )
                 }
 
                 is UiEvent.ShowError -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         event.error.asString(context)
                     )
                 }
@@ -188,7 +187,7 @@ fun MeetingsListScreen(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            SnackbarHost(hostState = snackBarHostState)
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(

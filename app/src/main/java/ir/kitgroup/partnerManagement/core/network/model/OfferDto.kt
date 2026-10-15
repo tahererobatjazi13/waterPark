@@ -2,9 +2,8 @@ package ir.kitgroup.partnerManagement.core.network.model
 
 import com.google.gson.annotations.SerializedName
 
-// کلاس DTO دریافت داده از وب‌سرویس باید دقیقاً این انوتیشن‌ها را داشته باشد:
 data class OfferDto(
-    @SerializedName("offerId") // یا @SerialName("offerId")
+    @SerializedName("offerId")
     val offerId: String,
 
     @SerializedName("code")
@@ -26,5 +25,8 @@ data class OfferDto(
     val statusOfferName: String?,
 
     @SerializedName("stateCode")
-    val stateCode: Int?
+    val stateCode: Int?,
+
+    @SerializedName("modifiedOn")
+    val modifiedOn: String?
 )

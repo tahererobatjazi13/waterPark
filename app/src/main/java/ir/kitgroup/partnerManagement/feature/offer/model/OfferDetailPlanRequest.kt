@@ -1,6 +1,6 @@
 package ir.kitgroup.partnerManagement.feature.offer.model
 
-data class CreateOfferDetailPlanRequest(
+data class OfferDetailPlanRequest(
     val offerTicketPlanLineId: String? = null,
     val offerTicketPlanId: String? = null,
     val productServiceId: String? = null,

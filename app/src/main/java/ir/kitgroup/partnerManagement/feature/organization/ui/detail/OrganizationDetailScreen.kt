@@ -231,20 +231,20 @@ fun OrganizationDetailScreen(
 
     val visitSubjects by organizationDetailViewModel.visitSubjects
         .collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     /*
     // گوش دادن به پیام‌های وضعیت
         LaunchedEffect(Unit) {
             organizationDetailViewModel.statusUiEvent.collect { event ->
                 when (event) {
-                    is UiEvent.ShowMessage -> snackbarHostState.showSnackbar(
+                    is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
                         event.message.asString(
                             context
                         )
                     )
 
-                    is UiEvent.ShowError -> snackbarHostState.showSnackbar(event.error.asString(context))
+                    is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
                 }
             }
         }*/
@@ -270,7 +270,7 @@ fun OrganizationDetailScreen(
             is DataState.Error -> {
                 showStatusDialog = false
 
-                snackbarHostState.showSnackbar(
+                snackBarHostState.showSnackbar(
                     state.error.asString(context)
                 )
 
@@ -302,7 +302,7 @@ fun OrganizationDetailScreen(
             is DataState.Error -> {
                 showWarningDialog = false
 
-                snackbarHostState.showSnackbar(
+                snackBarHostState.showSnackbar(
                     state.error.asString(context)
                 )
 
@@ -318,7 +318,7 @@ fun OrganizationDetailScreen(
           val message = addWarningState.successMessage
               ?: return@LaunchedEffect
 
-          snackbarHostState.showSnackbar(message)
+          snackBarHostState.showSnackbar(message)
 
           showWarningDialog = false
 
@@ -332,7 +332,7 @@ fun OrganizationDetailScreen(
           val message = addWarningState.errorMessage
               ?: return@LaunchedEffect
 
-          snackbarHostState.showSnackbar(message)
+          snackBarHostState.showSnackbar(message)
 
           organizationDetailViewModel
               .resetAddWarningState()
@@ -342,7 +342,7 @@ fun OrganizationDetailScreen(
           val message = addWarningState.errorMessage
               ?: return@LaunchedEffect
 
-          snackbarHostState.showSnackbar(message)
+          snackBarHostState.showSnackbar(message)
 
           organizationDetailViewModel
               .resetAddWarningState()
@@ -371,7 +371,7 @@ fun OrganizationDetailScreen(
 
             is DataState.Error -> {
 
-                snackbarHostState.showSnackbar(
+                snackBarHostState.showSnackbar(
                     state.error.asString(context)
                 )
 
@@ -385,7 +385,7 @@ fun OrganizationDetailScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            SnackbarHost(hostState = snackBarHostState)
         },
 
         bottomBar = {
@@ -532,7 +532,7 @@ fun OrganizationDetailScreen(
                                     ).show()
 
                                     // یا اگر در صفحه اسنک‌بار دارید:
-                                    // scope.launch { snackbarHostState.showSnackbar("این سازمان قرارداد همکاری فعالی ندارد.") }
+                                    // scope.launch { snackBarHostState.showSnackbar("این سازمان قرارداد همکاری فعالی ندارد.") }
                                 }
                             },
                             onTicketClick = { ticket ->

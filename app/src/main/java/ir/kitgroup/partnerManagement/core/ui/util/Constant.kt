@@ -24,11 +24,6 @@ const val SYNC_AFTER_CONTRACT_SAVE =
 const val SYNC_AFTER_STAND_SAVE =
     "sync_after_stand_save"
 
-
-const val SYNC_AFTER_OFFER_SAVE =
-    "sync_after_offer_save"
-
-
 const val SYNC_AFTER_OFFER_DETAIL_SAVE =
     "sync_after_offer_detail_save"
 
@@ -202,7 +197,7 @@ enum class OrganizationStatus(
     INITIAL_REGISTRATION(0, R.string.status_initial_registration, StatusColor.INFO),
     ACTIVE(1, R.string.status_active, StatusColor.SUCCESS),
     INACTIVE(2, R.string.status_inactive, StatusColor.ERROR),
-    SUSPENDED(3, R.string.status_suspended, StatusColor.WARNING),
+    SUSPENDED(3, R.string.status_suspend, StatusColor.WARNING),
     CLOSED(4, R.string.status_closed, StatusColor.ERROR),
     YELLOW(5, R.string.status_yellow, StatusColor.WARNING),
     ORANGE(6, R.string.status_orange, StatusColor.WARNING);

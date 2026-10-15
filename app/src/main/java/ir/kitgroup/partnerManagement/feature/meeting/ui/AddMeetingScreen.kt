@@ -47,7 +47,7 @@ fun AddMeetingRoute(
     // val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val organizationPersons by
     viewModel.organizationPersons.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     val isEditMode = viewModel.meetingId != null
 
@@ -56,7 +56,7 @@ fun AddMeetingRoute(
             /*  val message = if (isEditMode) "بازدید با موفقیت ویرایش شد" else "بازدید با موفقیت ثبت شد"
 
               // نمایش اسنک‌بار در همین فرم
-              val result = snackbarHostState.showSnackbar(
+              val result = snackBarHostState.showSnackbar(
                   message = message,
                   duration = SnackbarDuration.Short
               )*/
@@ -69,7 +69,7 @@ fun AddMeetingRoute(
     // لیسنر مستقیم SharedFlow خطایاب
     LaunchedEffect(Unit) {
         viewModel.errorMessage.collect { message ->
-            snackbarHostState.showSnackbar(
+            snackBarHostState.showSnackbar(
                 message = message,
                 duration = SnackbarDuration.Short
             )
@@ -82,7 +82,7 @@ fun AddMeetingRoute(
         existingMeeting = uiState.existingMeeting,
         organizationsList = uiState.organizations,
         visitSubjects = uiState.visitSubjects,
-        snackbarHostState = snackbarHostState,
+        snackBarHostState = snackBarHostState,
         isSaving = isSaving,
         allVisitors = uiState.allVisitors,
         defaultVisitorId = uiState.defaultVisitorId,
@@ -107,7 +107,7 @@ fun AddMeetingScreen(
     existingMeeting: MeetingWithDetail? = null,
     organizationsList: List<OrganizationWithDetail> = emptyList(),
     visitSubjects: List<VisitSubjectEntity> = emptyList(),
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     allVisitors: List<VisitorItem> = emptyList(),
     defaultVisitorId: String? = null,
     defaultVisitorName: String? = null,
@@ -462,7 +462,7 @@ fun AddMeetingScreen(
             )
         },
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            SnackbarHost(hostState = snackBarHostState)
         },
         containerColor =
         MaterialTheme.colorScheme.background

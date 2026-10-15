@@ -240,6 +240,7 @@
     <string name="label_offer_code">کد طرح</string>
     <string name="label_offer_ticket_plans">طرح های پایه آفر / بلیط</string>
     <string name="label_create_plan_offer">ایجاد طرح پایه آفر / بلیط</string>
+    <string name="label_edit_plan_offer">ویرایش طرح پایه آفر / بلیط</string>
     <string name="label_new_plan">طرح جدید</string>
     <string name="label_new_plan_detail">ثبت جزییات طرح</string>
     <string name="label_offer_plan_lines">ردیف‌های طرح آفر و بلیط</string>
@@ -389,7 +390,8 @@
     <string name="status_initial_registration">ثبت اولیه</string>
     <string name="status_active">فعال</string>
     <string name="status_inactive">غیرفعال</string>
-    <string name="status_suspended">معلق</string>
+    <string name="status_suspend">معلق</string>
+    <string name="status_suspended">تعلیق شده</string>
     <string name="status_closed">بسته شده</string>
     <string name="status_yellow">زرد</string>
     <string name="status_orange">ارجاع فوری / نارنجی</string>
@@ -522,6 +524,10 @@
     <string name="label_score">امتیاز</string>
     <string name="label_choose_score">امتیاز را انتخاب کنید</string>
     <string name="label_no_warning_added">تذکری برای این سازمان ثبت نشده است</string>
+    <string name="label_to">تا</string>
+    <string name="msg_submitting">در حال ثبت…</string>
+    <string name="label_edit_plan">ویرایش طرح</string>
+    <string name="label_register_plan">ثبت طرح</string>
 
     <string name="label_assignment_details">جزئیات تخصیص استند</string>
     <string name="label_assignment_information">اطلاعات تخصیص</string>
@@ -673,7 +679,7 @@
     <string name="error_network_connection">امکان اتصال به سرور وجود ندارد. لطفاً آدرس سرور و اتصال شبکه را بررسی کنید.</string>
     <string name="error_server_unavailable">سرور در حال حاضر در دسترس نیست. لطفاً دوباره تلاش کنید.</string>
     <string name="error_http">خطای ارتباط با سرور (%1$d)</string>
-
+    <string name="error_end_date_before_start">تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.</string>
 
     <!-- Login -->
     <string name="login_username_required">نام کاربری را وارد کنید</string>
@@ -686,6 +692,21 @@
     <string name="server_address_required">آدرس سرور را وارد کنید</string>
     <string name="server_address_invalid">آدرس سرور نامعتبر است</string>
     <string name="server_address_save_failed">ذخیره آدرس سرور انجام نشد</string>
+
+
+
+    <string name="error_server_empty_response">پاسخی از سرور دریافت نشد.</string>
+    <string name="msg_offer_plan_created">طرح با موفقیت ثبت شد.</string>
+    <string name="msg_offer_plan_updated">طرح با موفقیت ویرایش شد.</string>
+    <string name="error_offer_name_required">لطفاً نام طرح را وارد کنید.</string>
+    <string name="error_offer_plan_create">خطا در ثبت طرح</string>
+    <string name="error_offer_plan_update">خطا در ویرایش طرح</string>
+
+    <string name="error_offer_detail_plan_create">خطا در ثبت جزییات طرح</string>
+    <string name="error_offer_detail_plan_update">خطا در ویرایش جزییات طرح</string>
+    <string name="msg_offer_detail_plan_created">جزییات طرح با موفقیت ثبت شد.</string>
+    <string name="msg_offer_detail_plan_updated">جزییات طرح با موفقیت ویرایش شد.</string>
+    <string name="hint_select_end_date">انتخاب تاریخ پایان اعتبار</string>
 
 
 </resources>

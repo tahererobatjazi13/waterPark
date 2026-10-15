@@ -185,13 +185,6 @@ fun convertNumbersToEnglish(input: String): String {
     return result
 }
 
-fun getGUID(): String {
-    return UUID.randomUUID().toString()
-}
-
-
-
-
 
 fun formatJalaliDate(dateTime: String?): String {
     if (dateTime.isNullOrBlank()) return "—"
@@ -214,7 +207,7 @@ fun formatJalaliDate(dateTime: String?): String {
 }
 
 
- fun jalaliToGregorian(date: String): String? {
+fun jalaliToGregorian(date: String): String? {
     return try {
         val parts = date.split("/")
 
@@ -238,7 +231,7 @@ fun formatJalaliDate(dateTime: String?): String {
     }
 }
 
- fun formatPercentForInput(value: Double?): String {
+fun formatPercentForInput(value: Double?): String {
     if (value == null) return ""
 
     return if (value % 1.0 == 0.0) {
@@ -248,8 +241,11 @@ fun formatJalaliDate(dateTime: String?): String {
     }
 }
 
+fun formatJalali(year: Int, month: Int, day: Int): String {
+    return String.format(Locale.US, "%04d/%02d/%02d", year, month, day)
+}
 
- fun extractErrorMessage(
+fun extractErrorMessage(
     errorBody: String?,
     defaultMessage: String
 ): String {

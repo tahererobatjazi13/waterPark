@@ -99,6 +99,8 @@ data class OrganizationDto(
 
     val reasonDeactive: String?,
 
-    val stateCode: Int?
+    val stateCode: Int?,
+
+    val modifiedOn: String?
 
 )

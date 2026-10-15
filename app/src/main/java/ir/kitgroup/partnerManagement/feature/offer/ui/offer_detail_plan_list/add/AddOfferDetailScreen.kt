@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.add
+package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.add
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -17,7 +17,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
@@ -60,19 +59,19 @@ fun AddOfferDetailScreen(
 
         }
     }
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
 
     LaunchedEffect(viewModel.uiEvent) {
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowMessage -> {
-                    snackbarHostState.showSnackbar(event.message.asString(context))
+                    snackBarHostState.showSnackbar(event.message.asString(context))
                     onSaveSuccess()
                 }
 
                 is UiEvent.ShowError -> {
-                    snackbarHostState.showSnackbar(event.error.asString(context))
+                    snackBarHostState.showSnackbar(event.error.asString(context))
                 }
             }
         }
@@ -135,7 +134,7 @@ fun AddOfferDetailScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(

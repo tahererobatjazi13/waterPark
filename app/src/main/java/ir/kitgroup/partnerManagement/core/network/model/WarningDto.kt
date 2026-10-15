@@ -27,5 +27,8 @@ data class WarningDto(
 
     val warningDate: String?,
 
-    val stateCode: Int?
+    val stateCode: Int?,
+
+    val modifiedOn: String?
+
 )

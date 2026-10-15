@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list
+package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,7 +37,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -64,32 +63,19 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
 
 @Composable
-fun OfferDetailsListScreen(
+fun OfferDetailPlanListScreen(
     shouldRefreshAndSync: Boolean = false,
     onRefreshHandled: () -> Unit = {},
     onAddClick: (planId: String, planTitle: String) -> Unit, // <-- امضای دو پارامتری
     onOfferTicketPlanLineClick: (OfferDetailWithProduct) -> Unit,
-    viewModel: OfferDetailsListViewModel = hiltViewModel(),
+    viewModel: OfferDetailPlanListViewModel = hiltViewModel(),
     dashboardViewModel: DashboardViewModel = hiltViewModel(),
-    navController: NavController,
 
     ) {
     val headerOffer by viewModel.headerOffer.collectAsStateWithLifecycle()
     val offerLines by viewModel.offerDetails.collectAsStateWithLifecycle()
     val appColors = LocalPartnerManagementColors.current
-// در ابتدای OfferDetailsListScreen:
- /*   val backStackEntry = navController.currentBackStackEntry
-    val shouldRefresh = backStackEntry?.savedStateHandle?.getStateFlow("should_refresh_lines", false)?.collectAsState()
 
-    LaunchedEffect(shouldRefresh?.value) {
-        if (shouldRefresh?.value == true) {
-            // ۱. ریست فلگ برای جلوگیری از فراخوانی مکرر
-            backStackEntry!!.savedStateHandle["should_refresh_lines"] = false
-
-            // ۲. فراخوانی متد همگام‌سازی یا لود مجدد از سرور/دیتابیس در ViewModel صفحه لیست
-            viewModel.refreshDetails() // یا viewModel.fetchOfferLinesFromRemote()
-        }
-    }*/
     LaunchedEffect(shouldRefreshAndSync) {
         if (shouldRefreshAndSync) {
             // ۱. ابتدا فراخوانی متد همگام‌سازی سرور

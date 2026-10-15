@@ -35,6 +35,8 @@ data class ContractDto(
 
     val statusName: String?,
 
-    val stateCode: Int?
+    val stateCode: Int?,
+
+    val modifiedOn: String?
 
 )

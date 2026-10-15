@@ -47,6 +47,8 @@ data class ContractEntity(
 
     val statusName: String? = null,
 
-    val stateCode: Int? = null
+    val stateCode: Int? = null,
+
+    val modifiedOn: String? = null
 
 )

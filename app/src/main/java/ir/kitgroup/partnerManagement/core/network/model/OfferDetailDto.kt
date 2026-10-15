@@ -41,6 +41,7 @@ data class OfferDetailDto(
 
     val statusName: String?,
 
-    val stateCode: Int?
+    val stateCode: Int?,
 
+    val modifiedOn: String? = null
 )

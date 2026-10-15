@@ -48,4 +48,6 @@ data class AssignedStandDto(
     val statusAssignName: String?,
 
     val stateCode: Int?,
+
+    val modifiedOn: String?
 )

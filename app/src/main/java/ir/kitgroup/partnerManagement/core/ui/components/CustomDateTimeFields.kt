@@ -1,20 +1,9 @@
 package ir.kitgroup.partnerManagement.core.ui.components
 
-import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -23,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,15 +22,18 @@ fun CustomDateTimeFields(
     label: String,
     date: String,
     onDateClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
     time: String = "",
     onTimeClick: () -> Unit = {},
     showTime: Boolean = true,
-    modifier: Modifier = Modifier,
-    isRequired: Boolean = true // اضافه شدن فیلد اجباری به صورت پیش‌فرض فعال
+    isRequired: Boolean = true
 ) {
     val colors = MaterialTheme.colorScheme
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
         // هدر فیلد با کنترل وضعیت اجباری بودن
         Row(
             modifier = Modifier.padding(bottom = 8.dp),
@@ -82,14 +75,14 @@ fun CustomDateTimeFields(
                     Icon(
                         imageVector = Icons.Default.DateRange,
                         contentDescription = null,
-                        tint = colors.primary,
+                        tint = if (date.isNotBlank()) colors.primary else colors.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = date,
+                        text = date.ifBlank { placeholder },
                         style = typography.bodyMedium,
-                        color = colors.onSurface
+                        color = if (date.isNotBlank()) colors.onSurface else colors.onSurfaceVariant
                     )
                 }
 
@@ -140,14 +133,14 @@ fun CustomDateTimeFields(
                 Icon(
                     imageVector = Icons.Default.DateRange,
                     contentDescription = null,
-                    tint = colors.primary,
+                    tint = if (date.isNotBlank()) colors.primary else colors.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = date,
+                    text = date.ifBlank { placeholder },
                     style = typography.bodyMedium,
-                    color = colors.onSurface
+                    color = if (date.isNotBlank()) colors.onSurface else colors.onSurfaceVariant
                 )
             }
         }

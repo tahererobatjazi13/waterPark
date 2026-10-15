@@ -190,7 +190,7 @@ fun AddOrganizationScreen(
     }
     var showAddPersonSheet by rememberSaveable { mutableStateOf(false) }
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val createState by viewModel.createState.collectAsState()
     val context = LocalContext.current
     val isLoading = createState is DataState.Loading
@@ -207,7 +207,7 @@ fun AddOrganizationScreen(
     // دریافت پیام‌های اعتبارسنجی
     LaunchedEffect(Unit) {
         viewModel.toastEvent.collect { message ->
-            snackbarHostState.showSnackbar(
+            snackBarHostState.showSnackbar(
                 message = message,
                 duration = SnackbarDuration.Long
             )
@@ -233,7 +233,7 @@ fun AddOrganizationScreen(
             }
 
             is DataState.Error -> {
-                snackbarHostState.showSnackbar(
+                snackBarHostState.showSnackbar(
                     message = state.error.asString(context),
                     duration = SnackbarDuration.Long
                 )
@@ -263,7 +263,7 @@ fun AddOrganizationScreen(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = {
             SnackbarHost(
-                hostState = snackbarHostState,
+                hostState = snackBarHostState,
                 modifier = Modifier.padding(
                     horizontal = 16.dp,
                     vertical = 12.dp

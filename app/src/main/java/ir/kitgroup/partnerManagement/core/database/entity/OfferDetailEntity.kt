@@ -52,6 +52,8 @@ data class OfferDetailEntity(
 
     val statusName: String? = null,
 
-    val stateCode: Int? = null
+    val stateCode: Int? = null,
+
+    val modifiedOn: String? = null
 
 )

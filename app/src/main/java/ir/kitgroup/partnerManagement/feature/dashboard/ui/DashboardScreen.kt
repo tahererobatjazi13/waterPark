@@ -86,7 +86,7 @@ fun DashboardScreen(
     val isUploading =
         uploadState is DataState.Loading
 
-    val snackbarHostState =
+    val snackBarHostState =
         remember { SnackbarHostState() }
 
     val context =
@@ -138,13 +138,13 @@ fun DashboardScreen(
         dashboardViewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowMessage -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         event.message.asString(context)
                     )
                 }
 
                 is UiEvent.ShowError -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         event.error.asString(context)
                     )
                 }
@@ -203,7 +203,7 @@ fun DashboardScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = {
             SnackbarHost(
-                hostState = snackbarHostState
+                hostState = snackBarHostState
             )
         }
     ) {

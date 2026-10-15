@@ -109,5 +109,8 @@ data class OrganizationEntity(
 
     val reasonDeactive: String? = null,
 
-    val stateCode: Int? = null
+    val stateCode: Int? = null,
+
+    val modifiedOn: String? = null
+
 )

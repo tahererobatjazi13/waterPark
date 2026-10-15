@@ -12,9 +12,9 @@ import ir.kitgroup.partnerManagement.feature.login.model.LoginRequest
 import ir.kitgroup.partnerManagement.feature.login.model.LoginResponse
 import ir.kitgroup.partnerManagement.feature.meeting.model.ChangeStatusMeetingRequest
 import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
-import ir.kitgroup.partnerManagement.feature.offer.model.CreateOfferDetailPlanRequest
-import ir.kitgroup.partnerManagement.feature.offer.model.CreateOfferPlanRequest
-import ir.kitgroup.partnerManagement.feature.offer.model.CreateSerialOfferRequest
+import ir.kitgroup.partnerManagement.feature.offer.model.OfferDetailPlanRequest
+import ir.kitgroup.partnerManagement.feature.offer.model.OfferPlanRequest
+import ir.kitgroup.partnerManagement.feature.offer.model.SerialOfferRequest
 import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
 import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
@@ -141,22 +141,22 @@ interface ApiService {
     //PromotionTicket
     @POST("api/promotion-ticket/offer-plan/Create")
     suspend fun createOfferPlan(
-        @Body request: CreateOfferPlanRequest
+        @Body request: OfferPlanRequest
     ): Response<ModelResponse>
 
     @PUT("api/promotion-ticket/offer-plan/Update")
     suspend fun updateOfferPlan(
-        @Body request: CreateOfferPlanRequest
+        @Body request: OfferPlanRequest
     ): Response<ModelResponse>
 
     @POST("api/promotion-ticket/offer-detailplan/Create")
     suspend fun createOfferDetailPlan(
-        @Body request: CreateOfferDetailPlanRequest
+        @Body request: OfferDetailPlanRequest
     ): Response<ModelResponse>
 
     @PUT("api/promotion-ticket/offer-detailplan/Update")
     suspend fun updateOfferDetailPlan(
-        @Body request: CreateOfferDetailPlanRequest
+        @Body request: OfferDetailPlanRequest
     ): Response<ModelResponse>
 
     @DELETE("api/promotion-ticket/offer-detailplan/Delete{id}")
@@ -166,12 +166,12 @@ interface ApiService {
 
     @POST("api/promotion-ticket/AssignSerialOffer")
     suspend fun assignSerialOffer(
-        @Body request: CreateSerialOfferRequest
+        @Body request: SerialOfferRequest
     ): Response<ModelResponse>
 
     @PUT("api/promotion-ticket/UpdateSerialOffer")
     suspend fun updateSerialOffer(
-        @Body request: CreateSerialOfferRequest
+        @Body request: SerialOfferRequest
     ): Response<ModelResponse>
 
     @PATCH("api/promotion-ticket/change-status/{id}/status")

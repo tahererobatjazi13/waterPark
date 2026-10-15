@@ -39,6 +39,8 @@ data class OrganizationPersonDto(
 
     val beforeDate: String?,
 
-    val stateCode: Int?
+    val stateCode: Int?,
+
+    val modifiedOn: String?
 
 )

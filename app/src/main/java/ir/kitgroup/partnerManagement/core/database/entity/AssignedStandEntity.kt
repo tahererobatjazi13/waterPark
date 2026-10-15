@@ -64,6 +64,8 @@ data class AssignedStandEntity(
 
     val stateCode: Int? = null,
 
+    val modifiedOn: String? = null
+
     /*   @Ignore
        val items: List<StandTypeEntity> = emptyList()*/
 ) {

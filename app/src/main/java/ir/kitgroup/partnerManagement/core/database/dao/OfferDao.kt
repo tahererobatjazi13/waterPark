@@ -14,25 +14,23 @@ interface OfferDao {
     @Upsert
     suspend fun upsertAll(items: List<OfferEntity>)
 
+    @Upsert
+    suspend fun upsert(offer: OfferEntity)
+
+    @Query("SELECT * FROM offers ORDER BY modifiedOn DESC")
+    fun observeAll(): Flow<List<OfferEntity>>
+
+    @Query("DELETE FROM offers")
+    suspend fun deleteAll()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(offer: OfferEntity): Long
 
     @Update
     suspend fun update(offer: OfferEntity): Int
 
-    @Query("SELECT * FROM offers ORDER BY title")
-    fun observeAll(): Flow<List<OfferEntity>>
-
     @Query("SELECT * FROM offers WHERE offerId = :offerId LIMIT 1")
-    fun observeById(offerId: String): Flow<OfferEntity?>
-
-    @Query("DELETE FROM offers")
-    suspend fun deleteAll()
-
-    // افزودن کلمه کلیدی suspend
-    @Query("SELECT * FROM offers WHERE offerId = :offerId")
-    suspend fun getOfferById(offerId: String): OfferEntity?
-
+    fun observeOfferById(offerId: String): Flow<OfferEntity?>
 
     @Query("SELECT COUNT(*) FROM offers")
     suspend fun getCount(): Int

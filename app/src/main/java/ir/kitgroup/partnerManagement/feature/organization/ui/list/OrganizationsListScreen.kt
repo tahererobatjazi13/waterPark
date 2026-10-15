@@ -93,7 +93,7 @@ fun OrganizationsListScreen(
 
     val statusOptions = remember { OrganizationStatus.entries }
 
-    val snackbarHostState =
+    val snackBarHostState =
         remember { SnackbarHostState() }
 
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -119,13 +119,13 @@ fun OrganizationsListScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.ShowMessage -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         event.message.asString(context)
                     )
                 }
 
                 is UiEvent.ShowError -> {
-                    snackbarHostState.showSnackbar(
+                    snackBarHostState.showSnackbar(
                         event.error.asString(context)
                     )
                 }
@@ -156,7 +156,7 @@ fun OrganizationsListScreen(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            SnackbarHost(hostState = snackBarHostState)
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(

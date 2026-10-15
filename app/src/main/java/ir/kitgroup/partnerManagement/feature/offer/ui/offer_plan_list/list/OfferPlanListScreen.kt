@@ -1,48 +1,20 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.list
+package ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,25 +33,17 @@ import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
-
 
 @Composable
-fun OfferListScreen(
-    onAddClick: () -> Unit,
+fun OfferPlanListRoute(
     onOfferClick: (OfferEntity) -> Unit,
+    onAddOfferClick: () -> Unit,
     onEditOfferClick: (String) -> Unit,
-    shouldRefreshAndSync: Boolean = false,
-    onRefreshHandled: () -> Unit = {},
-    viewModel: OfferListViewModel = hiltViewModel(),
-    sessionViewModel: SessionViewModel = hiltViewModel(),
-    dashboardViewModel: DashboardViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
-
-
-    ) {
+    viewModel: OfferPlanListViewModel = hiltViewModel(),
+    sessionViewModel: SessionViewModel = hiltViewModel()
+) {
     val offers by viewModel.offers.collectAsStateWithLifecycle()
-    val appColors = LocalPartnerManagementColors.current
     val roleCode by sessionViewModel.roleCode.collectAsStateWithLifecycle()
 
     val isSupervisor = remember(roleCode) {
@@ -87,47 +51,54 @@ fun OfferListScreen(
     }
 
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel.uiEvent) {
         viewModel.uiEvent.collect { event ->
             when (event) {
-                is UiEvent.ShowMessage -> {
-                    snackbarHostState.showSnackbar(event.message.asString(context))
-                }
+                is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
+                    event.message.asString(
+                        context
+                    )
+                )
 
-                is UiEvent.ShowError -> {
-                    snackbarHostState.showSnackbar(event.error.asString(context))
-                }
+                is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
             }
         }
     }
 
-    LaunchedEffect(shouldRefreshAndSync) {
-        if (shouldRefreshAndSync) {
-            // ۱. ابتدا فراخوانی متد همگام‌سازی سرور
-            dashboardViewModel.onReceiveDataClick()
-            // ۲. بازخوانی اطلاعات جدید در لیست از دیتابیس لوکال
-            viewModel.loadOffers()
-            // ۳. خاموش کردن فلگ در SavedStateHandle
-            onRefreshHandled()
-        }
-    }
+    OfferPlanListScreen(
+        offers = offers,
+        isSupervisor = isSupervisor,
+        snackBarHostState = snackBarHostState,
+        onOfferClick = onOfferClick,
+        onAddOfferClick = { viewModel.checkCanNavigateToAddOffer(onAddOfferClick) },
+        onEditOfferClick = onEditOfferClick,
+        modifier = modifier
+    )
+}
 
+@Composable
+fun OfferPlanListScreen(
+    offers: List<OfferEntity>?,
+    isSupervisor: Boolean,
+    snackBarHostState: SnackbarHostState,
+    onOfferClick: (OfferEntity) -> Unit,
+    onAddOfferClick: () -> Unit,
+    onEditOfferClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val appColors = LocalPartnerManagementColors.current
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         floatingActionButton = {
             if (isSupervisor) {
                 ExtendedFloatingActionButton(
-                    onClick = {
-                        viewModel.checkCanNavigateToAddOffer {
-                            onAddClick()
-                        }
-                    },
+                    onClick = onAddOfferClick,
                     containerColor = appColors.success,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = RoundedCornerShape(16.dp),
@@ -140,7 +111,7 @@ fun OfferListScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            Icons.Default.Add,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
@@ -154,24 +125,22 @@ fun OfferListScreen(
             }
         },
         floatingActionButtonPosition = FabPosition.Center
-    ) {
+    ) { padding ->
         Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(
-                topStart = 24.dp,
-                topEnd = 24.dp
-            ),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp, top = 4.dp)
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
             ) {
 
                 when {
                     offers == null -> {
-                        // ۱. داده‌ها هنوز از دیتابیس واکشی نشده‌اند -> لودینگ نمایش داده شود
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -185,8 +154,7 @@ fun OfferListScreen(
                         }
                     }
 
-                    offers!!.isEmpty() -> {
-                        // ۲. واکشی انجام شده و واقعاً خالی است -> EmptyState نمایش داده شود
+                    offers.isEmpty() -> {
                         EmptyState(
                             textRes = R.string.msg_no_item_found,
                             modifier = Modifier
@@ -196,14 +164,13 @@ fun OfferListScreen(
                     }
 
                     else -> {
-                        // ۳. لیست پر است
                         LazyColumn(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
                             items(
-                                items = offers!!,
+                                items = offers,
                                 key = { plan -> plan.offerId }
                             ) { offer ->
                                 OfferListItem(
@@ -226,6 +193,7 @@ fun OfferListScreen(
         }
     }
 }
+
 
 @Composable
 private fun OfferListItem(
@@ -260,24 +228,21 @@ private fun OfferListItem(
                 )
 
                 Spacer(modifier = Modifier.width(6.dp))
-
                 StatusBadge(status = OfferPlanStatus.fromId(offer.statusOffer))
-
                 Spacer(modifier = Modifier.width(6.dp))
 
-                // دکمه ویرایش مخصوص سرپرست
                 if (isSupervisor) {
                     Box(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)) // رنگ پس‌زمینه ملایم
-                            .clickable(onClick = onEditClick), // انتقال قابلیت کلیک به باکس
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                            .clickable(onClick = onEditClick),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Edit,
-                            contentDescription = "ویرایش",
+                            contentDescription = stringResource(R.string.label_edit),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
@@ -310,10 +275,12 @@ private fun OfferListItem(
                     )
                 }
             }
+
             HorizontalDivider(
                 color = appColors.border.copy(alpha = 0.5f),
                 thickness = 0.6.dp
             )
+
             PlanDateRangeDisplay(
                 fromDate = formatJalaliDate(offer.fromDate),
                 toDate = formatJalaliDate(offer.toDate)
@@ -364,7 +331,7 @@ private fun PlanDateRangeDisplay(
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "تا",
+                text = stringResource(R.string.label_to),
                 style = typography.labelLarge,
                 color = appColors.textTertiary
             )

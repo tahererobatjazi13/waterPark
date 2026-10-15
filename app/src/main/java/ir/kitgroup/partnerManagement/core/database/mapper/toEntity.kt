@@ -140,6 +140,7 @@ fun OfferDto.toEntity(): OfferEntity {
         statusOffer = statusOffer,
         statusOfferName = statusOfferName,
         stateCode = stateCode,
+        modifiedOn = modifiedOn,
     )
 }
 
@@ -163,7 +164,8 @@ fun OfferDetailDto.toEntity(): OfferDetailEntity {
         genderName = genderName,
         status = status,
         statusName = statusName,
-        stateCode = stateCode
+        stateCode = stateCode,
+        modifiedOn = modifiedOn
     )
 }
 
@@ -218,6 +220,7 @@ fun OrganizationDto.toEntity(): OrganizationEntity {
         deactiveDate = this.deactiveDate,
         reasonDeactive = this.reasonDeactive,
         stateCode = this.stateCode ?: 0,
+        modifiedOn = modifiedOn
     )
 }
 
@@ -240,7 +243,8 @@ fun OrganizationPersonDto.toEntity(): OrganizationPersonEntity {
         remainBalance = this.remainBalance,
         beforeRemain = this.beforeRemain,
         beforeDate = this.beforeDate,
-        stateCode = this.stateCode
+        stateCode = this.stateCode,
+        modifiedOn = modifiedOn
     )
 }
 
@@ -257,7 +261,8 @@ fun WarningDto.toEntity(): WarningEntity {
         score = this.score ?: 0,
         description = this.description,
         warningDate = this.warningDate,
-        stateCode = this.stateCode ?: 0
+        stateCode = this.stateCode ?: 0,
+        modifiedOn = modifiedOn
     )
 }
 
@@ -282,32 +287,6 @@ fun OrgAttachmentFileDto.toEntity(): OrgAttachmentFileEntity {
     )
 }
 
-
-fun PersonDto.toEntity(): PersonEntity {
-    return PersonEntity(
-        personId = personId,
-        name = name,
-        description = description,
-        gender = gender,
-        mobile = mobile,
-        phone1 = phone1,
-        status = status
-    )
-}
-
-
-fun AutoNumberSequenceDto.toEntity(): AutoNumberSequenceEntity {
-    return AutoNumberSequenceEntity(
-        autoNumberSequenceId = autoNumberSequenceId,
-        name = name,
-        currentNumber = currentNumber,
-        prefix = prefix,
-        format = format,
-        step = step,
-        recreationCenterId = recreationCenterId
-    )
-}
-
 fun ContractDto.toEntity(): ContractEntity {
     return ContractEntity(
         contractId = this.contractId,
@@ -326,24 +305,7 @@ fun ContractDto.toEntity(): ContractEntity {
         status = this.status ?: 0,
         statusName = this.statusName,
         stateCode = this.stateCode ?: 0,
-    )
-}
-
-fun ContractOfferDto.toEntity(): ContractOfferEntity {
-    return ContractOfferEntity(
-        contractOfferId = contractOfferId,
-        name = name,
-        contractId = contractId,
-        countSerial = countSerial,
-        lastSerialUsed = lastSerialUsed,
-        serialFrom = serialFrom,
-        serialPrefix = serialPrefix,
-        serialTo = serialTo,
-        offerTicketPlanId = offerTicketPlanId,
-        contractOfferStatus = contractOfferStatus,
-        organizationId = organizationId,
-        remainSerialCount = remainSerialCount,
-        meetingId = meetingId
+        modifiedOn = modifiedOn
     )
 }
 
@@ -369,61 +331,9 @@ fun MeetingDto.toEntity(): MeetingEntity {
         latitude = this.latitude,
         longitude = this.longitude,
         stateCode = this.stateCode ?: 0,
+        modifiedOn = modifiedOn
     )
 }
-
-
-fun TicketIssueDto.toEntity(): TicketIssueEntity {
-    return TicketIssueEntity(
-        ticketIssueId = ticketIssueId,
-        name = name,
-        count = count,
-        customerMobile = customerMobile,
-        customerName = customerName,
-        description = description,
-        issuedOn = issuedOn,
-        organizationPersonId = organizationPersonId,
-        customerType = customerType,
-        sumPrice = sumPrice,
-        sumDiscountPrice = sumDiscountPrice,
-        organizationId = organizationId,
-        sourceCreate = sourceCreate
-    )
-}
-
-/*
-fun TicketIssueLineDto.toEntity(): TicketIssueLineEntity {
-    return TicketIssueLineEntity(
-        ticketIssueLineId = ticketIssueLineId,
-        name = name,
-        consumedAgeCategory = consumedAgeCategory,
-        consumedDate = consumedDate,
-        consumedGender = consumedGender,
-        discountPrice = discountPrice,
-        gender = gender,
-        personCategory = personCategory,
-        productServiceId = productServiceId,
-        serialNumber = serialNumber,
-        ticketIssueId = ticketIssueId,
-        ticketStatus = ticketStatus,
-        unitPrice = unitPrice,
-        count = count,
-        realCount = realCount,
-        contractOfferId = contractOfferId,
-        sumPrice = sumPrice,
-        finalProductServiceId = finalProductServiceId,
-        finalCustomerType = finalCustomerType,
-        usageDate = usageDate,
-        useTime = useTime,
-        visitorId = visitorId,
-        recreationCenterPartId = recreationCenterPartId,
-        totalCommission = totalCommission,
-        statusUsage = statusUsage,
-        approvedBy = approvedBy,
-        approvedDate = approvedDate
-    )
-}
-*/
 
 
 fun VisitorDto.toEntity(): VisitorEntity {
@@ -454,19 +364,6 @@ fun VisitorOrganizationDto.toEntity(): VisitorOrganizationEntity {
 }
 
 
-fun WalletTransactionDto.toEntity(): WalletTransactionEntity {
-    return WalletTransactionEntity(
-        walletTransactionId = walletTransactionId,
-        name = name,
-        amount = amount,
-        createSource = createSource,
-        description = description,
-        type = type,
-        organizationPersonId = organizationPersonId,
-        ticketIssueLineId = ticketIssueLineId
-    )
-}
-
 fun AssignedSerialDto.toEntity(): AssignedSerialEntity {
     return AssignedSerialEntity(
         serialAssignmentId = this.serialAssignmentId,
@@ -486,7 +383,8 @@ fun AssignedSerialDto.toEntity(): AssignedSerialEntity {
         meetingId = this.meetingId,
         lastSerialUsed = this.lastSerialUsed,
         remainingSerialCount = this.remainingSerialCount,
-        stateCode = this.stateCode
+        stateCode = this.stateCode,
+        modifiedOn = modifiedOn
     )
 }
 
@@ -514,7 +412,8 @@ fun AssignedStandDto.toEntity(): AssignedStandEntity {
         meetingId = this.meetingId,
         statusAssign = this.statusAssign,
         statusAssignName = this.statusAssignName,
-        stateCode = this.stateCode ?: 0
+        stateCode = this.stateCode ?: 0,
+        modifiedOn = modifiedOn
     )
 }
 

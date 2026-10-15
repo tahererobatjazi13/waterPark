@@ -48,6 +48,8 @@ data class OrganizationPersonEntity(
 
     val beforeDate: String? = null,
 
-    val stateCode: Int? = null
+    val stateCode: Int? = null,
+
+    val modifiedOn: String? = null
 
 )

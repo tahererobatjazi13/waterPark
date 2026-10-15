@@ -40,6 +40,8 @@ data class WarningEntity(
 
     val warningDate: String? = null,
 
-    val stateCode: Int? = null
+    val stateCode: Int? = null,
+
+    val modifiedOn: String? = null
 
 )

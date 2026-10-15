@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.add
+package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.add
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
@@ -6,16 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.core.database.dao.OfferDetailDao
-import ir.kitgroup.partnerManagement.core.repository.OfferDetailPlanRepository
-import ir.kitgroup.partnerManagement.core.ui.util.CommissionType
-import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
-import ir.kitgroup.partnerManagement.core.ui.util.GenderType
-import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanLineStatus
-import ir.kitgroup.partnerManagement.core.ui.util.PersonCategory
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.repository.OfferDetailPlanRepository
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatPercentForInput
-import ir.kitgroup.partnerManagement.feature.offer.model.CreateOfferDetailPlanRequest
-import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.AddEditOfferDetailUiState
+import ir.kitgroup.partnerManagement.feature.offer.model.OfferDetailPlanRequest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -32,7 +26,6 @@ class AddOfferDetailViewModel @Inject constructor(
     private val offerDetailDao: OfferDetailDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
 
     private val _uiState = MutableStateFlow(AddEditOfferDetailUiState())
     val uiState = _uiState.asStateFlow()
@@ -114,7 +107,7 @@ class AddOfferDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                val request = CreateOfferDetailPlanRequest(
+                val request = OfferDetailPlanRequest(
                     offerTicketPlanLineId = offerTicketPlanLineId,
                     offerTicketPlanId = offerTicketPlanId,
                     productServiceId = productServiceId,
@@ -134,14 +127,14 @@ class AddOfferDetailViewModel @Inject constructor(
                 val isEditMode = isEdit || !offerTicketPlanLineId.isNullOrBlank()
 
                 val result = if (isEditMode) {
-                    offerDetailPlanRepository.updateOfferDetailPlan(request)
+                    offerDetailPlanRepository.updateOfferDetailPlanAndSync(request)
                 } else {
-                    offerDetailPlanRepository.createOfferDetailPlan(request)
+                    offerDetailPlanRepository.createOfferDetailPlanAndSync(request)
                 }
 
                 Log.d("assignedStandsRepositoryResult", result.toString())
 
-                result
+             /*   result
                     .onSuccess { response ->
                         _saveMessage.emit(
                             response.message
@@ -152,7 +145,7 @@ class AddOfferDetailViewModel @Inject constructor(
                         _saveMessage.emit(
                             error.message ?: "عملیات انجام نشد."
                         )
-                    }
+                    }*/
             } catch (e: Exception) {
                 Log.e("saveAssignStand", "Error occurred", e)
                 _saveMessage.emit(e.localizedMessage ?: "خطای ناشناخته در ارتباط با سرور.")

@@ -51,7 +51,9 @@ data class AssignedSerialEntity(
 
     val stateCode: Int? = null,
 
-    ) /*{
+    val modifiedOn: String? = null
+
+) /*{
     */
 /**
  * وضعیت فعال بودن رکورد تخصیص سریال در CRM

@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list
+package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.add
 
 import ir.kitgroup.partnerManagement.core.database.entity.ProductEntity
 

@@ -39,6 +39,8 @@ data class AssignedSerialDto(
 
     val remainingSerialCount: Int?,
 
-    val stateCode: Int?
+    val stateCode: Int?,
+
+    val modifiedOn: String?
 
 )

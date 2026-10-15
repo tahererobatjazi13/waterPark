@@ -1,7 +1,7 @@
 package ir.kitgroup.partnerManagement.feature.offer.model
 
 
-data class CreateSerialOfferRequest(
+data class SerialOfferRequest(
     val id: String? = null,
     val contractId: String? = null,
     val organizationId: String? = null,

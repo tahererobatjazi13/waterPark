@@ -6,8 +6,7 @@ import ir.kitgroup.partnerManagement.core.database.model.AssignedSerialWithDetai
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
 import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
 import ir.kitgroup.partnerManagement.core.ui.util.extractErrorMessage
-import ir.kitgroup.partnerManagement.feature.offer.model.CreateSerialOfferRequest
-import ir.kitgroup.partnerManagement.feature.stand.model.ChangeAssignStandStatusRequest
+import ir.kitgroup.partnerManagement.feature.offer.model.SerialOfferRequest
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,7 +28,7 @@ class AssignedSerialsRepository @Inject constructor(
     suspend fun deleteAll() = assignedSerialDao.deleteAll()
 
     suspend fun createSerialOffer(
-        request: CreateSerialOfferRequest
+        request: SerialOfferRequest
     ): Result<ModelResponse> {
         return try {
             val response = apiService.assignSerialOffer(request)
@@ -54,7 +53,7 @@ class AssignedSerialsRepository @Inject constructor(
     }
 
     suspend fun updateSerialOffer(
-        request: CreateSerialOfferRequest
+        request: SerialOfferRequest
     ): Result<ModelResponse> {
         return try {
             val response = apiService.updateSerialOffer(request)

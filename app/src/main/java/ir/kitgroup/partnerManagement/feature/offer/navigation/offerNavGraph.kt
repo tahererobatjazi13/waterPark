@@ -22,57 +22,42 @@ import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_OFFER_DETAIL_SAVE
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_OFFER_SAVE
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.add.AddEditOfferScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.add.AddOfferDetailScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.add.AddEditOfferScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.add.AddOfferDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail.OfferDetailScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_list.OfferDetailsListScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.offer_list.list.OfferListScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.list.OfferDetailPlanListScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.list.OfferPlanListRoute
 import ir.kitgroup.partnerManagement.navigation.Screen
-
 
 fun NavGraphBuilder.offerNavGraph(navController: NavController) {
 
-    //  لیست کلی آفرها
+    // لیست کلی آفرها
     composable(
         route = BottomNavItem.Offers.route,
         enterTransition = { fadeIn(tween(250)) },
         exitTransition = { fadeOut(tween(200)) },
         popEnterTransition = { fadeIn(tween(250)) },
         popExitTransition = { fadeOut(tween(200)) }
-    ) { backStackEntry ->
-
-        // شنود سیگنال سینک و رفرش از SavedStateHandle همین Entry
-        val shouldRefreshAndSync by backStackEntry.savedStateHandle
-            .getStateFlow(SYNC_AFTER_OFFER_SAVE, false)
-            .collectAsStateWithLifecycle()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-
             CustomHeader(
                 title = stringResource(R.string.nav_plan_offer),
                 showBackButton = false
             )
 
-            OfferListScreen(
-                shouldRefreshAndSync = shouldRefreshAndSync,
-                onRefreshHandled = {
-                    backStackEntry.savedStateHandle[SYNC_AFTER_OFFER_SAVE] = false
-                },
-
-                onAddClick = {
-                    navController.navigate(Screen.AddOffer.route)
-                },
-
+            OfferPlanListRoute(
                 onOfferClick = { offer ->
                     navController.navigate(
                         Screen.OfferDetailList.createRoute(offer.offerId)
-
                     )
+                },
+                onAddOfferClick = {
+                    navController.navigate(Screen.AddOffer.route)
                 },
                 onEditOfferClick = { offerId ->
                     navController.navigate(
@@ -91,7 +76,6 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
         popEnterTransition = { fadeIn(tween(250)) },
         popExitTransition = { fadeOut(tween(200)) }
     ) {
-
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -104,26 +88,18 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
                     navController.popBackStack()
                 }
             )
-
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
                 AddEditOfferScreen(
-                    offerId = null,
                     onSuccessSave = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(SYNC_AFTER_OFFER_SAVE, true)
                         navController.popBackStack()
-
                     }
                 )
             }
         }
-
-
     }
-// ویرایش طرح موجود
+    // ویرایش طرح موجود
     composable(
         route = Screen.EditOffer.route,
         arguments = listOf(
@@ -135,17 +111,12 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
         exitTransition = { fadeOut(tween(200)) },
         popEnterTransition = { fadeIn(tween(250)) },
         popExitTransition = { fadeOut(tween(200)) }
-    ) { backStackEntry ->
-
-        val offerId = backStackEntry.arguments
-            ?.getString("offerId")
-            .orEmpty()
-
+    ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
             CustomHeader(
-                title = stringResource(R.string.label_create_plan_offer),
+                title = stringResource(R.string.label_edit_plan_offer),
                 showBackButton = true,
                 onBackClick = {
                     navController.popBackStack()
@@ -156,11 +127,7 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 AddEditOfferScreen(
-                    offerId = offerId,
                     onSuccessSave = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(SYNC_AFTER_OFFER_SAVE, true)
                         navController.popBackStack()
                     }
                 )
@@ -209,7 +176,7 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-                OfferDetailsListScreen(
+                OfferDetailPlanListScreen(
                     shouldRefreshAndSync = shouldRefreshAndSync,
                     onRefreshHandled = {
                         backStackEntry.savedStateHandle[SYNC_AFTER_OFFER_DETAIL_SAVE] = false
@@ -223,7 +190,7 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
                         navController.navigate(
                             Screen.OfferDetail.createRoute(item.offerDetail.offerDetailId)
                         )
-                    }, navController = navController
+                    }
                 )
             }
         }

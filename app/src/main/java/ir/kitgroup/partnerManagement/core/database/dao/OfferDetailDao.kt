@@ -14,7 +14,7 @@ interface OfferDetailDao {
     @Upsert
     suspend fun upsertAll(items: List<OfferDetailEntity>)
 
-    @Query("SELECT * FROM offer_details WHERE offerId = :offerId")
+    @Query("SELECT * FROM offer_details  WHERE offerId = :offerId ORDER BY modifiedOn DESC")
     fun observeByOfferId(offerId: String): Flow<List<OfferDetailEntity>>
 
     @Transaction

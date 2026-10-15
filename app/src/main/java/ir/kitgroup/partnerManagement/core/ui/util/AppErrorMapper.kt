@@ -27,7 +27,7 @@ object AppErrorMapper {
 
             is ConnectException ->
                 UiText.StringResource(
-                    R.string.error_network_connection
+                    R.string.error_network_internet
                 )
 
             is SocketTimeoutException ->

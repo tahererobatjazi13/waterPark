@@ -7,10 +7,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedSerialDao
 import ir.kitgroup.partnerManagement.core.repository.AssignedSerialsRepository
 import ir.kitgroup.partnerManagement.core.repository.ContractRepository
-import ir.kitgroup.partnerManagement.core.repository.OfferPlanRepository
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.repository.OfferPlanRepository
 import ir.kitgroup.partnerManagement.core.repository.OrganizationRepository
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
-import ir.kitgroup.partnerManagement.feature.offer.model.CreateSerialOfferRequest
+import ir.kitgroup.partnerManagement.feature.offer.model.SerialOfferRequest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -204,7 +204,7 @@ class AddSerialOfferViewModel @Inject constructor(
 
             _isSaving.value = true
             try {
-                val request = CreateSerialOfferRequest(
+                val request = SerialOfferRequest(
                     id = s.id,
                     contractId = s.selectedContractId,
                     organizationId = organizationId,
