@@ -33,7 +33,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
-import ir.kitgroup.partnerManagement.feature.contract.ui.ContractListItem
+import ir.kitgroup.partnerManagement.feature.contract.ui.list.ContractListItem
 
 
 @Composable

@@ -3,7 +3,7 @@ package ir.kitgroup.partnerManagement.core.network.apiService
 import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
 import ir.kitgroup.partnerManagement.core.network.model.TicketIssueLineDto
 import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
-import ir.kitgroup.partnerManagement.feature.contract.model.CreateContractRequest
+import ir.kitgroup.partnerManagement.feature.contract.model.ContractRequest
 import ir.kitgroup.partnerManagement.feature.contract.model.TerminateActiveContractRequest
 import ir.kitgroup.partnerManagement.feature.dashboard.model.ConfirmLastSyncResponse
 import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataRequest
@@ -73,12 +73,12 @@ interface ApiService {
 
     @POST("api/Organizations/Createcontracts")
     suspend fun createContract(
-        @Body request: CreateContractRequest
+        @Body request: ContractRequest
     ): Response<ModelResponse>
 
     @PUT("api/Organizations/Updatecontracts")
     suspend fun updateContract(
-        @Body request: CreateContractRequest
+        @Body request: ContractRequest
     ): Response<ModelResponse>
 
     @POST("api/Organizations/TerminateActiveContract")

@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,8 +18,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,8 +30,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.material3.MaterialTheme.typography
-
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,88 +39,46 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.database.model.OfferDetailWithProduct
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.CommissionType
 import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
 import ir.kitgroup.partnerManagement.core.ui.util.GenderType
-import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanLineStatus
 import ir.kitgroup.partnerManagement.core.ui.util.PersonCategory
-import kotlinx.coroutines.flow.collectLatest
-import java.text.NumberFormat
-import java.util.Locale
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import ir.kitgroup.partnerManagement.core.ui.components.CustomDialog
+import ir.kitgroup.partnerManagement.core.ui.components.DualActionButtonBottomBar
+import ir.kitgroup.partnerManagement.core.ui.util.OfferDetailPlanStatus
+import ir.kitgroup.partnerManagement.core.ui.util.SecondaryButtonVariant
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import ir.kitgroup.partnerManagement.core.ui.util.toAmountDisplay
 
 @Composable
 fun OfferDetailScreen(
-
     onNavigateBack: () -> Unit,
-    onNavigateToEdit: (offerDetailId: String) -> Unit,
+    onEditClick: (offerDetailId: String) -> Unit,
     viewModel: OfferDetailViewModel = hiltViewModel()
 ) {
-    val planWithProduct by viewModel.offerDetail.collectAsStateWithLifecycle()
-    val parentOffer by viewModel.parentOffer.collectAsStateWithLifecycle()
-    val appColors = LocalPartnerManagementColors.current
-    val isDeleting by viewModel.isDeleting.collectAsStateWithLifecycle()
+    val offerDetail by viewModel.offerDetail.collectAsStateWithLifecycle()
+    val offer by viewModel.offer.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val appColors = LocalPartnerManagementColors.current
     val context = LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState() }
 
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
-    // دریافت رویدادهای حذف و بازگشت
-    LaunchedEffect(Unit) {
-        viewModel.eventFlow.collectLatest { event ->
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
             when (event) {
-                is OfferDetailViewModel.UiEvent.DeleteSuccess -> {
-                    Toast.makeText(context, "با موفقیت حذف شد", Toast.LENGTH_SHORT).show()
-                    onNavigateBack()
+                is UiEvent.ShowMessage -> {
+                    snackBarHostState.showSnackbar(event.message.asString(context))
                 }
 
-                is OfferDetailViewModel.UiEvent.ShowMessage -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                is UiEvent.ShowError -> {
+                    snackBarHostState.showSnackbar(event.error.asString(context))
                 }
             }
         }
@@ -133,73 +86,17 @@ fun OfferDetailScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = {
-            if (planWithProduct != null) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = appColors.cardBackground,
-                    tonalElevation = 8.dp,
-                    border = BorderStroke(width = 0.5.dp, color = appColors.border)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // دکمه ویرایش
-                        Button(
-                            onClick = { onNavigateToEdit(viewModel.offerDetailId) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            enabled = !isDeleting
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "ویرایش", style = MaterialTheme.typography.labelLarge)
-                        }
-
-                        // دکمه حذف
-                        OutlinedButton(
-                            onClick = { showDeleteConfirmationDialog = true },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            ),
-                            enabled = !isDeleting
-                        ) {
-                            if (isDeleting) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = "حذف", style = MaterialTheme.typography.labelLarge)
-                            }
-                        }
-                    }
-                }
+            if (offerDetail != null) {
+                DualActionButtonBottomBar(
+                    primaryText = stringResource(R.string.label_edit),
+                    secondaryText = stringResource(R.string.label_delete),
+                    onPrimaryClick = { onEditClick(viewModel.offerDetailId) },
+                    onSecondaryClick = { showDeleteConfirmationDialog = true },
+                    isSecondaryLoading = uiState.isLoading,
+                    secondaryVariant = SecondaryButtonVariant.FILLED
+                )
             }
         }
     ) { innerPadding ->
@@ -213,7 +110,7 @@ fun OfferDetailScreen(
             ),
             color = MaterialTheme.colorScheme.background
         ) {
-            val currentItem = planWithProduct
+            val currentItem = offerDetail
             if (currentItem == null) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -224,62 +121,43 @@ fun OfferDetailScreen(
             } else {
                 OfferDetailContent(
                     item = currentItem,
-                    parentOffer = parentOffer
+                    offer = offer
                 )
             }
         }
     }
 
-    // دیالوگ تأیید حذف
-    if (showDeleteConfirmationDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                if (!isDeleting) showDeleteConfirmationDialog = false
-            },
-            title = {
-                Text(
-                    text = "حذف سطر طرح",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = appColors.textPrimary
+    CustomDialog(
+        isVisible = showDeleteConfirmationDialog,
+        title = stringResource(R.string.title_delete_offer_detail),
+        message = stringResource(R.string.msg_confirm_delete_offer_detail),
+        confirmText = stringResource(R.string.label_delete),
+        dismissText = stringResource(R.string.label_cancel),
+        onConfirm = {
+            if (!uiState.isLoading) {
+                showDeleteConfirmationDialog = false
+                viewModel.deleteOfferDetail(
+                    onSuccessCallback = onNavigateBack
                 )
-            },
-            text = {
-                Text(
-                    text = "آیا از حذف این سطر از طرح اطمینان دارید؟ این عملیات قابل بازگشت نیست.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = appColors.textSecondary
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteConfirmationDialog = false
-                        viewModel.deleteOfferDetail()
-                    }
-                ) {
-                    Text(text = "حذف شود", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDeleteConfirmationDialog = false }
-                ) {
-                    Text(text = "انصراف", color = appColors.textSecondary)
-                }
-            },
-            containerColor = appColors.cardBackground,
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
+            }
+        },
+        onDismiss = {
+            if (!uiState.isLoading) {
+                showDeleteConfirmationDialog = false
+            }
+        },
+        confirmColor = MaterialTheme.colorScheme.error,
+        dismissColor = appColors.textSecondary
+    )
+
 }
 
 @Composable
 private fun OfferDetailContent(
     item: OfferDetailWithProduct,
-    parentOffer: OfferEntity?
+    offer: OfferEntity?
 ) {
     val plan = item.offerDetail
-    val appColors = LocalPartnerManagementColors.current
     val displayName = item.resolvedProductName
 
     val personCategoryEnum =
@@ -288,10 +166,9 @@ private fun OfferDetailContent(
     val commissionTypeEnum =
         remember(plan.commissionType) { CommissionType.fromId(plan.commissionType) }
     val discountTypeEnum = remember(plan.discountType) { DiscountType.fromId(plan.discountType) }
-    val lineStatusEnum = remember(plan.status) { OfferPlanLineStatus.fromId(plan.status) }
+    val lineStatusEnum = remember(plan.status) { OfferDetailPlanStatus.fromId(plan.status) }
 
-    // جلوگیری از کرش در صورت null بودن یا لود نشدن طرح والد
-    val offerPlanTitle = parentOffer?.title?.takeIf { it.isNotBlank() } ?: "-"
+    val offerTitle = offer?.title?.takeIf { it.isNotBlank() } ?: "-"
 
     Column(
         modifier = Modifier
@@ -301,7 +178,7 @@ private fun OfferDetailContent(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
 
-        // ۱. بخش اطلاعات اصلی طرح
+        //  بخش اطلاعات اصلی طرح
         OfferDetailSection(
             title = stringResource(R.string.label_offer_main_information),
             headerTrailingContent = {
@@ -310,7 +187,7 @@ private fun OfferDetailContent(
         ) {
             OfferDetailRow(
                 label = stringResource(R.string.label_plan_header),
-                value = offerPlanTitle,
+                value = offerTitle,
             )
 
             OfferDetailRow(
@@ -330,51 +207,76 @@ private fun OfferDetailContent(
             )
         }
 
-        // ۲. بخش اطلاعات پورسانت / کمیسیون
+        // بخش اطلاعات پورسانت / کمیسیون
         OfferDetailSection(
             title = stringResource(R.string.label_offer_commission_information)
         ) {
             OfferDetailRow(
                 label = stringResource(R.string.label_commission_type),
-                value = stringResource(commissionTypeEnum.titleRes)
+                value = stringResource(commissionTypeEnum.titleRes),
+                showDivider = commissionTypeEnum != CommissionType.NONE
             )
 
-            OfferDetailRow(
-                label = stringResource(R.string.label_commission_percent),
-                value = plan.commissionPercent?.toString().toPercentDisplay()
-            )
+            when (commissionTypeEnum) {
+                CommissionType.PERCENTAGE -> {
+                    OfferDetailRow(
+                        label = stringResource(R.string.label_commission_percent),
+                        value = plan.commissionPercent?.toString().toPercentDisplay(),
+                        showDivider = false
+                    )
+                }
 
-            OfferDetailRow(
-                label = stringResource(R.string.label_commission_amount),
-                value = plan.commissionAmount?.toString().toAmountDisplay(),
-                showDivider = false
-            )
+                CommissionType.FIXED_AMOUNT -> {
+                    OfferDetailRow(
+                        label = stringResource(R.string.label_commission_amount),
+                        value = plan.commissionAmount?.toString().toAmountDisplay(),
+                        showDivider = false
+                    )
+                }
+
+                CommissionType.NONE -> {
+                    // در حالت بدون پورسانت، سطری برای مبلغ یا درصد نمایش داده نمی‌شود
+                }
+            }
         }
 
-        // ۳. بخش اطلاعات تخفیف
+        // بخش اطلاعات تخفیف
         OfferDetailSection(
             title = stringResource(R.string.label_offer_discount_information)
         ) {
             OfferDetailRow(
                 label = stringResource(R.string.label_discount_type),
-                value = stringResource(discountTypeEnum.titleRes)
+                value = stringResource(discountTypeEnum.titleRes),
+                showDivider = discountTypeEnum != DiscountType.NONE
             )
 
-            OfferDetailRow(
-                label = stringResource(R.string.label_discount_percent),
-                value = plan.discountPercent?.toString().toPercentDisplay()
-            )
+            when (discountTypeEnum) {
+                DiscountType.PERCENTAGE -> {
+                    OfferDetailRow(
+                        label = stringResource(R.string.label_discount_percent),
+                        value = plan.discountPercent?.toString().toPercentDisplay(),
+                        showDivider = false
+                    )
+                }
 
-            OfferDetailRow(
-                label = stringResource(R.string.label_discount_amount),
-                value = plan.discountAmount?.toString().toAmountDisplay(),
-                showDivider = false
-            )
+                DiscountType.FIXED_AMOUNT -> {
+                    OfferDetailRow(
+                        label = stringResource(R.string.label_discount_amount),
+                        value = plan.discountAmount?.toString().toAmountDisplay(),
+                        showDivider = false
+                    )
+                }
+
+                DiscountType.NONE -> {
+                    // در حالت بدون تخفیف، سطری برای مبلغ یا درصد نمایش داده نمی‌شود
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
+
 
 @Composable
 private fun OfferDetailSection(
@@ -486,24 +388,5 @@ private fun String?.toPercentDisplay(): String {
     return stringResource(
         R.string.value_percent,
         formattedPercent
-    )
-}
-
-@Composable
-private fun String?.toAmountDisplay(): String {
-    if (isNullOrBlank()) {
-        return stringResource(R.string.value_not_available)
-    }
-
-    val longValue = this.replace(",", "").toDoubleOrNull()?.toLong()
-    val formattedAmount = if (longValue != null) {
-        NumberFormat.getNumberInstance(Locale.US).format(longValue)
-    } else {
-        this
-    }
-
-    return stringResource(
-        R.string.value_amount_rial,
-        formattedAmount
     )
 }

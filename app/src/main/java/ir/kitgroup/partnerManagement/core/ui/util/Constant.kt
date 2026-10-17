@@ -18,9 +18,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus.INITIAL_REG
 const val SYNC_AFTER_ORGANIZATION_SAVE =
     "sync_after_organization_save"
 
-const val SYNC_AFTER_CONTRACT_SAVE =
-    "sync_after_contract_save"
-
 const val SYNC_AFTER_STAND_SAVE =
     "sync_after_stand_save"
 
@@ -417,7 +414,7 @@ enum class PersonCategory(
     val id: Int,
     @StringRes val titleRes: Int
 ) {
-    UNASSIGNED(0, R.string.label_category_none),
+    UNASSIGNED(0,  R.string.gender_none),
     ADULT(1, R.string.label_category_adult),
     CHILD(2, R.string.label_category_child);
 
@@ -464,7 +461,7 @@ enum class PersonGenderType(
 }
 
 
-enum class OfferPlanLineStatus(
+enum class OfferDetailPlanStatus(
     override val id: Int,
     override val titleRes: Int,
     override val colorType: StatusColor
@@ -474,7 +471,7 @@ enum class OfferPlanLineStatus(
     REVOKED(2, R.string.status_revoked, StatusColor.ERROR);
 
     companion object {
-        fun fromId(id: Int?): OfferPlanLineStatus =
+        fun fromId(id: Int?): OfferDetailPlanStatus =
             entries.find { it.id == id } ?: ACTIVE
     }
 }
@@ -594,3 +591,7 @@ enum class PersonOrganizationRole(
     }
 }
 
+enum class SecondaryButtonVariant {
+    OUTLINED,
+    FILLED
+}

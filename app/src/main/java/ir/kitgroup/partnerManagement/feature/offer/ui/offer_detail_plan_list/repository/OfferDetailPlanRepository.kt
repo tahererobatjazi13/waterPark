@@ -9,8 +9,6 @@ import ir.kitgroup.partnerManagement.core.database.entity.ProductEntity
 import ir.kitgroup.partnerManagement.core.database.model.OfferDetailWithProduct
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
 import ir.kitgroup.partnerManagement.core.network.exception.ApiRequestExecutor
-import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
-import ir.kitgroup.partnerManagement.core.ui.util.extractErrorMessage
 import ir.kitgroup.partnerManagement.feature.dashboard.repository.SyncRepository
 import ir.kitgroup.partnerManagement.feature.offer.model.OfferDetailPlanRequest
 import kotlinx.coroutines.flow.Flow
@@ -25,8 +23,16 @@ class OfferDetailPlanRepository @Inject constructor(
 ) {
     fun getProducts(): Flow<List<ProductEntity>> = productDao.observeAll()
 
-    fun observeOfferDetailById(offerId: String): Flow<List<OfferDetailWithProduct>> {
-        return offerDetailDao.observeWithProductByOfferId(offerId)
+    fun observeOfferDetailWithProductByOfferId(offerId: String): Flow<List<OfferDetailWithProduct>> {
+        return offerDetailDao.observeOfferDetailWithProductByOfferId(offerId)
+    }
+
+    fun observeOfferDetailById(offerDetailId: String?): Flow<OfferDetailWithProduct?> {
+        return if (offerDetailId.isNullOrBlank()) {
+            kotlinx.coroutines.flow.flowOf(null)
+        } else {
+            offerDetailDao.observeOfferDetailById(offerDetailId)
+        }
     }
 
     suspend fun createOfferDetailPlanAndSync(
@@ -66,32 +72,25 @@ class OfferDetailPlanRepository @Inject constructor(
         )
     }
 
-    suspend fun deleteOfferDetailLine(
-        offerDetailId: String
-    ): Result<ModelResponse> {
-        return try {
-            val response = apiService.deleteOfferDetailPlan(offerDetailId)
 
-            if (response.isSuccessful && response.body() != null) {
-                val body = response.body()!!
-                if (body.success) {
-                    // به‌روزرسانی رکورد در دیتابیس لوکال
-                    offerDetailDao.deleteByDetailId(offerDetailId)
-                    Result.success(body)
-                } else {
-                    Result.failure(Exception(body.message ?: "خطا در حذف"))
-                }
-            } else {
-                val errorMessage = extractErrorMessage(
-                    errorBody = response.errorBody()?.string(),
-                    defaultMessage = "خطای سرور در حذف: ${response.code()}"
-                )
-                Result.failure(Exception(errorMessage))
+    suspend fun deleteOfferDetailPlan(
+        offerDetailId: String
+    ): Result<String?> {
+        return ApiRequestExecutor.execute(
+            defaultMessage = context.getString(R.string.error_offer_detail_plan_delete)
+        ) {
+            apiService.deleteOfferDetailPlan(offerDetailId)
+        }.fold(
+            onSuccess = { response ->
+                offerDetailDao.deleteByDetailId(offerDetailId)
+                Result.success(response.message)
+            },
+            onFailure = { error ->
+                Result.failure(error)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        )
     }
+
 }
 
 

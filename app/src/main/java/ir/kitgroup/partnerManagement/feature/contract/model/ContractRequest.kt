@@ -2,7 +2,7 @@ package ir.kitgroup.partnerManagement.feature.contract.model
 
 import com.google.gson.annotations.SerializedName
 
-data class CreateContractRequest(
+data class ContractRequest(
 
     @SerializedName("contractId")
     val contractId: String? = null,

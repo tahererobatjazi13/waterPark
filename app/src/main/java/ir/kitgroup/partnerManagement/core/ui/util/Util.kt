@@ -9,6 +9,8 @@ import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import ir.kitgroup.partnerManagement.R
@@ -20,6 +22,7 @@ import java.io.IOException
 import java.util.UUID
 
 import saman.zamani.persiandate.PersianDate
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -190,12 +193,10 @@ fun formatJalaliDate(dateTime: String?): String {
     if (dateTime.isNullOrBlank()) return "—"
 
     return runCatching {
-        // حذف بخش اعشار ثانیه یا Z در صورت وجود
         val cleanDateTime = dateTime.substringBefore(".").substringBefore("Z")
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
         val date = inputFormat.parse(cleanDateTime) ?: return dateTime
 
-        // تبدیل میلادی به شمسی
         val pDate = PersianDate(date.time)
 
         val year = pDate.shYear
@@ -206,6 +207,25 @@ fun formatJalaliDate(dateTime: String?): String {
     }.getOrDefault(dateTime)
 }
 
+
+@Composable
+fun String?.toAmountDisplay(): String {
+    if (isNullOrBlank()) {
+        return stringResource(R.string.value_not_available)
+    }
+
+    val longValue = this.replace(",", "").toDoubleOrNull()?.toLong()
+    val formattedAmount = if (longValue != null) {
+        NumberFormat.getNumberInstance(Locale.US).format(longValue)
+    } else {
+        this
+    }
+
+    return stringResource(
+        R.string.value_amount_rial,
+        formattedAmount
+    )
+}
 
 fun jalaliToGregorian(date: String): String? {
     return try {

@@ -1,18 +1,23 @@
 package ir.kitgroup.partnerManagement.core.repository
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.dao.ContractDao
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
-import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
-import ir.kitgroup.partnerManagement.core.ui.util.extractErrorMessage
-import ir.kitgroup.partnerManagement.feature.contract.model.CreateContractRequest
+import ir.kitgroup.partnerManagement.core.network.exception.ApiRequestExecutor
+import ir.kitgroup.partnerManagement.feature.contract.model.ContractRequest
 import ir.kitgroup.partnerManagement.feature.contract.model.TerminateActiveContractRequest
+import ir.kitgroup.partnerManagement.feature.dashboard.repository.SyncRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class ContractRepository @Inject constructor(
     private val contractDao: ContractDao,
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val syncRepository: SyncRepository,
+    @ApplicationContext private val context: Context
 ) {
 
     fun observeByOrganization(
@@ -27,14 +32,14 @@ class ContractRepository @Inject constructor(
         return contractDao.observeActiveByOrganization(organizationId)
     }
 
-    fun observeAllContracts(): Flow<List<ContractEntity>> =
-        contractDao.observeAll()
+    fun observeAll() = contractDao.observeAll()
 
     suspend fun upsertAll(
         contracts: List<ContractEntity>
     ) {
         contractDao.upsertAll(contracts)
     }
+
     fun observeById(
         contractId: String
     ): Flow<ContractEntity?> {
@@ -47,149 +52,61 @@ class ContractRepository @Inject constructor(
     }
 
 
-    suspend fun createContract(
-        request: CreateContractRequest
-    ): Result<ModelResponse> {
-
-        return try {
-
-            val response =
-                apiService.createContract(request)
-
-            if (
-                response.isSuccessful &&
-                response.body() != null
-            ) {
-
-                val body =
-                    response.body()!!
-
-                if (body.success) {
-
-                    Result.success(body)
-
-                } else {
-
-                    Result.failure(
-                        Exception(
-                            body.message
-                                ?: "خطا در ثبت قرارداد"
-                        )
-                    )
-                }
-
-            } else {
-                val errorMessage = extractErrorMessage(
-                    errorBody = response.errorBody()?.string(),
-                    defaultMessage = "خطای سرور در ثبت قرارداد: ${response.code()}"
-                )
-
-                Result.failure(
-                    Exception(errorMessage)
-                )
+    suspend fun createContractAndSync(
+        request: ContractRequest
+    ): Result<String?> {
+        return ApiRequestExecutor.execute(
+            defaultMessage = context.getString(R.string.error_contract_create)
+        ) {
+            apiService.createContract(request)
+        }.fold(
+            onSuccess = { response ->
+                syncRepository.syncData()
+                Result.success(response.message)
+            },
+            onFailure = { error ->
+                Result.failure(error)
             }
-
-        } catch (e: Exception) {
-
-            Result.failure(e)
-        }
+        )
     }
 
-    suspend fun updateContract(
-        request: CreateContractRequest
-    ): Result<ModelResponse> {
-
-        return try {
-
-            val response =
-                apiService.updateContract(request)
-
-            if (
-                response.isSuccessful &&
-                response.body() != null
-            ) {
-
-                val body =
-                    response.body()!!
-
-                if (body.success) {
-
-                    Result.success(body)
-
-                } else {
-
-                    Result.failure(
-                        Exception(
-                            body.message
-                                ?: "خطا در ویرایش قرارداد"
-                        )
-                    )
-                }
-
-            } else {
-
-                val errorMessage = extractErrorMessage(
-                    errorBody = response.errorBody()?.string(),
-                    defaultMessage = "خطای سرور در ویرایش قرارداد: ${response.code()}"
-                )
-                Result.failure(
-                    Exception(errorMessage)
-                )
+    suspend fun updateContractAndSync(
+        request: ContractRequest
+    ): Result<String?> {
+        return ApiRequestExecutor.execute(
+            defaultMessage = context.getString(R.string.error_contract_update)
+        ) {
+            apiService.updateContract(request)
+        }.fold(
+            onSuccess = { response ->
+                syncRepository.syncData()
+                Result.success(response.message)
+            },
+            onFailure = { error ->
+                Result.failure(error)
             }
-
-        } catch (e: Exception) {
-
-            Result.failure(e)
-        }
+        )
     }
 
     suspend fun terminateActiveContract(
         request: TerminateActiveContractRequest
-    ): Result<ModelResponse> {
-
-        return try {
-
-            val response =
-                apiService.terminateActiveContract(request)
-
-            if (
-                response.isSuccessful &&
-                response.body() != null
-            ) {
-
-                val body =
-                    response.body()!!
-
-                if (body.success) {
-
-                    Result.success(body)
-
-                } else {
-
-                    Result.failure(
-                        Exception(
-                            body.message
-                                ?: "خطا در خاتمه دادن قرارداد"
-                        )
-                    )
-                }
-
-            } else {
-
-                val errorMessage = extractErrorMessage(
-                    errorBody = response.errorBody()?.string(),
-                    defaultMessage = "خطای سرور در  خاتمه دادن قرارداد: ${response.code()}"
-                )
-
-                Result.failure(
-                    Exception(errorMessage)
-                )
+    ): Result<String?> {
+        return ApiRequestExecutor.execute(
+            defaultMessage = context.getString(R.string.error_contract_terminate)
+        ) {
+            apiService.terminateActiveContract(request)
+        }.fold(
+            onSuccess = { response ->
+                syncRepository.syncData()
+                Result.success(response.message)
+            },
+            onFailure = { error ->
+                Result.failure(error)
             }
-
-        } catch (e: Exception) {
-
-            Result.failure(e)
-        }
+        )
     }
+
 }
+
+
 

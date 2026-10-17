@@ -49,7 +49,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_ORGANIZATION_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
@@ -96,15 +95,6 @@ fun DashboardScreen(
         navController.getBackStackEntry(BottomNavItem.Dashboard.route)
     }
 
-    val shouldSyncAfterContractSave by
-    currentBackStackEntry
-        .savedStateHandle
-        .getStateFlow(
-            SYNC_AFTER_CONTRACT_SAVE,
-            false
-        )
-        .collectAsStateWithLifecycle()
-
     val shouldSyncAfterOrganizationCreate by currentBackStackEntry
         .savedStateHandle
         .getStateFlow(
@@ -118,20 +108,6 @@ fun DashboardScreen(
             currentBackStackEntry.savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = false
             // سپس سینک را اجرا می‌کنیم
             dashboardViewModel.onReceiveDataClick()
-        }
-    }
-    LaunchedEffect(
-        shouldSyncAfterContractSave
-    ) {
-        if (shouldSyncAfterContractSave) {
-
-            currentBackStackEntry
-                .savedStateHandle[
-                SYNC_AFTER_CONTRACT_SAVE
-            ] = false
-
-            dashboardViewModel
-                .onReceiveDataClick()
         }
     }
     LaunchedEffect(dashboardViewModel.uiEvent) {

@@ -188,6 +188,7 @@
     <string name="label_contract">قرارداد همکاری</string>
     <string name="label_contract_item">قرارداد</string>
     <string name="label_edit_contract">ویرایش قرارداد</string>
+    <string name="label_create_contract">ثبت قرارداد</string>
     <string name="label_report_cooperation_agreement"> گزارش لیست قرارداد همکاری ها</string>
     <string name="label_visitor_list">لیست بازاریاب ها</string>
     <string name="label_report_view_visitor">مشاهده گزارشات عملکرد همه بازاریاب ها و یک بازاریاب</string>
@@ -694,7 +695,6 @@
     <string name="server_address_save_failed">ذخیره آدرس سرور انجام نشد</string>
 
 
-
     <string name="error_server_empty_response">پاسخی از سرور دریافت نشد.</string>
     <string name="msg_offer_plan_created">طرح با موفقیت ثبت شد.</string>
     <string name="msg_offer_plan_updated">طرح با موفقیت ویرایش شد.</string>
@@ -703,10 +703,24 @@
     <string name="error_offer_plan_update">خطا در ویرایش طرح</string>
 
     <string name="error_offer_detail_plan_create">خطا در ثبت جزییات طرح</string>
+    <string name="error_offer_detail_plan_delete">خطا در حذف جزییات طرح</string>
     <string name="error_offer_detail_plan_update">خطا در ویرایش جزییات طرح</string>
     <string name="msg_offer_detail_plan_created">جزییات طرح با موفقیت ثبت شد.</string>
     <string name="msg_offer_detail_plan_updated">جزییات طرح با موفقیت ویرایش شد.</string>
+    <string name="msg_offer_detail_plan_deleted">جزییات طرح با موفقیت حذف شد.</string>
     <string name="hint_select_end_date">انتخاب تاریخ پایان اعتبار</string>
 
+    <string name="title_delete_offer_detail">حذف سطر طرح</string>
+    <string name="msg_confirm_delete_offer_detail">آیا از حذف این سطر از طرح اطمینان دارید؟ این عملیات قابل بازگشت نیست.</string>
+
+    <string name="error_product_service_required">لطفاً کالا و خدامت مربوطه را انتخاب  کنید.</string>
+    <string name="error_contract_create">خطا در ثبت قرارداد</string>
+    <string name="error_contract_update">خطا در ویرایش قرارداد</string>
+    <string name="error_contract_terminate">خطا در خاتمه قرارداد</string>
+    <string name="error_select_organization">لطفاً نام سازمان را انتخاب  کنید.</string>
+    <string name="msg_contract_created">قرارداد با موفقیت ثبت شد.</string>
+    <string name="msg_contract_updated">قرارداد با موفقیت ویرایش شد.</string>
+    <string name="msg_contract_terminated">قرارداد با موفقیت خاتمه یافت</string>
+    <string name="label_confirm_termination">تأیید خاتمه</string>
 
 </resources>

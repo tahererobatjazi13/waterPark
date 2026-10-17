@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.contract.ui
+package ir.kitgroup.partnerManagement.feature.contract.ui.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -12,35 +12,56 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
 import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
 fun ContractsListScreen(
-    onAddClick: () -> Unit,
+    onAddContractClick: () -> Unit,
     onContractClick: (ContractEntity) -> Unit,
-    viewModel: ContractsViewModel = hiltViewModel()
+    modifier: Modifier = Modifier,
+    contractsListViewModel: ContractsListViewModel = hiltViewModel()
 ) {
-    val appColors = LocalPartnerManagementColors.current
-    val contracts by viewModel.contracts.collectAsState()
+    val contracts by contractsListViewModel.contracts.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(contractsListViewModel.uiEvent) {
+        contractsListViewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
+                    event.message.asString(
+                        context
+                    )
+                )
+
+                is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
+            }
+        }
+    }
 
     Scaffold(
+        modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
@@ -55,31 +76,54 @@ fun ContractsListScreen(
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                ContractsHeader(onAddClick = onAddClick)
+                ContractsHeader(
+                    onAddContractClick = {
+                        contractsListViewModel.checkCanAddContractUseCase(onAddContractClick)
+                    }
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (contracts.isEmpty()) {
-                    EmptyState(
-                        textRes = R.string.msg_no_item_found,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    )
-
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(
-                            items = contracts,
-                            key = { contract -> contract.contractId }
-                        ) { contract ->
-                            ContractListItem(
-                                contract = contract,
-                                onClick = { onContractClick(contract) }
+                when {
+                    contracts == null -> {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(36.dp),
+                                color = MaterialTheme.colorScheme.primary
                             )
+                        }
+                    }
+
+                    contracts?.isEmpty() == true -> {
+                        EmptyState(
+                            textRes = R.string.msg_no_item_found,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        )
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(
+                                items = contracts.orEmpty(),
+                                key = { contract -> contract.contractId }
+                            ) { contract ->
+                                ContractListItem(
+                                    contract = contract,
+                                    onClick = { onContractClick(contract) }
+                                )
+                            }
                         }
                     }
                 }
@@ -91,7 +135,8 @@ fun ContractsListScreen(
 @Composable
 fun ContractListItem(
     contract: ContractEntity,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -106,7 +151,7 @@ fun ContractListItem(
     val status = ContractStatus.fromId(contract.status)
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
@@ -120,7 +165,7 @@ fun ContractListItem(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
 
-            // ردیف اول: عنوان قرارداد و وضعیت
+            // عنوان قرارداد و وضعیت
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -148,7 +193,6 @@ fun ContractListItem(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-
                     Text(
                         text = stringResource(R.string.label_contract_number),
                         style = typography.labelMedium,
@@ -169,7 +213,7 @@ fun ContractListItem(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            // مدل همکاری در یک ردیف جداگانه
+            // مدل همکاری
             ContractInfoRow(
                 label = stringResource(R.string.label_cooperation_model),
                 value = cooperationModelText
@@ -177,7 +221,7 @@ fun ContractListItem(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // نوع دوره تسویه در یک ردیف جداگانه
+            // نوع دوره تسویه
             ContractInfoRow(
                 label = stringResource(R.string.label_settlement_period_type),
                 value = settlementPeriodTypeText
@@ -185,7 +229,7 @@ fun ContractListItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ردیف پایین: دوره اعتبار و تاریخ‌ها در سمت چپ
+            // دوره اعتبار و تاریخ‌ها
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -207,7 +251,7 @@ fun ContractListItem(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "تا",
+                        text = stringResource(R.string.label_to),
                         style = typography.labelLarge,
                         color = appColors.textTertiary
                     )
@@ -223,7 +267,7 @@ fun ContractListItem(
 }
 
 @Composable
-private fun ContractInfoRow(
+fun ContractInfoRow(
     label: String,
     value: String,
     modifier: Modifier = Modifier
@@ -248,10 +292,9 @@ private fun ContractInfoRow(
     }
 }
 
-
 @Composable
-private fun ContractsHeader(
-    onAddClick: () -> Unit,
+fun ContractsHeader(
+    onAddContractClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -269,7 +312,7 @@ private fun ContractsHeader(
 
         CustomButton(
             text = stringResource(R.string.label_new_contract),
-            onClick = onAddClick,
+            onClick = onAddContractClick,
             fillMaxWidth = false,
             height = 38.dp,
             textStyle = typography.titleLarge,

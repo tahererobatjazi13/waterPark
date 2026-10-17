@@ -32,7 +32,6 @@ class OfferPlanRepository @Inject constructor(
         }
     }
 
-
     suspend fun createOfferPlanAndSync(
         request: OfferPlanRequest
     ): Result<String?> {
@@ -51,7 +50,6 @@ class OfferPlanRepository @Inject constructor(
         )
     }
 
-
     suspend fun updateOfferPlanAndSync(
         request: OfferPlanRequest
     ): Result<String?> {
@@ -69,5 +67,4 @@ class OfferPlanRepository @Inject constructor(
             }
         )
     }
-
 }

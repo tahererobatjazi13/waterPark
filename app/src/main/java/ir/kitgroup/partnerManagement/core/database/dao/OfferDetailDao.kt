@@ -19,11 +19,11 @@ interface OfferDetailDao {
 
     @Transaction
     @Query("SELECT * FROM offer_details WHERE offerId = :offerId")
-    fun observeWithProductByOfferId(offerId: String): Flow<List<OfferDetailWithProduct>>
+    fun observeOfferDetailWithProductByOfferId(offerId: String): Flow<List<OfferDetailWithProduct>>
 
     @Transaction
     @Query("SELECT * FROM offer_details WHERE offerDetailId = :offerDetailId LIMIT 1")
-    fun observeById(offerDetailId: String): Flow<OfferDetailWithProduct?>
+    fun observeOfferDetailById(offerDetailId: String): Flow<OfferDetailWithProduct?>
 
     @Query("DELETE FROM offer_details WHERE offerDetailId = :offerDetailId")
     suspend fun deleteByDetailId(offerDetailId: String)

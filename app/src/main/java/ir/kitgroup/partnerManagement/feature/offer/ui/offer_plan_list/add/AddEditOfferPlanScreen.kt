@@ -132,7 +132,7 @@ fun AddEditOfferContent(
                             onDateClick = { showValidToDatePicker = true },
                             placeholder = stringResource(R.string.hint_select_end_date),
                             showTime = false,
-                            isRequired = true
+                            isRequired = false
                         )
 
                         DropdownSelectorField(
@@ -155,7 +155,7 @@ fun AddEditOfferContent(
                             stringResource(R.string.label_register_plan)
                         },
                         isLoading = uiState.isLoading,
-                        enabled = !uiState.isLoading,
+                        enabled = uiState.isFormValid,
                         onClick = onSubmit,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -186,3 +186,4 @@ fun AddEditOfferContent(
         )
     }
 }
+

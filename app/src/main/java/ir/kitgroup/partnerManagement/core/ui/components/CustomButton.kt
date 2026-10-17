@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +29,7 @@ fun CustomButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    border: BorderStroke? = null,
     colors: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -49,11 +51,11 @@ fun CustomButton(
         modifier = finalModifier,
         shape = RoundedCornerShape(cornerRadius),
         colors = colors,
+        border = border,
         enabled = enabled && !isLoading,
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
         contentPadding = contentPadding
     ) {
-        // تغییر نرم و با انیمیشن بین حالت دکمه و حالت لودینگ
         AnimatedContent(
             targetState = isLoading,
             transitionSpec = {

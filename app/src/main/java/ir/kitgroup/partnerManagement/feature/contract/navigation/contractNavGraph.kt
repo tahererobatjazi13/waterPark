@@ -14,12 +14,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_SERIAL_OFFER_SAVE
-import ir.kitgroup.partnerManagement.feature.contract.ui.add.AddContractRoute
-import ir.kitgroup.partnerManagement.feature.contract.ui.ContractDetailScreen
-import ir.kitgroup.partnerManagement.feature.contract.ui.ContractsListScreen
-import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
+import ir.kitgroup.partnerManagement.feature.contract.ui.add.AddEditContractScreen
+import ir.kitgroup.partnerManagement.feature.contract.ui.detail.ContractDetailScreen
+import ir.kitgroup.partnerManagement.feature.contract.ui.list.ContractsListScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.detail.AssignedSerialDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.add.AddContractOfferScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
@@ -31,24 +29,14 @@ fun NavGraphBuilder.contractNavGraph(
     // ------------------------------------------------
     // Contracts List
     // ------------------------------------------------
-
     composable(
         route =
         Screen.ContractsList.route,
-        enterTransition = {
-            EnterTransition.None
-        },
-        exitTransition = {
-            ExitTransition.None
-        },
-        popEnterTransition = {
-            EnterTransition.None
-        },
-        popExitTransition = {
-            ExitTransition.None
-        }
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
     ) {
-
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -65,17 +53,11 @@ fun NavGraphBuilder.contractNavGraph(
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-
                 ContractsListScreen(
-
-                    onAddClick = {
-                        //  dashboardViewModel.checkCanNavigateToAddContract {
+                    onAddContractClick = {
                         navController.navigate(Screen.AddContract.route)
-                        //  }
                     },
-
                     onContractClick = { contract ->
-
                         navController.navigate(
                             Screen.ContractDetail.createRoute(
                                 contract.contractId
@@ -85,14 +67,12 @@ fun NavGraphBuilder.contractNavGraph(
                 )
             }
         }
-
     }
 
 
     // ------------------------------------------------
     // Contract Detail
     // ------------------------------------------------
-
     composable(
         route = Screen.ContractDetail.route,
         arguments = listOf(
@@ -112,15 +92,9 @@ fun NavGraphBuilder.contractNavGraph(
         popExitTransition = {
             ExitTransition.None
         }
-    ) { backStackEntry ->
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
 
-        val contractId =
-            backStackEntry.arguments
-                ?.getString("contractId")
-
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
             CustomHeader(
                 title = stringResource(
                     R.string.label_details
@@ -131,33 +105,14 @@ fun NavGraphBuilder.contractNavGraph(
                 }
             )
 
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+
                 ContractDetailScreen(
-                    contractId = contractId,
-
-                    onEditClick = {
-                        navController.navigate(
-                            Screen.EditContract.createRoute(
-                                contractId!!
-                            )
-                        )
+                    onEditClick = { contractId ->
+                        navController.navigate(Screen.EditContract.createRoute(contractId))
                     },
-
-                    onStatusChanged = {
-                        navController
-                            .getBackStackEntry(
-                                BottomNavItem.Dashboard.route
-                            )
-                            .savedStateHandle[
-                            SYNC_AFTER_CONTRACT_SAVE
-                        ] = true
-
-                        navController.popBackStack(
-                            BottomNavItem.Dashboard.route,
-                            inclusive = false
-                        )
+                    onTerminateActiveContract = {
+                        navController.popBackStack()
                     }
                 )
             }
@@ -168,41 +123,23 @@ fun NavGraphBuilder.contractNavGraph(
     // ------------------------------------------------
     // Add Contract
     // ------------------------------------------------
-
     composable(
-
         route =
         "${Screen.AddContract.route}?" +
                 "${Screen.AddContract.ORGANIZATION_ID_ARGUMENT}=" +
                 "{${Screen.AddContract.ORGANIZATION_ID_ARGUMENT}}",
 
         arguments = listOf(
-
-            navArgument(
-                Screen.AddContract
-                    .ORGANIZATION_ID_ARGUMENT
-            ) {
-
-                type =
-                    NavType.StringType
-
+            navArgument(Screen.AddContract.ORGANIZATION_ID_ARGUMENT) {
+                type = NavType.StringType
                 nullable = true
-
                 defaultValue = null
             }
         ),
-        enterTransition = {
-            EnterTransition.None
-        },
-        exitTransition = {
-            ExitTransition.None
-        },
-        popEnterTransition = {
-            EnterTransition.None
-        },
-        popExitTransition = {
-            ExitTransition.None
-        }
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -220,55 +157,26 @@ fun NavGraphBuilder.contractNavGraph(
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-
-                AddContractRoute(
-
-                    onSaved = {
-
-                        navController
-                            .getBackStackEntry(
-                                BottomNavItem.Dashboard.route
-                            )
-                            .savedStateHandle[
-                            SYNC_AFTER_CONTRACT_SAVE
-                        ] = true
-
-                        navController.popBackStack(
-                            BottomNavItem.Dashboard.route,
-                            inclusive = false
-                        )
+                AddEditContractScreen(
+                    onSuccessSave = {
+                        navController.popBackStack()
                     }
                 )
             }
         }
-
-
     }
 
 
     // ------------------------------------------------
     // Edit Contract
     // ------------------------------------------------
-
     composable(
         route = Screen.EditContract.route,
-        arguments = listOf(
-            navArgument("contractId") {
-                type = NavType.StringType
-            }
-        ),
-        enterTransition = {
-            EnterTransition.None
-        },
-        exitTransition = {
-            ExitTransition.None
-        },
-        popEnterTransition = {
-            EnterTransition.None
-        },
-        popExitTransition = {
-            ExitTransition.None
-        }
+        arguments = listOf(navArgument("contractId") { type = NavType.StringType }),
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -286,53 +194,30 @@ fun NavGraphBuilder.contractNavGraph(
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-                AddContractRoute(
-                    onSaved = {
-
-                        navController
-                            .getBackStackEntry(
-                                BottomNavItem.Dashboard.route
-                            )
-                            .savedStateHandle[
-                            SYNC_AFTER_CONTRACT_SAVE
-                        ] = true
-
-                        navController.popBackStack(
-                            BottomNavItem.Dashboard.route,
-                            inclusive = false
-                        )
+                AddEditContractScreen(
+                    onSuccessSave = {
+                        navController.popBackStack()
                     }
                 )
             }
         }
-
     }
 
 
     // ------------------------------------------------
     // Contract Offer
     // ------------------------------------------------
-
     composable(
         route = Screen.AddContractOffer.route,
-        arguments = listOf(
-            navArgument("organizationId") {
-                type = NavType.StringType
-                nullable = true
-            }
-        ),
-        enterTransition = {
-            EnterTransition.None
-        },
-        exitTransition = {
-            ExitTransition.None
-        },
-        popEnterTransition = {
-            EnterTransition.None
-        },
-        popExitTransition = {
-            ExitTransition.None
+        arguments = listOf(navArgument("organizationId") {
+            type = NavType.StringType
+            nullable = true
         }
+        ),
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
     ) { backStackEntry ->
         val organizationId = backStackEntry.arguments?.getString("organizationId")
 
@@ -358,7 +243,6 @@ fun NavGraphBuilder.contractNavGraph(
                         navController.previousBackStackEntry
                             ?.savedStateHandle
                             ?.set(SYNC_AFTER_SERIAL_OFFER_SAVE, true)
-
                         navController.popBackStack()
                     }
                 )

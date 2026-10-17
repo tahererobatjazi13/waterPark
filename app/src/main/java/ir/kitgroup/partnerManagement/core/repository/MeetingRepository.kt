@@ -6,8 +6,6 @@ import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
 import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
 import ir.kitgroup.partnerManagement.core.ui.util.extractErrorMessage
-import ir.kitgroup.partnerManagement.feature.contract.model.CreateContractRequest
-import ir.kitgroup.partnerManagement.feature.contract.model.TerminateActiveContractRequest
 import ir.kitgroup.partnerManagement.feature.meeting.model.ChangeStatusMeetingRequest
 import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
 import kotlinx.coroutines.flow.Flow

@@ -42,7 +42,7 @@ class AddEditOfferPlanViewModel @Inject constructor(
 
     init {
         if (!offerId.isNullOrBlank()) {
-            loadOffer(offerId)
+            loadOfferForEdit(offerId)
         } else {
             initDefaultDates()
         }
@@ -60,7 +60,7 @@ class AddEditOfferPlanViewModel @Inject constructor(
         }
     }
 
-    private fun loadOffer(id: String) {
+    private fun loadOfferForEdit(id: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isInitialLoading = true) }
             try {

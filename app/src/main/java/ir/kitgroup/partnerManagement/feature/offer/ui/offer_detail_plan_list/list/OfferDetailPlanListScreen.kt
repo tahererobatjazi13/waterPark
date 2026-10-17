@@ -33,6 +33,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,12 +44,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.database.model.OfferDetailWithProduct
@@ -57,36 +60,41 @@ import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.CommissionType
 import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
-import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanLineStatus
+import ir.kitgroup.partnerManagement.core.ui.util.OfferDetailPlanStatus
 import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanStatus
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
 
 @Composable
 fun OfferDetailPlanListScreen(
-    shouldRefreshAndSync: Boolean = false,
-    onRefreshHandled: () -> Unit = {},
-    onAddClick: (planId: String, planTitle: String) -> Unit, // <-- امضای دو پارامتری
-    onOfferTicketPlanLineClick: (OfferDetailWithProduct) -> Unit,
+    onAddOfferDetailPlanClick: (planId: String, planTitle: String) -> Unit,
+    onOfferDetailPlanClick: (OfferDetailWithProduct) -> Unit,
     viewModel: OfferDetailPlanListViewModel = hiltViewModel(),
-    dashboardViewModel: DashboardViewModel = hiltViewModel(),
-
-    ) {
+) {
     val headerOffer by viewModel.headerOffer.collectAsStateWithLifecycle()
-    val offerLines by viewModel.offerDetails.collectAsStateWithLifecycle()
+    val offerDetails by viewModel.offerDetails.collectAsStateWithLifecycle()
     val appColors = LocalPartnerManagementColors.current
 
-    LaunchedEffect(shouldRefreshAndSync) {
-        if (shouldRefreshAndSync) {
-            // ۱. ابتدا فراخوانی متد همگام‌سازی سرور
-            dashboardViewModel.onReceiveDataClick()
-            // ۲. بازخوانی اطلاعات جدید در لیست از دیتابیس لوکال
-           viewModel.loadOfferDetails()
-            // ۳. خاموش کردن فلگ در SavedStateHandle
-            onRefreshHandled()
+    val context = LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
+                    event.message.asString(
+                        context
+                    )
+                )
+
+                is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
+            }
         }
     }
+
+
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         bottomBar = {
             Surface(
                 color = appColors.cardBackground,
@@ -105,10 +113,9 @@ fun OfferDetailPlanListScreen(
                             val title = plan?.title?.takeIf { it.isNotBlank() }.orEmpty()
 
                             if (planId.isNotBlank()) {
-                                onAddClick(planId, title)
+                                onAddOfferDetailPlanClick(planId, title)
                             }
                         },
-
                         fillMaxWidth = true,
                         height = 48.dp,
                         textStyle = typography.titleLarge,
@@ -121,7 +128,7 @@ fun OfferDetailPlanListScreen(
                 }
             }
         },
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
             modifier = Modifier
@@ -137,7 +144,10 @@ fun OfferDetailPlanListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(36.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             } else {
                 LazyColumn(
@@ -148,9 +158,9 @@ fun OfferDetailPlanListScreen(
                         top = 16.dp,
                         bottom = innerPadding.calculateBottomPadding() + 16.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // هدر طرح همیشه نمایش داده می‌شود
+                    // هدر طرح
                     item(key = "header_summary") {
                         PlanHeaderSummarySection(plan = currentHeader)
                         Spacer(modifier = Modifier.height(10.dp))
@@ -167,27 +177,47 @@ fun OfferDetailPlanListScreen(
                         }
                     }
 
-                    // در صورتی که سطری وجود نداشته باشد، وضعیت خالی داخل خود لیست نمایش داده می‌شود
-                    if (offerLines.isEmpty()) {
-                        item(key = "empty_state") {
-                            EmptyState(
-                                textRes = R.string.msg_no_offers_details_found,
-                                icon = Icons.Outlined.Inbox,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 48.dp)
-                            )
+                    // وضعیت‌های لیست جزئیات
+                    when {
+                        offerDetails == null -> {
+                            item(key = "loading_state") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 48.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(36.dp),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
-                    } else {
-                        itemsIndexed(
-                            items = offerLines,
-                            key = { _, item -> item.offerDetail.offerDetailId }
-                        ) { index, item ->
-                            OfferPlanLineListItem(
-                                rowIndex = index + 1,
-                                item = item,
-                                onClick = { onOfferTicketPlanLineClick(item) }
-                            )
+
+                        offerDetails!!.isEmpty() -> {
+                            item(key = "empty_state") {
+                                EmptyState(
+                                    textRes = R.string.msg_no_offers_details_found,
+                                    icon = Icons.Outlined.Inbox,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 48.dp)
+                                )
+                            }
+                        }
+
+                        else -> {
+                            itemsIndexed(
+                                items = offerDetails!!,
+                                key = { _, item -> item.offerDetail.offerDetailId }
+                            ) { index, item ->
+                                OfferPlanLineListItem(
+                                    rowIndex = index + 1,
+                                    item = item,
+                                    onClick = { onOfferDetailPlanClick(item) }
+                                )
+                            }
                         }
                     }
                 }
@@ -277,7 +307,7 @@ private fun PlanHeaderSummarySection(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "تا",
+                    text = stringResource(R.string.label_to),
                     style = typography.labelLarge,
                     color = appColors.textTertiary
                 )
@@ -307,7 +337,6 @@ private fun OfferPlanLineListItem(
     val plan = item.offerDetail
     val appColors = LocalPartnerManagementColors.current
 
-    // بهره‌گیری از پراپرتی کپسوله‌شده در مدل و کش کردن مقادیر Enum
     val displayName = item.resolvedProductName
     val commissionTitle = remember(plan.commissionType) {
         CommissionType.fromId(plan.commissionType)
@@ -316,7 +345,7 @@ private fun OfferPlanLineListItem(
         DiscountType.fromId(plan.discountType)
     }
     val lineStatusEnum = remember(plan.status) {
-        OfferPlanLineStatus.fromId(plan.status)
+        OfferDetailPlanStatus.fromId(plan.status)
     }
 
     Card(
@@ -336,13 +365,11 @@ private fun OfferPlanLineListItem(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // هدر آیتم: شماره ردیف، عنوان کالا/خدمت و نشان وضعیت
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // شماره ردیف
                 Box(
                     modifier = Modifier
                         .size(24.dp)
@@ -357,7 +384,6 @@ private fun OfferPlanLineListItem(
                     )
                 }
 
-                // نام اصلی کالا در هدر
                 Text(
                     text = displayName,
                     style = typography.titleLarge,
@@ -367,10 +393,8 @@ private fun OfferPlanLineListItem(
                     modifier = Modifier.weight(1f)
                 )
 
-                // وضعیت
                 StatusBadge(status = lineStatusEnum)
 
-                // آیکون هدایت
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
@@ -384,26 +408,19 @@ private fun OfferPlanLineListItem(
                 thickness = 0.6.dp
             )
 
-            // جزئیات سطر
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                /*   OfferLineDetailRow(
-                       label = stringResource(R.string.label_related_product_or_service),
-                       value = displayName,
-                       valueColor = MaterialTheme.colorScheme.primary
-                   )*/
-
                 OfferLineDetailRow(
                     label = stringResource(R.string.label_commission_type),
-                    value = commissionTitle?.let { stringResource(it.titleRes) } ?: "-",
+                    value = stringResource(commissionTitle.titleRes),
                     valueColor = appColors.textPrimary
                 )
 
                 OfferLineDetailRow(
                     label = stringResource(R.string.label_discount_type),
-                    value = discountTitle?.let { stringResource(it.titleRes) } ?: "-",
+                    value = stringResource(discountTitle.titleRes),
                     valueColor = appColors.textPrimary
                 )
             }
@@ -411,14 +428,11 @@ private fun OfferPlanLineListItem(
     }
 }
 
-/**
- * کامپوننت کمکی جهت جلوگیری از تکرار سطرهای برچسب/مقدار
- */
 @Composable
 private fun OfferLineDetailRow(
     label: String,
     value: String,
-    valueColor: androidx.compose.ui.graphics.Color,
+    valueColor: Color,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current

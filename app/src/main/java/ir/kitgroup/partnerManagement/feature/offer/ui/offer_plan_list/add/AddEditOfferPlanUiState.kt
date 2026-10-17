@@ -11,4 +11,7 @@ data class AddEditOfferPlanUiState(
     val isEditMode: Boolean = false,
     val isLoading: Boolean = false,
     val isInitialLoading: Boolean = false
-)
+){
+    val isFormValid: Boolean
+        get() = offerName.isNotBlank()
+}

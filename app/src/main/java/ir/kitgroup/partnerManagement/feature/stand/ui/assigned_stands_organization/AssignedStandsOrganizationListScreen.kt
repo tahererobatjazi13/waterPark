@@ -31,15 +31,12 @@ import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_STAND_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel

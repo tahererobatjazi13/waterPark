@@ -20,7 +20,6 @@ import androidx.navigation.navigation
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_CONTRACT_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.ThemeMode
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.meeting.ui.AddMeetingRoute
@@ -129,19 +128,11 @@ fun NavGraphBuilder.meetingNavGraph(
                             )
                         },
                         onStatusChanged = {
-
-                            navController
-                                .getBackStackEntry(
-                                    BottomNavItem.Dashboard.route
-                                )
-                                .savedStateHandle[
-                                SYNC_AFTER_CONTRACT_SAVE
-                            ] = true
-
                             navController.popBackStack(
                                 BottomNavItem.Dashboard.route,
                                 inclusive = false
-                            )                        },
+                            )
+                        },
                     )
                 }
             }
@@ -174,15 +165,6 @@ fun NavGraphBuilder.meetingNavGraph(
                 onBackClick = {
                     navController.popBackStack()
                 }, onSaved = {
-
-                    navController
-                        .getBackStackEntry(
-                            BottomNavItem.Dashboard.route
-                        )
-                        .savedStateHandle[
-                        SYNC_AFTER_CONTRACT_SAVE
-                    ] = true
-
                     navController.popBackStack(
                         BottomNavItem.Dashboard.route,
                         inclusive = false

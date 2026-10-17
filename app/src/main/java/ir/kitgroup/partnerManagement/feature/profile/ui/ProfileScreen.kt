@@ -22,19 +22,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,12 +53,8 @@ import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CardMenuItem
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDialog
-import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
-import ir.kitgroup.partnerManagement.core.ui.components.FilterSection
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.theme.RedContent
-import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationsCard
-import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationsFiltersRow
 
 @Composable
 fun ProfileScreen(

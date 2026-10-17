@@ -120,6 +120,7 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+
     fun checkCanNavigateToAddContract(onSuccess: () -> Unit) {
         viewModelScope.launch {
             val error = checkCanAddContractUseCase()

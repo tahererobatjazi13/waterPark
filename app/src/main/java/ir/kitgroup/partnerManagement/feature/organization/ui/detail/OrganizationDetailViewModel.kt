@@ -110,7 +110,7 @@ class OrganizationDetailViewModel @Inject constructor(
                     }
 
                     if (!activeContractId.isNullOrBlank()) {
-                        contractRepository.observeAllContracts().collect { contracts ->
+                        contractRepository.observeAll().collect { contracts ->
                             _activeContractName.value =
                                 contracts.firstOrNull { it.contractId == activeContractId }?.title
                         }
