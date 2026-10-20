@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.meeting.ui
+package ir.kitgroup.partnerManagement.feature.meeting.ui.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -22,12 +22,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
-data class ContractDetailUiState(
-    val isTerminating: Boolean = false
-)
 
 @HiltViewModel
 class ContractDetailViewModel @Inject constructor(
@@ -51,6 +52,12 @@ class ContractDetailViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
 
+    private fun getCurrentIsoUtcTimestamp(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        return dateFormat.format(Date())
+    }
+
     fun terminateActiveContract(
         contractId: String,
         organizationId: String,
@@ -61,6 +68,7 @@ class ContractDetailViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isTerminating = true) }
+
             try {
                 val gregorianTerminationDate = jalaliToGregorian(terminationJalaliDate).orEmpty()
 
@@ -79,12 +87,31 @@ class ContractDetailViewModel @Inject constructor(
                         } else {
                             UiText.StringResource(R.string.msg_contract_terminated)
                         }
+
                         _uiEvent.emit(UiEvent.ShowMessage(uiMessage))
                         delay(500)
                         onSuccessCallback()
                     },
-                    onFailure = { error ->
-                        _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(error)))
+                    onFailure = {
+                        try {
+                            // فراخوانی ریپازیتوری جهت ذخیره در جدول PendingContractTerminationEntity و به‌روزرسانی وضعیت لوکال
+                            contractRepository.saveOfflineTermination(
+                                contractId = contractId,
+                                organizationId = organizationId,
+                                terminationDate = gregorianTerminationDate
+                            )
+
+                            _uiEvent.emit(
+                                UiEvent.ShowMessage(
+                                    UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)
+                                )
+                            )
+
+                            delay(500)
+                            onSuccessCallback()
+                        } catch (dbError: Exception) {
+                            _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(dbError)))
+                        }
                     }
                 )
             } catch (e: CancellationException) {
@@ -96,4 +123,6 @@ class ContractDetailViewModel @Inject constructor(
             }
         }
     }
+
+
 }

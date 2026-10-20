@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.meeting.ui
+package ir.kitgroup.partnerManagement.feature.meeting.ui.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -62,8 +62,6 @@ import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.components.FilterSection
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import saman.zamani.persiandate.PersianDate
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -91,7 +89,7 @@ fun MeetingsListScreen(
     onAddMeetingClick: () -> Unit,
     onEditMeetingClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: MeetingsViewModel = hiltViewModel()
+    viewModel: MeetingsListViewModel = hiltViewModel()
 ) {
 
     val allMeetings by viewModel.allMeetings.collectAsState()

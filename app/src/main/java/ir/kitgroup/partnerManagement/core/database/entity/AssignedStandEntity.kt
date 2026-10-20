@@ -4,6 +4,7 @@ package ir.kitgroup.partnerManagement.core.database.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 
 @Entity(
     tableName = "assigned_stands",
@@ -18,6 +19,8 @@ data class AssignedStandEntity(
 
     @PrimaryKey
     val assignedStandId: String,
+
+    val serverId: String? = null,
 
     val organizationId: String? = null,
 
@@ -64,45 +67,12 @@ data class AssignedStandEntity(
 
     val stateCode: Int? = null,
 
-    val modifiedOn: String? = null
+    val modifiedOn: String? = null,
 
-    /*   @Ignore
-       val items: List<StandTypeEntity> = emptyList()*/
-) {
-    /* // Constructor مورد نیاز Room به دلیل استفاده از فیلد @Ignore
-     constructor(
-         standAssignmentId: String,
-         name: String?,
-         actualReturnDate: String?,
-         advertisingStandId: String?,
-         assignmentDate: String?,
-         assignmentMode: Int?,
-         assignmentType: Int?,
-         deliveryToOrgDate: String?,
-         deliveryToVisitorDate: String?,
-         organizationId: String?,
-         plannedReturnDate: String?,
-         status: Int?,
-         visitorId: String?,
-         count: Int?,
-         description: String?,
-         meetingId: String?
-     ) : this(
-         standAssignmentId = standAssignmentId,
-         name = name,
-         actualReturnDate = actualReturnDate,
-         advertisingStandId = advertisingStandId,
-         assignmentDate = assignmentDate,
-         assignmentMode = assignmentMode,
-         assignmentType = assignmentType,
-         deliveryToOrgDate = deliveryToOrgDate,
-         deliveryToVisitorDate = deliveryToVisitorDate,
-         organizationId = organizationId,
-         plannedReturnDate = plannedReturnDate,
-         status = status,
-         visitorId = visitorId,
-         count = count,
-         description = description,
-         meetingId = meetingId
-     )*/
-}
+    // فیلدهای کنترل سینک
+    val syncStatus: SyncStatus = SyncStatus.SYNCED,
+
+    val isLocallyModified: Boolean = false,
+
+    val lastModifiedTimestamp: Long = System.currentTimeMillis()
+)

@@ -56,12 +56,12 @@ fun NavGraphBuilder.organizationNavGraph(
 
                 OrganizationsListScreen(
                     navController = navController,
-                    onNavigateToDetail = { organizationId ->
+                    onOrganizationClick = { organizationId ->
                         navController.navigate(
                             Screen.OrganizationDetail.createRoute(organizationId)
                         )
                     },
-                    onNavigateToAdd = {
+                    onAddOrganizationClick = {
                         navController.navigate(
                             Screen.AddOrganization.route
                         )
@@ -267,6 +267,7 @@ fun NavGraphBuilder.organizationNavGraph(
                         },
                         onWarningSuccess = {
                             navController.getBackStackEntry(BottomNavItem.Organizations.route)
+                            navController.getBackStackEntry(BottomNavItem.Organizations.route)
                                 .savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = true
 
                             navController.popBackStack(
@@ -335,7 +336,7 @@ fun NavGraphBuilder.organizationNavGraph(
                         },
                         onAddTicketOfferClick = {
                             navController.navigate(
-                                Screen.AddContractOffer.createRoute(organizationId)
+                                Screen.AddSerialOffer.createRoute(organizationId)
                             )
                         }, navController = navController
                     )

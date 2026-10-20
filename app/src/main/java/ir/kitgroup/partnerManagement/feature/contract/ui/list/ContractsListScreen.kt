@@ -1,6 +1,7 @@
 package ir.kitgroup.partnerManagement.feature.contract.ui.list
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CloudQueue
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.Composable
@@ -17,8 +19,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,11 +30,13 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
+import ir.kitgroup.partnerManagement.core.ui.components.OfflinePendingFooterBanner
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
 import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
+import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
@@ -132,6 +138,7 @@ fun ContractsListScreen(
     }
 }
 
+
 @Composable
 fun ContractListItem(
     contract: ContractEntity,
@@ -139,6 +146,8 @@ fun ContractListItem(
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+
+    val isPendingSync = contract.syncStatus != SyncStatus.SYNCED
 
     val cooperationModelText = contract.cooperationModel?.let { id ->
         CooperationModel.fromId(id)?.let { stringResource(it.titleRes) }
@@ -150,6 +159,7 @@ fun ContractListItem(
 
     val status = ContractStatus.fromId(contract.status)
 
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -159,23 +169,28 @@ fun ContractListItem(
             containerColor = appColors.cardBackground
         ),
         border = BorderStroke(
-            width = 0.7.dp,
-            color = appColors.border
+            width = if (isPendingSync) 1.dp else 0.7.dp,
+            color = if (isPendingSync) appColors.warning.copy(alpha = 0.65f) else appColors.border
         )
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
 
-            // عنوان قرارداد و وضعیت
+            // ردیف عنوان: اکنون تمام عرض برای عنوان و وضعیت باز است
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = contract.title ?: "-",
+                    text = contract.title.orEmpty(),
                     style = typography.titleLarge,
                     color = appColors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 StatusBadge(status = status)
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -187,7 +202,8 @@ fun ContractListItem(
                 )
             }
 
-            contract.contractNumber?.let { number ->
+            // شماره قرارداد (در صورت وجود)
+            contract.contractNumber?.takeIf { it.isNotBlank() }?.let { number ->
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -206,12 +222,12 @@ fun ContractListItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             HorizontalDivider(
                 thickness = 0.6.dp,
                 color = appColors.border
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // مدل همکاری
             ContractInfoRow(
@@ -219,7 +235,7 @@ fun ContractListItem(
                 value = cooperationModelText
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // نوع دوره تسویه
             ContractInfoRow(
@@ -261,6 +277,11 @@ fun ContractListItem(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
+            }
+
+            if (isPendingSync) {
+                Spacer(modifier = Modifier.height(10.dp))
+                OfflinePendingFooterBanner()
             }
         }
     }

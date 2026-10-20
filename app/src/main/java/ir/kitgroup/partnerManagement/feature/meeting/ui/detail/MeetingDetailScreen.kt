@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.meeting.ui
+package ir.kitgroup.partnerManagement.feature.meeting.ui.detail
 
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -39,7 +39,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.feature.organization.ui.add.OrganizationImagesSection
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ImagesSection
 
 @Composable

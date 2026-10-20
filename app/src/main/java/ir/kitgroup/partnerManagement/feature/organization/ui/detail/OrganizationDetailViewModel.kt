@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
-import android.content.ContentValues.TAG
 import androidx.lifecycle.viewModelScope
 
 import kotlinx.coroutines.flow.asStateFlow
@@ -8,7 +7,6 @@ import kotlinx.coroutines.launch
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.core.database.dao.VisitSubjectDao
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
@@ -39,7 +37,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.UiText
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.dashboard.repository.SyncRepository
 import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
-import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -47,10 +44,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
@@ -81,9 +75,8 @@ class OrganizationDetailViewModel @Inject constructor(
     private val _activeVisitorName = MutableStateFlow<String?>(null)
     val activeVisitorName: StateFlow<String?> = _activeVisitorName.asStateFlow()
 
-    private val _activeContractName= MutableStateFlow<String?>(null)
+    private val _activeContractName = MutableStateFlow<String?>(null)
     val activeContractName: StateFlow<String?> = _activeContractName.asStateFlow()
-
 
 
     private val _organization =
@@ -100,22 +93,27 @@ class OrganizationDetailViewModel @Inject constructor(
                     _organization.value = organization
                     val activeVisitorId = organization?.organization?.activeVisitorId
                     val activeContractId = organization?.organization?.activeContractId
+
                     if (!activeVisitorId.isNullOrBlank()) {
-                        visitorRepository.getAllVisitors().collect { visitors ->
-                            _activeVisitorName.value =
-                                visitors.firstOrNull { it.visitorId == activeVisitorId }?.name
+                        viewModelScope.launch {
+                            visitorRepository.getAllVisitors().collect { visitors ->
+                                _activeVisitorName.value =
+                                    visitors.firstOrNull { it.visitorId == activeVisitorId }?.name
+                            }
                         }
                     } else {
                         _activeVisitorName.value = null
                     }
 
                     if (!activeContractId.isNullOrBlank()) {
-                        contractRepository.observeAll().collect { contracts ->
-                            _activeContractName.value =
-                                contracts.firstOrNull { it.contractId == activeContractId }?.title
+                        viewModelScope.launch {
+                            contractRepository.observeAll().collect { contracts ->
+                                _activeContractName.value =
+                                    contracts.firstOrNull { it.contractId == activeContractId }?.title
+                            }
                         }
                     } else {
-                        _activeVisitorName.value = null
+                        _activeContractName.value = null
                     }
                 }
         }
@@ -169,7 +167,7 @@ class OrganizationDetailViewModel @Inject constructor(
         }
     }
 
-
+   // warning
     private val _warnings = MutableStateFlow<List<WarningWithDetail>>(emptyList())
     val warnings: StateFlow<List<WarningWithDetail>> =
         _warnings.asStateFlow()
@@ -342,9 +340,6 @@ class OrganizationDetailViewModel @Inject constructor(
     }
 
 
-
-
-
     // درون OrganizationDetailViewModel:
     private val _visitorsState =
         MutableStateFlow<DataState<List<VisitorOrganizationEntity>>>(DataState.Idle)
@@ -467,6 +462,7 @@ class OrganizationDetailViewModel @Inject constructor(
         warningRepository.observeWarningTypes()
 
 
+/*
     fun createOrganizationWarning(
         organizationId: String,
         warningId: String,
@@ -533,6 +529,7 @@ class OrganizationDetailViewModel @Inject constructor(
             }
         }
     }
+*/
 
 
     /*

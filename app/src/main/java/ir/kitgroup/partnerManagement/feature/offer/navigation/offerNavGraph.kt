@@ -25,6 +25,8 @@ import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail.OfferDetailSc
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.add.AddEditOfferDetailPlanScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.list.OfferDetailPlanListScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.list.OfferPlanListRoute
+import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.add.AddEditSerialOfferScreen
+import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.detail.AssignedSerialDetailScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 fun NavGraphBuilder.offerNavGraph(navController: NavController) {
@@ -299,6 +301,110 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
                     }
                 )
             }
+        }
+    }
+
+
+    // ------------------------------------------------
+    // Serial Offer
+    // ------------------------------------------------
+    composable(
+        route = Screen.AddSerialOffer.route,
+        arguments = listOf(navArgument("organizationId") {
+            type = NavType.StringType
+            nullable = true
+        }),
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
+    ) { backStackEntry ->
+        val organizationId = backStackEntry.arguments?.getString("organizationId")
+
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CustomHeader(
+                title = stringResource(
+                    R.string.label_contract_offer
+                ),
+                showBackButton = true,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                AddEditSerialOfferScreen(
+                    organizationId = organizationId,
+                    onSaveSuccess = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+        }
+    }
+
+
+    composable(
+        route = Screen.EditSerialOffer.route,
+        arguments = listOf(
+            navArgument("serialId") {
+                type = NavType.StringType
+            }
+        ),
+        enterTransition = { fadeIn(tween(250)) },
+        exitTransition = { fadeOut(tween(200)) },
+        popEnterTransition = { fadeIn(tween(250)) },
+        popExitTransition = { fadeOut(tween(200)) }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CustomHeader(
+                title = stringResource(R.string.label_contract_offer),
+                showBackButton = true,
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                AddEditSerialOfferScreen(
+                    onSaveSuccess = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+        }
+    }
+
+
+    composable(
+        route = Screen.AssignedSerialDetail.route,
+        arguments = listOf(
+            navArgument("serialId") { type = NavType.StringType }
+        )
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            CustomHeader(
+                title = stringResource(R.string.label_serial_detail),
+                showBackButton = true,
+                onBackClick = { navController.popBackStack() }
+            )
+
+            AssignedSerialDetailScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onEditClick = { serialId ->
+                    navController.navigate(Screen.EditSerialOffer.createRoute(serialId = serialId))
+                }
+            )
         }
     }
 }

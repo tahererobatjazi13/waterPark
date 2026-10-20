@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.meeting.ui
+package ir.kitgroup.partnerManagement.feature.meeting.ui.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,7 +7,6 @@ import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.repository.MeetingRepository
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddMeetingUseCase
-import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddOrganizationUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +16,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MeetingsViewModel @Inject constructor(
+class MeetingsListViewModel @Inject constructor(
     private val meetingRepository: MeetingRepository,
     private val checkCanAddMeetingUseCase: CheckCanAddMeetingUseCase
 

@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.meeting.ui
+package ir.kitgroup.partnerManagement.feature.meeting.ui.add
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,12 +33,11 @@ import saman.zamani.persiandate.PersianDate
 import java.util.Calendar
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddMeetingRoute(
+fun AddEditMeetingScreen(
     onBackClick: () -> Unit,
     onSaved: () -> Unit,
-    viewModel: AddMeetingViewModel = hiltViewModel()
+    viewModel: AddEditMeetingViewModel = hiltViewModel()
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -75,7 +74,7 @@ fun AddMeetingRoute(
             )
         }
     }
-    AddMeetingScreen(
+    AddEditMeetingContent(
         meetingId = viewModel.meetingId,
         preselectedOrganizationId = viewModel.preselectedOrganizationId,
         preselectedOrganization = uiState.preloadedOrganization,
@@ -100,7 +99,7 @@ fun AddMeetingRoute(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddMeetingScreen(
+fun AddEditMeetingContent(
     meetingId: String?,
     preselectedOrganizationId: String?,
     preselectedOrganization: OrganizationWithDetail? = null,

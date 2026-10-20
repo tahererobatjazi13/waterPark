@@ -4,17 +4,21 @@ package ir.kitgroup.partnerManagement.core.database.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 
 @Entity(
     tableName = "contracts",
     indices = [
-        Index("organizationId")
+        Index("organizationId"),
+        Index("syncStatus")
     ]
 )
 data class ContractEntity(
 
     @PrimaryKey
     val contractId: String,
+
+    val serverId: String? = null,
 
     val title: String? = null,
 
@@ -49,6 +53,12 @@ data class ContractEntity(
 
     val stateCode: Int? = null,
 
-    val modifiedOn: String? = null
+    val modifiedOn: String? = null,
 
+    // فیلدهای کنترل سینک
+    val syncStatus: SyncStatus = SyncStatus.SYNCED,
+
+    val isLocallyModified: Boolean = false,
+
+    val lastModifiedTimestamp: Long = System.currentTimeMillis()
 )

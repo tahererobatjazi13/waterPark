@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui.detail
+package ir.kitgroup.partnerManagement.feature.organization.ui.detail.warning
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +19,7 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 
 @Composable
-fun AddOrganizationWarningDialog(
+fun AddEditOrganizationWarningDialog(
     warningTypes: List<WarningTypeEntity>,
     isSubmitting: Boolean,
     onDismiss: () -> Unit,

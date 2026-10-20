@@ -188,24 +188,35 @@ fun convertNumbersToEnglish(input: String): String {
     return result
 }
 
+fun formatJalaliDate(dateString: String?): String {
+    if (dateString.isNullOrBlank()) return "-"
+    return try {
+        // اگر تاریخ فقط شامل yyyy-MM-dd بود یا فرمت کامل ISO داشت
+        val cleanDate = dateString.substringBefore("T").trim()
+        val parts = cleanDate.split("-")
+        if (parts.size == 3) {
+            val year = parts[0].toInt()
+            val month = parts[1].toInt()
+            val day = parts[2].toInt()
 
-fun formatJalaliDate(dateTime: String?): String {
-    if (dateTime.isNullOrBlank()) return "—"
-
-    return runCatching {
-        val cleanDateTime = dateTime.substringBefore(".").substringBefore("Z")
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
-        val date = inputFormat.parse(cleanDateTime) ?: return dateTime
-
-        val pDate = PersianDate(date.time)
-
-        val year = pDate.shYear
-        val month = pDate.shMonth.toString().padStart(2, '0')
-        val day = pDate.shDay.toString().padStart(2, '0')
-
-        "$year/$month/$day"
-    }.getOrDefault(dateTime)
+            val persianDate = PersianDate()
+            val jalali = persianDate.gregorian_to_jalali(year, month, day)
+            // فرمت خروجی: 1405/07/29
+            String.format(
+                java.util.Locale.US,
+                "%04d/%02d/%02d",
+                jalali[0],
+                jalali[1],
+                jalali[2]
+            )
+        } else {
+            dateString
+        }
+    } catch (e: Exception) {
+        dateString
+    }
 }
+
 
 
 @Composable

@@ -126,12 +126,12 @@ fun OrganizationSerialsTabContent(
     }
 
     // دیالوگ نمایش جزئیات کامل آفر با کلیک روی کارت
-   /* selectedTicketForDetail?.let { ticket ->
-        TicketOfferDetailDialog(
-            item = ticket,
-            onDismiss = { selectedTicketForDetail = null }
-        )
-    }*/
+    /* selectedTicketForDetail?.let { ticket ->
+         TicketOfferDetailDialog(
+             item = ticket,
+             onDismiss = { selectedTicketForDetail = null }
+         )
+     }*/
 }
 
 @Composable
@@ -191,8 +191,15 @@ fun TicketOfferCard(
                         style = typography.labelSmall,
                         color = appColors.textSecondary
                     )
+                    val prefix = item.assignedSerial.serialPrefix
+                    val rangeText = if (!prefix.isNullOrBlank()) {
+                        "$prefix : ${item.assignedSerial.fromSerial} - ${item.assignedSerial.toSerial}"
+                    } else {
+                        "${item.assignedSerial.fromSerial} - ${item.assignedSerial.toSerial}"
+                    }
+
                     Text(
-                        text = "${item.assignedSerial.serialPrefix} : ${item.assignedSerial.fromSerial} - ${item.assignedSerial.toSerial}",
+                        text = rangeText,
                         style = typography.titleMedium
                     )
                 }

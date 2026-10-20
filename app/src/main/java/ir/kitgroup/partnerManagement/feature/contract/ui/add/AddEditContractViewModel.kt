@@ -1,11 +1,13 @@
 package ir.kitgroup.partnerManagement.feature.contract.ui.add
 
-import android.util.Log
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.repository.ContractRepository
 import ir.kitgroup.partnerManagement.core.repository.OrganizationRepository
@@ -13,30 +15,41 @@ import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
 import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
 import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
+import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UiText
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.core.ui.util.formatPercentForInput
 import ir.kitgroup.partnerManagement.core.ui.util.jalaliToGregorian
 import ir.kitgroup.partnerManagement.feature.contract.model.ContractRequest
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import saman.zamani.persiandate.PersianDate
-import javax.inject.Inject
-import ir.kitgroup.partnerManagement.core.ui.util.formatPercentForInput
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
+import java.util.UUID
+import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class AddEditContractViewModel @Inject constructor(
     private val organizationRepository: OrganizationRepository,
     private val contractRepository: ContractRepository,
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     val organizationIdArg: String? = savedStateHandle["organizationId"]
     private val contractIdArg: String? = savedStateHandle["contractId"]
     val isEditMode: Boolean = !contractIdArg.isNullOrBlank()
-
 
     private val _uiState = MutableStateFlow(AddEditContractUiState(isEditMode = isEditMode))
     val uiState = _uiState.asStateFlow()
@@ -109,7 +122,6 @@ class AddEditContractViewModel @Inject constructor(
         }
     }
 
-
     fun onOrganizationSelected(organization: OrganizationWithDetail) {
         _uiState.update {
             it.copy(
@@ -151,6 +163,11 @@ class AddEditContractViewModel @Inject constructor(
         _uiState.update { it.copy(status = status) }
     }
 
+    private fun getCurrentIsoUtcTimestamp(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        return dateFormat.format(Date())
+    }
 
     fun submitContract(onSuccessCallback: () -> Unit) {
         val state = _uiState.value
@@ -160,49 +177,145 @@ class AddEditContractViewModel @Inject constructor(
             _uiEvent.tryEmit(UiEvent.ShowError(UiText.StringResource(R.string.error_select_organization)))
             return
         }
-        val request = ContractRequest(
-            contractId = if (isEditMode) contractIdArg else null,
-            organizationId = state.organizationId,
-            startDate = jalaliToGregorian(state.startDate).orEmpty(),
-            settlementPeriodType = state.settlementPeriodType.id,
-            cooperationModel = state.cooperationModel.id,
-            defaultDiscountPercent = state.defaultDiscountPercent.replace(",", ".")
-                .toDoubleOrNull(),
-            defaultCommissionPercent = state.defaultCommissionPercent.replace(",", ".")
-                .toDoubleOrNull(),
-            status = state.status.id
-        )
-        Log.e("ContractRequest", request.toString())
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
             try {
+                val formattedStartDate = jalaliToGregorian(state.startDate).orEmpty()
+                val discountVal = state.defaultDiscountPercent.replace(",", ".").toDoubleOrNull()
+                val commissionVal =
+                    state.defaultCommissionPercent.replace(",", ".").toDoubleOrNull()
+                val currentTimestamp = System.currentTimeMillis()
+                val isoTimestamp = getCurrentIsoUtcTimestamp()
 
-                val result = if (isEditMode) {
-                    contractRepository.updateContractAndSync(request)
+                val cooperationTitle = context.getString(state.cooperationModel.titleRes)
+                val contractTitle = "${state.organizationName} - $cooperationTitle"
+                val settlementPeriodTitle = context.getString(state.settlementPeriodType.titleRes)
+
+                if (isEditMode) {
+                    // --- حالت ویرایش ---
+                    val targetContractId = contractIdArg!!
+                    val existingContract =
+                        contractRepository.observeById(targetContractId).firstOrNull()
+
+                    val updateRequest = ContractRequest(
+                        contractId = targetContractId,
+                        organizationId = state.organizationId,
+                        startDate = formattedStartDate,
+                        settlementPeriodType = state.settlementPeriodType.id,
+                        cooperationModel = state.cooperationModel.id,
+                        defaultDiscountPercent = discountVal,
+                        defaultCommissionPercent = commissionVal,
+                        status = state.status.id
+                    )
+
+                    val syncResult = contractRepository.updateContractAndSync(updateRequest)
+
+                    syncResult.fold(
+                        onSuccess = { serverMsg ->
+                            val msg =
+                                if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
+                                else UiText.StringResource(R.string.msg_contract_updated)
+                            _uiEvent.emit(UiEvent.ShowMessage(msg))
+                            delay(400)
+                            onSuccessCallback()
+                        },
+                        onFailure = {
+                            // تعیین وضعیت سینک
+                            val nextSyncStatus =
+                                if (existingContract?.syncStatus == SyncStatus.SYNCED) {
+                                    SyncStatus.PENDING_UPDATE
+                                } else {
+                                    existingContract?.syncStatus ?: SyncStatus.PENDING_INSERT
+                                }
+
+                            // ذخیره تغییرات به عنوان ویرایش آفلاین در روم با پر کردن کامل تمام فیلدها
+                            val offlineEntity = ContractEntity(
+                                contractId = targetContractId,
+                                title = contractTitle,
+                                organizationId = state.organizationId,
+                                contractNumber = existingContract?.contractNumber,
+                                startDate = formattedStartDate,
+                                endDate = existingContract?.endDate,
+                                description = existingContract?.description,
+                                settlementPeriodType = state.settlementPeriodType.id,
+                                settlementPeriodTypeName = settlementPeriodTitle,
+                                cooperationModel = state.cooperationModel.id,
+                                cooperationModelName = cooperationTitle,
+                                defaultDiscountPercent = discountVal,
+                                defaultCommissionPercent = commissionVal,
+                                status = state.status.id,
+                                statusName = existingContract?.statusName,
+                                stateCode = existingContract?.stateCode ?: 0,
+                                modifiedOn = isoTimestamp,
+                                syncStatus = nextSyncStatus,
+                                isLocallyModified = true,
+                                lastModifiedTimestamp = currentTimestamp
+                            )
+                            contractRepository.saveLocal(offlineEntity)
+                            _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)))
+                            delay(400)
+                            onSuccessCallback()
+                        }
+                    )
                 } else {
-                    contractRepository.createContractAndSync(request)
+                    // --- حالت ثبت جدید ---
+                    val newRequest = ContractRequest(
+                        contractId = null,
+                        organizationId = state.organizationId,
+                        startDate = formattedStartDate,
+                        settlementPeriodType = state.settlementPeriodType.id,
+                        cooperationModel = state.cooperationModel.id,
+                        defaultDiscountPercent = discountVal,
+                        defaultCommissionPercent = commissionVal,
+                        status = state.status.id
+                    )
+
+                    val result = contractRepository.createContractAndSync(newRequest)
+
+                    result.fold(
+                        onSuccess = { serverMsg ->
+                            val msg =
+                                if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
+                                else UiText.StringResource(R.string.msg_contract_created)
+                            _uiEvent.emit(UiEvent.ShowMessage(msg))
+                            delay(400)
+                            onSuccessCallback()
+                        },
+                        onFailure = {
+                            // ایجاد شناسه محلی و ذخیره آفلاین کامل انتیتی
+                            val localUUID = UUID.randomUUID().toString()
+                            val offlineEntity = ContractEntity(
+                                contractId = localUUID,
+                                title = contractTitle,
+                                organizationId = state.organizationId,
+                                contractNumber = null,
+                                startDate = formattedStartDate,
+                                endDate = null,
+                                description = null,
+                                settlementPeriodType = state.settlementPeriodType.id,
+                                settlementPeriodTypeName = settlementPeriodTitle,
+                                cooperationModel = state.cooperationModel.id,
+                                cooperationModelName = cooperationTitle,
+                                defaultDiscountPercent = discountVal,
+                                defaultCommissionPercent = commissionVal,
+                                status = state.status.id,
+                                statusName = null,
+                                stateCode = 0,
+                                modifiedOn = isoTimestamp,
+                                syncStatus = SyncStatus.PENDING_INSERT,
+                                isLocallyModified = true,
+                                lastModifiedTimestamp = currentTimestamp
+                            )
+                            contractRepository.saveLocal(offlineEntity)
+                            _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_saved_local_storage_awaiting_synchronization)))
+                            delay(400)
+                            onSuccessCallback()
+                        }
+                    )
                 }
 
-                result.fold(
-                    onSuccess = { serverMessage ->
-                        val uiMessage = if (!serverMessage.isNullOrBlank()) {
-                            UiText.DynamicString(serverMessage)
-                        } else {
-                            UiText.StringResource(
-                                if (state.isEditMode) R.string.msg_contract_updated else R.string.msg_contract_created
-                            )
-                        }
-                        _uiEvent.emit(UiEvent.ShowMessage(uiMessage))
-                        kotlinx.coroutines.delay(500)
-                        onSuccessCallback()
-
-                    },
-                    onFailure = { error ->
-                        _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(error)))
-                    }
-                )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -213,3 +326,4 @@ class AddEditContractViewModel @Inject constructor(
         }
     }
 }
+

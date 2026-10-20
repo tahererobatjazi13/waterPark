@@ -1,42 +1,47 @@
 package ir.kitgroup.partnerManagement.core.network.model
 
+
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class ContractDto(
 
-    val contractId: String,
+    val contractId: String? = null,
 
-    val title: String?,
+    // این فیلد فقط مصرف لوکال دارد و در JSON ارسالی به سرور قرار نمی‌گیرد
+    @Transient
+    val serverId: String? = null,
 
-    val organizationId: String?,
+    val title: String? = null,
 
-    val contractNumber: String?,
+    val organizationId: String? = null,
 
-    val startDate: String?,
+    val contractNumber: String? = null,
 
-    val endDate: String?,
+    val startDate: String? = null,
 
-    val description: String?,
+    val endDate: String? = null,
 
-    val settlementPeriodType: Int?,
+    val description: String? = null,
 
-    val settlementPeriodTypeName: String?,
+    val settlementPeriodType: Int? = null,
 
-    val cooperationModel: Int?,
+    val settlementPeriodTypeName: String? = null,
 
-    val cooperationModelName: String?,
+    val cooperationModel: Int? = null,
 
-    val defaultDiscountPercent: Double?,
+    val cooperationModelName: String? = null,
 
-    val defaultCommissionPercent: Double?,
+    val defaultDiscountPercent: Double? = null,
 
-    val status: Int?,
+    val defaultCommissionPercent: Double? = null,
 
-    val statusName: String?,
+    val status: Int? = null,
 
-    val stateCode: Int?,
+    val statusName: String? = null,
 
-    val modifiedOn: String?
+    val stateCode: Int? = null,
 
+    val modifiedOn: String? = null
 )

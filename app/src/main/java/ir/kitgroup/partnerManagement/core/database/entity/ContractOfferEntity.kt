@@ -11,7 +11,7 @@ data class ContractOfferEntity(
 
     val name: String? = null,
 
-    val contractId: String? = null,
+    val contracId: String? = null,
 
     val countSerial: Int? = null,
 

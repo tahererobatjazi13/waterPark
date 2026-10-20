@@ -1,37 +1,38 @@
 package ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.add
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.core.ui.util.ContractOfferStatus
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 
 @Composable
-fun AddContractOfferScreen(
+fun AddEditSerialOfferScreen(
     organizationId: String? = null,
     meetingId: String? = null,
     onSaveSuccess: () -> Unit = {},
-    viewModel: AddSerialOfferViewModel = hiltViewModel()
+    viewModel: AddEditSerialOfferViewModel = hiltViewModel()
 ) {
     val appColors = LocalPartnerManagementColors.current
     val context = LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState() }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
 
     var isOfferExpanded by remember { mutableStateOf(false) }
     var isContractExpanded by remember { mutableStateOf(false) }
@@ -40,46 +41,77 @@ fun AddContractOfferScreen(
         ContractOfferStatus.entries.associateWith { context.getString(it.titleRes) }
     }
 
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> {
+                    snackBarHostState.showSnackbar(event.message.asString(context))
+                }
 
-    LaunchedEffect(Unit) {
-        viewModel.saveMessage.collect { msg ->
-            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                is UiEvent.ShowError -> {
+                    snackBarHostState.showSnackbar(event.error.asString(context))
+                }
+            }
         }
     }
-
-    LaunchedEffect(Unit) {
-        viewModel.saveSuccessEvent.collect {
-            onSaveSuccess()
-        }
-    }
-
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.background,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .navigationBarsPadding()
+            ) {
+                CustomButton(
+                    text = stringResource(
+                        if (uiState.isEditMode) R.string.label_update_serial_offer else R.string.label_assign_serial_offer
+                    ),
+                    isLoading = uiState.isLoading,
+                    enabled = !uiState.isLoading && !uiState.isInitialLoading,
+                    onClick = {
+                        viewModel.submitSerialOffer(
+                            organizationId = organizationId,
+                            meetingId = meetingId,
+                            onSuccessCallback = onSaveSuccess
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                )
+            }
+        }
     ) { innerPadding ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-                .padding(20.dp)
-        ) {
-
+        if (uiState.isInitialLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        } else {
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                // Offer Plan
+                // انتخاب طرح آفر (Offer Plan)
                 Box(modifier = Modifier.fillMaxWidth()) {
                     CustomSelectorField(
                         value = uiState.selectedOfferPlanTitle,
                         label = stringResource(R.string.label_offer_plan),
                         placeholder = stringResource(R.string.hint_choose_offer_plan),
+                        isRequired = true,
                         isExpanded = isOfferExpanded,
                         onClick = { isOfferExpanded = !isOfferExpanded }
                     )
@@ -87,14 +119,21 @@ fun AddContractOfferScreen(
                     DropdownMenu(
                         expanded = isOfferExpanded,
                         onDismissRequest = { isOfferExpanded = false },
-                        modifier = Modifier.fillMaxWidth(0.9f).background(appColors.cardBackground)
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .background(appColors.cardBackground)
                     ) {
                         uiState.offerPlans.forEachIndexed { index, item ->
                             val bg =
                                 if (index % 2 == 0) appColors.cardBackground else appColors.cardBackgroundAlt
                             Surface(modifier = Modifier.fillMaxWidth(), color = bg) {
                                 DropdownMenuItem(
-                                    text = { Text(item.title) },
+                                    text = {
+                                        Text(
+                                            text = item.title.orEmpty(),
+                                            color = appColors.textPrimary
+                                        )
+                                    },
                                     onClick = {
                                         viewModel.onSelectOfferPlan(item)
                                         isOfferExpanded = false
@@ -105,12 +144,13 @@ fun AddContractOfferScreen(
                     }
                 }
 
-                // Contract
+                // انتخاب قرارداد (Contract)
                 Box(modifier = Modifier.fillMaxWidth()) {
                     CustomSelectorField(
                         value = uiState.selectedContractTitle,
                         label = stringResource(R.string.label_contract_item),
                         placeholder = stringResource(R.string.hint_choose_contract),
+                        isRequired = true,
                         isExpanded = isContractExpanded,
                         onClick = { isContractExpanded = !isContractExpanded }
                     )
@@ -118,14 +158,21 @@ fun AddContractOfferScreen(
                     DropdownMenu(
                         expanded = isContractExpanded,
                         onDismissRequest = { isContractExpanded = false },
-                        modifier = Modifier.fillMaxWidth(0.9f).background(appColors.cardBackground)
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .background(appColors.cardBackground)
                     ) {
                         uiState.contracts.forEachIndexed { index, item ->
                             val bg =
                                 if (index % 2 == 0) appColors.cardBackground else appColors.cardBackgroundAlt
                             Surface(modifier = Modifier.fillMaxWidth(), color = bg) {
                                 DropdownMenuItem(
-                                    text = { Text(item.title) },
+                                    text = {
+                                        Text(
+                                            text = item.title.orEmpty(),
+                                            color = appColors.textPrimary
+                                        )
+                                    },
                                     onClick = {
                                         viewModel.onSelectContract(item)
                                         isContractExpanded = false
@@ -136,6 +183,7 @@ fun AddContractOfferScreen(
                     }
                 }
 
+                // پیشوند سریال
                 CustomEditTextField(
                     value = uiState.serialPrefix,
                     onValueChange = viewModel::onSerialPrefixChange,
@@ -145,6 +193,7 @@ fun AddContractOfferScreen(
                     isRequired = false
                 )
 
+                // تعداد سریال
                 CustomEditTextField(
                     value = uiState.countSerialText,
                     onValueChange = viewModel::onCountSerialChange,
@@ -155,6 +204,7 @@ fun AddContractOfferScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
 
+                // سریال شروع
                 CustomEditTextField(
                     value = uiState.serialFromText,
                     onValueChange = viewModel::onSerialFromChange,
@@ -165,28 +215,23 @@ fun AddContractOfferScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
 
+                // وضعیت
                 DropdownSelectorField(
-                    value = statusMap.entries.firstOrNull { it.key.id == uiState.selectedStatusId }?.value ?: "",
+                    value = statusMap.entries.firstOrNull { it.key.id == uiState.selectedStatusId }?.value.orEmpty(),
                     label = stringResource(R.string.label_contract_offer_Status),
                     placeholder = stringResource(R.string.hint_choose_status),
                     items = statusMap.values.toList(),
                     isRequired = false,
                     onItemSelected = { selectedTitle ->
-                        val status = statusMap.entries.firstOrNull { it.value == selectedTitle }?.key
-                            ?: ContractOfferStatus.DRAFT
+                        val status =
+                            statusMap.entries.firstOrNull { it.value == selectedTitle }?.key
+                                ?: ContractOfferStatus.DRAFT
                         viewModel.onStatusChange(status.id)
                     }
                 )
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
-
-            CustomButton(
-                text = stringResource(R.string.label_registration),
-                enabled = !isSaving,
-                onClick = { viewModel.save(organizationId = organizationId, meetingId = meetingId) },
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
-            )
         }
     }
 }

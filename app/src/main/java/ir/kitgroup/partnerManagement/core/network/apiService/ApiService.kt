@@ -6,7 +6,7 @@ import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
 import ir.kitgroup.partnerManagement.feature.contract.model.ContractRequest
 import ir.kitgroup.partnerManagement.feature.contract.model.TerminateActiveContractRequest
 import ir.kitgroup.partnerManagement.feature.dashboard.model.ConfirmLastSyncResponse
-import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataRequest
+import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncRequestDto
 import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataResponse
 import ir.kitgroup.partnerManagement.feature.login.model.LoginRequest
 import ir.kitgroup.partnerManagement.feature.login.model.LoginResponse
@@ -42,7 +42,7 @@ interface ApiService {
     // Sync
     @POST("api/Sync/syncData")
     suspend fun syncData(
-        @Body request: SyncDataRequest
+        @Body request: SyncRequestDto
     ): SyncDataResponse
 
     @POST("api/Sync/confirmLastSync")

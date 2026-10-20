@@ -4,18 +4,25 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.AssignedSerialWithDetail
 import ir.kitgroup.partnerManagement.core.repository.AssignedSerialsRepository
+import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import ir.kitgroup.partnerManagement.core.ui.util.UiText
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.add.AddEditOfferPlanUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class AssignedSerialDetailViewModel @Inject constructor(
@@ -23,85 +30,66 @@ class AssignedSerialDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // دریافت مستقیم serialId از آرگومان‌های ناوبری
-    val serialId: String = checkNotNull(savedStateHandle.get<String>("serialId"))
+    val serialId: String = checkNotNull(savedStateHandle["serialId"])
 
     // مشاهده لحظه‌ای جزئیات سریال از دیتابیس لوکال
-    val serialDetail: StateFlow<AssignedSerialWithDetail?> = assignedSerialsRepository
-        .observeById(serialId)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = null
-        )
+    val serialDetail: StateFlow<AssignedSerialWithDetail?> =
+        assignedSerialsRepository.observeById(serialId)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
 
-    // وضعیت در حال بارگذاری عملیات (مانند تغییر وضعیت)
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // نگهداری آیتم انتخاب‌شده برای دیالوگ/باتم‌شیت تغییر وضعیت
-    private val _statusDialogItem = MutableStateFlow<AssignedSerialWithDetail?>(null)
-    val statusDialogItem: StateFlow<AssignedSerialWithDetail?> = _statusDialogItem.asStateFlow()
+    private val _uiState = MutableStateFlow(AddEditOfferPlanUiState())
+    val uiState = _uiState.asStateFlow()
 
-    // مدیریت پیام‌های یک‌بارمصرف (Toast/SnackBar)
-    private val _message = MutableSharedFlow<String>(extraBufferCapacity = 1)
-    val message: SharedFlow<String> = _message.asSharedFlow()
+    private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val uiEvent = _uiEvent.asSharedFlow()
 
-    init {
-        // همگام‌سازی تکی با سرور (در صورت نیاز به آخرین دیتا)
-        fetchLatestDetail()
-    }
-
-    private fun fetchLatestDetail() {
-        if (serialId.isBlank()) return
-        viewModelScope.launch {
-            try {
-                assignedSerialsRepository.observeById(serialId)
-            } catch (_: Exception) {
-                // خطا در فچ شبکه مانع نمایش دیتای لوکال Cache شده نمی‌شود
-            }
-        }
-    }
-
-    /**
-     * باز کردن مودال یا دیالوگ تغییر وضعیت
-     */
-    fun openStatusChangeDialog(item: AssignedSerialWithDetail) {
-        _statusDialogItem.value = item
-    }
-
-    /**
-     * بستن دیالوگ تغییر وضعیت
-     */
-    fun dismissStatusDialog() {
-        _statusDialogItem.value = null
-    }
-
-    /**
-     * متد ارسال درخواست تغییر وضعیت طرح سریال
-     * @param newStatusId شناسه وضعیت جدید (از ContractOfferStatus)
-     */
-    fun updateStatus(newStatusId: String) {
-        val currentItem = serialDetail.value ?: return
+    fun changeStatusSerialOffer(
+        onSuccessCallback: () -> Unit,
+        newStatusId: String
+    ) {
+        if (_uiState.value.isLoading) return
 
         viewModelScope.launch {
-            _isLoading.value = true
+            _uiState.update { it.copy(isLoading = true) }
             try {
-                val result = assignedSerialsRepository.serialOfferChangeStatus(
-                    id = currentItem.assignedSerial.serialAssignmentId,
-                    status = newStatusId
+                val result = assignedSerialsRepository.changeStatusSerialOfferC(
+                    serialId,
+                    newStatusId
                 )
-
-                if (result.isSuccess) {
-                    _message.emit("وضعیت با موفقیت تغییر کرد")
-                    dismissStatusDialog()
-                } else {
-                    _message.emit((result ?: "خطا در تغییر وضعیت").toString())
-                }
+                result.fold(
+                    onSuccess = { serverMessage ->
+                        val uiMessage = if (!serverMessage.isNullOrBlank()) {
+                            UiText.DynamicString(serverMessage)
+                        } else {
+                            UiText.StringResource(R.string.msg_change_status_success)
+                        }
+                        _uiEvent.emit(UiEvent.ShowMessage(uiMessage))
+                        delay(600)
+                        onSuccessCallback()
+                    },
+                    onFailure = { error ->
+                        _uiEvent.emit(
+                            UiEvent.ShowError(
+                                AppErrorMapper.map(error)
+                            )
+                        )
+                    }
+                )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _message.emit(e.localizedMessage ?: "خطای ناشناخته در برقراری ارتباط")
+                _uiEvent.emit(
+                    UiEvent.ShowError(
+                        AppErrorMapper.map(e)
+                    )
+                )
             } finally {
-                _isLoading.value = false
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

@@ -21,12 +21,6 @@ const val SYNC_AFTER_ORGANIZATION_SAVE =
 const val SYNC_AFTER_STAND_SAVE =
     "sync_after_stand_save"
 
-const val SYNC_AFTER_OFFER_DETAIL_SAVE =
-    "sync_after_offer_detail_save"
-
-const val SYNC_AFTER_SERIAL_OFFER_SAVE =
-    "sync_after_serial_offer_save"
-
 enum class ThemeMode {
     LIGHT,
     DARK,
@@ -414,7 +408,7 @@ enum class PersonCategory(
     val id: Int,
     @StringRes val titleRes: Int
 ) {
-    UNASSIGNED(0,  R.string.gender_none),
+    UNASSIGNED(0, R.string.gender_none),
     ADULT(1, R.string.label_category_adult),
     CHILD(2, R.string.label_category_child);
 
@@ -594,4 +588,11 @@ enum class PersonOrganizationRole(
 enum class SecondaryButtonVariant {
     OUTLINED,
     FILLED
+}
+
+enum class SyncStatus {
+    SYNCED,          // ارسال شده و همگام با سرور
+    PENDING_INSERT,  // جدید در دستگاه ایجاد شده و هنوز سرور ندیده
+    PENDING_UPDATE,  // ویرایش آفلاین شده
+    PENDING_DELETE   // در آفلاین حذف/خاتمه یافته
 }

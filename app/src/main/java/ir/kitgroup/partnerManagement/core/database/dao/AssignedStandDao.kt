@@ -7,7 +7,9 @@ import ir.kitgroup.partnerManagement.core.database.entity.AssignedStandEntity
 import kotlinx.coroutines.flow.Flow
 import androidx.room.Transaction
 import androidx.room.Update
+import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
+import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 
 @Dao
 interface AssignedStandDao {
@@ -40,22 +42,41 @@ interface AssignedStandDao {
     @Update
     suspend fun update(item: AssignedStandEntity)
 
-    @Query("""
+    @Query(
+        """
     UPDATE assigned_stands
     SET statusAssign = :status
     WHERE assignedStandId = :assignedStandId
-""")
+"""
+    )
     suspend fun updateStatus(
         assignedStandId: String,
         status: Int
     )
 
-    @Query("""
+    @Query(
+        """
     SELECT * FROM assigned_stands
     WHERE assignedStandId = :assignedStandId
     LIMIT 1
-""")
+"""
+    )
     suspend fun getById(
         assignedStandId: String
     ): AssignedStandEntity?
+
+    @Query("DELETE FROM assigned_stands WHERE assignedStandId = :assignedStandId")
+    suspend fun deleteById(assignedStandId: String)
+
+    /**
+     * دریافت لیست تمام قراردادهای ایجاد شده آفلاین جهت قرار دادن در pendingContracts
+     */
+    @Query(
+        """
+        SELECT * FROM assigned_stands 
+        WHERE syncStatus = :syncStatus
+        ORDER BY lastModifiedTimestamp ASC
+    """
+    )
+    suspend fun getAssignedStandBySyncStatus(syncStatus: SyncStatus): List<AssignedStandEntity>
 }

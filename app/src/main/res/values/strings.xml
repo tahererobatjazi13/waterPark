@@ -125,6 +125,7 @@
     <string name="label_image_gallery">گالری تصویر</string>
     <string name="label_deactivation">غیرفعال‌سازی</string>
 
+    <string name="label_change_status">تغییر وضعیت</string>
     <string name="label_determination_status">تعیین وضعیت</string>
     <string name="label_determination_organization_status">تعیین وضعیت سازمان</string>
     <string name="label_edit_organization">ویرایش سازمان</string>
@@ -340,6 +341,7 @@
     <string name="label_used_count">استفاده‌شده:</string>
     <string name="label_remaining_count">باقی‌مانده:</string>
 
+    <string name="label_serial_detail">جزئیات سریال</string>
 
     <!-- متریک‌های ردیف اول -->
     <string name="label_warnings_unit">تذکر</string>
@@ -712,6 +714,7 @@
 
     <string name="title_delete_offer_detail">حذف سطر طرح</string>
     <string name="msg_confirm_delete_offer_detail">آیا از حذف این سطر از طرح اطمینان دارید؟ این عملیات قابل بازگشت نیست.</string>
+    <string name="msg_change_status_success">وضعیت با موفقیت تغییر کرد.</string>
 
     <string name="error_product_service_required">لطفاً کالا و خدامت مربوطه را انتخاب  کنید.</string>
     <string name="error_contract_create">خطا در ثبت قرارداد</string>
@@ -722,5 +725,20 @@
     <string name="msg_contract_updated">قرارداد با موفقیت ویرایش شد.</string>
     <string name="msg_contract_terminated">قرارداد با موفقیت خاتمه یافت</string>
     <string name="label_confirm_termination">تأیید خاتمه</string>
+    <string name="label_waiting_synchronization">در انتظار همگام سازی</string>
+    <string name="error_contract_not_found">قراردادی یافت نشد</string>
 
+    <string name="error_warning_create">خطا در ثبت تذکر</string>
+    <string name="error_warning_update">خطا در ویرایش تذکر</string>
+
+    <string name="error_assign_serial_offer">خطا در ثبت تخصیص سریال</string>
+    <string name="error_update_serial_offer">خطا در ویرایش تخصیص سریال</string>
+    <string name="error_change_status_serial_offer">خطا در تتغییر وضعیت  تخصیص سریال</string>
+
+    <string name="label_assign_serial_offer">تخصیص سریال</string>
+    <string name="label_update_serial_offer">ویرایش سریال</string>
+    <string name="msg_assign_serial_offer">تخصیص سریال با موفقیت ثبت شد.</string>
+    <string name="msg_update_serial_offer">ویرایش سریال با موفقیت ویرایش شد.</string>
+    <string name="msg_saved_local_storage_awaiting_synchronization">در حافظه محلی ذخیره شد و در انتظار همگام‌سازی است.</string>
+    <string name="msg_changes_saved_offline_synchronized_connection">تغییرات به صورت آفلاین ذخیره شد و در اولین اتصال همگام خواهد شد.</string>
 </resources>

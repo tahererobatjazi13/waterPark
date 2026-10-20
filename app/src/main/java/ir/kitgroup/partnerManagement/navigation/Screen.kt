@@ -164,14 +164,19 @@ sealed class Screen(val route: String) {
     }
 
 
-    data object AddContractOffer : Screen("add_contract_offer?organizationId={organizationId}") {
+    data object AddSerialOffer : Screen("add_serialOffer?organizationId={organizationId}") {
         fun createRoute(organizationId: String? = null): String {
             return if (!organizationId.isNullOrBlank()) {
-                "add_contract_offer?organizationId=$organizationId"
+                "add_serialOffer?organizationId=$organizationId"
             } else {
-                "add_contract_offer"
+                "add_serialOffer"
             }
         }
+    }
+
+    data object EditSerialOffer : Screen("edit_serialOffer/{serialId}") {
+        fun createRoute(serialId: String): String =
+            "edit_serialOffer/$serialId"
     }
 
     data object AssignedSerialDetail : Screen("assigned_serial_detail/{serialId}") {
@@ -181,7 +186,7 @@ sealed class Screen(val route: String) {
     // add Offer
     data object AddOffer : Screen("add_Offer")
 
-    object EditOffer : Screen("edit_offer/{offerId}") {
+    data object EditOffer : Screen("edit_offer/{offerId}") {
         fun createRoute(offerId: String): String =
             "edit_offer/$offerId"
     }
@@ -192,7 +197,8 @@ sealed class Screen(val route: String) {
     }
 
     // add Offer detail
-    data object AddOfferDetail : Screen("add_offer_detail/{offerTicketPlanId}?offerTicketPlanName={offerTicketPlanName}") {
+    data object AddOfferDetail :
+        Screen("add_offer_detail/{offerTicketPlanId}?offerTicketPlanName={offerTicketPlanName}") {
         fun createRoute(offerTicketPlanId: String, offerTicketPlanName: String = ""): String {
             val encodedName = runCatching {
                 java.net.URLEncoder.encode(offerTicketPlanName, "UTF-8")

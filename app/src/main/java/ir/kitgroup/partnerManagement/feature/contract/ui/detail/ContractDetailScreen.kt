@@ -32,7 +32,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.SecondaryButtonVariant
 import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.core.ui.util.formatPercentForInput
 import java.util.Locale
 
 @Composable
@@ -253,18 +252,18 @@ fun ContractDetailContent(
                     label = stringResource(R.string.label_end_date),
                     value = formatJalaliDate(contract.endDate)
                 )
-                HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
+                /*  HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
-                DetailRow(
-                    label = stringResource(R.string.label_default_commission_percent),
-                    value = formatPercentForInput(contract.defaultCommissionPercent)
-                )
-                HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
+                         DetailRow(
+                             label = stringResource(R.string.label_default_commission_percent),
+                             value = formatPercentForInput(contract.defaultCommissionPercent)
+                         )
+                         HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))
 
-                DetailRow(
-                    label = stringResource(R.string.label_default_discount_percent),
-                    value = formatPercentForInput(contract.defaultDiscountPercent)
-                )
+                         DetailRow(
+                             label = stringResource(R.string.label_default_discount_percent),
+                             value = formatPercentForInput(contract.defaultDiscountPercent)
+                         ) */
 
                 contract.description?.takeIf { it.isNotBlank() }?.let { description ->
                     HorizontalDivider(color = appColors.border.copy(alpha = 0.4f))

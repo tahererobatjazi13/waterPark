@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui.detail
+package ir.kitgroup.partnerManagement.feature.organization.ui.detail.stand
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable

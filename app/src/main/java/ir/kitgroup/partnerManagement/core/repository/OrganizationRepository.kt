@@ -29,9 +29,8 @@ class OrganizationRepository @Inject constructor(
     private val apiService: ApiService
 
 ) {
-    fun observeAll(): Flow<List<OrganizationWithDetail>> {
-        return organizationDao.observeAll()
-    }
+
+    fun observeAll() = organizationDao.observeAll()
 
     fun observeById(
         organizationId: String

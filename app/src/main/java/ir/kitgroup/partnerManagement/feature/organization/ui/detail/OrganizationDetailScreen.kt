@@ -33,7 +33,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -44,7 +43,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -61,7 +59,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,7 +80,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -92,18 +88,19 @@ import ir.kitgroup.partnerManagement.core.database.entity.VisitSubjectEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
-import ir.kitgroup.partnerManagement.core.network.BaseUrlProvider
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.PersonGenderType
 import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
-import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
-import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddPersonFormState
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.InactivationReasonDialog
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddOrganizationFormState
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddPersonFormState
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.stand.OrganizationStandsTabContent
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ticket.OrganizationTicketIssueTabContent
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.visitor.OrganizationVisitorTabContent
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.warning.OrganizationWarningTabContent
 import ir.kitgroup.partnerManagement.navigation.Screen
 import saman.zamani.persiandate.PersianDate
 import java.time.Instant
@@ -133,9 +130,6 @@ fun OrganizationDetailScreen(
     organizationDetailViewModel: OrganizationDetailViewModel = hiltViewModel(),
     navController: NavController
 ) {
-    lateinit var mainPreferences: MainPreferences
-
-
     val organization by organizationDetailViewModel.organization
         .collectAsState()
 
@@ -152,8 +146,10 @@ fun OrganizationDetailScreen(
     val assignedStands by organizationDetailViewModel.assignedStands
         .collectAsStateWithLifecycle()
 
-    val warnings by organizationDetailViewModel.warnings
-        .collectAsStateWithLifecycle()
+    /*
+        val warnings by organizationDetailViewModel.warnings
+            .collectAsStateWithLifecycle()
+    */
 
     val assignedSerials by organizationDetailViewModel.assignedSerials
         .collectAsStateWithLifecycle()
@@ -169,27 +165,21 @@ fun OrganizationDetailScreen(
     val warningTypes by organizationDetailViewModel
         .observeWarningTypes()
 
-
         .collectAsStateWithLifecycle(initialValue = emptyList())
     var warningToEdit by remember { mutableStateOf<WarningWithDetail?>(null) }
 
-    /*    val addWarningState by organizationDetailViewModel
-            .addWarningState
-            .collectAsStateWithLifecycle()*/
 
     LaunchedEffect(organizationId) {
         organizationDetailViewModel.getOrganizationById(organizationId)
         organizationDetailViewModel.observeOrganizationMeetings(organizationId)
         organizationDetailViewModel.observeOrganizationPersons(organizationId)
         organizationDetailViewModel.observeOrganizationContracts(organizationId)
-        organizationDetailViewModel.observeOrganizationWarnings(organizationId)
+        // organizationDetailViewModel.observeOrganizationWarnings(organizationId)
         organizationDetailViewModel.observeOrganizationAssignedStands(organizationId)
         organizationDetailViewModel.observeOrganizationAssignedSerials(organizationId)
         organizationDetailViewModel.fetchOrganizationVisitors(organizationId)
         organizationDetailViewModel.fetchOrganizationTicketIssue(organizationId)
-
     }
-
 
     val currentOrganization = organization ?: return
     val appColors = LocalPartnerManagementColors.current
@@ -201,7 +191,6 @@ fun OrganizationDetailScreen(
     val formState = rememberAddOrganizationFormState()
     val personState = rememberAddPersonFormState()
 
-
     var selectedTab by rememberSaveable { mutableStateOf(OrganizationDetailTab.BASIC_INFO) }
     val visibleTabs = remember(isSupervisor) {
         OrganizationDetailTab.entries.filter { tab ->
@@ -212,7 +201,6 @@ fun OrganizationDetailScreen(
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
     var showInactiveReasonDialog by rememberSaveable { mutableStateOf(false) }
     var currentOrganizationStatus by rememberSaveable { mutableStateOf(OrganizationStatus.ACTIVE) }
-    var currentInactiveReason by rememberSaveable { mutableStateOf("") }
 
     var warningPendingDelete by remember { mutableStateOf<WarningWithDetail?>(null) }
     var visitorToDelete by remember { mutableStateOf<VisitorOrganizationEntity?>(null) }
@@ -224,30 +212,14 @@ fun OrganizationDetailScreen(
     val statusUpdateState by organizationDetailViewModel.statusUpdateState
         .collectAsStateWithLifecycle()
 
-
     val addWarningState by organizationDetailViewModel.addWarningState
         .collectAsStateWithLifecycle()
-
 
     val visitSubjects by organizationDetailViewModel.visitSubjects
         .collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    /*
-    // گوش دادن به پیام‌های وضعیت
-        LaunchedEffect(Unit) {
-            organizationDetailViewModel.statusUiEvent.collect { event ->
-                when (event) {
-                    is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
-                        event.message.asString(
-                            context
-                        )
-                    )
 
-                    is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
-                }
-            }
-        }*/
 
 // بستن دیالوگ و بازگشت پس از موفقیت
 // بستن دیالوگ و بازگشت به لیست سازمان‌ها همراه با فعال‌سازی پرچم سینک
@@ -313,41 +285,6 @@ fun OrganizationDetailScreen(
         }
     }
 
-    /*
-      LaunchedEffect(addWarningState.successMessage) {
-          val message = addWarningState.successMessage
-              ?: return@LaunchedEffect
-
-          snackBarHostState.showSnackbar(message)
-
-          showWarningDialog = false
-
-          organizationDetailViewModel
-              .resetAddWarningState()
-
-          organizationDetailViewModel
-              .observeOrganizationWarnings(organizationId)
-      }
-      LaunchedEffect(addWarningState.errorMessage) {
-          val message = addWarningState.errorMessage
-              ?: return@LaunchedEffect
-
-          snackBarHostState.showSnackbar(message)
-
-          organizationDetailViewModel
-              .resetAddWarningState()
-      }
-
-      LaunchedEffect(addWarningState.errorMessage) {
-          val message = addWarningState.errorMessage
-              ?: return@LaunchedEffect
-
-          snackBarHostState.showSnackbar(message)
-
-          organizationDetailViewModel
-              .resetAddWarningState()
-      }
-  */
     LaunchedEffect(addPersonState) {
         when (val state = addPersonState) {
 
@@ -496,18 +433,20 @@ fun OrganizationDetailScreen(
                                 onContractClick(contract)
                             })
                     }
-                    OrganizationDetailTab.WARNING -> {
 
-// داخل فراخوانی OrganizationWarningTabContent:
+                    OrganizationDetailTab.WARNING -> {
+                        organizationDetailViewModel.observeOrganizationWarnings(organizationId)
+
+                        // داخل فراخوانی OrganizationWarningTabContent:
                         OrganizationWarningTabContent(
-                            warnings = warnings,
+                            organizationId = organizationId,
                             isSupervisor = isSupervisor,
                             onAddWarningClick = {
-                                warningToEdit = null // حالت ثبت جدید
+                                warningToEdit = null
                                 showWarningDialog = true
                             },
                             onEditWarningClick = { item ->
-                                warningToEdit = item // حالت ویرایش
+                                warningToEdit = item
                                 showWarningDialog = true
                             }
                         )
@@ -548,7 +487,9 @@ fun OrganizationDetailScreen(
                         OrganizationTicketIssueTabContent(
                             ticketIssueState = ticketIssueState,
                             onRetry = {
-                                organizationDetailViewModel.fetchOrganizationTicketIssue(organizationId)
+                                organizationDetailViewModel.fetchOrganizationTicketIssue(
+                                    organizationId
+                                )
                             }
                         )
                     }
@@ -572,6 +513,7 @@ fun OrganizationDetailScreen(
         }
     }
 
+/*
     if (showWarningDialog) {
         AddOrganizationWarningDialog(
             warningTypes = warningTypes,
@@ -599,6 +541,7 @@ fun OrganizationDetailScreen(
             }
         )
     }
+*/
     // دیالوگ تأیید حذف
     warningPendingDelete?.let { item ->
         DeleteConfirmationDialog(

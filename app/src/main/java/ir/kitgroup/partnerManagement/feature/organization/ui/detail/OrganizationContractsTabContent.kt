@@ -41,8 +41,7 @@ fun OrganizationContractsTabContent(
     contracts: List<ContractEntity>,
     onAssignContractClick: () -> Unit = {},
     onContractClick: (ContractEntity) -> Unit,
-
-    ) {
+) {
     val appColors = LocalPartnerManagementColors.current
 
     Column(

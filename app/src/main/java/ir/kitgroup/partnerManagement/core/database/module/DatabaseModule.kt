@@ -8,15 +8,19 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import ir.kitgroup.partnerManagement.core.database.AppDatabase
+import ir.kitgroup.partnerManagement.core.database.dao.AssignStandChangeStatusDao
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedSerialDao
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedStandDao
 import ir.kitgroup.partnerManagement.core.database.dao.CityDao
 import ir.kitgroup.partnerManagement.core.database.dao.ContractDao
+import ir.kitgroup.partnerManagement.core.database.dao.ContractTerminationDao
+import ir.kitgroup.partnerManagement.core.database.dao.MeetingChangeStatusDao
 import ir.kitgroup.partnerManagement.core.database.dao.MeetingDao
 import ir.kitgroup.partnerManagement.core.database.dao.OfferDao
 import ir.kitgroup.partnerManagement.core.database.dao.OfferDetailDao
 import ir.kitgroup.partnerManagement.core.database.dao.OrganizationDao
 import ir.kitgroup.partnerManagement.core.database.dao.OrganizationPersonDao
+import ir.kitgroup.partnerManagement.core.database.dao.OrganizationChangeStatusDao
 import ir.kitgroup.partnerManagement.core.database.dao.ProductDao
 import ir.kitgroup.partnerManagement.core.database.dao.RegionDao
 import ir.kitgroup.partnerManagement.core.database.dao.StandTypeDao
@@ -85,7 +89,7 @@ object DatabaseModule {
         db: AppDatabase
     ): OfferDetailDao = db.offerDetailDao()
 
-   @Provides
+    @Provides
     fun provideVisitorDao(
         db: AppDatabase
     ): VisitorDao = db.visitorDao()
@@ -94,6 +98,11 @@ object DatabaseModule {
     fun provideOrganizationDao(
         db: AppDatabase
     ): OrganizationDao = db.organizationDao()
+
+    @Provides
+    fun provideOrganizationChangeStatusDao(
+        db: AppDatabase
+    ): OrganizationChangeStatusDao = db.organizationChangeStatusDao()
 
     @Provides
     fun provideOrganizationPersonDao(
@@ -106,6 +115,12 @@ object DatabaseModule {
     ): MeetingDao = db.meetingDao()
 
     @Provides
+    fun provideMeetingChangeStatusDao(
+        db: AppDatabase
+    ): MeetingChangeStatusDao = db.meetingChangeStatusDao()
+
+
+    @Provides
     fun provideWarningDao(
         db: AppDatabase
     ): WarningDao = db.warningDao()
@@ -116,9 +131,20 @@ object DatabaseModule {
     ): AssignedStandDao = db.assignedStandDao()
 
     @Provides
+    fun provideAssignStandChangeStatusDao(
+        db: AppDatabase
+    ): AssignStandChangeStatusDao = db.assignStandChangeStatusDao()
+
+
+    @Provides
     fun provideContractDao(
         db: AppDatabase
     ): ContractDao = db.contractDao()
+
+    @Provides
+    fun provideContractTerminationDao(
+        db: AppDatabase
+    ): ContractTerminationDao = db.contractTerminationDao()
 
     @Provides
     fun provideAssignedSerialDao(

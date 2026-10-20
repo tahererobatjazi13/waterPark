@@ -20,12 +20,10 @@ import androidx.navigation.navigation
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.ThemeMode
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.meeting.ui.AddMeetingRoute
-import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingDetailScreen
-import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingsListScreen
-import ir.kitgroup.partnerManagement.feature.profile.ui.ThemeModeScreen
+import ir.kitgroup.partnerManagement.feature.meeting.ui.add.AddEditMeetingScreen
+import ir.kitgroup.partnerManagement.feature.meeting.ui.detail.MeetingDetailScreen
+import ir.kitgroup.partnerManagement.feature.meeting.ui.list.MeetingsListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 fun NavGraphBuilder.meetingNavGraph(
@@ -161,7 +159,7 @@ fun NavGraphBuilder.meetingNavGraph(
             popEnterTransition = { fadeIn(tween(250)) },
             popExitTransition = { fadeOut(tween(200)) }
         ) {
-            AddMeetingRoute(
+            AddEditMeetingScreen(
                 onBackClick = {
                     navController.popBackStack()
                 }, onSaved = {

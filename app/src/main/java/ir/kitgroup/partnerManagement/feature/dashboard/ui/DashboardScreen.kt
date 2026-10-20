@@ -53,8 +53,8 @@ import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_ORGANIZATION_SAVE
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.meeting.ui.DetailRow
-import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingTypeChip
+import ir.kitgroup.partnerManagement.feature.meeting.ui.list.DetailRow
+import ir.kitgroup.partnerManagement.feature.meeting.ui.list.MeetingTypeChip
 
 @Composable
 fun DashboardScreen(
@@ -237,7 +237,7 @@ fun DashboardScreen(
                             onQuickContractOfferClick =
                             {
                                 dashboardViewModel.checkCanNavigateToAddOffer {
-                                    navController.navigate(Screen.AddContractOffer.route)
+                                    navController.navigate(Screen.AddSerialOffer.route)
                                 }
                             }
                         )

@@ -51,9 +51,11 @@ data class PartnerManagementColors(
     val chartBlue: Color,
     val chartTeal: Color,
     val chartOrange: Color,
-    val chartPurple: Color
-
+    val chartPurple: Color,
+    val syncPendingBackground: Color,
+    val syncPendingText: Color,
 )
+
 val LightPartnerManagementColors = PartnerManagementColors(
     appBackground = White,
     screenBackground = LightBackground,
@@ -106,7 +108,7 @@ val LightPartnerManagementColors = PartnerManagementColors(
     iconBlueContainer = Color(0xFFDBEAFE),
     iconGreenContainer = Color(0xFFDCFCE7),
     iconPurpleContainer = Color(0xFFEDE9FE),
-     iconOrangeContainer = Color(0xFFFFEDD5),
+    iconOrangeContainer = Color(0xFFFFEDD5),
 
     ratingActive = Color(0xFFF59E0B),
     ratingInactive = Color(0xFFD1D5DB),
@@ -125,7 +127,14 @@ val LightPartnerManagementColors = PartnerManagementColors(
     chartBlue = Color(0xFF1D4ED8),
     chartTeal = Color(0xFF0F766E),
     chartOrange = Color(0xFFC2410C),
-    chartPurple = Color(0xFF6D28D9)
+    chartPurple = Color(0xFF6D28D9),
+
+
+    /*
+     * وضعیت همگام‌سازی (Sync Status)
+     */
+    syncPendingBackground = Color(0xFFFEF3C7),
+    syncPendingText = Color(0xFFB45309),
 )
 val DarkPartnerManagementColors = PartnerManagementColors(
     appBackground = Black,
@@ -198,7 +207,13 @@ val DarkPartnerManagementColors = PartnerManagementColors(
     chartBlue = Color(0xFF60A5FA),
     chartTeal = Color(0xFF2DD4BF),
     chartOrange = Color(0xFFFBBF24),
-    chartPurple = Color(0xFFC084FC)
+    chartPurple = Color(0xFFC084FC),
+
+    /*
+   * وضعیت همگام‌سازی (Sync Status)
+   */
+    syncPendingBackground = Color(0xFF4A2B05),
+    syncPendingText = Color(0xFFFDE68A)
 )
 
 val LocalPartnerManagementColors = staticCompositionLocalOf {

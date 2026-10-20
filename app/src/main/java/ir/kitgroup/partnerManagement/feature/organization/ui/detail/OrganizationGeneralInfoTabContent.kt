@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

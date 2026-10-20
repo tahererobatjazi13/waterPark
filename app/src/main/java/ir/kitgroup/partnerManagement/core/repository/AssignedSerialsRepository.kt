@@ -1,11 +1,14 @@
 package ir.kitgroup.partnerManagement.core.repository
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedSerialDao
 import ir.kitgroup.partnerManagement.core.database.entity.AssignedSerialEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedSerialWithDetail
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
-import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
-import ir.kitgroup.partnerManagement.core.ui.util.extractErrorMessage
+import ir.kitgroup.partnerManagement.core.network.exception.ApiRequestExecutor
+import ir.kitgroup.partnerManagement.feature.dashboard.repository.SyncRepository
 import ir.kitgroup.partnerManagement.feature.offer.model.SerialOfferRequest
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -15,6 +18,8 @@ import javax.inject.Singleton
 class AssignedSerialsRepository @Inject constructor(
     private val assignedSerialDao: AssignedSerialDao,
     private val apiService: ApiService,
+    private val syncRepository: SyncRepository,
+    @ApplicationContext private val context: Context
 ) {
 
     fun observeByOrganization(organizationId: String): Flow<List<AssignedSerialWithDetail>> =
@@ -27,82 +32,60 @@ class AssignedSerialsRepository @Inject constructor(
 
     suspend fun deleteAll() = assignedSerialDao.deleteAll()
 
-    suspend fun createSerialOffer(
-        request: SerialOfferRequest
-    ): Result<ModelResponse> {
-        return try {
-            val response = apiService.assignSerialOffer(request)
 
-            if (response.isSuccessful && response.body() != null) {
-                val body = response.body()!!
-                if (body.success) {
-                    Result.success(body)
-                } else {
-                    Result.failure(Exception(body.message ?: "خطا در ثبت تخصیص سریال"))
-                }
-            } else {
-                val errorMessage = extractErrorMessage(
-                    errorBody = response.errorBody()?.string(),
-                    defaultMessage = "خطای سرور در ثبت تخصیص سریال: ${response.code()}"
-                )
-                Result.failure(Exception(errorMessage))
+    suspend fun createSerialOfferAndSync(
+        request: SerialOfferRequest
+    ): Result<String?> {
+        return ApiRequestExecutor.execute(
+            defaultMessage = context.getString(R.string.error_assign_serial_offer)
+        ) {
+            apiService.assignSerialOffer(request)
+        }.fold(
+            onSuccess = { response ->
+                syncRepository.syncData()
+                Result.success(response.message)
+            },
+            onFailure = { error ->
+                Result.failure(error)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        )
     }
 
-    suspend fun updateSerialOffer(
+    suspend fun updateSerialOfferAndSync(
         request: SerialOfferRequest
-    ): Result<ModelResponse> {
-        return try {
-            val response = apiService.updateSerialOffer(request)
-
-            if (response.isSuccessful && response.body() != null) {
-                val body = response.body()!!
-                if (body.success) {
-                    // به‌روزرسانی رکورد در دیتابیس لوکال
-                    Result.success(body)
-                } else {
-                    Result.failure(Exception(body.message ?: "خطا در ویرایش تخصیص سریال"))
-                }
-            } else {
-                val errorMessage = extractErrorMessage(
-                    errorBody = response.errorBody()?.string(),
-                    defaultMessage = "خطای سرور در ویرایش تخصیص سریال: ${response.code()}"
-                )
-                Result.failure(Exception(errorMessage))
+    ): Result<String?> {
+        return ApiRequestExecutor.execute(
+            defaultMessage = context.getString(R.string.error_update_serial_offer)
+        ) {
+            apiService.updateSerialOffer(request)
+        }.fold(
+            onSuccess = { response ->
+                syncRepository.syncData()
+                Result.success(response.message)
+            },
+            onFailure = { error ->
+                Result.failure(error)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        )
     }
-    suspend fun serialOfferChangeStatus(
+
+    suspend fun changeStatusSerialOfferC(
         id: String,
         status: String
-    ): Result<ModelResponse> {
-        return try {
-            val response = apiService.serialOfferChangeStatus(id,status)
-
-            if (response.isSuccessful && response.body() != null) {
-                val body = response.body()!!
-                if (body.success) {
-                    // به‌روزرسانی رکورد در دیتابیس لوکال
-                 //   offerDetailDao.deleteByDetailId(offerDetailId)
-                    Result.success(body)
-                } else {
-                    Result.failure(Exception(body.message ?: "خطا  "))
-                }
-            } else {
-                val errorMessage = extractErrorMessage(
-                    errorBody = response.errorBody()?.string(),
-                    defaultMessage = "خطای سرور  : ${response.code()}"
-                )
-                Result.failure(Exception(errorMessage))
+    ): Result<String?> {
+        return ApiRequestExecutor.execute(
+            defaultMessage = context.getString(R.string.error_change_status_serial_offer)
+        ) {
+            apiService.serialOfferChangeStatus(id, status)
+        }.fold(
+            onSuccess = { response ->
+                syncRepository.syncData()
+                Result.success(response.message)
+            },
+            onFailure = { error ->
+                Result.failure(error)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        )
     }
 
 }

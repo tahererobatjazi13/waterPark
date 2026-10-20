@@ -191,7 +191,7 @@ fun AddContractContent(
                             }
                         )
 
-                        CustomEditTextField(
+                        /* CustomEditTextField(
                             value = uiState.defaultCommissionPercent,
                             onValueChange = onDefaultCommissionPercentChange,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -209,7 +209,7 @@ fun AddContractContent(
                             placeholder = stringResource(R.string.hint_enter_default_discount_percent),
                             isRequired = false,
                             leadingIcon = null
-                        )
+                        ) */
 
                         Spacer(modifier = Modifier.height(10.dp))
                     }

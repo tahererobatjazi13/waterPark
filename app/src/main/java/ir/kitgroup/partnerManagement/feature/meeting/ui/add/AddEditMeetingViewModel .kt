@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.meeting.ui
+package ir.kitgroup.partnerManagement.feature.meeting.ui.add
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AddMeetingViewModel @Inject constructor(
+class AddEditMeetingViewModel @Inject constructor(
     private val organizationDao: OrganizationDao,
     private val visitSubjectDao: VisitSubjectDao,
     private val organizationPersonDao: OrganizationPersonDao,
@@ -101,7 +101,7 @@ class AddMeetingViewModel @Inject constructor(
         }
 
 
-    val uiState: StateFlow<AddMeetingUiState> =
+    val uiState: StateFlow<AddEditMeetingUiState> =
         combine(
             organizationDao.observeAll(),
             visitSubjectDao.observeAll(),
@@ -127,7 +127,7 @@ class AddMeetingViewModel @Inject constructor(
                 ?.fullName
                 .orEmpty()
 
-            AddMeetingUiState(
+            AddEditMeetingUiState(
                 organizations = organizations,
                 visitSubjects = visitSubjects,
                 preloadedOrganization = preselectedOrg,
@@ -140,7 +140,7 @@ class AddMeetingViewModel @Inject constructor(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = AddMeetingUiState()
+            initialValue = AddEditMeetingUiState()
         )
 
 

@@ -1,17 +1,22 @@
 package ir.kitgroup.partnerManagement.core.network.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 data class MeetingDto(
 
-    val meetingId: String,
+    val meetingId: String? = null,
 
-    val organizationId: String,
+    // این فیلد فقط مصرف لوکال دارد و در JSON ارسالی به سرور قرار نمی‌گیرد
+    @Transient
+    val serverId: String? = null,
 
-    val organizationName: String,
+    val organizationId: String?,
 
-    val visitorId: String,
+    val organizationName: String?,
+
+    val visitorId: String?,
 
     val visitorName: String?,
 

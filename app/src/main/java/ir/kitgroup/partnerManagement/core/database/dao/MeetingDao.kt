@@ -4,7 +4,9 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
+import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -49,4 +51,18 @@ interface MeetingDao {
 
     @Query("DELETE FROM meetings")
     suspend fun deleteAll()
+
+
+
+    /**
+     * دریافت لیست تمام قراردادهای ایجاد شده آفلاین جهت قرار دادن در pendingContracts
+     */
+    @Query(
+        """
+        SELECT * FROM meetings 
+        WHERE syncStatus = :syncStatus
+        ORDER BY lastModifiedTimestamp ASC
+    """
+    )
+    suspend fun getMeetingsBySyncStatus(syncStatus: SyncStatus): List<MeetingEntity>
 }

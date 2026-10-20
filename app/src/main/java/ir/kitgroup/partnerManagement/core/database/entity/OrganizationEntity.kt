@@ -3,6 +3,7 @@ package ir.kitgroup.partnerManagement.core.database.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 
 @Entity(
     tableName = "organizations",
@@ -16,6 +17,8 @@ data class OrganizationEntity(
 
     @PrimaryKey
     val organizationId: String,
+
+    val serverId: String? = null,
 
     val activeVisitorId: String? = null,
 
@@ -111,6 +114,13 @@ data class OrganizationEntity(
 
     val stateCode: Int? = null,
 
-    val modifiedOn: String? = null
+    val modifiedOn: String? = null,
+
+    // فیلدهای کنترل سینک
+    val syncStatus: SyncStatus = SyncStatus.SYNCED,
+
+    val isLocallyModified: Boolean = false,
+
+    val lastModifiedTimestamp: Long = System.currentTimeMillis()
 
 )

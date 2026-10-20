@@ -14,12 +14,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_SERIAL_OFFER_SAVE
 import ir.kitgroup.partnerManagement.feature.contract.ui.add.AddEditContractScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.detail.ContractDetailScreen
 import ir.kitgroup.partnerManagement.feature.contract.ui.list.ContractsListScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.detail.AssignedSerialDetailScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.add.AddContractOfferScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
 
 fun NavGraphBuilder.contractNavGraph(
@@ -196,77 +193,19 @@ fun NavGraphBuilder.contractNavGraph(
             ) {
                 AddEditContractScreen(
                     onSuccessSave = {
-                        navController.popBackStack()
+                        // با بستن ContractDetail، کاربر مستقیماً به صفحه والد (جزئیات سازمان) بازمی‌گردد
+                        val popped = navController.popBackStack(
+                            route = Screen.ContractDetail.route,
+                            inclusive = true
+                        )
+                        // در صورت عدم تطابق روت، به صورت ایمن یک مرحله به عقب برمی‌گردد
+                        if (!popped) {
+                            navController.popBackStack()
+                        }
                     }
                 )
             }
         }
     }
 
-
-    // ------------------------------------------------
-    // Contract Offer
-    // ------------------------------------------------
-    composable(
-        route = Screen.AddContractOffer.route,
-        arguments = listOf(navArgument("organizationId") {
-            type = NavType.StringType
-            nullable = true
-        }
-        ),
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None }
-    ) { backStackEntry ->
-        val organizationId = backStackEntry.arguments?.getString("organizationId")
-
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            CustomHeader(
-                title = stringResource(
-                    R.string.label_contract_offer
-                ),
-                showBackButton = true,
-                onBackClick = {
-                    navController.popBackStack()
-                }
-            )
-
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                AddContractOfferScreen(
-                    organizationId = organizationId,
-                    onSaveSuccess = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(SYNC_AFTER_SERIAL_OFFER_SAVE, true)
-                        navController.popBackStack()
-                    }
-                )
-            }
-        }
-    }
-    composable(
-        route = Screen.AssignedSerialDetail.route,
-        arguments = listOf(
-            navArgument("serialId") { type = NavType.StringType }
-        )
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            CustomHeader(
-                title = stringResource(R.string.label_ticket_offer_detail),
-                showBackButton = true,
-                onBackClick = { navController.popBackStack() }
-            )
-
-            AssignedSerialDetailScreen(
-                onEditClick = { id ->
-                    navController.navigate(Screen.AddContractOffer.createRoute(organizationId = id))
-                }
-            )
-        }
-    }
 }

@@ -45,8 +45,8 @@ import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.feature.meeting.ui.DetailRow
-import ir.kitgroup.partnerManagement.feature.meeting.ui.MeetingTypeChip
+import ir.kitgroup.partnerManagement.feature.meeting.ui.list.DetailRow
+import ir.kitgroup.partnerManagement.feature.meeting.ui.list.MeetingTypeChip
 
 @Composable
 fun OrganizationMeetingsTabContent(
