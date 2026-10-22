@@ -1,9 +1,10 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
@@ -58,15 +58,39 @@ import androidx.compose.material.icons.outlined.ConfirmationNumber
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Storefront
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
+import ir.kitgroup.partnerManagement.core.network.model.AttachmentFileDto
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.outlined.ImageNotSupported
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import ir.kitgroup.partnerManagement.core.ui.util.AttachmentFileType
+import android.view.ViewGroup
+import androidx.compose.ui.viewinterop.AndroidView
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 @Composable
 fun OrganizationBasicInfoTabContent(
     organization: OrganizationWithDetail,
     activeVisitorName: String? = null,
-    activeContractName: String? = null
+    activeContractName: String? = null,
+    isImagesLoading: Boolean = false,
+    baseUrl: String,
+    attachments: List<AttachmentFileDto> = emptyList(),
+    onLocationClick: (latitude: Double, longitude: Double) -> Unit = { _, _ -> },
 ) {
     Column(
         modifier = Modifier
@@ -87,7 +111,8 @@ fun OrganizationBasicInfoTabContent(
 
         SectionTitle(stringResource(R.string.label_location))
         AddressMapCard(
-            organization
+            item = organization,
+            onLocationClick = onLocationClick
         )
 
         SectionTitle(stringResource(R.string.label_analytical_information))
@@ -100,8 +125,12 @@ fun OrganizationBasicInfoTabContent(
         CustomDescriptionCard(description = "این سازمان از مشتریان فعال است...")
 */
         SectionTitle(stringResource(R.string.label_images))
-        ImagesSection(images = listOf(R.drawable.ic_logo))
 
+        ImagesSection(
+            isLoading = isImagesLoading,
+            attachments = attachments,
+            baseUrl = baseUrl
+        )
         Spacer(Modifier.height(16.dp))
     }
 }
@@ -194,7 +223,16 @@ private fun BasicInfoSection(
                     thickness = 0.8.dp,
                     color = colors.outlineVariant.copy(alpha = 0.4f)
                 )
-
+                InfoRowItem(
+                    title = stringResource(R.string.label_mobile_owner),
+                    value = item.organization.mobile.orEmpty(),
+                    icon = Icons.Filled.Smartphone
+                )
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    thickness = 0.8.dp,
+                    color = colors.outlineVariant.copy(alpha = 0.4f)
+                )
                 InfoRowItem(
                     title = stringResource(R.string.label_english_name),
                     value = item.organization.englishName.orEmpty(),
@@ -295,16 +333,6 @@ private fun ContactInfoSection(
                     color = colors.outlineVariant.copy(alpha = 0.4f)
                 )
 
-                InfoRowItem(
-                    title = stringResource(R.string.label_mobile),
-                    value = item.organization.mobile.orEmpty(),
-                    icon = Icons.Filled.Smartphone
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
 
                 InfoRowItem(
                     title = stringResource(R.string.label_email),
@@ -361,16 +389,25 @@ private fun InfoRowItem(
 
 @Composable
 private fun AddressMapCard(
-    item: OrganizationWithDetail
+    item: OrganizationWithDetail,
+    onLocationClick: (latitude: Double, longitude: Double) -> Unit
 ) {
+    val context = LocalContext.current
+
     val colors = MaterialTheme.colorScheme
+    val lat = item.organization.latitude
+    val lng = item.organization.longitude
+    val hasLocation = lat != null && lng != null
+
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = true) {
+                onLocationClick(lat!!, lng!!)
+            },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
         border = BorderStroke(1.dp, colors.outlineVariant)
     ) {
         Row(
@@ -388,12 +425,36 @@ private fun AddressMapCard(
                     .background(colors.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Filled.LocationOn,
-                    contentDescription = null,
-                    tint = colors.primary,
-                    modifier = Modifier.size(36.dp)
-                )
+                if (hasLocation) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { ctx ->
+                            Configuration.getInstance().userAgentValue = ctx.packageName
+                            MapView(ctx).apply {
+                                setTileSource(TileSourceFactory.MAPNIK)
+                                setMultiTouchControls(false) // برای جلوگیری از تداخل اسکرول
+                                controller.setZoom(15.0)
+                                controller.setCenter(GeoPoint(lat!!, lng!!))
+                                overlays.add(Marker(this).apply {
+                                    position = GeoPoint(lat, lng)
+                                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                })
+                                layoutParams = ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                )
+                            }
+                        }
+                    )
+                } else {
+                    // در صورتی که مختصاتی ثبت نشده باشد
+                    Icon(
+                        imageVector = Icons.Filled.LocationOn,
+                        contentDescription = null,
+                        tint = colors.primary,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
             }
 
             // ستون نمایش جزئیات شهر، منطقه و آدرس
@@ -559,40 +620,155 @@ private fun StatusInfoSection(
 
 @Composable
 fun ImagesSection(
-    images: List<Int>
+    isLoading: Boolean,
+    attachments: List<AttachmentFileDto>,
+    baseUrl: String,
+    modifier: Modifier = Modifier
 ) {
-    if (images.isEmpty()) {
-        Text(
-            text = "تصویری ثبت نشده است",
-            style = typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    // نگهداری عکسی که کاربر روی آن کلیک کرده تا در دیالوگ باز شود
+    var selectedAttachmentForPreview by remember { mutableStateOf<AttachmentFileDto?>(null) }
+
+    if (isLoading) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(96.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 2.5.dp)
+        }
+        return
+    }
+
+    if (attachments.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.ImageNotSupported,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Text(
+                    text = stringResource(R.string.msg_no_images_registered),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         return
     }
 
     LazyRow(
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
     ) {
-        items(images.size) { index ->
+        items(
+            items = attachments,
+            key = { it.attachmentFileId }
+        ) { attachment ->
+            val imageUrl =
+                "${baseUrl.trimEnd('/')}/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
+            Log.d("imageUrllllll1", imageUrl.toString())
+            Log.d("imageUrllllll2", attachment.toString())
+
             ImageCard(
-                imageRes = images[index]
+                imageUrl = imageUrl,
+                attachment = attachment,
+                onClick = { selectedAttachmentForPreview = attachment }
             )
         }
+    }
+
+    // دیالوگ پیش‌نمایش تصویر به صورت بزرگ همراه با توضیحات
+    selectedAttachmentForPreview?.let { attachment ->
+        val fullImageUrl =
+            "${baseUrl.trimEnd('/')}/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
+
+        ImagePreviewDialog(
+            imageUrl = fullImageUrl,
+            attachment = attachment,
+            onDismiss = { selectedAttachmentForPreview = null }
+        )
     }
 }
 
 
 @Composable
 private fun ImageCard(
-    imageRes: Int
+    imageUrl: Any?,
+    attachment: AttachmentFileDto,
+    onClick: () -> Unit
 ) {
-    Image(
-        painter = painterResource(imageRes),
-        contentDescription = null,
+    val context = LocalContext.current
+    val fileTypeEnum = AttachmentFileType.fromId(attachment.fileType ?: 3)
+
+    Box(
         modifier = Modifier
-            .size(width = 110.dp, height = 88.dp)
-            .clip(RoundedCornerShape(14.dp)),
-        contentScale = ContentScale.Crop
-    )
+            .size(130.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable { onClick() }
+    ) {
+        // تصویر بندانگشتی
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(imageUrl)
+                .crossfade(true)
+                .placeholder(R.drawable.ic_image_placeholder)
+                .error(R.drawable.ic_image_placeholder)
+                .build(),
+            contentDescription = attachment.name,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        // گرادینت پایین کارت جهت خوانایی متن
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(36.dp)
+                .align(Alignment.BottomCenter)
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            androidx.compose.ui.graphics.Color.Transparent,
+                            androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.75f)
+                        )
+                    )
+                )
+        )
+
+        // برچسب نوع تصویر
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(6.dp),
+            shape = RoundedCornerShape(6.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
+        ) {
+            val titleText = fileTypeEnum?.let {
+                stringResource(it.titleRes)
+            } ?: stringResource(R.string.attachment_type_other_images)
+
+            Text(
+                text = titleText,
+                style = typography.labelSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                maxLines = 1
+            )
+        }
+
+    }
 }

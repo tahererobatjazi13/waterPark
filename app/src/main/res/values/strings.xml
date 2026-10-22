@@ -47,7 +47,7 @@
     <string name="label_organization_receiving_name">نام سازمان تحویل گیرنده</string>
     <string name="label_organization_type">نوع سازمان</string>
     <string name="label_organization_level">سطح سازمان</string>
-    <string name="label_owner_name">مالک یا مدیر ارشد</string>
+    <string name="label_owner_name">نام مدیر یا شخص</string>
     <string name="label_english_name">نام انگلیسی</string>
     <string name="label_name_recipient">نام پذیرش کننده</string>
     <string name="label_national_id">شناسه ملی</string>
@@ -89,6 +89,7 @@
     <string name="label_schedule_title">برنامه بازدید امروز</string>
     <string name="label_confirm">تایید</string>
     <string name="label_save">ذخیره</string>
+    <string name="label_save_organization">ثبت سازمان</string>
     <string name="label_cancel">لغو</string>
     <string name="label_select_time">انتخاب ساعت</string>
     <string name="label_images">تصاویر</string>
@@ -100,6 +101,7 @@
     <string name="label_phone">تلفن</string>
     <string name="label_organization_land_line">تلفن ثابت سازمان</string>
     <string name="label_mobile">موبایل</string>
+    <string name="label_mobile_owner">موبایل مدیر/شخص</string>
     <string name="label_address">آدرس</string>
     <string name="label_email">ایمیل</string>
     <string name="label_organization_basic_information">اطلاعات پایه سازمان</string>
@@ -170,6 +172,7 @@
     <string name="label_assignment_stands_to_organization">تخصیص استندها به سازمان</string>
     <string name="label_assignment_stands_to_organization_list">لیست استند های اختصاص داده شده</string>
     <string name="label_assignment_visitor_to_organization_list">لیست ویزیتورهای مرتبط با سازمان</string>
+    <string name="label_ticket_issue_list">لیست بلیط‌های صادر شده</string>
     <string name="label_advertising">آیتم‌های تبلیغاتی</string>
     <string name="label_assigning_visitor_organization">انتساب بازاریاب به سازمان</string>
     <string name="label_new_allocation">تخصیص جدید</string>
@@ -190,6 +193,9 @@
     <string name="label_contract_item">قرارداد</string>
     <string name="label_edit_contract">ویرایش قرارداد</string>
     <string name="label_create_contract">ثبت قرارداد</string>
+
+    <string name="label_create_organization">ثبت سازمان</string>
+
     <string name="label_report_cooperation_agreement"> گزارش لیست قرارداد همکاری ها</string>
     <string name="label_visitor_list">لیست بازاریاب ها</string>
     <string name="label_report_view_visitor">مشاهده گزارشات عملکرد همه بازاریاب ها و یک بازاریاب</string>
@@ -408,6 +414,9 @@
     <string name="status_returned">عودت شده</string>
     <string name="status_temporarily_stopped">موقتا متوقف</string>
     <string name="status_revoked">ابطال شده</string>
+    <string name="status_issued">صادر شده</string>
+    <string name="status_consumed">مصرف شده</string>
+    <string name="status_cancellation">ابطال شده</string>
 
     <string name="status_allocated_active">فعال/اختصاص داده شده</string>
     <string name="status_quota_exhausted">اتمام سهمیه/بسته شده</string>
@@ -582,6 +591,7 @@
     <string name="msg_no_meeting_register_today">برای امروز برنامه‌ی بازدیدی ثبت نشده است.</string>
     <string name="msg_no_offers_details_found">هیچ جزئیاتی برای این طرح ثبت نشده است</string>
     <string name="msg_no_item_found">آیتمی برای نمایش یافت نشد</string>
+    <string name="msg_no_images_registered">تصویری یافت نشد</string>
     <string name="msg_select_one_of_options">یکی از گزینه‌های زیر را انتخاب کنید</string>
     <string name="msg_delete_message">
     آیا از حذف «%1$s» مطمئن هستید؟ این عملیات قابل بازگشت نیست.</string>
@@ -715,11 +725,16 @@
     <string name="title_delete_offer_detail">حذف سطر طرح</string>
     <string name="msg_confirm_delete_offer_detail">آیا از حذف این سطر از طرح اطمینان دارید؟ این عملیات قابل بازگشت نیست.</string>
     <string name="msg_change_status_success">وضعیت با موفقیت تغییر کرد.</string>
+    <string name="error_organization_create">خطا در ثبت سازمان</string>
+    <string name="error_organization_update">خطا در ویرایش سازمان</string>
+    <string name="msg_organization_updated">سازمان با موفقیت ویرایش شد.</string>
+    <string name="msg_organization_created">سازمان با موفقیت ثبت شد.</string>
 
     <string name="error_product_service_required">لطفاً کالا و خدامت مربوطه را انتخاب  کنید.</string>
     <string name="error_contract_create">خطا در ثبت قرارداد</string>
     <string name="error_contract_update">خطا در ویرایش قرارداد</string>
     <string name="error_contract_terminate">خطا در خاتمه قرارداد</string>
+    <string name="error_organization_change_status">خطا درتغییر وضعیت سازمان</string>
     <string name="error_select_organization">لطفاً نام سازمان را انتخاب  کنید.</string>
     <string name="msg_contract_created">قرارداد با موفقیت ثبت شد.</string>
     <string name="msg_contract_updated">قرارداد با موفقیت ویرایش شد.</string>
@@ -741,4 +756,55 @@
     <string name="msg_update_serial_offer">ویرایش سریال با موفقیت ویرایش شد.</string>
     <string name="msg_saved_local_storage_awaiting_synchronization">در حافظه محلی ذخیره شد و در انتظار همگام‌سازی است.</string>
     <string name="msg_changes_saved_offline_synchronized_connection">تغییرات به صورت آفلاین ذخیره شد و در اولین اتصال همگام خواهد شد.</string>
+    <string name="msg_file_uploaded_successfully">فایل با موفقیت آپلود شد.</string>
+    <string name="error_invalid_mobile">شماره موبایل باید ۱۱ رقم و با 09 شروع شود</string>
+
+    <string name="msg_server_error">خطا در دریافت اطلاعات از سرور</string>
+    <string name="label_retry">تلاش مجدد</string>
+
+    <string name="label_untitled">بدون عنوان</string>
+    <string name="label_unknown">نامشخص</string>
+    <string name="label_not_available">—</string>
+    <string name="label_zero">0</string>
+    <string name="label_serial_number_value">سریال: %1$s</string>
+    <string name="label_ticket_product_title">%1$d. %2$s</string>
+    <string name="label_total_used_count">تعداد کل / مصرفی:</string>
+    <string name="label_total_amount">مبلغ کل:</string>
+    <string name="label_price_with_currency">%1$s ریال</string>
+    <string name="label_usage_date">تاریخ مصرف:</string>
+    <string name="label_time">ساعت:</string>
+    <string name="title_ticket_issue_details">جزئیات بلیط صادر شده</string>
+    <string name="label_close">بستن</string>
+    <string name="label_product_service_title">عنوان سرویس/کالا</string>
+    <string name="label_serial_number">شماره سریال</string>
+    <string name="label_issue_number">شماره صدور</string>
+    <string name="label_customer">مشتری</string>
+    <string name="label_ticket_status">وضعیت بلیط</string>
+    <string name="label_usage_status">وضعیت مصرف</string>
+    <string name="label_usage_datetime">تاریخ و زمان مصرف</string>
+    <string name="label_datetime_value">%1$s - ساعت %2$s</string>
+    <string name="label_approval_date">تاریخ تایید</string>
+    <string name="label_total_count">تعداد کل</string>
+    <string name="label_actual_used_count">تعداد واقعی مصرف شده</string>
+    <string name="label_unit_price">قیمت واحد</string>
+    <string name="label_discount_value">%1$s ریال (%2$s%%)</string>
+    <string name="label_net_price">قیمت خالص</string>
+    <string name="label_total_paid">جمع کل پرداختی</string>
+    <string name="label_unit_commission">مبلغ پورسانت واحد</string>
+    <string name="label_total_commission">پورسانت کل</string>
+
+    <string name="label_image_specifications">مشخصات تصویر</string>
+    <string name="label_image_type">نوع تصویر</string>
+    <string name="label_confirm_and_add">تایید و افزودن</string>
+
+
+    //attachment type
+    <string name="attachment_type_lobby_image">تصویر لابی</string>
+    <string name="attachment_type_signboard_image">تصویر سردر</string>
+    <string name="attachment_type_other_images">تصویر سایر مکان‌ها</string>
+    <string name="attachment_type_contract">قرارداد</string>
+    <string name="attachment_type_introduction_letter">معرفی‌نامه</string>
+    <string name="attachment_type_receipt">رسید</string>
+
+
 </resources>

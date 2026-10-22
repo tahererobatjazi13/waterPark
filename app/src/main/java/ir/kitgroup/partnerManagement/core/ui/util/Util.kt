@@ -22,8 +22,13 @@ import java.io.IOException
 import java.util.UUID
 
 import saman.zamani.persiandate.PersianDate
+import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 
@@ -218,7 +223,6 @@ fun formatJalaliDate(dateString: String?): String {
 }
 
 
-
 @Composable
 fun String?.toAmountDisplay(): String {
     if (isNullOrBlank()) {
@@ -293,6 +297,50 @@ fun extractErrorMessage(
 
     } catch (e: Exception) {
         errorBody
+    }
+}
+
+
+/** تبدیل millis به ISO-8601 (UTC) برای ارسال به API */
+fun convertMillisToIso(millis: Long): String {
+    val dateTime = Instant.ofEpochMilli(millis)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDateTime()
+    return dateTime.toInstant(ZoneOffset.UTC)
+        .atOffset(ZoneOffset.UTC)
+        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+}
+
+/** تبدیل millis به تاریخ شمسی برای نمایش */
+fun convertMillisToJalali(millis: Long): String {
+    val persianDate = PersianDate(millis)
+    return String.format(
+        Locale.US,
+        "%04d/%02d/%02d",
+        persianDate.shYear,
+        persianDate.shMonth,
+        persianDate.shDay
+    )
+}
+
+/** تبدیل شیء JalaliDate به میلی‌ثانیه */
+fun jalaliToMillis(jalali: ir.kitgroup.partnerManagement.core.ui.components.JalaliDate): Long {
+    return PersianDate().apply {
+        shYear = jalali.year
+        shMonth = jalali.month
+        shDay = jalali.day
+        hour = 0
+        minute = 0
+        second = 0
+    }.time
+}
+
+fun formatPrice(price: Long?): String {
+    if (price == null) return "0"
+    return try {
+        DecimalFormat("#,###").format(price)
+    } catch (_: Exception) {
+        price.toString()
     }
 }
 

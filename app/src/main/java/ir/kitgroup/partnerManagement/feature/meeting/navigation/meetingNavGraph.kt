@@ -72,11 +72,6 @@ fun NavGraphBuilder.meetingNavGraph(
                         navController.navigate(
                             Screen.AddMeeting.createRoute()
                         )
-                    },
-                    onEditMeetingClick = { meetingId ->
-                        navController.navigate(
-                            Screen.AddMeeting.createRoute(meetingId)
-                        )
                     }
                 )
             }

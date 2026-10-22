@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.core.database.mapper
 
-import com.google.gson.annotations.SerializedName
 import ir.kitgroup.partnerManagement.core.database.entity.AssignStandChangeStatusEntity
 import ir.kitgroup.partnerManagement.core.database.entity.StandTypeEntity
 import ir.kitgroup.partnerManagement.core.database.entity.CityEntity
@@ -8,7 +7,6 @@ import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OfferDetailEntity
-import ir.kitgroup.partnerManagement.core.database.entity.OrgAttachmentFileEntity
 import ir.kitgroup.partnerManagement.core.database.entity.WarningTypeEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
@@ -17,6 +15,7 @@ import ir.kitgroup.partnerManagement.core.network.model.WarningDto
 import ir.kitgroup.partnerManagement.core.database.entity.RegionEntity
 import ir.kitgroup.partnerManagement.core.database.entity.AssignedSerialEntity
 import ir.kitgroup.partnerManagement.core.database.entity.AssignedStandEntity
+import ir.kitgroup.partnerManagement.core.database.entity.AttachmentFileEntity
 import ir.kitgroup.partnerManagement.core.database.entity.ContractTerminationEntity
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingChangeStatusEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationChangeStatusEntity
@@ -30,7 +29,6 @@ import ir.kitgroup.partnerManagement.core.network.model.ContractDto
 import ir.kitgroup.partnerManagement.core.network.model.MeetingDto
 import ir.kitgroup.partnerManagement.core.network.model.OfferDto
 import ir.kitgroup.partnerManagement.core.network.model.OfferDetailDto
-import ir.kitgroup.partnerManagement.core.network.model.OrgAttachmentFileDto
 import ir.kitgroup.partnerManagement.core.network.model.WarningTypeDto
 import ir.kitgroup.partnerManagement.core.network.model.OrganizationDto
 import ir.kitgroup.partnerManagement.core.network.model.OrganizationPersonDto
@@ -43,6 +41,7 @@ import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
 import ir.kitgroup.partnerManagement.core.database.entity.WarningEntity
 import ir.kitgroup.partnerManagement.core.network.model.AssignStandChangeStatusDto
 import ir.kitgroup.partnerManagement.core.network.model.AssignedSerialDto
+import ir.kitgroup.partnerManagement.core.network.model.AttachmentFileDto
 import ir.kitgroup.partnerManagement.core.network.model.ContractTerminationDto
 import ir.kitgroup.partnerManagement.core.network.model.MeetingChangeStatusDto
 import ir.kitgroup.partnerManagement.core.network.model.OrganizationChangeStatusDto
@@ -381,26 +380,6 @@ fun WarningEntity.toPendingDto(): WarningDto {
     )
 }
 
-fun OrgAttachmentFileDto.toEntity(): OrgAttachmentFileEntity {
-    return OrgAttachmentFileEntity(
-        orgAttachmentFileId = orgAttachmentFileId,
-        name = name,
-        organizationId = organizationId,
-        fileType = fileType,
-        originalFileName = originalFileName,
-        storedFileName = storedFileName,
-        relativePath = relativePath,
-        fileExtension = fileExtension,
-        mimeType = mimeType,
-        fileSize = fileSize,
-        fileUrl = fileUrl,
-        fileHash = fileHash,
-        storageStatus = storageStatus,
-        description = description,
-        sourceCreate = sourceCreate,
-        meetingId = meetingId
-    )
-}
 
 fun ContractDto.toEntity(): ContractEntity {
     val finalId = this.contractId ?: this.serverId ?: java.util.UUID.randomUUID().toString()
@@ -546,7 +525,7 @@ fun VisitorDto.toEntity(): VisitorEntity {
 
 fun VisitorOrganizationDto.toEntity(): VisitorOrganizationEntity {
     return VisitorOrganizationEntity(
-        visitorOrganizationId = orgVisitorId.orEmpty(),
+        visitorOrganizationId = orgVisitorId,
         visitorId = visitorId,
         organizationId = organizationId,
         statusRelation = statusRelation,

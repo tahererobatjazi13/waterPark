@@ -22,8 +22,8 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_ORGANIZATION_SAVE
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.organization.ui.AssignVisitorScreen
-import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddOrganizationScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.visitor.AssignVisitorScreen
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddEditOrganizationScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.MapScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.OrganizationDetailScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationsListScreen
@@ -55,7 +55,6 @@ fun NavGraphBuilder.organizationNavGraph(
                 )
 
                 OrganizationsListScreen(
-                    navController = navController,
                     onOrganizationClick = { organizationId ->
                         navController.navigate(
                             Screen.OrganizationDetail.createRoute(organizationId)
@@ -105,22 +104,11 @@ fun NavGraphBuilder.organizationNavGraph(
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    AddOrganizationScreen(
-                        organizationId = null,   onBack = {
+                    AddEditOrganizationScreen(
+                        onSuccessSave = {
                             navController.popBackStack()
                         },
-                        onSuccessCreate = {
-                            // تنظیم پرچم برای لیست سازمان‌ها
-                            navController.getBackStackEntry(BottomNavItem.Organizations.route)
-                                .savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = true
-
-                            // بازگشت به لیست سازمان‌ها
-                            navController.popBackStack(
-                                BottomNavItem.Organizations.route,
-                                inclusive = false
-                            )
-                        },
-                        onSelectLocation = {
+                        onSelectLocationClick = {
                             navController.navigate("map_screen")
                         },
                         selectedLatitude = latitude,
@@ -185,22 +173,17 @@ fun NavGraphBuilder.organizationNavGraph(
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    AddOrganizationScreen(
-                        organizationId = organizationId,   onBack = {
-                            navController.popBackStack()
-                        },
-                        onSuccessCreate = {
-                            // تنظیم پرچم برای لیست سازمان‌ها
-                            navController.getBackStackEntry(BottomNavItem.Organizations.route)
-                                .savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = true
-
-                            // بازگشت به لیست سازمان‌ها
-                            navController.popBackStack(
-                                BottomNavItem.Organizations.route,
-                                inclusive = false
+                    AddEditOrganizationScreen(
+                        onSuccessSave = {
+                            val popped = navController.popBackStack(
+                                route = Screen.OrganizationDetail.route,
+                                inclusive = true
                             )
+                            if (!popped) {
+                                navController.popBackStack()
+                            }
                         },
-                        onSelectLocation = {
+                        onSelectLocationClick = {
                             navController.navigate("map_screen")
                         },
                         selectedLatitude = latitude,
@@ -396,23 +379,43 @@ fun NavGraphBuilder.organizationNavGraph(
 
         }
     }
-    composable("map_screen",
-        enterTransition = {
-            EnterTransition.None
-        },
-        exitTransition = {
-            ExitTransition.None
-        },
-        popEnterTransition = {
-            EnterTransition.None
-        },
-        popExitTransition = {
-            ExitTransition.None
-        }) {
+    composable(
+        route = "map_screen?lat={lat}&lng={lng}&isReadOnly={isReadOnly}",
+        arguments = listOf(
+            navArgument("lat") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            },
+            navArgument("lng") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            },
+            navArgument("isReadOnly") {
+                type = NavType.BoolType
+                defaultValue = false
+            }
+        ),
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
+    ) { backStackEntry ->
+        val lat = backStackEntry.arguments?.getString("lat")?.toDoubleOrNull()
+        val lng = backStackEntry.arguments?.getString("lng")?.toDoubleOrNull()
+        val isReadOnly = backStackEntry.arguments?.getBoolean("isReadOnly") ?: false
+
         MapScreen(
             navController = navController,
-            onBackClick = { navController.popBackStack() },
-
-            )
+            initialLatitude = lat,
+            initialLongitude = lng,
+            isReadOnly = isReadOnly,
+            onBackClick = {
+                navController.popBackStack()
+            }
+        )
     }
+
+
 }

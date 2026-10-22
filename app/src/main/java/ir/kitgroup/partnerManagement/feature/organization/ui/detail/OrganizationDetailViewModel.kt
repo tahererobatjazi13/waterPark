@@ -6,22 +6,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.dao.VisitSubjectDao
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitSubjectEntity
-import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
-import ir.kitgroup.partnerManagement.core.database.entity.WarningEntity
-import ir.kitgroup.partnerManagement.core.database.entity.WarningTypeEntity
-import ir.kitgroup.partnerManagement.core.database.model.AssignedSerialWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
-import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
-import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
-import ir.kitgroup.partnerManagement.core.network.model.TicketIssueLineDto
 import ir.kitgroup.partnerManagement.core.repository.AssignedSerialsRepository
 import ir.kitgroup.partnerManagement.core.repository.AssignedStandsRepository
 import ir.kitgroup.partnerManagement.core.repository.ContractRepository
@@ -30,23 +25,26 @@ import ir.kitgroup.partnerManagement.core.repository.OrganizationPersonRepositor
 import ir.kitgroup.partnerManagement.core.repository.OrganizationRepository
 import ir.kitgroup.partnerManagement.core.repository.VisitorRepository
 import ir.kitgroup.partnerManagement.core.repository.WarningRepository
+import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UiText
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.dashboard.repository.SyncRepository
-import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
+import ir.kitgroup.partnerManagement.feature.organization.model.ChangeStatusOrganizationRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import java.util.UUID
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 
 @HiltViewModel
@@ -61,10 +59,19 @@ class OrganizationDetailViewModel @Inject constructor(
     private val visitorRepository: VisitorRepository,
     private val visitSubjectDao: VisitSubjectDao,
     private val syncRepository: SyncRepository,
-    private val apiService: ApiService,
-    private val mainPreferences: MainPreferences
+    private val mainPreferences: MainPreferences,
+    savedStateHandle: SavedStateHandle,
 
-) : ViewModel() {
+    ) : ViewModel() {
+    val organizationId: String = checkNotNull(savedStateHandle["organizationId"])
+
+    val baseUrlFlow: StateFlow<String> = mainPreferences.baseUrlFlow
+        .map { it?.trim()?.trimEnd('/').orEmpty() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ""
+        )
 
     private val _statusUpdateState = MutableStateFlow<DataState<Unit>>(DataState.Idle)
     val statusUpdateState = _statusUpdateState.asStateFlow()
@@ -167,56 +174,6 @@ class OrganizationDetailViewModel @Inject constructor(
         }
     }
 
-   // warning
-    private val _warnings = MutableStateFlow<List<WarningWithDetail>>(emptyList())
-    val warnings: StateFlow<List<WarningWithDetail>> =
-        _warnings.asStateFlow()
-
-    fun observeOrganizationWarnings(
-        organizationId: String
-    ) {
-        viewModelScope.launch {
-            warningRepository
-                .observeByOrganization(organizationId)
-                .collect { warnings ->
-                    _warnings.value = warnings
-                }
-        }
-    }
-
-    fun deleteWarning(warningId: String) {
-        viewModelScope.launch {
-            warningRepository.deleteById(warningId)
-        }
-    }
-
-    fun addWarning(
-        organizationId: String,
-        organizationName: String?,
-        warningTypeId: String?,
-        warningTypeName: String?,
-        description: String
-    ) {
-        viewModelScope.launch {
-
-            val warning = WarningEntity(
-                warningId = UUID.randomUUID().toString(),
-                organizationId = organizationId,
-                organizationName = organizationName,
-                warningTypeId = warningTypeId,
-                warningTypeName = warningTypeName,
-                description = description,
-                warningDate = null,
-                score = null,
-                stateCode = 1
-            )
-
-            warningRepository.upsertAll(
-                listOf(warning)
-            )
-        }
-    }
-
     private val _assignedStands = MutableStateFlow<List<AssignedStandWithDetail>>(emptyList())
     val assignedStands: StateFlow<List<AssignedStandWithDetail>> =
         _assignedStands.asStateFlow()
@@ -233,22 +190,6 @@ class OrganizationDetailViewModel @Inject constructor(
         }
     }
 
-    private val _assignedSerials = MutableStateFlow<List<AssignedSerialWithDetail>>(emptyList())
-    val assignedSerials: StateFlow<List<AssignedSerialWithDetail>> =
-        _assignedSerials.asStateFlow()
-
-    fun observeOrganizationAssignedSerials(
-        organizationId: String
-    ) {
-        viewModelScope.launch {
-            assignedSerialsRepository
-                .observeByOrganization(organizationId)
-                .collect { assignedSerials ->
-                    _assignedSerials.value = assignedSerials
-                }
-        }
-    }
-
     val visitSubjects: StateFlow<List<VisitSubjectEntity>> =
         visitSubjectDao.observeAll()
             .stateIn(
@@ -261,19 +202,28 @@ class OrganizationDetailViewModel @Inject constructor(
         _statusUpdateState.value = DataState.Idle
     }
 
-    fun updateOrganizationStatus(
+    private val _uiStateChange = MutableStateFlow(OrganizationDetailUiState())
+    val uiStateChange: StateFlow<OrganizationDetailUiState> = _uiStateChange.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val uiEvent = _uiEvent.asSharedFlow()
+
+    fun changeStatusOrganization(
         organizationId: String,
         status: OrganizationStatus,
         deactiveDate: String?,
         reason: String?,
         visitDate: String?,
-        subjectVisitId: String?
+        subjectVisitId: String?,
+        onSuccessCallback: () -> Unit
     ) {
+        if (_uiStateChange.value.isChangeStatus) return
+
         viewModelScope.launch {
-            _statusUpdateState.value = DataState.Loading
+            _uiStateChange.update { it.copy(isChangeStatus = true) }
 
             try {
-                val request = ChangeOrganizationStatusRequest(
+                val request = ChangeStatusOrganizationRequest(
                     organizationId = organizationId,
                     statusOrg = status.id,
                     deactiveDate = deactiveDate,
@@ -281,88 +231,108 @@ class OrganizationDetailViewModel @Inject constructor(
                     visitDate = visitDate,
                     subjectVisitId = subjectVisitId
                 )
-                Log.d("ChangeOrganizationStatusRequest", request.toString())
 
-                val result = organizationRepository.changeOrganizationStatus(request)
+                val result = organizationRepository.changeStatusOrganization(request)
 
-                result.onSuccess {
-                    _statusUpdateState.value = DataState.Success(Unit)
-                    _statusUiEvent.emit(
-                        UiEvent.ShowMessage(
-                            UiText.DynamicString("وضعیت سازمان با موفقیت به‌روزرسانی شد.")
-                        )
-                    )
-                    Log.d("ChangeOrganizationStatusRequest1", "ok")
+                result.fold(
+                    onSuccess = { serverMessage ->
+                        val uiMessage = if (!serverMessage.isNullOrBlank()) {
+                            UiText.DynamicString(serverMessage)
+                        } else {
+                            UiText.StringResource(R.string.msg_change_status_success)
+                        }
 
-                }.onFailure { error ->
-                    val message = error.localizedMessage ?: "خطا در تغییر وضعیت سازمان"
-                    _statusUpdateState.value = DataState.Error(UiText.DynamicString(message))
-                    _statusUiEvent.emit(
-                        UiEvent.ShowError(UiText.DynamicString(message))
-                    )
-                    Log.d("ChangeOrganizationStatusRequest2", "ok")
+                        _uiEvent.emit(UiEvent.ShowMessage(uiMessage))
+                        delay(500)
+                        onSuccessCallback()
+                    },
+                    onFailure = {
+                        try {
+                            organizationRepository.saveOfflineOrganizationStatusChange(
+                                organizationId = organizationId,
+                                statusOrg = status.id,
+                                deactiveDate = deactiveDate,
+                                reason = reason,
+                                visitDate = visitDate,
+                                subjectVisitId = subjectVisitId
+                            )
 
-                }
-            } catch (e: Exception) {
+                            _uiEvent.emit(
+                                UiEvent.ShowMessage(
+                                    UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)
+                                )
+                            )
 
-                // در صورتی که تابع ریپازیتوری اکولایز نشده باشد یا Exception پرتاب کند
-                val message = e.localizedMessage ?: "خطای ناشناخته در برقراری ارتباط با سرور"
-                _statusUpdateState.value = DataState.Error(UiText.DynamicString(message))
-                _statusUiEvent.emit(
-                    UiEvent.ShowError(UiText.DynamicString(message))
+                            delay(500)
+                            onSuccessCallback()
+                        } catch (dbError: Exception) {
+                            _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(dbError)))
+                        }
+                    }
                 )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(e)))
+            } finally {
+                _uiStateChange.update { it.copy(isChangeStatus = false) }
             }
         }
     }
 
-    // درون OrganizationDetailViewModel:
-    private val _ticketIssueState =
-        MutableStateFlow<DataState<List<TicketIssueLineDto>>>(DataState.Idle)
-    val ticketIssueState: StateFlow<DataState<List<TicketIssueLineDto>>> =
-        _ticketIssueState.asStateFlow()
+    /*  fun changeStatusOrganization(
+          organizationId: String,
+          status: OrganizationStatus,
+          deactiveDate: String?,
+          reason: String?,
+          visitDate: String?,
+          subjectVisitId: String?
+      ) {
+          viewModelScope.launch {
+              _statusUpdateState.value = DataState.Loading
 
-    fun fetchOrganizationTicketIssue(organizationId: String) {
-        viewModelScope.launch {
-            _ticketIssueState.value = DataState.Loading
+              try {
+                  val request = ChangeStatusOrganizationRequest(
+                      organizationId = organizationId,
+                      statusOrg = status.id,
+                      deactiveDate = deactiveDate,
+                      reason = reason,
+                      visitDate = visitDate,
+                      subjectVisitId = subjectVisitId
+                  )
+                  Log.d("ChangeOrganizationStatusRequest", request.toString())
 
-            organizationRepository.getOrganizationTicketIssue(organizationId)
-                .onSuccess { ticketIssues ->
-                    _ticketIssueState.value = DataState.Success(ticketIssues)
-                }
-                .onFailure { error ->
-                    _ticketIssueState.value = DataState.Error(
-                        UiText.DynamicString(
-                            error.localizedMessage ?: "خطا در دریافت بلیط‌های سازمان"
-                        )
-                    )
-                }
-        }
-    }
+                  val result = organizationRepository.changeStatusOrganization(request)
 
+                  result.onSuccess {
+                      _statusUpdateState.value = DataState.Success(Unit)
+                      _statusUiEvent.emit(
+                          UiEvent.ShowMessage(
+                              UiText.DynamicString("وضعیت سازمان با موفقیت به‌روزرسانی شد.")
+                          )
+                      )
+                      Log.d("ChangeOrganizationStatusRequest1", "ok")
 
-    // درون OrganizationDetailViewModel:
-    private val _visitorsState =
-        MutableStateFlow<DataState<List<VisitorOrganizationEntity>>>(DataState.Idle)
-    val visitorsState: StateFlow<DataState<List<VisitorOrganizationEntity>>> =
-        _visitorsState.asStateFlow()
+                  }.onFailure { error ->
+                      val message = error.localizedMessage ?: "خطا در تغییر وضعیت سازمان"
+                      _statusUpdateState.value = DataState.Error(UiText.DynamicString(message))
+                      _statusUiEvent.emit(
+                          UiEvent.ShowError(UiText.DynamicString(message))
+                      )
+                      Log.d("ChangeOrganizationStatusRequest2", "ok")
 
-    fun fetchOrganizationVisitors(organizationId: String) {
-        viewModelScope.launch {
-            _visitorsState.value = DataState.Loading
+                  }
+              } catch (e: Exception) {
 
-            organizationRepository.getOrganizationVisitors(organizationId)
-                .onSuccess { visitors ->
-                    _visitorsState.value = DataState.Success(visitors)
-                }
-                .onFailure { error ->
-                    _visitorsState.value = DataState.Error(
-                        UiText.DynamicString(
-                            error.localizedMessage ?: "خطا در دریافت ویزیتورهای سازمان"
-                        )
-                    )
-                }
-        }
-    }
+                  // در صورتی که تابع ریپازیتوری اکولایز نشده باشد یا Exception پرتاب کند
+                  val message = e.localizedMessage ?: "خطای ناشناخته در برقراری ارتباط با سرور"
+                  _statusUpdateState.value = DataState.Error(UiText.DynamicString(message))
+                  _statusUiEvent.emit(
+                      UiEvent.ShowError(UiText.DynamicString(message))
+                  )
+              }
+          }
+      }*/
 
 
     private val _addPersonState =
@@ -449,97 +419,42 @@ class OrganizationDetailViewModel @Inject constructor(
     }
 
 
-    private val _addWarningState = MutableStateFlow<DataState<Unit>>(DataState.Idle)
-    val addWarningState = _addWarningState.asStateFlow()
+    private val _uiState = MutableStateFlow(AttachmentsFileUiState())
+    val uiState: StateFlow<AttachmentsFileUiState> = _uiState.asStateFlow()
 
-    /*    private val _addWarningState =
-            MutableStateFlow(AddOrganizationWarningState())
+    init {
+        loadAttachments()
+    }
 
-        val addWarningState: StateFlow<AddOrganizationWarningState> =
-            _addWarningState.asStateFlow()*/
-
-    fun observeWarningTypes(): Flow<List<WarningTypeEntity>> =
-        warningRepository.observeWarningTypes()
-
-
-/*
-    fun createOrganizationWarning(
-        organizationId: String,
-        warningId: String,
-        visitorId: String,
-        meetingId: String? = null,
-        warningDate: String,
-        description: String,
-        isEdit: Boolean = false,
-        warningRecordId: String? = null
-    ) {
+    fun loadAttachments() {
         viewModelScope.launch {
-            _addWarningState.value = DataState.Loading
+            _uiState.update { it.copy(isImagesLoading = true) }
+            val result = organizationRepository.getAttachmentsByOrgId(organizationId)
 
-            try {
-                val actualVisitorId = visitorId.ifBlank {
-                    mainPreferences.getVisitorId()
-                }
-                val request = CreateOrganizationWarningRequest(
-                    organizationWarningId = warningRecordId,
-                    organizationId = organizationId,
-                    warningId = warningId,
-                    visitorId = actualVisitorId,
-                    meetingId = meetingId,
-                    warningDate = warningDate,
-                    description = description.trim()
-                )
-
-                Log.d("ChangeOrganizationStatusRequest", request.toString())
-                val isEditMode: Boolean =
-                    !warningRecordId.isNullOrBlank()
-
-                val result = if (isEditMode) {
-                    warningRepository.updateOrganizationWarning(request)
-                } else {
-                    warningRepository.createOrganizationWarning(request)
-                }
-
-                result.onSuccess {
-                    _addWarningState.value = DataState.Success(Unit)
-                    _statusUiEvent.emit(
-                        UiEvent.ShowMessage(
-                            UiText.DynamicString("تذکر با موفقیت ثبت شد.")
-                        )
+            result.onSuccess { dtoList ->
+                result.onSuccess { attachments ->
+                    organizationRepository.saveAttachmentsToDb(
+                        orgId = organizationId,
+                        attachments = attachments,
+                        baseUrl = baseUrlFlow.value
                     )
-                    Log.d("createOrganizationWarning1", "ok")
-
-                }.onFailure { error ->
-                    val message = error.localizedMessage ?: "خطا در ثبت تذکر"
-                    _addWarningState.value = DataState.Error(UiText.DynamicString(message))
-                    _statusUiEvent.emit(
-                        UiEvent.ShowError(UiText.DynamicString(message))
-                    )
-                    Log.d("createOrganizationWarning2", "ok")
-
                 }
-            } catch (e: Exception) {
 
-                // در صورتی که تابع ریپازیتوری اکولایز نشده باشد یا Exception پرتاب کند
-                val message = e.localizedMessage ?: "خطای ناشناخته در برقراری ارتباط با سرور"
-                _addWarningState.value = DataState.Error(UiText.DynamicString(message))
-                _statusUiEvent.emit(
-                    UiEvent.ShowError(UiText.DynamicString(message))
-                )
+
+                _uiState.update {
+                    it.copy(
+                        attachments = dtoList,
+                        isImagesLoading = false
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isImagesLoading = false,
+                        errorMessage = error.localizedMessage
+                    )
+                }
             }
         }
-    }
-*/
-
-
-    /*
-        fun resetAddWarningState() {
-            _addWarningState.value = AddOrganizationWarningState()
-        }
-    */
-
-
-    fun resetAddWarningState() {
-        _addWarningState.value = DataState.Idle
     }
 }

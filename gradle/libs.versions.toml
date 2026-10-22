@@ -24,7 +24,7 @@ vico = "1.14.0"
 constraintlayout = "2.2.1"
 osmdroid = "6.1.20"
 preference = "1.2.1"
-
+coil = "2.7.0"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
@@ -68,6 +68,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 
 osmdroid = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroid" }
 androidx-preference = { group = "androidx.preference", name = "preference-ktx", version.ref = "preference" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

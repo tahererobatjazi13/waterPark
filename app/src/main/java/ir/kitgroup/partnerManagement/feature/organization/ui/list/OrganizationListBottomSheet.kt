@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui
+package ir.kitgroup.partnerManagement.feature.organization.ui.list
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

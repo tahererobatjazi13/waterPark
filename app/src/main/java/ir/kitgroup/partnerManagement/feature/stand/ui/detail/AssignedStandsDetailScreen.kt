@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -56,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.StandTypeEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomOutlinedButton
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
@@ -101,7 +101,7 @@ fun AssignedStandsDetailRoute(
             .background(LocalPartnerManagementColors.current.screenBackground),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(
+        BouncingDotsIndicator(
             color = MaterialTheme.colorScheme.primary
         )
     }

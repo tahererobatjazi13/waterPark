@@ -19,6 +19,7 @@ data class CreateOrganizationRequest(
     val regionId: String?,
     val latitude: Double?,
     val longitude: Double?,
+    val visitorId: String?,
     val statusExternalCustomer: Boolean,
     val englishName: String?,
     val document: String? = null,

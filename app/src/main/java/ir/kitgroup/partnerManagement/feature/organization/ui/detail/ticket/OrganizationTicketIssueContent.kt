@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +25,6 @@ import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,37 +33,54 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.network.model.TicketIssueLineDto
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
+import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.TicketStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import java.text.DecimalFormat
+import ir.kitgroup.partnerManagement.core.ui.util.formatPrice
+import ir.kitgroup.partnerManagement.core.ui.util.isInternetAvailable
 
 @Composable
 fun OrganizationTicketIssueTabContent(
-    ticketIssueState: DataState<List<TicketIssueLineDto>>,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    organizationTicketIssueViewModel: OrganizationTicketIssueViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
+    val ticketIssueState by organizationTicketIssueViewModel.ticketIssueState.collectAsStateWithLifecycle()
     var selectedTicketLine by remember { mutableStateOf<TicketIssueLineDto?>(null) }
 
+    LaunchedEffect(Unit) {
+        val online = isInternetAvailable(context)
+        organizationTicketIssueViewModel.ensureTicketIssuesLoaded(online)
+    }
+
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -76,7 +91,7 @@ fun OrganizationTicketIssueTabContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.weight(1f)) {
-                SectionTitle(title = "لیست بلیط‌های صادر شده")
+                SectionTitle(title = stringResource(R.string.label_ticket_issue_list))
             }
         }
 
@@ -88,11 +103,12 @@ fun OrganizationTicketIssueTabContent(
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    BouncingDotsIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
 
             is DataState.Error -> {
+                val errorMessage = (ticketIssueState as DataState.Error).error.asString(context)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -101,21 +117,24 @@ fun OrganizationTicketIssueTabContent(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "خطا در دریافت لیست بلیط‌ها",
+                        text = errorMessage,
                         style = typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     CustomButton(
-                        text = "تلاش مجدد",
-                        onClick = onRetry
+                        text = stringResource(R.string.label_retry),
+                        onClick = {
+                            val online = isInternetAvailable(context)
+                            organizationTicketIssueViewModel.retry(online)
+                        }
                     )
                 }
             }
 
             is DataState.Success -> {
-                val tickets = ticketIssueState.data
-                if (tickets.isEmpty()) {
+                val ticketIssues = (ticketIssueState as DataState.Success).data
+                if (ticketIssues.isEmpty()) {
                     EmptyState(
                         textRes = R.string.msg_no_item_found,
                         modifier = Modifier
@@ -127,11 +146,10 @@ fun OrganizationTicketIssueTabContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f),
-                        contentPadding = PaddingValues(bottom = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         itemsIndexed(
-                            items = tickets,
+                            items = ticketIssues,
                             key = { _, item -> item.ticketIssueLineId }
                         ) { index, item ->
                             TicketIssueLineCard(
@@ -158,6 +176,7 @@ fun OrganizationTicketIssueTabContent(
         )
     }
 }
+
 
 @Composable
 private fun TicketIssueLineCard(
@@ -209,8 +228,14 @@ private fun TicketIssueLineCard(
 
                     Column {
                         Text(
-                            text = "${index + 1}. ${ticket.finalProductServiceName ?: ticket.productServiceName ?: "بدون عنوان"}",
-                            style = typography.titleMedium,
+                            text = stringResource(
+                                R.string.label_ticket_product_title,
+                                index + 1,
+                                ticket.finalProductServiceName
+                                    ?: ticket.productServiceName
+                                    ?: stringResource(R.string.label_untitled)
+                            ),
+                            style = typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = appColors.textPrimary,
                             maxLines = 1,
@@ -218,7 +243,7 @@ private fun TicketIssueLineCard(
                         )
                         ticket.serialNumber?.let { serial ->
                             Text(
-                                text = "سریال: $serial",
+                                text = stringResource(R.string.label_serial_number_value, serial),
                                 style = typography.labelSmall,
                                 color = appColors.textSecondary
                             )
@@ -227,10 +252,9 @@ private fun TicketIssueLineCard(
                 }
 
                 // بج وضعیت مصرف
-                TicketStatusBadge(
-                    statusName = ticket.ticketStatusName ?: ticket.statusUsageName ?: "نامشخص",
-                    isSuccess = ticket.ticketStatus == 1 || ticket.statusUsage == 1
-                )
+                StatusBadge(status = TicketStatus.fromId(ticket.ticketStatus ?: 0))
+
+
             }
 
             HorizontalDivider(thickness = 0.5.dp, color = appColors.border)
@@ -241,13 +265,16 @@ private fun TicketIssueLineCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TicketInfoCompactItem(
-                    label = "تعداد کل / مصرفی:",
+                    label = stringResource(R.string.label_total_used_count),
                     value = "${ticket.count ?: 0} / ${ticket.realCount ?: 0}"
                 )
 
                 TicketInfoCompactItem(
-                    label = "مبلغ کل:",
-                    value = "${formatPrice(ticket.sumPrice)} ریال"
+                    label = stringResource(R.string.label_total_amount),
+                    value = stringResource(
+                        R.string.label_price_with_currency,
+                        formatPrice(ticket.sumPrice)
+                    )
                 )
             }
 
@@ -257,13 +284,13 @@ private fun TicketIssueLineCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TicketInfoCompactItem(
-                    label = "تاریخ مصرف:",
+                    label = stringResource(R.string.label_usage_date),
                     value = formatJalaliDate(ticket.usageDate)
                 )
 
                 TicketInfoCompactItem(
-                    label = "ساعت:",
-                    value = ticket.useTime ?: "-"
+                    label = stringResource(R.string.label_time),
+                    value = ticket.useTime ?: stringResource(R.string.label_not_available)
                 )
             }
         }
@@ -286,91 +313,182 @@ private fun TicketIssueLineDetailDialog(
                 .fillMaxWidth(0.92f)
                 .padding(vertical = 24.dp),
             shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.background,
             tonalElevation = 6.dp
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp)
+            CompositionLocalProvider(
+                LocalLayoutDirection provides LayoutDirection.Rtl
             ) {
-                // هدر دیالوگ
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "جزئیات بلیط صادر شده",
-                            style = typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = appColors.textPrimary
-                        )
-                    }
-
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "بستن",
-                            tint = appColors.textSecondary
-                        )
-                    }
-                }
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    thickness = 0.8.dp,
-                    color = appColors.border
-                )
-
-                // محتوای اسکرول‌پذیر جزئیات
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(18.dp)
                 ) {
-                    DetailRowItem(label = "عنوان سرویس/کالا", value = ticket.finalProductServiceName ?: ticket.productServiceName ?: "-")
-                    DetailRowItem(label = "شماره سریال", value = ticket.serialNumber ?: "-")
-                    DetailRowItem(label = "شماره صدور", value = ticket.issueNumber ?: "-")
-                    DetailRowItem(label = "مشتری", value = ticket.customerName ?: "-")
-                    DetailRowItem(label = "وضعیت بلیط", value = ticket.ticketStatusName ?: "-")
-                    DetailRowItem(label = "وضعیت مصرف", value = ticket.statusUsageName ?: "-")
-                    DetailRowItem(label = "تاریخ و زمان مصرف", value = "${formatJalaliDate(ticket.usageDate)} - ساعت ${ticket.useTime ?: "-"}")
-                    DetailRowItem(label = "تاریخ تایید", value = formatJalaliDate(ticket.approvedDate))
-                    DetailRowItem(label = "تعداد کل", value = ticket.count?.toString() ?: "0")
-                    DetailRowItem(label = "تعداد واقعی مصرف شده", value = ticket.realCount?.toString() ?: "0")
+                    // هدر دیالوگ
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = stringResource(R.string.title_ticket_issue_details),
+                                style = typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = appColors.textPrimary
+                            )
+                        }
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp, color = appColors.border)
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.label_close),
+                                tint = appColors.textSecondary
+                            )
+                        }
+                    }
 
-                    DetailRowItem(label = "قیمت واحد", value = "${formatPrice(ticket.unitPrice)} ریال")
-                    DetailRowItem(label = "مبلغ تخفیف", value = "${formatPrice(ticket.discountPrice)} ریال (${ticket.discountAmount ?: 0}%)")
-                    DetailRowItem(label = "قیمت خالص", value = "${formatPrice(ticket.netPrice)} ریال")
-                    DetailRowItem(label = "جمع کل پرداختی", value = "${formatPrice(ticket.sumPrice)} ریال", isHighlighted = true)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        thickness = 0.8.dp,
+                        color = appColors.border
+                    )
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp, color = appColors.border)
+                    // محتوای اسکرول‌پذیر جزئیات
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        DetailRowItem(
+                            label = stringResource(R.string.label_product_service_title),
+                            value = ticket.finalProductServiceName ?: ticket.productServiceName
+                            ?: "-"
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_serial_number),
+                            value = ticket.serialNumber
+                                ?: stringResource(R.string.label_not_available)
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_issue_number),
+                            value = ticket.issueNumber
+                                ?: stringResource(R.string.label_not_available)
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_customer),
+                            value = ticket.customerName
+                                ?: stringResource(R.string.label_not_available)
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_ticket_status),
+                            value = ticket.ticketStatusName
+                                ?: stringResource(R.string.label_not_available)
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_usage_status),
+                            value = ticket.statusUsageName
+                                ?: stringResource(R.string.label_not_available)
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_usage_datetime),
+                            value = stringResource(
+                                R.string.label_datetime_value,
+                                formatJalaliDate(ticket.usageDate),
+                                ticket.useTime ?: "—"
+                            )
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_approval_date),
+                            value = formatJalaliDate(ticket.approvedDate)
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_total_count),
+                            value = ticket.count?.toString() ?: stringResource(R.string.label_zero)
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_actual_used_count),
+                            value = ticket.realCount?.toString()
+                                ?: stringResource(R.string.label_zero)
+                        )
 
-                    DetailRowItem(label = "مبلغ پورسانت واحد", value = "${formatPrice(ticket.commissionAmount)} ریال")
-                    DetailRowItem(label = "پورسانت کل", value = "${formatPrice(ticket.totalCommission)} ریال")
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            thickness = 0.5.dp,
+                            color = appColors.border
+                        )
+
+                        DetailRowItem(
+                            label = stringResource(R.string.label_unit_price),
+                            value = stringResource(
+                                R.string.label_price_with_currency,
+                                formatPrice(ticket.unitPrice)
+                            )
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_discount_amount),
+                            value = stringResource(
+                                R.string.label_discount_value,
+                                formatPrice(ticket.discountPrice),
+                                (ticket.discountAmount ?: 0).toString()
+                            )
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_net_price),
+                            value = stringResource(
+                                R.string.label_price_with_currency,
+                                formatPrice(ticket.netPrice)
+                            )
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_total_paid),
+                            value = stringResource(
+                                R.string.label_price_with_currency,
+                                formatPrice(ticket.sumPrice)
+                            ),
+                            isHighlighted = true
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            thickness = 0.5.dp,
+                            color = appColors.border
+                        )
+
+                        DetailRowItem(
+                            label = stringResource(R.string.label_unit_commission),
+                            value = stringResource(
+                                R.string.label_price_with_currency,
+                                formatPrice(ticket.commissionAmount)
+                            )
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_total_commission),
+                            value = stringResource(
+                                R.string.label_price_with_currency,
+                                formatPrice(ticket.totalCommission)
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    CustomButton(
+                        text = stringResource(R.string.label_close),
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                CustomButton(
-                    text = "بستن",
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         }
     }
@@ -427,35 +545,4 @@ private fun TicketInfoCompactItem(
     }
 }
 
-@Composable
-private fun TicketStatusBadge(
-    statusName: String,
-    isSuccess: Boolean
-) {
-    val appColors = LocalPartnerManagementColors.current
-    val bgColor = if (isSuccess) appColors.successContainer else appColors.warningContainer
-    val contentColor = if (isSuccess) appColors.onSuccessContainer else appColors.onWarningContainer
 
-    Box(
-        modifier = Modifier
-            .background(color = bgColor, shape = RoundedCornerShape(8.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = statusName,
-            style = typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = contentColor
-        )
-    }
-}
-
-private fun formatPrice(price: Long?): String {
-    if (price == null) return "0"
-    return try {
-        DecimalFormat("#,###").format(price)
-    } catch (_: Exception) {
-        price.toString()
-    }
-}

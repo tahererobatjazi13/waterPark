@@ -2,6 +2,7 @@ package ir.kitgroup.partnerManagement.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
@@ -19,7 +20,7 @@ interface OrganizationDao {
     @Upsert
     suspend fun upsert(item: OrganizationEntity)
 
-
+    @Transaction
     @Query(
         """
         SELECT * FROM organizations
@@ -64,8 +65,15 @@ interface OrganizationDao {
     suspend fun getOrganizationsBySyncStatus(syncStatus: SyncStatus): List<OrganizationEntity>
 
 
-
     @Query("DELETE FROM organizations WHERE organizationId = :organizationId")
     suspend fun deleteById(organizationId: String)
+
+
+    @Query("UPDATE organizations SET syncStatus = :status, isLocallyModified = :isLocallyModified WHERE organizationId = :organizationId")
+    suspend fun updateSyncStatus(
+        organizationId: String,
+        status: SyncStatus,
+        isLocallyModified: Boolean
+    )
 
 }

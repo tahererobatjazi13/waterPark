@@ -19,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.ProductEntity
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomSelectorField
@@ -162,7 +162,7 @@ fun AddEditOfferDetailPlanContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
+                    BouncingDotsIndicator(
                         modifier = Modifier.size(36.dp),
                         color = MaterialTheme.colorScheme.primary
                     )

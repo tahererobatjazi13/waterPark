@@ -27,7 +27,6 @@ import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.database.model.OfferDetailWithProduct
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
@@ -144,7 +144,7 @@ fun OfferDetailPlanListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
+                    BouncingDotsIndicator(
                         modifier = Modifier.size(36.dp),
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -187,7 +187,7 @@ fun OfferDetailPlanListScreen(
                                         .padding(top = 48.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    CircularProgressIndicator(
+                                    BouncingDotsIndicator(
                                         modifier = Modifier.size(36.dp),
                                         color = MaterialTheme.colorScheme.primary
                                     )

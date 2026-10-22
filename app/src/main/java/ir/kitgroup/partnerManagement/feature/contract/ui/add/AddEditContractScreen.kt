@@ -3,7 +3,6 @@ package ir.kitgroup.partnerManagement.feature.contract.ui.add
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,15 +10,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDateTimeFields
-import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomSelectorField
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
@@ -27,7 +25,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 import ir.kitgroup.partnerManagement.core.ui.util.CooperationModel
 import ir.kitgroup.partnerManagement.core.ui.util.SettlementPeriodType
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
-import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationListBottomSheet
+import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationListBottomSheet
 
 @Composable
 fun AddEditContractScreen(
@@ -117,7 +115,7 @@ fun AddContractContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
+                    BouncingDotsIndicator(
                         modifier = Modifier.size(36.dp),
                         color = MaterialTheme.colorScheme.primary
                     )

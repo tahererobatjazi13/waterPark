@@ -28,7 +28,8 @@ import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationListBottomSheet
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ImagesSection
+import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationListBottomSheet
 import saman.zamani.persiandate.PersianDate
 import java.util.Calendar
 import java.util.Locale
@@ -839,10 +840,16 @@ fun AddEditMeetingContent(
                    ImageUploadField(
                           label =
                           stringResource(
-                              R.string.label_visit_image
+                              R.string.label_images
                           ),onClick={openGallery}
                       )
+                   /* SectionTitle(stringResource(R.string.label_images))
 
+                    ImagesSection(
+                        isLoading = isImagesLoading,
+                        attachments = attachments,
+                        baseUrl = baseUrl
+                    )*/
                     /*   GpsLocationField(
                         label =
                         stringResource(

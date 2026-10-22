@@ -94,6 +94,8 @@ dependencies {
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.core)
 
+    implementation(libs.coil.compose)
+
     implementation(libs.osmdroid)
     implementation(libs.androidx.preference)
 }

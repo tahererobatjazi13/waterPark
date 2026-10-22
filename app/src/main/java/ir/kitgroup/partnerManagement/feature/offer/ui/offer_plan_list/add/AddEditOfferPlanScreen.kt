@@ -91,7 +91,7 @@ fun AddEditOfferContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
+                    BouncingDotsIndicator(
                         modifier = Modifier.size(36.dp),
                         color = MaterialTheme.colorScheme.primary
                     )

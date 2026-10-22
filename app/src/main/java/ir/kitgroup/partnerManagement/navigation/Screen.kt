@@ -215,4 +215,23 @@ sealed class Screen(val route: String) {
     data object OfferDetail : Screen("offer_detail/{offerDetailId}") {
         fun createRoute(offerDetailId: String) = "offer_detail/$offerDetailId"
     }
+
+
+    // درون شیء مربوط به مسیرها، مثلاً Screen.Map
+    object MapScreen {
+        const val ROUTE = "map_screen?lat={lat}&lng={lng}&isReadOnly={isReadOnly}"
+
+        fun createRoute(
+            latitude: Double? = null,
+            longitude: Double? = null,
+            isReadOnly: Boolean = false
+        ): String {
+            return if (latitude != null && longitude != null) {
+                "map_screen?lat=$latitude&lng=$longitude&isReadOnly=$isReadOnly"
+            } else {
+                "map_screen?isReadOnly=$isReadOnly"
+            }
+        }
+    }
+
 }

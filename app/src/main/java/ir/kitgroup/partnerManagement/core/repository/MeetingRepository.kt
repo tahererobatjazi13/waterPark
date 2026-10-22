@@ -23,17 +23,13 @@ class MeetingRepository @Inject constructor(
         return meetingDao.observeByOrganization(organizationId)
     }
 
-    fun observeAllMeetings(
+    fun observeAll(
     ): Flow<List<MeetingWithDetail>> {
-        return meetingDao.observeAllMeetings()
+        return meetingDao.observeAll()
     }
 
     fun observeMeetingsByDate(date: String): Flow<List<MeetingWithDetail>> {
         return meetingDao.observeMeetingsByDate(date)
-    }
-
-    suspend fun deleteMeeting(meetingId: String) {
-        meetingDao.deleteById(meetingId)
     }
 
     fun observeMeetingById(

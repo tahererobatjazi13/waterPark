@@ -535,6 +535,23 @@ enum class ContractOfferStatus(
 }
 
 
+enum class TicketStatus(
+    override val id: Int,
+    override val titleRes: Int,
+    override val colorType: StatusColor
+) : AppStatus {
+
+    ISSUED(0, R.string.status_issued, StatusColor.INFO),
+    CONSUMED(1, R.string.status_consumed, StatusColor.SUCCESS),
+    CANCELLATION(2, R.string.status_cancellation, StatusColor.ERROR);
+
+    companion object {
+        fun fromId(id: Int?): TicketStatus =
+            entries.find { it.id == id } ?: ISSUED
+    }
+}
+
+
 enum class UserRole(
     val code: String,
     val title: String,
@@ -596,3 +613,42 @@ enum class SyncStatus {
     PENDING_UPDATE,  // ویرایش آفلاین شده
     PENDING_DELETE   // در آفلاین حذف/خاتمه یافته
 }
+
+
+enum class AttachmentFileType(
+    val id: Int,
+    @StringRes val titleRes: Int
+) {
+    SIGNBOARD_IMAGE(
+        id = 2,
+        titleRes = R.string.attachment_type_signboard_image
+    ),
+    LOBBY_IMAGE(
+        id = 1,
+        titleRes = R.string.attachment_type_lobby_image
+    ),
+    OTHER_IMAGES(
+        id = 3,
+        titleRes = R.string.attachment_type_other_images
+    ),
+    CONTRACT(
+        id = 10,
+        titleRes = R.string.attachment_type_contract
+    ),
+    INTRODUCTION_LETTER(
+        id = 11,
+        titleRes = R.string.attachment_type_introduction_letter
+    ),
+    RECEIPT(
+        id = 13,
+        titleRes = R.string.attachment_type_receipt
+    )
+    ;
+
+    companion object {
+        fun fromId(id: Int?): AttachmentFileType? {
+            return entries.firstOrNull { it.id == id }
+        }
+    }
+}
+

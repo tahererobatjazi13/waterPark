@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDialog
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.components.DualActionButtonBottomBar
@@ -102,7 +103,7 @@ fun ContractDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    BouncingDotsIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else {
                 ContractDetailContent(contract = currentItem)

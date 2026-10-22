@@ -12,6 +12,9 @@ interface OrganizationChangeStatusDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(item: OrganizationChangeStatusEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(item: OrganizationChangeStatusEntity)
+
     @Query("SELECT * FROM organization_change_status")
     suspend fun getAll(): List<OrganizationChangeStatusEntity>
 
@@ -20,4 +23,5 @@ interface OrganizationChangeStatusDao {
 
     @Query("DELETE FROM  organization_change_status")
     suspend fun deleteAll()
+
 }

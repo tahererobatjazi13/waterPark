@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui.detail
+package ir.kitgroup.partnerManagement.feature.organization.ui.detail.person
 
 
 import androidx.compose.foundation.BorderStroke

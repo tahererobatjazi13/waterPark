@@ -52,12 +52,6 @@ class ContractDetailViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private fun getCurrentIsoUtcTimestamp(): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-        return dateFormat.format(Date())
-    }
-
     fun terminateActiveContract(
         contractId: String,
         organizationId: String,

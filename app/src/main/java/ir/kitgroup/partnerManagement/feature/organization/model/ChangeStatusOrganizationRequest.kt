@@ -1,7 +1,7 @@
 package ir.kitgroup.partnerManagement.feature.organization.model
 
 
-data class ChangeOrganizationStatusRequest(
+data class ChangeStatusOrganizationRequest(
     val organizationId: String,
     val statusOrg: Int,
     val deactiveDate: String?,

@@ -75,7 +75,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
-import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
@@ -87,12 +86,11 @@ import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 fun MeetingsListScreen(
     onMeetingClick: (String) -> Unit,
     onAddMeetingClick: () -> Unit,
-    onEditMeetingClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MeetingsListViewModel = hiltViewModel()
 ) {
 
-    val allMeetings by viewModel.allMeetings.collectAsState()
+    val allMeetings by viewModel.meetings.collectAsState()
 
     val appColors = LocalPartnerManagementColors.current
     val allVisitorsLabel = stringResource(R.string.label_all_visitors)
@@ -103,7 +101,6 @@ fun MeetingsListScreen(
     var selectedStartDate by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedStatus by rememberSaveable { mutableStateOf<Int?>(null) } // <-- استیت وضعیت
     var showDatePicker by remember { mutableStateOf(false) }
-    var visitPendingDelete by remember { mutableStateOf<MeetingWithDetail?>(null) }
 
     val today = remember { PersianDate() }
     val todayDate = remember(today) {
@@ -288,9 +285,8 @@ fun MeetingsListScreen(
                             ) { item ->
                                 MeetingCard(
                                     item = item,
-                                    onClick = { onMeetingClick(item.meeting.meetingId) },
-                                    onEditClick = { onEditMeetingClick(item.meeting.meetingId) },
-                                    onDeleteClick = { visitPendingDelete = item }
+                                    onClick = { onMeetingClick(item.meeting.meetingId) }
+
                                 )
                             }
                             item {
@@ -318,19 +314,6 @@ fun MeetingsListScreen(
         )
     }
 
-    visitPendingDelete?.let { visit ->
-        DeleteConfirmationDialog(
-            itemType = stringResource(R.string.label_visit),
-            itemName = visit.subjectVisitName,
-            onConfirm = {
-                viewModel.deleteMeeting(visit.meeting.meetingId)
-                visitPendingDelete = null
-            },
-            onDismiss = {
-                visitPendingDelete = null
-            }
-        )
-    }
 }
 
 
@@ -515,9 +498,7 @@ private fun MeetingFiltersRow(
 @Composable
 fun MeetingCard(
     item: MeetingWithDetail,
-    onClick: () -> Unit,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -609,29 +590,6 @@ fun MeetingCard(
                         icon = Icons.Default.DateRange,
                         text = dateTimeText
                     )
-
-                    /*       // اکشن‌ها
-                           Row(
-                               modifier = Modifier.fillMaxWidth(),
-                               horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                               verticalAlignment = Alignment.CenterVertically
-                           ) {
-                               ActionIconButton(
-                                   icon = Icons.Default.Edit,
-                                   contentDescription = stringResource(R.string.label_edit),
-                                   onClick = onEditClick,
-                                   tint = MaterialTheme.colorScheme.primary,
-                                   backgroundColor = appColors.cardBackgroundAlt
-                               )
-
-                               ActionIconButton(
-                                   icon = Icons.Default.DeleteOutline,
-                                   contentDescription = stringResource(R.string.label_delete),
-                                   onClick = onDeleteClick,
-                                   tint = MaterialTheme.colorScheme.error,
-                                   backgroundColor = MaterialTheme.colorScheme.errorContainer
-                               )
-                           }*/
                 }
             }
         }
@@ -737,8 +695,7 @@ private fun MeetingsListScreenPreview() {
     AppScreenPreview {
         MeetingsListScreen(
             onMeetingClick = {},
-            onAddMeetingClick = {},
-            onEditMeetingClick = {}
+            onAddMeetingClick = {}
         )
     }
 }

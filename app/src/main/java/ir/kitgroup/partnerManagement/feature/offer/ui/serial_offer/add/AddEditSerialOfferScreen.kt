@@ -94,7 +94,7 @@ fun AddEditSerialOfferScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                BouncingDotsIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             Column(

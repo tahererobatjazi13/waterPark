@@ -5,48 +5,63 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.repository.MeetingRepository
+import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddMeetingUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class MeetingsListViewModel @Inject constructor(
-    private val meetingRepository: MeetingRepository,
+    meetingRepository: MeetingRepository,
     private val checkCanAddMeetingUseCase: CheckCanAddMeetingUseCase
 
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
-    fun checkCanNavigateToAddMeeting(onSuccess: () -> Unit) {
-        viewModelScope.launch {
-            val error = checkCanAddMeetingUseCase()
-            if (error != null) {
-                _uiEvent.emit(UiEvent.ShowError(error))
-            } else {
-                onSuccess()
+
+    val meetings: StateFlow<List<MeetingWithDetail>?> =
+        meetingRepository.observeAll()
+            .catch { throwable ->
+                if (throwable is CancellationException) throw throwable
+                _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(throwable)))
             }
-        }
-    }
-    val allMeetings: StateFlow<List<MeetingWithDetail>?> =
-        meetingRepository.observeAllMeetings()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = null
             )
 
-
-    fun deleteMeeting(meetingId: String) {
+    fun checkCanNavigateToAddMeeting(onSuccess: () -> Unit) {
         viewModelScope.launch {
-            meetingRepository.deleteMeeting(meetingId)
+            try {
+                val error = checkCanAddMeetingUseCase()
+
+                if (error != null) {
+                    _uiEvent.emit(UiEvent.ShowError(error))
+                } else {
+                    onSuccess()
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                _uiEvent.emit(
+                    UiEvent.ShowError(
+                        ir.kitgroup.partnerManagement.core.ui.util.UiText
+                            .DynamicString("بررسی امکان ثبت بازدید ناموفق بود")
+                    )
+                )
+            }
         }
     }
+
 }
 

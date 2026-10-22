@@ -310,4 +310,10 @@ class OrganizationWarningViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteWarning(warningId: String) {
+        viewModelScope.launch {
+            warningRepository.deleteById(warningId)
+        }
+    }
 }

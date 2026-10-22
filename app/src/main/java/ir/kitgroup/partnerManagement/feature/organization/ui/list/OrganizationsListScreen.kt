@@ -1,7 +1,6 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.list
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,7 +63,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.entity.AttachmentFileEntity
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
@@ -77,6 +79,7 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import java.io.File
 
 @Composable
 fun OrganizationsListScreen(
@@ -85,7 +88,6 @@ fun OrganizationsListScreen(
     modifier: Modifier = Modifier,
     organizationsListViewModel: OrganizationsListViewModel = hiltViewModel()
 ) {
-
     val organizations by organizationsListViewModel.organizations.collectAsStateWithLifecycle()
     val statusOptions = remember { OrganizationStatus.entries }
 
@@ -95,6 +97,7 @@ fun OrganizationsListScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedStatus by rememberSaveable { mutableStateOf<OrganizationStatus?>(null) }
     var isWarningOnly by rememberSaveable { mutableStateOf(false) }
+    val baseUrl by organizationsListViewModel.baseUrlFlow.collectAsStateWithLifecycle()
 
 
     LaunchedEffect(organizationsListViewModel.uiEvent) {
@@ -114,7 +117,7 @@ fun OrganizationsListScreen(
     // فیلتر کردن لیست
     val filteredOrganizations =
         remember(organizations, searchQuery, selectedStatus, isWarningOnly) {
-            organizations!!.filter { item ->
+            organizations?.filter { item ->
                 val matchesSearch = searchQuery.isBlank() ||
                         item.organization.name.orEmpty().contains(searchQuery, ignoreCase = true) ||
                         item.organization.address.orEmpty().contains(searchQuery, ignoreCase = true)
@@ -230,12 +233,17 @@ fun OrganizationsListScreen(
                             contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
                             itemsIndexed(
-                                items = filteredOrganizations,
+                                items = filteredOrganizations!!,
                                 key = { _, item -> item.organization.organizationId }
                             ) { index, organization ->
-                                OrganizationsCard(
+                                val orgThumbnail =
+                                    organization.attachments.firstOrNull { it.isHeader }
+                                        ?: organization.attachments.firstOrNull()
+
+                                OrganizationsCard(baseUrl = baseUrl,
                                     item = organization,
                                     number = index + 1,
+                                    thumbnail = orgThumbnail,
                                     onClick = {
                                         onOrganizationClick(organization.organization.organizationId)
                                     }
@@ -420,8 +428,10 @@ fun OrganizationsFiltersRow(
 
 @Composable
 fun OrganizationsCard(
+    baseUrl: String,
     item: OrganizationWithDetail,
     number: Int,
+    thumbnail: AttachmentFileEntity? = null,
     onClick: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
@@ -430,25 +440,47 @@ fun OrganizationsCard(
 
     val warningCount = item.organization.countWarning ?: 0
     val orgGrade = item.organization.grade ?: 0
-    val orgName = item.organization.name ?: ""
+    val orgName = item.organization.name.orEmpty()
 
-    val locationText = when {
-        !item.organization.address.isNullOrBlank() -> {
-            item.organization.address
+    // ساخت آدرس سرور کاملاً امن بر اساس شناسه یا مسیر نسبی
+    val serverImageUrl: String? = when {
+        thumbnail == null -> null
+        // اگر آدرس فیزیکی دانلود بر اساس ID فایل مد نظرتان است
+        !thumbnail.attachmentFileId.isNullOrBlank() -> {
+            "${baseUrl.trimEnd('/')}/api/OrgAttachmentFiles/download/${thumbnail.attachmentFileId}"
+        }
+        // اگر سرور فایل استاتیک سرو می‌کند بر اساس fileUrl
+        !thumbnail.fileUrl.isNullOrBlank() -> {
+            val path = thumbnail.fileUrl!!.removePrefix("/")
+            "${baseUrl.trimEnd('/')}/$path"
         }
 
-        item.cityName.isNotBlank() || item.regionName.isNotBlank() -> {
-            listOf(
-                item.cityName,
-                item.regionName
-            ).filter { it.isNotBlank() }.joinToString("، ")
-        }
-
-        else -> {
-            "-"
-        }
+        else -> null
     }
 
+    // اولویت‌بندی تصویر: ۱.فایل محلی ۲.آدرس سرور ۳.آیکون پیش‌فرض
+    val imageModel: Any = when {
+        !thumbnail?.localPath.isNullOrBlank() && File(thumbnail!!.localPath!!).exists() -> {
+            File(thumbnail.localPath!!)
+        }
+
+        !serverImageUrl.isNullOrBlank() -> {
+            serverImageUrl
+        }
+
+        else -> R.drawable.ic_logo
+    }
+
+    val locationText = when {
+        !item.organization.address.isNullOrBlank() -> item.organization.address
+        item.cityName.isNotBlank() || item.regionName.isNotBlank() -> {
+            listOf(item.cityName, item.regionName)
+                .filter { it.isNotBlank() }
+                .joinToString("، ")
+        }
+
+        else -> "-"
+    }
 
     Card(
         modifier = Modifier
@@ -467,11 +499,31 @@ fun OrganizationsCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageModel)
+                    .crossfade(true)
+                    .listener(
+                        onError = { request, result ->
+                            android.util.Log.e(
+                                "CoilError",
+                                "Error loading: ${request.data}",
+                                result.throwable
+                            )
+                        },
+                        onSuccess = { _, _ ->
+                            android.util.Log.d(
+                                "CoilSuccess",
+                                "Image loaded successfully: $imageModel"
+                            )
+                        }
+                    )
+                    .placeholder(R.drawable.ic_logo)
+                    .error(R.drawable.ic_logo)
+                    .build(),
+                contentDescription = orgName,
                 modifier = Modifier
-                    .size(70.dp)
+                    .size(80.dp)
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )

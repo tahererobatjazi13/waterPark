@@ -55,7 +55,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
 import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.feature.organization.ui.OrganizationListBottomSheet
+import ir.kitgroup.partnerManagement.feature.organization.ui.list.OrganizationListBottomSheet
 import saman.zamani.persiandate.PersianDate
 import java.util.Locale
 

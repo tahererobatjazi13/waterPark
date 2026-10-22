@@ -2,6 +2,7 @@ package ir.kitgroup.partnerManagement.core.database.model
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import ir.kitgroup.partnerManagement.core.database.entity.AttachmentFileEntity
 import ir.kitgroup.partnerManagement.core.database.entity.CityEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.database.entity.RegionEntity
@@ -21,8 +22,13 @@ data class OrganizationWithDetail(
         parentColumn = "regionId",
         entityColumn = "regionId"
     )
-    val region: RegionEntity?
+    val region: RegionEntity?,
 
+    @Relation(
+        parentColumn = "organizationId",
+        entityColumn = "organizationId"
+    )
+    val attachments: List<AttachmentFileEntity> = emptyList()
 ) {
 
     val cityName: String

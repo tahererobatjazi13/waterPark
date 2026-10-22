@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.detail
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,9 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
+import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
+import ir.kitgroup.partnerManagement.core.ui.components.CustomOutlinedButton
+import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 import ir.kitgroup.partnerManagement.core.ui.components.DualActionButtonBottomBar
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -79,7 +83,7 @@ fun AssignedSerialDetailScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                BouncingDotsIndicator()
             }
         } else {
             val serial = currentItem.assignedSerial
@@ -220,59 +224,83 @@ private fun ChangeStatusDialog(
         )
     }
 
-    var selectedStatus by remember {
-        mutableStateOf(statuses.find { it.id == currentStatusId } ?: ContractOfferStatus.ACTIVE)
+    val statusTitles = statuses.map {
+        stringResource(it.titleRes)
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.label_change_status),
-                style = typography.titleLarge
+    var selectedStatus by rememberSaveable(currentStatusId) {
+        mutableIntStateOf(
+            statuses.find { it.id == currentStatusId }?.id
+                ?: ContractOfferStatus.ACTIVE.id
+        )
+    }
+
+    val selectedStatusTitle = statuses
+        .find { it.id == selectedStatus }
+        ?.let { stringResource(it.titleRes) }
+        .orEmpty()
+
+    Dialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
             )
-        },
-        text = {
+        ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                statuses.forEach { status ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { selectedStatus = status }
-                            .padding(vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = (selectedStatus == status),
-                            onClick = { selectedStatus = status }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(status.titleRes),
-                            style = typography.bodyLarge
-                        )
+                Text(
+                    text = stringResource(R.string.label_change_status),
+                    style = typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                DropdownSelectorField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = selectedStatusTitle,
+                    label = stringResource(R.string.label_status),
+                    placeholder = "",
+                    items = statusTitles,
+                    isRequired = true,
+                    onItemSelected = { selectedTitle ->
+                        val index = statusTitles.indexOf(selectedTitle)
+
+                        if (index != -1) {
+                            selectedStatus = statuses[index].id
+                        }
                     }
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CustomButton(
+                        text = stringResource(R.string.label_confirm),
+                        onClick = {
+                            onConfirm(selectedStatus)
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    CustomOutlinedButton(
+                        text = stringResource(R.string.label_cancel),
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm(selectedStatus.id)
-                }
-            ) {
-                Text(text = stringResource(R.string.label_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.label_cancel))
             }
         }
-    )
+    }
 }
 
 

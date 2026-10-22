@@ -1,5 +1,7 @@
 package ir.kitgroup.partnerManagement.core.network.apiService
 
+import ir.kitgroup.partnerManagement.core.network.model.AttachmentFileDto
+import ir.kitgroup.partnerManagement.core.network.model.AttachmentUploadResponse
 import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
 import ir.kitgroup.partnerManagement.core.network.model.TicketIssueLineDto
 import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
@@ -15,21 +17,27 @@ import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
 import ir.kitgroup.partnerManagement.feature.offer.model.OfferDetailPlanRequest
 import ir.kitgroup.partnerManagement.feature.offer.model.OfferPlanRequest
 import ir.kitgroup.partnerManagement.feature.offer.model.SerialOfferRequest
-import ir.kitgroup.partnerManagement.feature.organization.model.ChangeOrganizationStatusRequest
+import ir.kitgroup.partnerManagement.feature.organization.model.ChangeStatusOrganizationRequest
 import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.CreateOrganizationRequest
 import ir.kitgroup.partnerManagement.feature.stand.model.ChangeAssignStandStatusRequest
 import ir.kitgroup.partnerManagement.feature.stand.model.CreateAssignStandRequest
-import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import retrofit2.Response
 
 interface ApiService {
 
@@ -62,8 +70,8 @@ interface ApiService {
     ): Response<ModelResponse>
 
     @PATCH("api/Organizations/change-status")
-    suspend fun changeOrganizationStatus(
-        @Body request: ChangeOrganizationStatusRequest
+    suspend fun changeStatusOrganization(
+        @Body request: ChangeStatusOrganizationRequest
     ): Response<ModelResponse>
 
     @POST("api/Organizations/persons")
@@ -179,5 +187,29 @@ interface ApiService {
         @Path("id") id: String,
         @Query("status") status: String
     ): Response<ModelResponse>
+
+
+    @Multipart
+    @POST("api/OrgAttachmentFiles/upload")
+    suspend fun uploadAttachment(
+        @Part file: MultipartBody.Part,
+        @Part("Name") name: RequestBody?,
+        @Part("OrganizationId") organizationId: RequestBody?,
+        @Part("MeetingId") meetingId: RequestBody?,
+        @Part("FileType") fileType: RequestBody?,
+        @Part("Description") description: RequestBody?
+    ): Response<AttachmentUploadResponse>
+
+    @Streaming
+    @GET("api/OrgAttachmentFiles/download/{id}")
+    suspend fun downloadAttachment(
+        @Path("id") fileId: String
+    ): Response<ResponseBody>
+
+    @GET("api/OrgAttachmentFiles/getAttachments/{id}")
+    suspend fun getOrganizationAttachments(
+        @Path("id") organizationId: String
+    ): Response<List<AttachmentFileDto>>
+
 
 }

@@ -18,19 +18,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
+import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
@@ -39,16 +44,22 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.VisitorOrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.core.ui.util.isInternetAvailable
 
 @Composable
 fun OrganizationVisitorTabContent(
-    visitorsState: DataState<List<VisitorOrganizationEntity>>,
-    onRetry: () -> Unit,
+    organizationVisitorViewModel: OrganizationVisitorViewModel = hiltViewModel(),
     onAssignVisitorClick: () -> Unit = {},
     onEditVisitorClick: (String) -> Unit = {},
     onDeleteVisitorClick: (String) -> Unit = {},
 ) {
-    val appColors = LocalPartnerManagementColors.current
+    val context = LocalContext.current
+    val visitorsState by organizationVisitorViewModel.visitorsState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        val online = isInternetAvailable(context)
+        organizationVisitorViewModel.ensureVisitorsLoaded(online)
+    }
 
     Column(
         modifier = Modifier
@@ -64,26 +75,26 @@ fun OrganizationVisitorTabContent(
             Box(modifier = Modifier.weight(1f)) {
                 SectionTitle(title = stringResource(R.string.label_assignment_visitor_to_organization_list))
             }
-   /*         FilledTonalButton(
-                onClick = onAssignVisitorClick,
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = appColors.success,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.label_new_assigning),
-                    style = typography.titleLarge
-                )
-            }*/
+            /*         FilledTonalButton(
+                         onClick = onAssignVisitorClick,
+                         shape = RoundedCornerShape(12.dp),
+                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                         colors = ButtonDefaults.buttonColors(
+                             containerColor = appColors.success,
+                             contentColor = MaterialTheme.colorScheme.onPrimary
+                         )
+                     ) {
+                         Icon(
+                             imageVector = Icons.Default.Add,
+                             contentDescription = null,
+                             modifier = Modifier.size(18.dp)
+                         )
+                         Spacer(modifier = Modifier.width(6.dp))
+                         Text(
+                             text = stringResource(R.string.label_new_assigning),
+                             style = typography.titleLarge
+                         )
+                     }*/
         }
 
         when (visitorsState) {
@@ -94,11 +105,12 @@ fun OrganizationVisitorTabContent(
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    BouncingDotsIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
 
             is DataState.Error -> {
+                val errorMessage = (visitorsState as DataState.Error).error.asString(context)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -107,20 +119,23 @@ fun OrganizationVisitorTabContent(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "خطا در دریافت اطلاعات از سرور",
+                        text = errorMessage,
                         style = typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     CustomButton(
-                        text = "تلاش مجدد",
-                        onClick = onRetry
+                        text = stringResource(R.string.label_retry),
+                        onClick = {
+                            val online = isInternetAvailable(context)
+                            organizationVisitorViewModel.retry(online)
+                        }
                     )
                 }
             }
 
             is DataState.Success -> {
-                val visitors = visitorsState.data
+                val visitors = (visitorsState as DataState.Success).data
                 if (visitors.isEmpty()) {
                     EmptyState(
                         textRes = R.string.msg_no_visitor_found,
@@ -137,18 +152,19 @@ fun OrganizationVisitorTabContent(
                     ) {
                         itemsIndexed(
                             items = visitors,
-                            key = { _, item -> item.visitorOrganizationId }
+                            key = { _, item -> item.orgVisitorId }
                         ) { index, visitor ->
                             VisitorOrganizationCard(
                                 index = index,
                                 visitor = visitor,
-                                onEditClick = { onEditVisitorClick(visitor.visitorOrganizationId) },
-                                onDeleteClick = { onDeleteVisitorClick(visitor.visitorOrganizationId) }
+                                onEditClick = { onEditVisitorClick(visitor.orgVisitorId) },
+                                onDeleteClick = { onDeleteVisitorClick(visitor.orgVisitorId) }
                             )
                         }
                     }
                 }
             }
+
 
             is DataState.Idle -> {
                 Spacer(modifier = Modifier.weight(1f))
@@ -160,7 +176,7 @@ fun OrganizationVisitorTabContent(
 @Composable
 private fun VisitorOrganizationCard(
     index: Int,
-    visitor: VisitorOrganizationEntity,
+    visitor: VisitorOrganizationDto,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier

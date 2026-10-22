@@ -7,12 +7,14 @@ import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.repository.OrganizationRepository
 import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.core.usecase.CheckCanAddOrganizationUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,12 +23,20 @@ import kotlin.coroutines.cancellation.CancellationException
 @HiltViewModel
 class OrganizationsListViewModel @Inject constructor(
     organizationRepository: OrganizationRepository,
+    mainPreferences: MainPreferences,
     private val checkCanAddOrganizationUseCase: CheckCanAddOrganizationUseCase
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
 
+    val baseUrlFlow: StateFlow<String> = mainPreferences.baseUrlFlow
+        .map { it?.trim()?.trimEnd('/').orEmpty() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = ""
+        )
     val organizations: StateFlow<List<OrganizationWithDetail>?> =
         organizationRepository.observeAll()
             .catch { throwable ->

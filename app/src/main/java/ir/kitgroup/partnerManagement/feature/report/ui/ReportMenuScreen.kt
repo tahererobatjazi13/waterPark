@@ -107,7 +107,7 @@ private fun AdvertisingMenuContent(
             )
         }
 
-        item {
+      /*  item {
             AdvertisingMenuCard(
                 titleRes = R.string.label_cooperation_agreement,
                 subtitleRes = R.string.label_report_cooperation_agreement,
@@ -127,7 +127,7 @@ private fun AdvertisingMenuContent(
                 iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 onClick = onCollectionPerformanceClick
             )
-        }
+        }*/
     }
 }
 

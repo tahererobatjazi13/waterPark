@@ -15,7 +15,7 @@ interface MeetingDao {
     suspend fun upsertAll(items: List<MeetingEntity>)
 
     @Query("SELECT * FROM meetings ORDER BY visitDate DESC, visitTime DESC")
-    fun observeAllMeetings(): Flow<List<MeetingWithDetail>>
+    fun observeAll(): Flow<List<MeetingWithDetail>>
 
     @Query("SELECT * FROM meetings WHERE status = :status ORDER BY visitDate DESC, visitTime DESC")
     fun observeMeetingsByStatus(status: Int): Flow<List<MeetingEntity>>

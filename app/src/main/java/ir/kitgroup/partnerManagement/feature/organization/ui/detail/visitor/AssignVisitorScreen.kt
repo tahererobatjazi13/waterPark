@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui
+package ir.kitgroup.partnerManagement.feature.organization.ui.detail.visitor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,7 +16,6 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDateTimeFields
-import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
 import ir.kitgroup.partnerManagement.core.ui.components.CustomSelectorField
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import saman.zamani.persiandate.PersianDate

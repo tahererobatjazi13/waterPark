@@ -39,7 +39,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ImagesSection
 
 @Composable
 fun MeetingDetailScreen(
@@ -158,7 +157,7 @@ fun MeetingDetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    BouncingDotsIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else {
                 Column(
@@ -442,7 +441,7 @@ private fun VisitorInfoCard(item: MeetingWithDetail) {
                     .padding(horizontal = 12.dp, vertical = 14.dp),
             ) {
                 SectionTitle(stringResource(R.string.label_images))
-                ImagesSection(images = listOf(R.drawable.ic_logo))
+            //    ImagesSection(images = listOf(R.drawable.ic_logo))
             }
         }
     }

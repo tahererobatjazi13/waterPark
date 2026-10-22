@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.OfflinePendingFooterBanner
@@ -98,7 +99,7 @@ fun ContractsListScreen(
                                 .fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
+                            BouncingDotsIndicator(
                                 modifier = Modifier.size(36.dp),
                                 color = MaterialTheme.colorScheme.primary
                             )

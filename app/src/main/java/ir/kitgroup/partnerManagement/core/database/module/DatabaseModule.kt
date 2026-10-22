@@ -11,6 +11,7 @@ import ir.kitgroup.partnerManagement.core.database.AppDatabase
 import ir.kitgroup.partnerManagement.core.database.dao.AssignStandChangeStatusDao
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedSerialDao
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedStandDao
+import ir.kitgroup.partnerManagement.core.database.dao.AttachmentFileDao
 import ir.kitgroup.partnerManagement.core.database.dao.CityDao
 import ir.kitgroup.partnerManagement.core.database.dao.ContractDao
 import ir.kitgroup.partnerManagement.core.database.dao.ContractTerminationDao
@@ -150,6 +151,11 @@ object DatabaseModule {
     fun provideAssignedSerialDao(
         db: AppDatabase
     ): AssignedSerialDao = db.assignedSerialDao()
+
+    @Provides
+    fun provideAttachmentFileDao(
+        db: AppDatabase
+    ): AttachmentFileDao = db.attachmentFileDao()
 
     @Provides
     fun provideStatisticDao(

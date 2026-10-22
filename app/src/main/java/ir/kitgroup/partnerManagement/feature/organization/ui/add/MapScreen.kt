@@ -2,48 +2,26 @@ package ir.kitgroup.partnerManagement.feature.organization.ui.add
 
 import android.Manifest
 import android.content.pm.PackageManager
-
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-
 import androidx.core.content.ContextCompat
-
 import androidx.navigation.NavController
-
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-
-import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -56,59 +34,37 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 @Composable
 fun MapScreen(
     onBackClick: () -> Unit,
-    navController: NavController
+    navController: NavController,
+    initialLatitude: Double? = null,
+    initialLongitude: Double? = null,
+    isReadOnly: Boolean = false
 ) {
-
     val context = LocalContext.current
 
-    // ---------------------------------------------------------
-    // Map configuration
-    // ---------------------------------------------------------
+    val hasInitialLocation = initialLatitude != null && initialLongitude != null
 
-    Configuration.getInstance().userAgentValue =
-        context.packageName
-
-    // ---------------------------------------------------------
-    // Selected location
-    // ---------------------------------------------------------
-
+    // ۲. مقداردهی اولیه مکان بر اساس پارامترهای ورودی
     var selectedLocation by remember {
-        mutableStateOf<GeoPoint?>(null)
+        mutableStateOf(
+            if (hasInitialLocation) GeoPoint(initialLatitude!!, initialLongitude!!) else null
+        )
     }
 
+    // اگر مختصات اولیه داریم، دیگر منتظر لود GPS نمی‌مانیم
     var isLocationLoading by remember {
-        mutableStateOf(true)
+        mutableStateOf(!hasInitialLocation)
     }
 
-    // ---------------------------------------------------------
-    // Map references
-    // ---------------------------------------------------------
-
-    var mapViewRef by remember {
-        mutableStateOf<MapView?>(null)
-    }
-
-    var markerRef by remember {
-        mutableStateOf<Marker?>(null)
-    }
-
-    var myLocationOverlay by remember {
-        mutableStateOf<MyLocationNewOverlay?>(null)
-    }
-
-    // ---------------------------------------------------------
-    // Permission
-    // ---------------------------------------------------------
+    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+    var markerRef by remember { mutableStateOf<Marker?>(null) }
+    var myLocationOverlay by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
 
     var hasLocationPermission by remember {
-
         mutableStateOf(
-
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED ||
-
                     ContextCompat.checkSelfPermission(
                         context,
                         Manifest.permission.ACCESS_COARSE_LOCATION
@@ -116,71 +72,50 @@ fun MapScreen(
         )
     }
 
-    val locationPermissionLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestMultiplePermissions()
-        ) { permissions ->
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        hasLocationPermission =
+            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
-            hasLocationPermission =
-                permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                        permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-
-            if (!hasLocationPermission) {
-                isLocationLoading = false
-            }
+        if (!hasLocationPermission) {
+            isLocationLoading = false
         }
-
-    // ---------------------------------------------------------
-    // Update selected location and marker
-    // ---------------------------------------------------------
+    }
 
     fun updateSelectedLocation(
         point: GeoPoint,
-        mapView: MapView? = mapViewRef
+        mapView: MapView? = mapViewRef,
+        animate: Boolean = true
     ) {
-
         selectedLocation = point
-
         val currentMap = mapView ?: return
 
         val marker = markerRef ?: Marker(currentMap).apply {
-
-            setAnchor(
-                Marker.ANCHOR_CENTER,
-                Marker.ANCHOR_BOTTOM
-            )
-
-            title = context.getString(
-                R.string.location_organization
-            )
-
-            isDraggable = true
-
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            title = context.getString(R.string.location_organization)
+            isDraggable = !isReadOnly
         }.also {
-
             markerRef = it
-            currentMap.overlays.add(it)
-
+            if (!currentMap.overlays.contains(it)) {
+                currentMap.overlays.add(it)
+            }
         }
 
         marker.position = point
 
-        currentMap.controller.animateTo(point)
-
+        if (animate) {
+            currentMap.controller.animateTo(point)
+        } else {
+            currentMap.controller.setCenter(point)
+        }
         currentMap.invalidate()
     }
 
-    // ---------------------------------------------------------
-    // Request permission
-    // ---------------------------------------------------------
-
+    // درخواست پرمیشن فقط در صورتی که موقعیت اولیه وجود نداشته باشد
     LaunchedEffect(mapViewRef) {
-
-        if (
-            mapViewRef != null &&
-            !hasLocationPermission
-        ) {
-
+        if (mapViewRef != null && !hasLocationPermission && !hasInitialLocation) {
             locationPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -190,350 +125,210 @@ fun MapScreen(
         }
     }
 
-    // ---------------------------------------------------------
-    // Get current GPS location automatically
-    // ---------------------------------------------------------
-
-    LaunchedEffect(
-        mapViewRef,
-        hasLocationPermission
-    ) {
-
-        val mapView = mapViewRef
-            ?: return@LaunchedEffect
+    // مدیریت لایه GPS
+    LaunchedEffect(mapViewRef, hasLocationPermission) {
+        val mapView = mapViewRef ?: return@LaunchedEffect
 
         if (!hasLocationPermission) {
-            isLocationLoading = false
+            if (!hasInitialLocation) {
+                isLocationLoading = false
+            }
             return@LaunchedEffect
         }
 
-        isLocationLoading = true
-
-        // Create GPS overlay
-        val overlay = MyLocationNewOverlay(
-            GpsMyLocationProvider(context),
-            mapView
-        )
-
+        val overlay = MyLocationNewOverlay(GpsMyLocationProvider(context), mapView)
         myLocationOverlay = overlay
-
         mapView.overlays.add(overlay)
-
-        // Start GPS
         overlay.enableMyLocation()
 
-        // Wait for first GPS fix
-        overlay.runOnFirstFix {
-
-            val location = overlay.myLocation
-
-            if (location != null) {
-
-                val currentPoint = GeoPoint(
-                    location.latitude,
-                    location.longitude
-                )
-
-                mapView.post {
-
-                    updateSelectedLocation(
-                        point = currentPoint,
-                        mapView = mapView
-                    )
-
-                    mapView.controller.setZoom(17.0)
-
-                    isLocationLoading = false
-
-                    mapView.invalidate()
+        // فقط در حالتی که مختصات اولیه وجود ندارد، نقشه به مکان کاربر منتقل شود
+        if (!hasInitialLocation) {
+            isLocationLoading = true
+            overlay.runOnFirstFix {
+                val location = overlay.myLocation
+                if (location != null) {
+                    val currentPoint = GeoPoint(location.latitude, location.longitude)
+                    mapView.post {
+                        updateSelectedLocation(point = currentPoint, mapView = mapView)
+                        mapView.controller.setZoom(17.0)
+                        isLocationLoading = false
+                        mapView.invalidate()
+                    }
                 }
             }
         }
     }
 
-    // ---------------------------------------------------------
-    // Map lifecycle
-    // ---------------------------------------------------------
-
     DisposableEffect(mapViewRef) {
-
         val mapView = mapViewRef
-
         onDispose {
-
             myLocationOverlay?.disableMyLocation()
-
             myLocationOverlay?.disableFollowLocation()
-
             mapView?.onPause()
-
             mapView?.onDetach()
-
             myLocationOverlay = null
             markerRef = null
         }
     }
 
-    // ---------------------------------------------------------
-    // UI
-    // ---------------------------------------------------------
-
     Scaffold(
-
         topBar = {
-
             CustomHeader(
-                title = stringResource(
-                    R.string.label_location_map
-                ),
+                title = stringResource(R.string.label_location_map),
                 showBackButton = true,
                 onBackClick = onBackClick
             )
         },
-
         floatingActionButton = {
-
             Column(
-
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-
                 horizontalAlignment = Alignment.End
-
             ) {
-
-                // Go to current GPS location
-
+                // دکمه بازگشت به مکان GPS کاربر
                 SmallFloatingActionButton(
-
                     onClick = {
-
                         if (!hasLocationPermission) {
-
                             locationPermissionLauncher.launch(
                                 arrayOf(
                                     Manifest.permission.ACCESS_FINE_LOCATION,
                                     Manifest.permission.ACCESS_COARSE_LOCATION
                                 )
                             )
-
                             return@SmallFloatingActionButton
                         }
 
                         val location = myLocationOverlay?.myLocation
-
                         if (location != null) {
-
-                            val point = GeoPoint(
-                                location.latitude,
-                                location.longitude
-                            )
-
+                            val point = GeoPoint(location.latitude, location.longitude)
                             updateSelectedLocation(point)
-
                             mapViewRef?.controller?.setZoom(17.0)
-
                             isLocationLoading = false
-
                         } else {
-
                             isLocationLoading = true
-
                             myLocationOverlay?.enableMyLocation()
                         }
                     },
-
                     containerColor = MaterialTheme.colorScheme.secondaryContainer
-
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.LocationOn,
-                        contentDescription = stringResource(
-                            R.string.location_current
-                        )
+                        contentDescription = stringResource(R.string.location_current)
                     )
                 }
 
-                // Confirm selected location
+                // دکمه تایید موقعیت (تنها در صورتی که ReadOnly نباشد نمایش می‌یابد)
+                if (!isReadOnly) {
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            val location = selectedLocation ?: return@ExtendedFloatingActionButton
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("selected_latitude", location.latitude.toString())
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("selected_longitude", location.longitude.toString())
 
-                ExtendedFloatingActionButton(
-
-                    onClick = {
-
-                        val location = selectedLocation
-                            ?: return@ExtendedFloatingActionButton
-
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(
-                                "selected_latitude",
-                                location.latitude.toString()
+                            navController.popBackStack()
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = stringResource(R.string.action_confirm)
                             )
-
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(
-                                "selected_longitude",
-                                location.longitude.toString()
-                            )
-
-                        navController.popBackStack()
-                    },
-
-                    icon = {
-
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = stringResource(
-                                R.string.action_confirm
-                            )
-                        )
-                    },
-
-                    text = {
-                        Text(stringResource(R.string.action_confirm_location))
-                    })
+                        },
+                        text = {
+                            Text(stringResource(R.string.action_confirm_location))
+                        }
+                    )
+                }
             }
         }
-
     ) { paddingValues ->
-
         Box(
-
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-
         ) {
-
-            // -------------------------------------------------
-            // MapView
-            // -------------------------------------------------
-
             AndroidView(
-
                 modifier = Modifier.fillMaxSize(),
-
                 factory = { ctx ->
-
                     MapView(ctx).apply {
-
-                        // Map settings
-
-                        setTileSource(
-                            TileSourceFactory.MAPNIK
-                        )
-
+                        setTileSource(TileSourceFactory.MAPNIK)
                         setMultiTouchControls(true)
+                        controller.setZoom(16.5)
 
-                        controller.setZoom(15.0)
+                        // در صورتی که نقطه ارسالی موجود باشد، مستقیماً مرکز نقشه قرار می‌گیرد
+                        if (hasInitialLocation) {
+                            val initialPoint = GeoPoint(initialLatitude!!, initialLongitude!!)
+                            controller.setCenter(initialPoint)
 
-                        // Do not set Tehran as initial center.
+                            val marker = Marker(this).apply {
+                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                title = context.getString(R.string.location_organization)
+                                isDraggable = !isReadOnly
+                                position = initialPoint
+                            }
+                            markerRef = marker
+                            overlays.add(marker)
+                        }
 
-                        // Map tap events
-
-                        val mapEventsReceiver =
-                            object : MapEventsReceiver {
-
-                                override fun singleTapConfirmedHelper(
-                                    p: GeoPoint
-                                ): Boolean {
-
+                        if (!isReadOnly) {
+                            val mapEventsReceiver = object : MapEventsReceiver {
+                                override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
                                     updateSelectedLocation(
-                                        point = GeoPoint(
-                                            p.latitude,
-                                            p.longitude
-                                        ),
+                                        point = GeoPoint(p.latitude, p.longitude),
                                         mapView = this@apply
                                     )
-
                                     return true
                                 }
 
-                                override fun longPressHelper(
-                                    p: GeoPoint
-                                ): Boolean {
-
+                                override fun longPressHelper(p: GeoPoint): Boolean {
                                     updateSelectedLocation(
-                                        point = GeoPoint(
-                                            p.latitude,
-                                            p.longitude
-                                        ),
+                                        point = GeoPoint(p.latitude, p.longitude),
                                         mapView = this@apply
                                     )
-
                                     return true
                                 }
                             }
-
-                        overlays.add(
-                            MapEventsOverlay(mapEventsReceiver)
-                        )
-
-                        // Save map reference
+                            overlays.add(MapEventsOverlay(mapEventsReceiver))
+                        }
 
                         mapViewRef = this
-
                         onResume()
                     }
                 },
-
                 update = { mapView ->
-
                     selectedLocation?.let { point ->
-
                         markerRef?.position = point
                     }
-
                     mapView.invalidate()
                 }
             )
 
-            // -------------------------------------------------
-            // Loading indicator
-            // -------------------------------------------------
-
             if (isLocationLoading) {
-
                 Column(
-
                     modifier = Modifier
                         .align(Alignment.Center)
                         .background(
-                            MaterialTheme.colorScheme.surface.copy(
-                                alpha = 0.95f
-                            ),
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
                             shape = MaterialTheme.shapes.large
                         )
                         .padding(20.dp),
-
                     horizontalAlignment = Alignment.CenterHorizontally,
-
                     verticalArrangement = Arrangement.spacedBy(12.dp)
-
                 ) {
-
-                    CircularProgressIndicator()
-
+                    BouncingDotsIndicator()
                     Text(
-                        text = (stringResource(R.string.label_retrieving_phone_current_location)),
+                        text = stringResource(R.string.label_retrieving_phone_current_location),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
 
-            // -------------------------------------------------
-            // Permission denied message
-            // -------------------------------------------------
-
-            if (
-                !hasLocationPermission &&
-                !isLocationLoading
-            ) {
-
+            if (!hasLocationPermission && !isLocationLoading && !hasInitialLocation) {
                 Text(
-                    text = (stringResource(R.string.msg_enable_location_access_current_location)),
+                    text = stringResource(R.string.msg_enable_location_access_current_location),
                     modifier = Modifier
                         .align(Alignment.Center)
                         .background(

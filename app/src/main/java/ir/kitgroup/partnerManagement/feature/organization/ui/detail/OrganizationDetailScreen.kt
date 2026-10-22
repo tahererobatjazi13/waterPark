@@ -17,39 +17,31 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -80,39 +72,34 @@ import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.database.entity.VisitSubjectEntity
-import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
-import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
 import ir.kitgroup.partnerManagement.core.ui.components.DatePickerDialog
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
-import ir.kitgroup.partnerManagement.core.ui.util.PersonGenderType
-import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
-import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddPersonFormState
+import ir.kitgroup.partnerManagement.core.ui.util.SecondaryButtonVariant
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.InactivationReasonDialog
-import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddOrganizationFormState
-import ir.kitgroup.partnerManagement.feature.organization.ui.add.rememberAddPersonFormState
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.stand.OrganizationStandsTabContent
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ticket.OrganizationTicketIssueTabContent
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.visitor.OrganizationVisitorTabContent
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.warning.OrganizationWarningTabContent
 import ir.kitgroup.partnerManagement.navigation.Screen
-import saman.zamani.persiandate.PersianDate
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import ir.kitgroup.partnerManagement.core.ui.components.DualActionButtonBottomBar
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import ir.kitgroup.partnerManagement.core.ui.util.convertMillisToIso
+import ir.kitgroup.partnerManagement.core.ui.util.convertMillisToJalali
+import ir.kitgroup.partnerManagement.core.ui.util.jalaliToMillis
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.person.OrganizationPersonsTabContent
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.serial.OrganizationSerialsTabContent
 
 
 @Composable
 fun OrganizationDetailScreen(
     organizationId: String,
-    onEditClick: () -> Unit,
+    onEditClick: (organizationId: String) -> Unit,
     onDisableClick: () -> Unit,
     onStatusChangeSuccess: () -> Unit,
     onWarningSuccess: () -> Unit,
@@ -130,6 +117,10 @@ fun OrganizationDetailScreen(
     organizationDetailViewModel: OrganizationDetailViewModel = hiltViewModel(),
     navController: NavController
 ) {
+    val baseUrl by organizationDetailViewModel.baseUrlFlow.collectAsStateWithLifecycle()
+
+    val detailUiState by organizationDetailViewModel.uiState.collectAsStateWithLifecycle()
+
     val organization by organizationDetailViewModel.organization
         .collectAsState()
 
@@ -146,26 +137,12 @@ fun OrganizationDetailScreen(
     val assignedStands by organizationDetailViewModel.assignedStands
         .collectAsStateWithLifecycle()
 
-    /*
-        val warnings by organizationDetailViewModel.warnings
-            .collectAsStateWithLifecycle()
-    */
-
-    val assignedSerials by organizationDetailViewModel.assignedSerials
-        .collectAsStateWithLifecycle()
-
-
-    val visitorsState by organizationDetailViewModel.visitorsState.collectAsStateWithLifecycle()
-    val ticketIssueState by organizationDetailViewModel.ticketIssueState.collectAsStateWithLifecycle()
 
     val addPersonState by organizationDetailViewModel.addPersonState
         .collectAsStateWithLifecycle()
 
     var showAddPersonSheet by rememberSaveable { mutableStateOf(false) }
-    val warningTypes by organizationDetailViewModel
-        .observeWarningTypes()
 
-        .collectAsStateWithLifecycle(initialValue = emptyList())
     var warningToEdit by remember { mutableStateOf<WarningWithDetail?>(null) }
 
 
@@ -176,9 +153,7 @@ fun OrganizationDetailScreen(
         organizationDetailViewModel.observeOrganizationContracts(organizationId)
         // organizationDetailViewModel.observeOrganizationWarnings(organizationId)
         organizationDetailViewModel.observeOrganizationAssignedStands(organizationId)
-        organizationDetailViewModel.observeOrganizationAssignedSerials(organizationId)
-        organizationDetailViewModel.fetchOrganizationVisitors(organizationId)
-        organizationDetailViewModel.fetchOrganizationTicketIssue(organizationId)
+        organizationDetailViewModel.loadAttachments()
     }
 
     val currentOrganization = organization ?: return
@@ -188,8 +163,10 @@ fun OrganizationDetailScreen(
     val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
     val isSupervisor = currentRole == UserRole.SUPERVISOR
 
-    val formState = rememberAddOrganizationFormState()
-    val personState = rememberAddPersonFormState()
+    /*
+        val formState = rememberAddOrganizationFormState()
+        val personState = rememberAddPersonFormState()
+    */
 
     var selectedTab by rememberSaveable { mutableStateOf(OrganizationDetailTab.BASIC_INFO) }
     val visibleTabs = remember(isSupervisor) {
@@ -202,8 +179,6 @@ fun OrganizationDetailScreen(
     var showInactiveReasonDialog by rememberSaveable { mutableStateOf(false) }
     var currentOrganizationStatus by rememberSaveable { mutableStateOf(OrganizationStatus.ACTIVE) }
 
-    var warningPendingDelete by remember { mutableStateOf<WarningWithDetail?>(null) }
-    var visitorToDelete by remember { mutableStateOf<VisitorOrganizationEntity?>(null) }
 
     val activeVisitorName by organizationDetailViewModel.activeVisitorName.collectAsState()
     val activeContractName by organizationDetailViewModel.activeContractName.collectAsState()
@@ -212,15 +187,26 @@ fun OrganizationDetailScreen(
     val statusUpdateState by organizationDetailViewModel.statusUpdateState
         .collectAsStateWithLifecycle()
 
-    val addWarningState by organizationDetailViewModel.addWarningState
-        .collectAsStateWithLifecycle()
-
     val visitSubjects by organizationDetailViewModel.visitSubjects
         .collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val uiStateChange by organizationDetailViewModel.uiStateChange.collectAsStateWithLifecycle()
 
 
+    LaunchedEffect(organizationDetailViewModel.uiEvent) {
+        organizationDetailViewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
+                    event.message.asString(
+                        context
+                    )
+                )
+
+                is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
+            }
+        }
+    }
 // بستن دیالوگ و بازگشت پس از موفقیت
 // بستن دیالوگ و بازگشت به لیست سازمان‌ها همراه با فعال‌سازی پرچم سینک
     LaunchedEffect(statusUpdateState) {
@@ -254,37 +240,6 @@ fun OrganizationDetailScreen(
     }
 
 
-    LaunchedEffect(addWarningState) {
-        when (val state = addWarningState) {
-
-            is DataState.Success -> {
-                showWarningDialog = false
-                organizationDetailViewModel.resetAddWarningState()
-                organizationDetailViewModel.observeOrganizationWarnings(organizationId)
-
-                Toast.makeText(
-                    context,
-                    "تذکر سازمان با موفقیت ثبت شد",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                onWarningSuccess()
-            }
-
-            is DataState.Error -> {
-                showWarningDialog = false
-
-                snackBarHostState.showSnackbar(
-                    state.error.asString(context)
-                )
-
-                organizationDetailViewModel.resetAddWarningState()
-            }
-
-            else -> Unit
-        }
-    }
-
     LaunchedEffect(addPersonState) {
         when (val state = addPersonState) {
 
@@ -294,7 +249,7 @@ fun OrganizationDetailScreen(
 
                 showAddPersonSheet = false
 
-                formState.resetPersonFields(personState)
+                //  formState.resetPersonFields(personState)
 
                 organizationDetailViewModel
                     .observeOrganizationPersons(organizationId)
@@ -326,15 +281,30 @@ fun OrganizationDetailScreen(
         },
 
         bottomBar = {
-            Surface(
-                color = appColors.screenBackground,
-                tonalElevation = 4.dp,
-                shadowElevation = 8.dp
-            ) {
-                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                    ActionButtons(
-                        onEdit = onEditClick,
-                        onDetermination = { showStatusDialog = true }
+            if (selectedTab == OrganizationDetailTab.BASIC_INFO) {
+
+                Surface(
+                    color = appColors.screenBackground,
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp
+                ) {
+                    DualActionButtonBottomBar(
+                        primaryText = stringResource(R.string.label_edit_organization),
+                        secondaryText = stringResource(
+                            R.string.label_determination_organization_status
+                        ),
+                        primaryIcon = Icons.Outlined.Edit,
+                        secondaryIcon = Icons.Outlined.Cancel,
+                        secondaryVariant = SecondaryButtonVariant.FILLED,
+                        buttonHeight = 44.dp,
+                        onPrimaryClick = {
+                            onEditClick(organizationId)
+                        },
+                        onSecondaryClick = {
+                            if (!uiStateChange.isChangeStatus) {
+                                showStatusDialog = true
+                            }
+                        }
                     )
                 }
             }
@@ -392,7 +362,13 @@ fun OrganizationDetailScreen(
                         OrganizationBasicInfoTabContent(
                             organization = currentOrganization,
                             activeVisitorName = activeVisitorName,
-                            activeContractName = activeContractName
+                            activeContractName = activeContractName,
+                            isImagesLoading = detailUiState.isImagesLoading,
+                            attachments = detailUiState.attachments,
+                            baseUrl = baseUrl,
+                            onLocationClick = { lat, lng ->
+                                navController.navigate("map_screen?lat=$lat&lng=$lng&isReadOnly=true")
+                            }
                         )
                     }
 
@@ -412,7 +388,7 @@ fun OrganizationDetailScreen(
                         OrganizationPersonsTabContent(
                             persons = persons,
                             onAddPersonClick = {
-                                formState.resetPersonFields(personState)
+                                //     formState.resetPersonFields(personState)
                                 showAddPersonSheet = true
                             },
                         )
@@ -435,7 +411,6 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.WARNING -> {
-                        organizationDetailViewModel.observeOrganizationWarnings(organizationId)
 
                         // داخل فراخوانی OrganizationWarningTabContent:
                         OrganizationWarningTabContent(
@@ -453,8 +428,7 @@ fun OrganizationDetailScreen(
                     }
 
                     OrganizationDetailTab.SERIALS -> {
-                        OrganizationSerialsTabContent(
-                            serials = assignedSerials,
+                        OrganizationSerialsTabContent(organizationId = organizationId,
                             onAddTicketClick = {
                                 val activeContractId = organization?.organization!!.activeContractId
                                 val hasActiveContract = !activeContractId.isNullOrBlank() &&
@@ -478,28 +452,17 @@ fun OrganizationDetailScreen(
                                 navController.navigate(
                                     Screen.AssignedSerialDetail.createRoute(ticket.assignedSerial.serialAssignmentId)
                                 )
-                            },
-                            modifier = Modifier.fillMaxSize()
+                            }
                         )
                     }
 
                     OrganizationDetailTab.TICKET -> {
                         OrganizationTicketIssueTabContent(
-                            ticketIssueState = ticketIssueState,
-                            onRetry = {
-                                organizationDetailViewModel.fetchOrganizationTicketIssue(
-                                    organizationId
-                                )
-                            }
                         )
                     }
 
                     OrganizationDetailTab.VISITOR -> {
                         OrganizationVisitorTabContent(
-                            visitorsState = visitorsState,
-                            onRetry = {
-                                organizationDetailViewModel.fetchOrganizationVisitors(organizationId)
-                            },
                             onAssignVisitorClick = {
                                 onAssignVisitorClick(organizationId)
                             },
@@ -508,56 +471,12 @@ fun OrganizationDetailScreen(
                         )
                     }
 
+
                 }
             }
         }
     }
 
-/*
-    if (showWarningDialog) {
-        AddOrganizationWarningDialog(
-            warningTypes = warningTypes,
-            isSubmitting = addWarningState is DataState.Loading,
-
-            onDismiss = {
-                showWarningDialog = false
-                organizationDetailViewModel.resetAddWarningState()
-            },
-            initialWarningId = warningToEdit?.warning?.warningTypeId,
-            initialDescription = warningToEdit?.warning?.description.orEmpty(),
-            onConfirm = { warningTypeId, description ->
-
-                // شناسه‌های واقعی باید از اطلاعات جلسه و بازدیدکننده
-                // انتخاب‌شده در برنامه دریافت شوند.
-                organizationDetailViewModel.createOrganizationWarning(
-                    organizationId = organizationId,
-                    warningId = warningTypeId,
-                    visitorId = "",
-                    meetingId = null,
-                    warningDate = Instant.now().toString(),
-                    description = description,
-                    warningRecordId = warningToEdit?.warning?.warningId
-                )
-            }
-        )
-    }
-*/
-    // دیالوگ تأیید حذف
-    warningPendingDelete?.let { item ->
-        DeleteConfirmationDialog(
-            itemType = stringResource(R.string.label_warnings),
-            itemName = item.warningTypeName,
-            onConfirm = {
-                organizationDetailViewModel.deleteWarning(
-                    item.warning.warningId
-                )
-                warningPendingDelete = null
-            },
-            onDismiss = {
-                warningPendingDelete = null
-            }
-        )
-    }
     if (showStatusDialog) {
         ChangeOrganizationStatusDialog(
             initialStatus = OrganizationStatus.ACTIVE,
@@ -565,17 +484,19 @@ fun OrganizationDetailScreen(
             initialReason = "",
             isSubmitting = statusUpdateState is DataState.Loading,
             onDismiss = {
-                showStatusDialog = false
-                organizationDetailViewModel.resetStatusUpdateState()
+                if (!uiStateChange.isChangeStatus) {
+                    showStatusDialog = false
+                }
             },
             onConfirm = { newStatus, deactiveDate, reason, visitDate, subjectVisitId ->
-                organizationDetailViewModel.updateOrganizationStatus(
+                organizationDetailViewModel.changeStatusOrganization(
                     organizationId = organizationId,
                     status = newStatus,
                     deactiveDate = deactiveDate,
                     reason = reason,
                     visitDate = visitDate,
-                    subjectVisitId = subjectVisitId
+                    subjectVisitId = subjectVisitId, onSuccessCallback = {                    showStatusDialog = false
+                    }
                 )
             }
         )
@@ -583,53 +504,37 @@ fun OrganizationDetailScreen(
 
 
     if (showAddPersonSheet) {
-        AddPersonBottomSheet(
-            personState = personState,
+        /* AddPersonBottomSheet(
+             personState = personState,
 
-            onDismiss = {
-                showAddPersonSheet = false
-                organizationDetailViewModel.resetAddPersonState()
-            },
+             onDismiss = {
+                 showAddPersonSheet = false
+                 organizationDetailViewModel.resetAddPersonState()
+             },
 
-            onSavePerson = {
+             onSavePerson = {
 
-                if (
-                    personState.name.isBlank() ||
-                    personState.mobile.isBlank() ||
-                    personState.role == null
-                ) {
-                    return@AddPersonBottomSheet
-                }
+                 if (
+                     personState.name.isBlank() ||
+                     personState.mobile.isBlank() ||
+                     personState.role == null
+                 ) {
+                     return@AddPersonBottomSheet
+                 }
 
-                organizationDetailViewModel.addOrganizationPerson(
-                    organizationId = organizationId,
-                    fullName = personState.name,
-                    role = personState.role!!,
-                    mobile = personState.mobile,
-                    phone = personState.phone,
-                    gender = personState.gender,
-                    description = personState.description,
-                    isCommissionEligible =
-                    personState.isCommissionEligible
-                )
-            }
-        )
-    }
-
-    visitorToDelete?.let { visitor ->
-        DeleteConfirmationDialog(
-            itemType = stringResource(R.string.label_visitor),
-            itemName = visitor.name!!,
-            onConfirm = {
-                // حذف از لیست محلی یا فراخوانی ViewModel
-                //   visitors = visitors.filter { it.id != visitor.id }
-                // viewModel.deleteNotice(notice.id)
-                visitorToDelete = null
-            },
-            onDismiss = {
-                visitorToDelete = null
-            }
-        )
+                 organizationDetailViewModel.addOrganizationPerson(
+                     organizationId = organizationId,
+                     fullName = personState.name,
+                     role = personState.role!!,
+                     mobile = personState.mobile,
+                     phone = personState.phone,
+                     gender = personState.gender,
+                     description = personState.description,
+                     isCommissionEligible =
+                     personState.isCommissionEligible
+                 )
+             }
+         )*/
     }
 
     if (showInactiveReasonDialog) {
@@ -647,6 +552,7 @@ fun OrganizationDetailScreen(
 
 }
 
+/*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPersonBottomSheet(
@@ -803,6 +709,7 @@ fun AddPersonBottomSheet(
         }
     }
 }
+*/
 
 
 @Composable
@@ -1146,18 +1053,6 @@ fun ChangeOrganizationStatusDialog(
 }
 
 
-/** تبدیل شیء JalaliDate به میلی‌ثانیه */
-fun jalaliToMillis(jalali: ir.kitgroup.partnerManagement.core.ui.components.JalaliDate): Long {
-    return PersianDate().apply {
-        shYear = jalali.year
-        shMonth = jalali.month
-        shDay = jalali.day
-        hour = 0
-        minute = 0
-        second = 0
-    }.time
-}
-
 // تابع کمکی برای ردیف‌های تاریخ در دیالوگ
 @Composable
 private fun StatusDateRow(label: String, onClick: () -> Unit) {
@@ -1181,66 +1076,3 @@ private fun StatusDateRow(label: String, onClick: () -> Unit) {
     }
 }
 
-
-@Composable
-private fun ActionButtons(
-    onEdit: () -> Unit,
-    onDetermination: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        CustomButton(
-            text = stringResource(R.string.label_edit_organization),
-            onClick = onEdit,
-            fillMaxWidth = false,
-            modifier = Modifier.weight(1f),
-            height = 42.dp,
-            cornerRadius = 12.dp,
-            textStyle = typography.titleLarge,
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        )
-
-        CustomButton(
-            text = stringResource(R.string.label_determination_organization_status),
-            onClick = onDetermination,
-            fillMaxWidth = false,
-            modifier = Modifier.weight(1f),
-            height = 42.dp,
-            cornerRadius = 12.dp,
-            textStyle = typography.titleLarge,
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = LocalPartnerManagementColors.current.error,
-                contentColor = LocalPartnerManagementColors.current.errorContainer
-            )
-        )
-    }
-}
-
-/** تبدیل millis به ISO-8601 (UTC) برای ارسال به API */
-fun convertMillisToIso(millis: Long): String {
-    val dateTime = Instant.ofEpochMilli(millis)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDateTime()
-    return dateTime.toInstant(ZoneOffset.UTC)
-        .atOffset(ZoneOffset.UTC)
-        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-}
-
-/** تبدیل millis به تاریخ شمسی برای نمایش */
-fun convertMillisToJalali(millis: Long): String {
-    val persianDate = PersianDate(millis)
-    return String.format(
-        java.util.Locale.US,
-        "%04d/%02d/%02d",
-        persianDate.shYear,
-        persianDate.shMonth,
-        persianDate.shDay
-    )
-}

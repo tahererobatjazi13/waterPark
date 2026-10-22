@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import ir.kitgroup.partnerManagement.core.database.dao.AssignStandChangeStatusDao
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedSerialDao
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedStandDao
+import ir.kitgroup.partnerManagement.core.database.dao.AttachmentFileDao
 import ir.kitgroup.partnerManagement.core.database.dao.CityDao
 import ir.kitgroup.partnerManagement.core.database.dao.ContractDao
 import ir.kitgroup.partnerManagement.core.database.dao.ContractTerminationDao
@@ -36,6 +37,7 @@ import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEnti
 import ir.kitgroup.partnerManagement.core.database.entity.ProductEntity
 import ir.kitgroup.partnerManagement.core.database.entity.RegionEntity
 import ir.kitgroup.partnerManagement.core.database.entity.AssignedSerialEntity
+import ir.kitgroup.partnerManagement.core.database.entity.AttachmentFileEntity
 import ir.kitgroup.partnerManagement.core.database.entity.ContractTerminationEntity
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingChangeStatusEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationChangeStatusEntity
@@ -60,6 +62,7 @@ import ir.kitgroup.partnerManagement.core.database.entity.WarningEntity
         OrganizationEntity::class,
         OrganizationChangeStatusEntity::class,
         OrganizationPersonEntity::class,
+        AttachmentFileEntity::class,
         MeetingEntity::class,
         MeetingChangeStatusEntity::class,
         WarningEntity::class,
@@ -95,4 +98,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun statisticDao(): StatisticDao
     abstract fun contractTerminationDao(): ContractTerminationDao
     abstract fun organizationChangeStatusDao(): OrganizationChangeStatusDao
+    abstract fun attachmentFileDao(): AttachmentFileDao
 }

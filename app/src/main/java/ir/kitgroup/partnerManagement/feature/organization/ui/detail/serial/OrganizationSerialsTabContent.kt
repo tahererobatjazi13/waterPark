@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui.detail
+package ir.kitgroup.partnerManagement.feature.organization.ui.detail.serial
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -15,9 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ConfirmationNumber
@@ -41,10 +39,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.core.database.model.AssignedSerialWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.util.ContractOfferStatus
@@ -52,15 +51,22 @@ import ir.kitgroup.partnerManagement.core.ui.util.ContractOfferStatus
 
 @Composable
 fun OrganizationSerialsTabContent(
-    serials: List<AssignedSerialWithDetail>,
+    organizationId: String,
+    organizationSerialViewModel: OrganizationSerialViewModel = hiltViewModel(),
     onAddTicketClick: () -> Unit,
     onTicketClick: (AssignedSerialWithDetail) -> Unit,
-    modifier: Modifier = Modifier
 ) {
+
     var selectedTicketForDetail by remember { mutableStateOf<AssignedSerialWithDetail?>(null) }
     val appColors = LocalPartnerManagementColors.current
 
-    Column(modifier = modifier.fillMaxSize()) {
+    val serials by organizationSerialViewModel.assignedSerials.collectAsStateWithLifecycle()
+
+    LaunchedEffect(organizationId) {
+        organizationSerialViewModel.observeOrganizationAssignedSerials(organizationId)
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
         // هدر تب شامل عنوان و دکمه افزودن
         Row(
             modifier = Modifier
@@ -124,21 +130,12 @@ fun OrganizationSerialsTabContent(
             }
         }
     }
-
-    // دیالوگ نمایش جزئیات کامل آفر با کلیک روی کارت
-    /* selectedTicketForDetail?.let { ticket ->
-         TicketOfferDetailDialog(
-             item = ticket,
-             onDismiss = { selectedTicketForDetail = null }
-         )
-     }*/
 }
 
 @Composable
 fun TicketOfferCard(
     item: AssignedSerialWithDetail,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
 
@@ -217,106 +214,5 @@ fun TicketOfferCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun TicketOfferDetailDialog(
-    item: AssignedSerialWithDetail,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.action_close))
-            }
-        },
-        title = {
-            Text(
-                text = stringResource(R.string.label_ticket_offer_detail),
-                style = typography.titleLarge
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                DetailItemRow(
-                    label = stringResource(R.string.label_offer_plan),
-                    value = item.offerName
-                )
-                DetailItemRow(
-                    label = stringResource(R.string.label_contract),
-                    value = item.contractName
-                )
-                DetailItemRow(
-                    label = stringResource(R.string.label_org_name),
-                    value = item.organizationName
-                )
-                /*   DetailItemRow(
-                       label = stringResource(R.string.label_cooperation_model),
-                       value = ticket.cooperationModel
-                   )*/
-                DetailItemRow(
-                    label = stringResource(R.string.label_serial_prefix),
-                    value = item.assignedSerial.serialPrefix.orEmpty()
-                )
-                DetailItemRow(
-                    label = stringResource(R.string.label_serial_count),
-                    value = item.assignedSerial.count.toString()
-                )
-                DetailItemRow(
-                    label = stringResource(R.string.label_start_serial),
-                    value = item.assignedSerial.fromSerial.toString()
-                )
-                DetailItemRow(
-                    label = stringResource(R.string.label_end_serial),
-                    value = item.assignedSerial.toSerial.toString()
-                )
-                DetailItemRow(
-                    label = stringResource(R.string.label_serial_status),
-                    value = item.assignedSerial.contractOfferStatusName.orEmpty()
-                )
-                DetailItemRow(
-                    label = stringResource(R.string.label_last_used_serial),
-                    value = item.assignedSerial.lastSerialUsed?.toString() ?: "---"
-                )
-                DetailItemRow(
-                    label = stringResource(R.string.label_remaining_serial_count),
-                    value = item.assignedSerial.remainingSerialCount?.toString() ?: "---"
-                )
-            }
-        }
-    )
-}
-
-
-@Composable
-private fun DetailItemRow(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-    ) {
-        Text(
-            text = "$label:",
-            style = typography.bodySmall,
-            color = LocalPartnerManagementColors.current.textSecondary,
-            modifier = Modifier.weight(0.4f)
-        )
-        Text(
-            text = value,
-            style = typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(0.6f)
-        )
     }
 }

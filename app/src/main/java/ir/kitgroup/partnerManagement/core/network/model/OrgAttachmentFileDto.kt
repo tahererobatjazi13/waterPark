@@ -1,38 +1,41 @@
 package ir.kitgroup.partnerManagement.core.network.model
 
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
-@Serializable
-data class OrgAttachmentFileDto(
-    val orgAttachmentFileId: String,
+data class AttachmentFileDto(
+    @SerializedName("attachmentFileId")
+    val attachmentFileId: String,
 
+    @SerializedName("name")
     val name: String? = null,
 
-    val organizationId: String? = null,
-
-    val fileType: Int? = null,
-
+    @SerializedName("originalFileName")
     val originalFileName: String? = null,
 
+    @SerializedName("storedFileName")
     val storedFileName: String? = null,
 
+    @SerializedName("relativePath")
     val relativePath: String? = null,
 
+    @SerializedName("fileExtension")
     val fileExtension: String? = null,
 
+    @SerializedName("mimeType")
     val mimeType: String? = null,
 
-    val fileSize: Int? = null,
+    @SerializedName("fileSize")
+    val fileSize: Long = 0L,
 
+    @SerializedName("fileUrl")
     val fileUrl: String? = null,
 
-    val fileHash: String? = null,
+    @SerializedName("fileType")
+    val fileType: Int = 0,
 
-    val storageStatus: Int? = null,
-
+    @SerializedName("description")
     val description: String? = null,
 
-    val sourceCreate: Int? = null,
-
-    val meetingId: String? = null
+    @SerializedName("createdOn")
+    val createdOn: String? = null
 )

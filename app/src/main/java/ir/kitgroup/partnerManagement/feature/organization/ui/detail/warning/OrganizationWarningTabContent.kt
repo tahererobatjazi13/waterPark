@@ -52,6 +52,7 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
+import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.OfflinePendingFooterBanner
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
@@ -78,6 +79,7 @@ fun OrganizationWarningTabContent(
 
     val warnings by organizationWarningViewModel.warnings.collectAsStateWithLifecycle()
     val uiState by organizationWarningViewModel.uiState.collectAsStateWithLifecycle()
+    var warningPendingDelete by remember { mutableStateOf<WarningWithDetail?>(null) }
 
     LaunchedEffect(organizationId) {
         organizationWarningViewModel.observeOrganizationWarnings(organizationId)
@@ -184,6 +186,24 @@ fun OrganizationWarningTabContent(
                 }
             )
         }
+    }
+
+
+    // دیالوگ تأیید حذف
+    warningPendingDelete?.let { item ->
+        DeleteConfirmationDialog(
+            itemType = stringResource(R.string.label_warnings),
+            itemName = item.warningTypeName,
+            onConfirm = {
+                organizationWarningViewModel.deleteWarning(
+                    item.warning.warningId
+                )
+                warningPendingDelete = null
+            },
+            onDismiss = {
+                warningPendingDelete = null
+            }
+        )
     }
 }
 

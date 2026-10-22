@@ -11,7 +11,7 @@ fun Status.toDisplayName(): String = when (this) {
 
 /*
 git add .
-git commit -m "clean offline mode"
+git commit -m "add image file"
 git push -u origin master
 git push
 */
