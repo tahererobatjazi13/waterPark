@@ -76,4 +76,7 @@ interface OrganizationDao {
         isLocallyModified: Boolean
     )
 
+    @Query("SELECT COUNT(*) FROM organizations WHERE syncStatus IN ('PENDING_INSERT', 'PENDING_UPDATE')")
+    fun observePendingCount(): Flow<Int>
+
 }

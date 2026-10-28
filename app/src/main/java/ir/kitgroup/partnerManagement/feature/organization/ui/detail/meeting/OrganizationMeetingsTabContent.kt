@@ -1,4 +1,4 @@
-package ir.kitgroup.partnerManagement.feature.organization.ui.detail
+package ir.kitgroup.partnerManagement.feature.organization.ui.detail.meeting
 
 
 import androidx.compose.foundation.layout.Arrangement
@@ -31,19 +31,36 @@ import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
-import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
-import ir.kitgroup.partnerManagement.feature.contract.ui.list.ContractListItem
-
+import ir.kitgroup.partnerManagement.core.ui.util.UserRole
+import ir.kitgroup.partnerManagement.feature.meeting.ui.list.MeetingCard
 
 @Composable
-fun OrganizationContractsTabContent(
-    contracts: List<ContractEntity>,
-    onAssignContractClick: () -> Unit = {},
-    onContractClick: (ContractEntity) -> Unit,
+fun OrganizationMeetingsTabContent(
+    organizationId: String,
+    onAddMeetingClick: () -> Unit,
+    onMeetingClick: ((String) -> Unit),
+    viewModel: OrganizationMeetingsViewModel = hiltViewModel(),
+    sessionViewModel: SessionViewModel = hiltViewModel()
+
 ) {
     val appColors = LocalPartnerManagementColors.current
 
+    val meetings by viewModel.meetings.collectAsStateWithLifecycle()
+    val roleCode by sessionViewModel.roleCode.collectAsState()
+    val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
+    val isSupervisor = currentRole == UserRole.SUPERVISOR
+
+    LaunchedEffect(organizationId) {
+        viewModel.observeOrganizationContracts(organizationId)
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -56,14 +73,11 @@ fun OrganizationContractsTabContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.weight(1f)) {
-                SectionTitle(title = stringResource(R.string.label_contract_organization_list))
+                SectionTitle(title = stringResource(R.string.label_visits_list))
             }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
             FilledTonalButton(
-                onClick = onAssignContractClick,
-                shape = RoundedCornerShape(10.dp),
+                onClick = onAddMeetingClick,
+                shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = appColors.success,
@@ -77,15 +91,16 @@ fun OrganizationContractsTabContent(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = stringResource(R.string.label_new_contract),
+                    text = stringResource(R.string.label_register_visit),
                     style = typography.titleLarge
                 )
             }
         }
 
-        if (contracts.isEmpty()) {
+
+        if (meetings.isEmpty()) {
             EmptyState(
-                textRes = R.string.msg_no_contract_found,
+                textRes = R.string.msg_no_visit_found,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -97,13 +112,11 @@ fun OrganizationContractsTabContent(
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                itemsIndexed(
-                    items = contracts,
-                    key = { _, item -> item.contractId }
-                ) { _, contract ->
-                    ContractListItem(
-                        contract = contract,
-                        onClick = { onContractClick(contract) }
+                itemsIndexed(meetings) { index, item ->
+                    MeetingCard(
+                        item = item,
+                        isSupervisor = isSupervisor,
+                        onClick = { onMeetingClick(item.meeting.meetingId) }
                     )
                 }
             }

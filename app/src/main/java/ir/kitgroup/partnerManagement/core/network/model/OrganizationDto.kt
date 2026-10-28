@@ -70,7 +70,7 @@ data class OrganizationDto(
 
     val englishName: String?,
 
-    val document: String?,
+    val description: String?,
 
     val customerCapacity: Int?,
 

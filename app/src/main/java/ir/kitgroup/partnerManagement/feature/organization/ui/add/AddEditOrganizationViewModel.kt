@@ -8,9 +8,11 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.database.dao.AttachmentFileDao
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationEntity
 import ir.kitgroup.partnerManagement.core.network.model.AttachmentUploadResponse
 import ir.kitgroup.partnerManagement.core.repository.OrganizationRepository
+import ir.kitgroup.partnerManagement.core.repository.VisitorRepository
 import ir.kitgroup.partnerManagement.core.ui.model.OrganizationImageItem
 import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
@@ -41,11 +43,23 @@ import java.util.TimeZone
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
+import ir.kitgroup.partnerManagement.core.database.mapper.toDto
+import ir.kitgroup.partnerManagement.core.repository.AttachmentFileRepository
+import ir.kitgroup.partnerManagement.core.repository.OrganizationPersonRepository
+import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
+import ir.kitgroup.partnerManagement.core.ui.util.isNetworkError
+import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
+import java.io.File
 
 @HiltViewModel
 class AddEditOrganizationViewModel @Inject constructor(
     private val repository: OrganizationRepository,
+    private val attachmentFileRepository: AttachmentFileRepository,
+    private val visitorRepository: VisitorRepository,
+    private val attachmentFileDao: AttachmentFileDao,
     @ApplicationContext private val context: Context,
+    private val personRepository: OrganizationPersonRepository,
     private val mainPreferences: MainPreferences,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -78,13 +92,27 @@ class AddEditOrganizationViewModel @Inject constructor(
         loadInitialData()
     }
 
+
     private fun loadInitialData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isInitialLoading = true) }
 
             // واکشی لیست شهرها
             val cities = repository.observeAllCity().firstOrNull().orEmpty()
-            _uiState.update { it.copy(cities = cities) }
+            val visitors = try {
+                visitorRepository.getAllVisitors().firstOrNull().orEmpty()
+            } catch (e: Exception) {
+                emptyList()
+            }
+
+            val defaultVisitorId = mainPreferences.getVisitorId()
+            _uiState.update { state ->
+                state.copy(
+                    cities = cities,
+                    visitors = visitors,
+                    visitorId = if (state.visitorId.isNullOrBlank()) defaultVisitorId else state.visitorId
+                )
+            }
 
             // در صورتی که ویرایش باشد، لود کردن جزئیات سازمان
             if (isEditMode && !organizationIdArg.isNullOrBlank()) {
@@ -120,30 +148,61 @@ class AddEditOrganizationViewModel @Inject constructor(
                             customerCapacity = org.customerCapacity?.toString() ?: "",
                             statusExternalCustomer = org.statusExternalCustomer == true,
                             statusGetStand = org.statusGetStand == true,
-                            description = org.document.orEmpty(),
-                            //   organizationPersons = orgWithDetail.organization.persons.map { it.toPersonEntity() }
+                            description = org.description.orEmpty()
                         )
                     }
-                    val currentBaseUrl =
-                        mainPreferences.baseUrlFlow.firstOrNull().orEmpty().trimEnd('/')
-
-                    val attachmentsResult = repository.getAttachmentsByOrgId(organizationIdArg)
-                    attachmentsResult.onSuccess { attachments ->
-                        val loadedImages = attachments.map { attachment ->
-                            val fullUrl =
-                                "$currentBaseUrl/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
-                            OrganizationImageItem(
-                                uri = null,
-                                fileType = attachment.fileType ,
-                                description = attachment.description.orEmpty(),
-                                uploadedFileId = attachment.attachmentFileId,
-                                serverImageUrl = fullUrl
-                            )
-                        }
-
-                        _uiState.update { it.copy(images = loadedImages) }
-                    }
                 }
+
+                val currentBaseUrl = mainPreferences.baseUrlFlow.firstOrNull().orEmpty().trimEnd('/')
+
+                // ۱. ابتدا تلاش برای خواندن پیوست‌ها از دیتابیس لوکال (برای دسترسی آفلاین سریع و مطمئن)
+                val cachedEntities = try {
+                    attachmentFileDao.getOrganizationAttachments(organizationIdArg)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+
+                val attachments = if (cachedEntities.isNotEmpty()) {
+                    cachedEntities.map { it.toDto() }
+                } else {
+                    // اگر در کش نبود، ازپوستر/رپازیتوری می‌گیریم
+                    val result = attachmentFileRepository.getAttachmentsByOrgId(organizationIdArg)
+                    result.getOrDefault(emptyList())
+                }
+
+                // ۲. نگاشت استاندارد پیوست‌ها به OrganizationImageItem با بررسی دقیق فایل‌های محلی
+                val loadedImages = attachments.map { attachment ->
+                    val imagesDir = File(context.filesDir, "attachments")
+                    val extension = if (!attachment.fileExtension.isNullOrBlank()) {
+                        if (attachment.fileExtension.startsWith(".")) attachment.fileExtension else ".${attachment.fileExtension}"
+                    } else ".jpg"
+
+                    val localFile = File(imagesDir, "${attachment.attachmentFileId}$extension")
+                    val localUri = if (localFile.exists()) Uri.fromFile(localFile) else null
+
+                    val serverImageUrl = when {
+                        !attachment.fileUrl.isNullOrBlank() && attachment.fileUrl.startsWith("http", true) -> {
+                            attachment.fileUrl
+                        }
+                        !attachment.fileUrl.isNullOrBlank() -> {
+                            val cleanPath = attachment.fileUrl.removePrefix("/")
+                            "$currentBaseUrl/$cleanPath"
+                        }
+                        else -> {
+                            "$currentBaseUrl/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
+                        }
+                    }
+
+                    OrganizationImageItem(
+                        uri = localUri,
+                        fileType = attachment.fileType,
+                        description = attachment.description.orEmpty(),
+                        uploadedFileId = attachment.attachmentFileId,
+                        serverImageUrl = serverImageUrl
+                    )
+                }
+
+                _uiState.update { it.copy(images = loadedImages) }
             }
 
             _uiState.update { it.copy(isInitialLoading = false) }
@@ -168,13 +227,16 @@ class AddEditOrganizationViewModel @Inject constructor(
     fun onLandLineChange(value: String) = _uiState.update { it.copy(landLine = value) }
     fun onPhoneChange(value: String) = _uiState.update { it.copy(phone = value) }
     fun onMobileChange(value: String) {
+        val filteredValue = value.filter { it.isDigit() }.take(11)
+
         _uiState.update { state ->
             state.copy(
-                mobile = value,
-                mobileError = if (value.isBlank() || isValidIranianMobile(value)) {
-                    null
-                } else {
-                    context.getString(R.string.error_invalid_mobile)
+                mobile = filteredValue,
+                mobileError = when {
+                    filteredValue.isBlank() -> null
+                    filteredValue.length < 11 -> context.getString(R.string.error_invalid_mobile)
+                    isValidIranianMobile(filteredValue) -> null
+                    else -> context.getString(R.string.error_invalid_mobile)
                 }
             )
         }
@@ -198,6 +260,11 @@ class AddEditOrganizationViewModel @Inject constructor(
     fun onDescriptionChange(value: String) = _uiState.update { it.copy(description = value) }
     fun onLocationChange(lat: Double?, lng: Double?) =
         _uiState.update { it.copy(latitude = lat, longitude = lng) }
+
+    fun onVisitorSelected(visitorId: String) {
+        _uiState.update { it.copy(visitorId = visitorId) }
+        visitorRepository.getAllVisitors()
+    }
 
     fun onCitySelected(cityId: String) {
         _uiState.update { it.copy(cityId = cityId, regionId = "") }
@@ -236,14 +303,12 @@ class AddEditOrganizationViewModel @Inject constructor(
         if (!isValidIranianMobile(state.mobile)) {
             _uiEvent.tryEmit(
                 UiEvent.ShowError(
-                    UiText.DynamicString(
-                        context.getString(R.string.error_invalid_mobile)
-                    )
+                    UiText.DynamicString(context.getString(R.string.error_invalid_mobile))
                 )
             )
             return
         }
-        // اعتبارسنجی فرم
+        // اعتبارسنجی‌های فرم...
         if (state.organizationName.isBlank()) {
             _uiEvent.tryEmit(UiEvent.ShowError(UiText.StringResource(R.string.label_organization_name_required)))
             return
@@ -268,7 +333,8 @@ class AddEditOrganizationViewModel @Inject constructor(
                 val currentTimestamp = System.currentTimeMillis()
                 val isoTimestamp = getCurrentIsoUtcTimestamp()
                 val targetOrgId = state.organizationId
-                val currentVisitorId = mainPreferences.getVisitorId()
+                val visitorIdToSubmit =
+                    uiState.value.visitorId.ifBlank { mainPreferences.getVisitorId() }
 
                 val request = CreateOrganizationRequest(
                     organizationId = targetOrgId,
@@ -288,14 +354,16 @@ class AddEditOrganizationViewModel @Inject constructor(
                     regionId = state.regionId,
                     latitude = state.latitude,
                     longitude = state.longitude,
-                    visitorId =currentVisitorId,
+                    visitorId = visitorIdToSubmit,
                     statusExternalCustomer = state.statusExternalCustomer,
                     englishName = state.englishName.trim().takeIf { it.isNotEmpty() },
-                    document = state.description.trim().takeIf { it.isNotEmpty() },
+                    description = state.description.trim().takeIf { it.isNotEmpty() },
                     customerCapacity = state.customerCapacity.toIntOrNull() ?: 0,
                     email = state.email.trim().takeIf { it.isNotEmpty() },
                     ticketSaleCountHistory = state.ticketSaleCountHistory.toIntOrNull() ?: 0
                 )
+
+                val defaultPersonName = state.ownerName.ifBlank { state.organizationName }.trim()
 
                 if (state.isEditMode && !targetOrgId.isNullOrBlank()) {
                     // --- ویرایش سازمان ---
@@ -306,56 +374,62 @@ class AddEditOrganizationViewModel @Inject constructor(
 
                     syncResult.fold(
                         onSuccess = { serverMsg ->
-
-                            val msg =
-                                if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
-                                else UiText.StringResource(R.string.msg_organization_updated)
+                            val msg = if (!serverMsg.isNullOrBlank()) {
+                                UiText.DynamicString(serverMsg)
+                            } else {
+                                UiText.StringResource(R.string.msg_organization_updated)
+                            }
                             _uiEvent.emit(UiEvent.ShowMessage(msg))
                             delay(400)
                             onSuccessCallback()
                         },
-                        onFailure = {
-                            val nextSyncStatus = if (existingOrg?.syncStatus == SyncStatus.SYNCED) {
-                                SyncStatus.PENDING_UPDATE
+                        onFailure = { error ->
+                            if (error.isNetworkError()) {
+                                val nextSyncStatus =
+                                    if (existingOrg?.syncStatus == SyncStatus.SYNCED) {
+                                        SyncStatus.PENDING_UPDATE
+                                    } else {
+                                        existingOrg?.syncStatus ?: SyncStatus.PENDING_INSERT
+                                    }
+
+                                val offlineEntity = OrganizationEntity(
+                                    organizationId = targetOrgId,
+                                    name = request.name,
+                                    ownerName = request.ownerName,
+                                    nationalId = request.nationalId,
+                                    organizationType = request.organizationType,
+                                    grade = request.grade,
+                                    statusGetStand = request.statusGetStand,
+                                    level = request.level,
+                                    status = request.status,
+                                    phone = request.phone,
+                                    landLine = request.landLine,
+                                    mobile = request.mobile,
+                                    address = request.address,
+                                    cityId = request.cityId,
+                                    regionId = request.regionId,
+                                    latitude = request.latitude,
+                                    longitude = request.longitude,
+                                    visitorId = visitorIdToSubmit,
+                                    statusExternalCustomer = request.statusExternalCustomer,
+                                    englishName = request.englishName,
+                                    description = request.description,
+                                    customerCapacity = request.customerCapacity,
+                                    email = request.email,
+                                    ticketSaleCountHistory = request.ticketSaleCountHistory,
+                                    modifiedOn = isoTimestamp,
+                                    syncStatus = nextSyncStatus,
+                                    isLocallyModified = true,
+                                    lastModifiedTimestamp = currentTimestamp
+                                )
+
+                                repository.saveLocal(offlineEntity)
+                                _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)))
+                                delay(400)
+                                onSuccessCallback()
                             } else {
-                                existingOrg?.syncStatus ?: SyncStatus.PENDING_INSERT
+                                _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(error)))
                             }
-
-                            val offlineEntity = OrganizationEntity(
-                                organizationId = targetOrgId,
-                                name = request.name,
-                                ownerName = request.ownerName,
-                                nationalId = request.nationalId,
-                                organizationType = request.organizationType,
-                                grade = request.grade,
-                                statusGetStand = request.statusGetStand,
-                                level = request.level,
-                                status = request.status,
-                                phone = request.phone,
-                                landLine = request.landLine,
-                                mobile = request.mobile,
-                                address = request.address,
-                                cityId = request.cityId,
-                                regionId = request.regionId,
-                                latitude = request.latitude,
-                                longitude = request.longitude,
-                                visitorId =currentVisitorId,
-                                statusExternalCustomer = request.statusExternalCustomer,
-                                englishName = request.englishName,
-                                document = request.document,
-                                customerCapacity = request.customerCapacity,
-                                email = request.email,
-                                ticketSaleCountHistory = request.ticketSaleCountHistory,
-                                modifiedOn = isoTimestamp,
-                                syncStatus = nextSyncStatus,
-                                isLocallyModified = true,
-                                lastModifiedTimestamp = currentTimestamp
-                            )
-
-                            repository.saveLocal(offlineEntity)
-                            _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)))
-                            delay(400)
-                            onSuccessCallback()
                         }
                     )
                 } else {
@@ -374,60 +448,75 @@ class AddEditOrganizationViewModel @Inject constructor(
                                 return@fold
                             }
 
-                            // ۱. ابتدا منتظر می‌مانیم تا تمام عکس‌ها آپلود شوند
+                            createDefaultPersonForOrganization(
+                                organizationId = newOrganizationId,
+                                personName = defaultPersonName,
+                                mobile = state.mobile.trim(),
+                                isOnline = true
+                            )
+
                             if (_uiState.value.images.isNotEmpty()) {
-                                uploadImagesForNewOrganization(newOrganizationId)
+                                uploadImagesForOrganization(newOrganizationId)
                             }
 
-                            // ۲. نمایش پیام موفقیت پس از آپلود کامل
                             val msg = response.message
                                 ?.takeIf { it.isNotBlank() }
                                 ?.let { UiText.DynamicString(it) }
                                 ?: UiText.StringResource(R.string.msg_organization_created)
 
                             _uiEvent.emit(UiEvent.ShowMessage(msg))
-
-                            // ۳. اکنون با خیال راحت صفحه بسته می‌شود
                             delay(400)
                             onSuccessCallback()
-                        }, onFailure = {
-                            val localUUID = UUID.randomUUID().toString()
+                        },
+                        onFailure = { error ->
+                            if (error.isNetworkError()) {
+                                val localUUID = UUID.randomUUID().toString()
 
-                            val offlineEntity = OrganizationEntity(
-                                organizationId = localUUID,
-                                name = request.name,
-                                ownerName = request.ownerName,
-                                nationalId = request.nationalId,
-                                organizationType = request.organizationType,
-                                grade = request.grade,
-                                statusGetStand = request.statusGetStand,
-                                level = request.level,
-                                status = request.status,
-                                phone = request.phone,
-                                landLine = request.landLine,
-                                mobile = request.mobile,
-                                address = request.address,
-                                cityId = request.cityId,
-                                regionId = request.regionId,
-                                latitude = request.latitude,
-                                longitude = request.longitude,
-                                visitorId =currentVisitorId,
-                                statusExternalCustomer = request.statusExternalCustomer,
-                                englishName = request.englishName,
-                                document = request.document,
-                                customerCapacity = request.customerCapacity,
-                                email = request.email,
-                                ticketSaleCountHistory = request.ticketSaleCountHistory,
-                                modifiedOn = isoTimestamp,
-                                syncStatus = SyncStatus.PENDING_INSERT,
-                                isLocallyModified = true,
-                                lastModifiedTimestamp = currentTimestamp
-                            )
+                                val offlineEntity = OrganizationEntity(
+                                    organizationId = localUUID,
+                                    serverId = null,
+                                    name = request.name,
+                                    ownerName = request.ownerName,
+                                    nationalId = request.nationalId,
+                                    organizationType = request.organizationType,
+                                    grade = request.grade,
+                                    statusGetStand = request.statusGetStand,
+                                    level = request.level,
+                                    status = request.status,
+                                    phone = request.phone,
+                                    landLine = request.landLine,
+                                    mobile = request.mobile,
+                                    address = request.address,
+                                    cityId = request.cityId,
+                                    regionId = request.regionId,
+                                    latitude = request.latitude,
+                                    longitude = request.longitude,
+                                    visitorId = visitorIdToSubmit,
+                                    statusExternalCustomer = request.statusExternalCustomer,
+                                    englishName = request.englishName,
+                                    description = request.description,
+                                    customerCapacity = request.customerCapacity,
+                                    email = request.email,
+                                    ticketSaleCountHistory = request.ticketSaleCountHistory,
+                                    modifiedOn = isoTimestamp,
+                                    syncStatus = SyncStatus.PENDING_INSERT,
+                                    isLocallyModified = true,
+                                    lastModifiedTimestamp = currentTimestamp
+                                )
 
-                            repository.saveLocal(offlineEntity)
-                            _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_saved_local_storage_awaiting_synchronization)))
-                            delay(400)
-                            onSuccessCallback()
+                                repository.saveLocal(offlineEntity)
+                                createDefaultPersonForOrganization(
+                                    organizationId = localUUID,
+                                    personName = defaultPersonName,
+                                    mobile = state.mobile.trim(),
+                                    isOnline = false
+                                )
+                                _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_saved_local_storage_awaiting_synchronization)))
+                                delay(400)
+                                onSuccessCallback()
+                            } else {
+                                _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(error)))
+                            }
                         }
                     )
                 }
@@ -445,7 +534,7 @@ class AddEditOrganizationViewModel @Inject constructor(
         MutableStateFlow<DataState<AttachmentUploadResponse>>(DataState.Idle)
     val uploadState = _uploadState.asStateFlow()
 
-    fun uploadFileForOrganization(
+    private fun uploadFileForOrganization(
         fileUri: Uri,
         organizationId: String,
         fileType: Int,
@@ -454,10 +543,11 @@ class AddEditOrganizationViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _uploadState.value = DataState.Loading
-            val result = repository.uploadOrganizationFile(
+            val result = attachmentFileRepository.uploadAttachmentFile(
                 context = context,
                 uri = fileUri,
                 organizationId = organizationId,
+                meetingId = null,
                 fileType = fileType,
                 name = fileName,
                 description = description
@@ -466,8 +556,9 @@ class AddEditOrganizationViewModel @Inject constructor(
             result.onSuccess { response ->
                 _uploadState.value = DataState.Success(response)
                 _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_file_uploaded_successfully)))
-                repository.upsertUploadedAttachment(
+                attachmentFileRepository.upsertUploadedAttachment(
                     orgId = organizationId,
+                    meetingId = null,
                     response = response,
                     fileType = fileType,
                     description = description
@@ -481,7 +572,15 @@ class AddEditOrganizationViewModel @Inject constructor(
         }
     }
 
-    fun onAddLocalImage(uri: Uri, fileType: Int, description: String) {
+    fun onAddLocalAttachment(uri: Uri, fileType: Int, description: String) {
+        val contentResolver = context.contentResolver
+        val mimeType = contentResolver.getType(uri) ?: ""
+        val extension = when {
+            mimeType.contains("pdf", ignoreCase = true) -> ".pdf"
+            mimeType.contains("png", ignoreCase = true) -> ".png"
+            else -> ".jpg"
+        }
+
         val currentList = _uiState.value.images.toMutableList()
         currentList.add(
             OrganizationImageItem(
@@ -492,14 +591,13 @@ class AddEditOrganizationViewModel @Inject constructor(
         )
         _uiState.update { it.copy(images = currentList) }
 
-        // اگر در حالت ویرایش هستیم و organizationId سروری داریم، می‌توانیم بلافاصله آپلود کنیم:
         val currentOrgId = _uiState.value.organizationId
         if (_uiState.value.isEditMode && !currentOrgId.isNullOrBlank()) {
             uploadFileForOrganization(
                 fileUri = uri,
                 organizationId = currentOrgId,
                 fileType = fileType,
-                fileName = "org_${System.currentTimeMillis()}.jpg",
+                fileName = "org_${System.currentTimeMillis()}$extension",
                 description = description
             )
         }
@@ -513,30 +611,115 @@ class AddEditOrganizationViewModel @Inject constructor(
         }
     }
 
-    private suspend fun uploadImagesForNewOrganization(organizationId: String) {
+    private suspend fun uploadImagesForOrganization(organizationId: String) {
         val imagesToUpload = _uiState.value.images.filter { it.uploadedFileId == null }
 
         for (img in imagesToUpload) {
-            val fileName = "org_${System.currentTimeMillis()}_${img.fileType}.jpg"
+            val uri = img.uri ?: continue
 
-            repository.uploadOrganizationFile(
-                context = context,
-                uri = img.uri!!,
+            // تشخیص دقیق پسوند فایل به جای hardcode کردن jpg
+            val mimeType = context.contentResolver.getType(uri).orEmpty()
+            val extension = when {
+                mimeType.contains("pdf", ignoreCase = true) -> ".pdf"
+                mimeType.contains("png", ignoreCase = true) -> ".png"
+                mimeType.contains("word", ignoreCase = true) || mimeType.contains("officedocument", ignoreCase = true) -> ".docx"
+                else -> ".jpg"
+            }
+            val fileName = "org_${System.currentTimeMillis()}_${img.fileType}$extension"
+
+            try {
+                val uploadResult = attachmentFileRepository.uploadAttachmentFile(
+                    context = context,
+                    uri = uri,
+                    organizationId = organizationId,
+                    meetingId = null,
+                    fileType = img.fileType,
+                    name = fileName,
+                    description = img.description
+                )
+
+                uploadResult.fold(
+                    onSuccess = { uploadResponse ->
+                        // ذخیره در جدول پیوست‌های دیتابیس محلی
+                        attachmentFileRepository.upsertUploadedAttachment(
+                            orgId = organizationId,
+                            meetingId = null,
+                            response = uploadResponse,
+                            fileType = img.fileType,
+                            description = img.description
+                        )
+                    },
+                    onFailure = { error ->
+                        error.printStackTrace()
+                    }
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private suspend fun createDefaultPersonForOrganization(
+        organizationId: String,
+        personName: String,
+        mobile: String?,
+        isOnline: Boolean
+    ) {
+        if (personName.isBlank() && mobile.isNullOrBlank()) return
+
+        val roleId = PersonOrganizationRole.MANAGER.id
+        if (isOnline) {
+            val personRequest = AddOrganizationPersonRequest(
                 organizationId = organizationId,
-                fileType = img.fileType,
-                name = fileName,
-                description = img.description
-            ).fold(
-                onSuccess = { uploadResponse ->
-                    // در صورت نیاز به ذخیره شناسه فایل آپلود شده
-                },
-                onFailure = { error ->
-                    // لاگ خطا در صورت بروز مشکل در آپلود هر تصویر
-                    error.printStackTrace()
-                }
+                fullName = personName.ifBlank { "مدیر سازمان" },
+                role = roleId,
+                mobile = mobile?.takeIf { it.isNotBlank() },
+                phone = null,
+                gender = null,
+                description = "ثبت خودکار همزمان با ایجاد سازمان",
+                isCommissionEligible = false
+            )
+
+            // ارسال به سرور؛ در صورت خطا، در دیتابیس محلی ذخیره می‌شود
+            val result = repository.addOrganizationPerson(personRequest)
+            result.onFailure {
+                savePersonOffline(
+                    orgId = organizationId,
+                    name = personName,
+                    role = roleId,
+                    mobile = mobile,
+                )
+            }
+        } else {
+            // حالت آفلاین
+            savePersonOffline(
+                orgId = organizationId,
+                name = personName,
+                role = roleId,
+                mobile = mobile,
             )
         }
     }
 
+    private suspend fun savePersonOffline(
+        orgId: String,
+        name: String,
+        role: Int,
+        mobile: String?,
+    ) {
+        val offlinePerson = OrganizationPersonEntity(
+            orgPersonId = UUID.randomUUID().toString(),
+            organizationId = orgId,
+            fullName = name.ifBlank { "مدیر سازمان" },
+            role = role,
+            mobile = mobile.orEmpty(),
+            gender = null,
+            description = "ثبت خودکار آفلاین",
+            isCommissionEligible = false,
+            syncStatus = SyncStatus.PENDING_INSERT,
+            isLocallyModified = true
+        )
+        personRepository.saveLocal(offlinePerson)
+    }
 
 }

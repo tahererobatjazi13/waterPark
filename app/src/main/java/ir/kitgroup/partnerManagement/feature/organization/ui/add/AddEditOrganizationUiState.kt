@@ -1,9 +1,9 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.add
 
-import androidx.compose.runtime.mutableStateListOf
 import ir.kitgroup.partnerManagement.core.database.entity.CityEntity
 import ir.kitgroup.partnerManagement.core.database.entity.PersonEntity
 import ir.kitgroup.partnerManagement.core.database.entity.RegionEntity
+import ir.kitgroup.partnerManagement.core.database.entity.VisitorEntity
 import ir.kitgroup.partnerManagement.core.ui.model.OrganizationImageItem
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 
@@ -39,6 +39,7 @@ data class AddEditOrganizationUiState(
 
     val cities: List<CityEntity> = emptyList(),
     val regions: List<RegionEntity> = emptyList(),
+    val visitors: List<VisitorEntity> = emptyList(),
 
     val isEditMode: Boolean = false,
     val isLoading: Boolean = false,
@@ -48,9 +49,7 @@ data class AddEditOrganizationUiState(
         get() = organizationName.isNotBlank() &&
                 organizationType != 0 &&
                 cityId.isNotBlank() &&
-                regionId.isNotBlank() && ownerName.isNotBlank() && mobile.isNotBlank() &&
-                isMobileValid
+                (isEditMode || (ownerName.isNotBlank() && mobile.isNotBlank() && mobileError == null))
 
-    private val isMobileValid: Boolean
-        get() = mobile.matches(Regex("^09\\d{9}$"))
+
 }

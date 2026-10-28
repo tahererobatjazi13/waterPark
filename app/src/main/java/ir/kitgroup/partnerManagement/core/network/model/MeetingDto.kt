@@ -44,9 +44,9 @@ data class MeetingDto(
 
     val typeName: String?,
 
-    val longitude: String?,
+    val longitude: Double?,
 
-    val latitude: String?,
+    val latitude: Double?,
 
     val stateCode: Int?,
 

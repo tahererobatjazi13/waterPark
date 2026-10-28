@@ -207,7 +207,7 @@ private fun AdvertisingItemCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                ActionIconButton(
+               /* ActionIconButton(
                     icon = Icons.Default.Edit,
                     contentDescription = stringResource(R.string.label_edit),
                     onClick = onEditClick,
@@ -223,7 +223,7 @@ private fun AdvertisingItemCard(
                     onClick = onDeleteClick,
                     tint = MaterialTheme.colorScheme.error,
                     backgroundColor = MaterialTheme.colorScheme.errorContainer
-                )
+                )*/
             }
 
             HorizontalDivider(

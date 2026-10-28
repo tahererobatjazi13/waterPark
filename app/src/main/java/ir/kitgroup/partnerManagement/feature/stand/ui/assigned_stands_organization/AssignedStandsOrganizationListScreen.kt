@@ -27,19 +27,23 @@ import androidx.compose.ui.unit.dp
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
+import ir.kitgroup.partnerManagement.core.ui.components.OfflinePendingFooterBanner
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
+import ir.kitgroup.partnerManagement.core.ui.util.AssignedStandFilterTab
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
 import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
+import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import ir.kitgroup.partnerManagement.feature.dashboard.ui.DashboardViewModel
 
 
 @Composable
@@ -47,36 +51,38 @@ fun AssignedStandsOrganizationListScreen(
     onNewAssignmentOrganizationClick: () -> Unit,
     onViewItemDetailsClick: (AssignedStandWithDetail) -> Unit,
     modifier: Modifier = Modifier,
-    shouldRefreshAndSync: Boolean = false,
-    onRefreshHandled: () -> Unit = {},
     viewModel: AssignedStandsOrganizationViewModel = hiltViewModel(),
-    dashboardViewModel: DashboardViewModel = hiltViewModel()
 ) {
 
-    val appColors = LocalPartnerManagementColors.current
-    var selectedTab by rememberSaveable { mutableStateOf(AllocationFilterTab.All) }
+    var selectedTab by rememberSaveable { mutableStateOf(AssignedStandFilterTab.All) }
+    val assignedStand by viewModel.assignments.collectAsStateWithLifecycle()
 
-    val advertisingStandAssignments by viewModel.assignments.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState() }
 
-    // اجرای همگام‌سازی و سپس رفرش لیست محلی
-    LaunchedEffect(shouldRefreshAndSync) {
-        if (shouldRefreshAndSync) {
-            // ۱. ابتدا فراخوانی متد همگام‌سازی سرور
-            dashboardViewModel.onReceiveDataClick()
-            // ۲. بازخوانی اطلاعات جدید در لیست از دیتابیس لوکال
-            viewModel.loadAssignedStands()
-            // ۳. خاموش کردن فلگ در SavedStateHandle
-            onRefreshHandled()
+
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
+                    event.message.asString(
+                        context
+                    )
+                )
+
+                is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
+            }
         }
     }
 
-    val filteredAllocations = remember(selectedTab, advertisingStandAssignments) {
+
+    val filteredAllocations = remember(selectedTab, assignedStand) {
         when (selectedTab) {
-            AllocationFilterTab.All -> advertisingStandAssignments
-            AllocationFilterTab.Active -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 1 }
-            AllocationFilterTab.Draft -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 0 }
-            AllocationFilterTab.Returned -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 2 }
-            AllocationFilterTab.Cancelled -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 3 }
+            AssignedStandFilterTab.All -> assignedStand
+            AssignedStandFilterTab.Active -> assignedStand!!.filter { it.assignedStand.statusAssign == 1 }
+            AssignedStandFilterTab.Draft -> assignedStand!!.filter { it.assignedStand.statusAssign == 0 }
+            AssignedStandFilterTab.Returned -> assignedStand!!.filter { it.assignedStand.statusAssign == 2 }
+            AssignedStandFilterTab.Cancelled -> assignedStand!!.filter { it.assignedStand.statusAssign == 3 }
         }
     }
 
@@ -84,8 +90,8 @@ fun AssignedStandsOrganizationListScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-
-        ) { innerPadding ->
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
+    ) { innerPadding ->
         Surface(
             modifier = Modifier
                 .fillMaxSize()
@@ -98,30 +104,47 @@ fun AssignedStandsOrganizationListScreen(
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                AllocationHeader(onNewAssignmentOrganizationClick = onNewAssignmentOrganizationClick)
+                AssignedStandHeader(onNewAssignmentOrganizationClick = onNewAssignmentOrganizationClick)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                AllocationFilterTabs(
+                AssignedStandFilterTabs(
                     selectedTab = selectedTab,
                     onTabSelected = { selectedTab = it }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
+                when {
+                    assignedStand == null -> {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BouncingDotsIndicator(
+                                modifier = Modifier.size(36.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
 
-                if (filteredAllocations.isEmpty()) {
-                    EmptyState(
-                        textRes = R.string.msg_no_item_found,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    )
-                } else {
-                    AllocationsList(
-                        advertisingStandAssignments = filteredAllocations,
-                        onViewItemDetailsClick = onViewItemDetailsClick,
-                        modifier = Modifier.weight(1f)
-                    )
+                    filteredAllocations?.isEmpty() == true -> {
+                        EmptyState(
+                            textRes = R.string.msg_no_item_found,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        )
+                    }
+
+                    else -> {
+                        AssignedStandsList(
+                            advertisingStandAssignments = filteredAllocations.orEmpty(),
+                            onViewItemDetailsClick = onViewItemDetailsClick,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
@@ -129,7 +152,7 @@ fun AssignedStandsOrganizationListScreen(
 }
 
 @Composable
-private fun AllocationHeader(
+private fun AssignedStandHeader(
     onNewAssignmentOrganizationClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -162,9 +185,9 @@ private fun AllocationHeader(
 }
 
 @Composable
-private fun AllocationFilterTabs(
-    selectedTab: AllocationFilterTab,
-    onTabSelected: (AllocationFilterTab) -> Unit,
+private fun AssignedStandFilterTabs(
+    selectedTab: AssignedStandFilterTab,
+    onTabSelected: (AssignedStandFilterTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -178,7 +201,7 @@ private fun AllocationFilterTabs(
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        AllocationFilterTab.entries.forEach { tab ->
+        AssignedStandFilterTab.entries.forEach { tab ->
             val isSelected = selectedTab == tab
             Box(
                 modifier = Modifier
@@ -207,7 +230,7 @@ private fun AllocationFilterTabs(
 }
 
 @Composable
-private fun AllocationsList(
+private fun AssignedStandsList(
     advertisingStandAssignments: List<AssignedStandWithDetail>,
     onViewItemDetailsClick: (AssignedStandWithDetail) -> Unit,
     modifier: Modifier = Modifier
@@ -221,7 +244,7 @@ private fun AllocationsList(
             items = advertisingStandAssignments,
             key = { it.assignedStand.assignedStandId }
         ) { allocation ->
-            AllocationCard(
+            AssignedStandCard(
                 itemWithDetail = allocation,
                 onViewDetailsClick = { onViewItemDetailsClick(allocation) }
             )
@@ -230,11 +253,13 @@ private fun AllocationsList(
 }
 
 @Composable
-private fun AllocationCard(
+private fun AssignedStandCard(
     itemWithDetail: AssignedStandWithDetail,
     onViewDetailsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isPendingSync = itemWithDetail.assignedStand.syncStatus != SyncStatus.SYNCED
+
     val appColors = LocalPartnerManagementColors.current
     val assignment = itemWithDetail.assignedStand
 
@@ -258,7 +283,10 @@ private fun AllocationCard(
             .clickable { onViewDetailsClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
-        border = BorderStroke(0.5.dp, appColors.border)
+        border = BorderStroke(
+            width = if (isPendingSync) 1.dp else 0.7.dp,
+            color = if (isPendingSync) appColors.warning.copy(alpha = 0.65f) else appColors.border
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -314,6 +342,12 @@ private fun AllocationCard(
                         icon = Icons.Default.Inventory2
                     )
                 }
+
+            }
+
+            if (isPendingSync) {
+                Spacer(modifier = Modifier.height(10.dp))
+                OfflinePendingFooterBanner()
             }
         }
     }

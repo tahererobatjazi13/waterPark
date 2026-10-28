@@ -48,7 +48,7 @@ data class OrganizationEntity(
 
     val levelName: String? = null,
 
-    val status: Int? = null, // / 0 = ثبت اولیه، 1 = فعال، 2 = غیر فعال، 3 = معلق، 4 = بسته شده، 5 = زرد، 6 = ارجاع فوری / نارنجی
+    val status: Int? = null, // / 0 = ثبت اولیه، 1 = فعال، 2 = غیر فعال، 5 = زرد، 6 = ارجاع فوری / نارنجی
 
     val statusName: String? = null,
 
@@ -78,7 +78,7 @@ data class OrganizationEntity(
 
     val englishName: String? = null,
 
-    val document: String? = null,
+    val description: String? = null,
 
     val customerCapacity: Int? = null,
 

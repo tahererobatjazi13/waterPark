@@ -1,8 +1,13 @@
 package ir.kitgroup.partnerManagement.core.database.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import ir.kitgroup.partnerManagement.core.database.entity.AssignStandChangeStatusEntity
+import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
+import ir.kitgroup.partnerManagement.core.database.entity.MeetingChangeStatusEntity
 import ir.kitgroup.partnerManagement.core.database.entity.MeetingEntity
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEntity
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
@@ -13,6 +18,9 @@ import kotlinx.coroutines.flow.Flow
 interface MeetingDao {
     @Upsert
     suspend fun upsertAll(items: List<MeetingEntity>)
+
+    @Upsert
+    suspend fun upsert(item: MeetingEntity)
 
     @Query("SELECT * FROM meetings ORDER BY visitDate DESC, visitTime DESC")
     fun observeAll(): Flow<List<MeetingWithDetail>>
@@ -65,4 +73,19 @@ interface MeetingDao {
     """
     )
     suspend fun getMeetingsBySyncStatus(syncStatus: SyncStatus): List<MeetingEntity>
+
+    @Query("SELECT COUNT(*) FROM meetings WHERE syncStatus IN ('PENDING_INSERT', 'PENDING_UPDATE')")
+    fun observePendingCount(): Flow<Int>
+
+    @Query("UPDATE meetings SET syncStatus = :status, isLocallyModified = :isLocallyModified WHERE meetingId = :meetingId")
+    suspend fun updateSyncStatus(
+        meetingId: String,
+        status: SyncStatus,
+        isLocallyModified: Boolean
+    )
+
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(item: MeetingChangeStatusEntity)
+
 }

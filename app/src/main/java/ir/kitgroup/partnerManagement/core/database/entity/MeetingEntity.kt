@@ -53,9 +53,9 @@ data class MeetingEntity(
 
     val typeName: String? = null,
 
-    val longitude: String? = null,
+    val longitude: Double? = null,
 
-    val latitude: String? = null,
+    val latitude: Double? = null,
 
     val stateCode: Int? = null,
 

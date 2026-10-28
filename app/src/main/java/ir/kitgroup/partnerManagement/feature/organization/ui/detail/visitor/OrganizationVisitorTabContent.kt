@@ -1,9 +1,11 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail.visitor
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,25 +13,39 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EventBusy
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +70,7 @@ fun OrganizationVisitorTabContent(
     onDeleteVisitorClick: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
+    val appColors = LocalPartnerManagementColors.current
     val visitorsState by organizationVisitorViewModel.visitorsState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -64,9 +81,10 @@ fun OrganizationVisitorTabContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // نوار عنوان بالای لیست به همراه دکمه تخصیص جدید
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -75,29 +93,31 @@ fun OrganizationVisitorTabContent(
             Box(modifier = Modifier.weight(1f)) {
                 SectionTitle(title = stringResource(R.string.label_assignment_visitor_to_organization_list))
             }
-            /*         FilledTonalButton(
-                         onClick = onAssignVisitorClick,
-                         shape = RoundedCornerShape(12.dp),
-                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                         colors = ButtonDefaults.buttonColors(
-                             containerColor = appColors.success,
-                             contentColor = MaterialTheme.colorScheme.onPrimary
-                         )
-                     ) {
-                         Icon(
-                             imageVector = Icons.Default.Add,
-                             contentDescription = null,
-                             modifier = Modifier.size(18.dp)
-                         )
-                         Spacer(modifier = Modifier.width(6.dp))
-                         Text(
-                             text = stringResource(R.string.label_new_assigning),
-                             style = typography.titleLarge
-                         )
-                     }*/
+
+  /*          FilledTonalButton(
+                onClick = onAssignVisitorClick,
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = appColors.success,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.label_new_assigning),
+                    style = typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }*/
         }
 
-        when (visitorsState) {
+        when (val state = visitorsState) {
             is DataState.Loading -> {
                 Box(
                     modifier = Modifier
@@ -110,7 +130,7 @@ fun OrganizationVisitorTabContent(
             }
 
             is DataState.Error -> {
-                val errorMessage = (visitorsState as DataState.Error).error.asString(context)
+                val errorMessage = state.error.asString(context)
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -120,10 +140,10 @@ fun OrganizationVisitorTabContent(
                 ) {
                     Text(
                         text = errorMessage,
-                        style = typography.bodyLarge,
+                        style = typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     CustomButton(
                         text = stringResource(R.string.label_retry),
                         onClick = {
@@ -135,7 +155,7 @@ fun OrganizationVisitorTabContent(
             }
 
             is DataState.Success -> {
-                val visitors = (visitorsState as DataState.Success).data
+                val visitors = state.data
                 if (visitors.isEmpty()) {
                     EmptyState(
                         textRes = R.string.msg_no_visitor_found,
@@ -148,7 +168,8 @@ fun OrganizationVisitorTabContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(bottom = 24.dp)
                     ) {
                         itemsIndexed(
                             items = visitors,
@@ -164,7 +185,6 @@ fun OrganizationVisitorTabContent(
                     }
                 }
             }
-
 
             is DataState.Idle -> {
                 Spacer(modifier = Modifier.weight(1f))
@@ -182,83 +202,134 @@ private fun VisitorOrganizationCard(
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val colors = MaterialTheme.colorScheme
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
-        border = BorderStroke(0.5.dp, appColors.border)
+        border = BorderStroke(0.7.dp, appColors.border)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // ردیف اطلاعات اصلی: آواتار نمادین، نام و وضعیت
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${index + 1}. ${visitor.name ?: ""}".trim(),
-                    style = typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
+                // آواتار نمادین ویزیتور
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(colors.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = colors.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = "${index + 1}. ${visitor.name.orEmpty()}".trim(),
+                        style = typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = appColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
                 StatusBadge(status = VisitorOrganizationStatus.fromId(visitor.statusRelation ?: 0))
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
+            // باکس بازه زمانی فعالیت (تاریخ شروع و پایان تفکیک‌شده در دو ستون تمیز)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(colors.surfaceVariant.copy(alpha = 0.35f))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                VisitorStatItem(
+                DateInfoItem(
+                    modifier = Modifier.weight(1f),
                     label = stringResource(R.string.label_start_date),
                     date = formatJalaliDate(visitor.dateStart),
                     icon = Icons.Default.CalendarMonth
                 )
 
-                VisitorStatItem(
+                DateInfoItem(
+                    modifier = Modifier.weight(1f),
                     label = stringResource(R.string.label_end_date),
                     date = formatJalaliDate(visitor.dateEnd),
-                    icon = Icons.Default.CalendarMonth
+                    icon = Icons.Default.EventBusy
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // دکمه‌های عملیاتی (ویرایش / حذف)
+        /*    Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = colors.primary.copy(alpha = 0.1f),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    IconButton(onClick = onEditClick) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.label_edit),
+                            tint = colors.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
 
-            /*  Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.spacedBy(
-                      space = 8.dp,
-                      alignment = Alignment.End
-                  ),
-                  verticalAlignment = Alignment.CenterVertically
-              ) {
-                  ActionIconButton(
-                      icon = Icons.Default.Edit,
-                      contentDescription = stringResource(R.string.label_edit),
-                      onClick = onEditClick,
-                      tint = MaterialTheme.colorScheme.primary,
-                      backgroundColor = appColors.cardBackgroundAlt
-                  )
+                Spacer(modifier = Modifier.width(8.dp))
 
-                  ActionIconButton(
-                      icon = Icons.Default.DeleteOutline,
-                      contentDescription = stringResource(R.string.label_delete),
-                      onClick = onDeleteClick,
-                      tint = MaterialTheme.colorScheme.error,
-                      backgroundColor = MaterialTheme.colorScheme.errorContainer
-                  )
-              }*/
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = colors.error.copy(alpha = 0.1f),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    IconButton(onClick = onDeleteClick) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = stringResource(R.string.label_delete),
+                            tint = colors.error,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }*/
         }
     }
 }
 
 @Composable
-private fun VisitorStatItem(
+private fun DateInfoItem(
     label: String,
     date: String,
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
+    val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
 
     Row(
@@ -269,18 +340,23 @@ private fun VisitorStatItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(14.dp),
-            tint = colors.onSurfaceVariant
+            modifier = Modifier.size(16.dp),
+            tint = colors.primary
         )
-        Text(
-            text = "$label:",
-            style = typography.labelMedium,
-            color = colors.onSurfaceVariant
-        )
-        Text(
-            text = date.ifBlank { "—" },
-            style = typography.labelLarge,
-            color = colors.onSurface
-        )
+        Column {
+            Text(
+                text = label,
+                style = typography.labelSmall,
+                color = appColors.textSecondary
+            )
+            Text(
+                text = date.ifBlank { "—" },
+                style = typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = appColors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }

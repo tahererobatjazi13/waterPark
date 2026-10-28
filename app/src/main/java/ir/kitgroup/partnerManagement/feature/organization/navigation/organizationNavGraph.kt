@@ -20,7 +20,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_ORGANIZATION_SAVE
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.visitor.AssignVisitorScreen
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.AddEditOrganizationScreen
@@ -217,9 +216,7 @@ fun NavGraphBuilder.organizationNavGraph(
                 ExitTransition.None
             }
         ) { backStackEntry ->
-
             val organizationId = backStackEntry.arguments?.getString("organizationId")
-
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -238,23 +235,9 @@ fun NavGraphBuilder.organizationNavGraph(
                 ) {
                     OrganizationDetailScreen(
                         organizationId = organizationId!!,
-
                         onStatusChangeSuccess = {
-                            navController.getBackStackEntry(BottomNavItem.Organizations.route)
-                                .savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = true
-
                             navController.popBackStack(
-                                BottomNavItem.Organizations.route,
-                                inclusive = false
-                            )
-                        },
-                        onWarningSuccess = {
-                            navController.getBackStackEntry(BottomNavItem.Organizations.route)
-                            navController.getBackStackEntry(BottomNavItem.Organizations.route)
-                                .savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = true
-
-                            navController.popBackStack(
-                                BottomNavItem.Organizations.route,
+                                route = BottomNavItem.Organizations.route,
                                 inclusive = false
                             )
                         },
@@ -379,6 +362,7 @@ fun NavGraphBuilder.organizationNavGraph(
 
         }
     }
+
     composable(
         route = "map_screen?lat={lat}&lng={lng}&isReadOnly={isReadOnly}",
         arguments = listOf(

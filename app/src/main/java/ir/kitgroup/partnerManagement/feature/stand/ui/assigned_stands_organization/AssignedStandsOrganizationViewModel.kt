@@ -1,61 +1,39 @@
 package ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_organization
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.repository.AssignedStandsRepository
-import ir.kitgroup.partnerManagement.feature.dashboard.repository.SyncRepository
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
+import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class AssignedStandsOrganizationViewModel @Inject constructor(
-    private val assignedStandsRepository: AssignedStandsRepository, // افزودن private val برای تبدیل به property کلاس
-    private val syncRepository: SyncRepository
+    assignedStandsRepository: AssignedStandsRepository,
 ) : ViewModel() {
 
-    private val _assignments = MutableStateFlow<List<AssignedStandWithDetail>>(emptyList())
-    val assignments: StateFlow<List<AssignedStandWithDetail>> = _assignments.asStateFlow()
+    private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val uiEvent = _uiEvent.asSharedFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    val assignments: StateFlow<List<AssignedStandWithDetail>?> =
+        assignedStandsRepository.getOrganizationAssignedStandsWithDetail()
+            .catch { throwable ->
+                if (throwable is CancellationException) throw throwable
+                _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(throwable)))
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null
+            )
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-
-    private var loadJob: Job? = null
-
-    init {
-        loadAssignedStands()
-    }
-
-    /**
-     * واکشی و اشتراک در داده‌های استندهای تخصیص‌یافته به سازمان‌ها
-     */
-    fun loadAssignedStands() {
-        loadJob?.cancel()
-
-        loadJob = viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-
-            assignedStandsRepository.getOrganizationAssignedStandsWithDetail()
-                .catch { throwable ->
-                    Log.e("AssignedStandsVM", "Error collecting assigned stands", throwable)
-                    _errorMessage.value = throwable.localizedMessage ?: "خطا در دریافت لیست استندها"
-                    _isLoading.value = false
-                }
-                .collect { standList ->
-                    _assignments.value = standList
-                    _isLoading.value = false
-                }
-        }
-    }
 }

@@ -5,10 +5,8 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -16,13 +14,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_STAND_SAVE
 import ir.kitgroup.partnerManagement.feature.stand.ui.AdvertisingStandMenuScreen
 import ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_organization.AddAssignedStandsOrganizationScreen
 import ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_organization.AssignedStandsOrganizationListScreen
 import ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_visitor.AddAssignedStandsVisitorScreen
 import ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_visitor.AssignedStandsVisitorListScreen
-import ir.kitgroup.partnerManagement.feature.stand.ui.detail.AssignedStandsDetailRoute
+import ir.kitgroup.partnerManagement.feature.stand.ui.detail.AssignedStandsDetailScreen
 import ir.kitgroup.partnerManagement.feature.stand.ui.stand_type.AddStandTypeScreen
 import ir.kitgroup.partnerManagement.feature.stand.ui.stand_type.StandTypesListScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
@@ -270,12 +267,7 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
         },
         popExitTransition = {
             ExitTransition.None
-        }) { backStackEntry ->
-
-        // شنود سیگنال سینک و رفرش از SavedStateHandle همین Entry
-        val shouldRefreshAndSync by backStackEntry.savedStateHandle
-            .getStateFlow(SYNC_AFTER_STAND_SAVE, false)
-            .collectAsStateWithLifecycle()
+        }) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -292,10 +284,6 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 AssignedStandsOrganizationListScreen(
-                    shouldRefreshAndSync = shouldRefreshAndSync,
-                    onRefreshHandled = {
-                        backStackEntry.savedStateHandle[SYNC_AFTER_STAND_SAVE] = false
-                    },
                     onNewAssignmentOrganizationClick = {
                         navController.navigate(Screen.AddAssignedStandsOrganization.createRoute())
                     },
@@ -355,16 +343,15 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                 modifier = Modifier.fillMaxSize()
             ) {
                 AddAssignedStandsOrganizationScreen(
-                    organizationId = organizationId,
-                    assignedStandId = assignedStandId,
                     onSuccessSave = {
-                        // ۱. تنظیم فلگ در صفحه قبل (لیست تخصیص استند سازمان)
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(SYNC_AFTER_STAND_SAVE, true)
-
-                        // ۲. بازگشت مستقیم به همان صفحه لیست بدون رفتن به داشبورد
-                        navController.popBackStack()
+                        if (isEditMode) {
+                            navController.popBackStack(
+                                route = Screen.AssignedStandsOrganizationList.route,
+                                inclusive = false
+                            )
+                        } else {
+                            navController.popBackStack()
+                        }
                     }
                 )
             }
@@ -405,13 +392,15 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-                AssignedStandsDetailRoute(
+                AssignedStandsDetailScreen(
                     onEditClick = { assignedStandId ->
                         navController.navigate(
                             Screen.AddAssignedStandsOrganization.createRoute(assignedStandId = assignedStandId)
                         )
                     },
-                    onNavigateBack = {
+                    onStatusChangeSuccess = {
+                        navController.popBackStack()
+                    } , onNavigateBack = {
                         navController.popBackStack()
                     }
                 )

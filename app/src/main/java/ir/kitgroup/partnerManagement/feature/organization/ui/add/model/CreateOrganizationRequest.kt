@@ -22,7 +22,7 @@ data class CreateOrganizationRequest(
     val visitorId: String?,
     val statusExternalCustomer: Boolean,
     val englishName: String?,
-    val document: String? = null,
+    val description: String? = null,
     val customerCapacity: Int?,
     val email: String?,
     val ticketSaleCountHistory: Int?

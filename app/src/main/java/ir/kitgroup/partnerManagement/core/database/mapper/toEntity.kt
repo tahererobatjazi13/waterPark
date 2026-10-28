@@ -47,6 +47,7 @@ import ir.kitgroup.partnerManagement.core.network.model.MeetingChangeStatusDto
 import ir.kitgroup.partnerManagement.core.network.model.OrganizationChangeStatusDto
 import ir.kitgroup.partnerManagement.core.network.model.StatisticDto
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
+import ir.kitgroup.partnerManagement.feature.stand.model.CreateAssignStandRequest
 
 
 fun CityDto.toEntity(): CityEntity {
@@ -191,7 +192,7 @@ fun OrganizationDto.toEntity(): OrganizationEntity {
         visitorId = this.visitorId,
         statusExternalCustomer = this.statusExternalCustomer ?: false,
         englishName = this.englishName,
-        document = this.document,
+        description = this.description,
         customerCapacity = this.customerCapacity ?: 0,
         email = this.email,
         ticketSaleCountHistory = this.ticketSaleCountHistory ?: 0,
@@ -250,7 +251,7 @@ fun OrganizationEntity.toPendingDto(): OrganizationDto {
         visitorId = this.visitorId,
         statusExternalCustomer = this.statusExternalCustomer ?: false,
         englishName = this.englishName,
-        document = this.document,
+        description = this.description,
         customerCapacity = this.customerCapacity ?: 0,
         email = this.email,
         ticketSaleCountHistory = this.ticketSaleCountHistory ?: 0,
@@ -635,6 +636,41 @@ fun AssignStandChangeStatusEntity.toPendingDto(): AssignStandChangeStatusDto {
     )
 }
 
+fun AssignedStandEntity.toCreateAssignStandRequest(): CreateAssignStandRequest {
+    return CreateAssignStandRequest(
+        standAssignmentId = if (this.syncStatus == SyncStatus.PENDING_INSERT) null else (this.serverId
+            ?: this.assignedStandId),
+        advertisingStandId = this.standTypeId.orEmpty(),
+        visitorId = this.visitorId,
+        organizationId = this.organizationId.orEmpty(),
+        meetingId = this.meetingId,
+        count = this.count ?: 1,
+        assignmentType = this.assignmentType ?: 1,
+        assignmentMode = this.assignmentMode ?: 0,
+        assignmentDate = this.assignmentDate.orEmpty(),
+        plannedReturnDate = this.plannedReturnDate,
+        deliveryToVisitorDate = this.deliveryToVisitorDate,
+        deliveryToOrgDate = this.deliveryToOrgDate,
+        description = this.description?.trim()?.ifEmpty { null },
+        status = this.statusAssign ?: 1
+    )
+}
+
+fun AttachmentFileEntity.toDto() = AttachmentFileDto(
+    attachmentFileId = this.attachmentFileId,
+    name = null,
+    originalFileName = null,
+    storedFileName = null,
+    relativePath = this.relativePath,
+    fileExtension = null,
+    mimeType = this.mimeType,
+    fileSize = this.fileSize,
+    fileUrl = this.fileUrl,
+    fileType = this.fileType,
+    description = this.description,
+    createdOn = this.createdOn
+)
+
 fun StatisticDto.toEntity(): StatisticEntity {
     return StatisticEntity(
         id = 1,
@@ -644,5 +680,7 @@ fun StatisticDto.toEntity(): StatisticEntity {
         activeContractsCount = this.activeContractsCount,
         totalWarningsRegistered = this.totalWarningsRegistered
     )
+
+
 }
 

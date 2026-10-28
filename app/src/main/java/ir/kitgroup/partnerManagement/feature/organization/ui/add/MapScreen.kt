@@ -30,6 +30,8 @@ import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import android.graphics.Bitmap
+import android.graphics.Canvas
 
 @Composable
 fun MapScreen(
@@ -43,7 +45,7 @@ fun MapScreen(
 
     val hasInitialLocation = initialLatitude != null && initialLongitude != null
 
-    // ۲. مقداردهی اولیه مکان بر اساس پارامترهای ورودی
+    // مقداردهی اولیه مکان بر اساس پارامترهای ورودی
     var selectedLocation by remember {
         mutableStateOf(
             if (hasInitialLocation) GeoPoint(initialLatitude!!, initialLongitude!!) else null
@@ -96,6 +98,8 @@ fun MapScreen(
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
             title = context.getString(R.string.location_organization)
             isDraggable = !isReadOnly
+
+            icon = ContextCompat.getDrawable(context, R.drawable.ic_location_pin)
         }.also {
             markerRef = it
             if (!currentMap.overlays.contains(it)) {
@@ -112,6 +116,7 @@ fun MapScreen(
         }
         currentMap.invalidate()
     }
+
 
     // درخواست پرمیشن فقط در صورتی که موقعیت اولیه وجود نداشته باشد
     LaunchedEffect(mapViewRef) {
@@ -136,7 +141,17 @@ fun MapScreen(
             return@LaunchedEffect
         }
 
-        val overlay = MyLocationNewOverlay(GpsMyLocationProvider(context), mapView)
+        val overlay = MyLocationNewOverlay(GpsMyLocationProvider(context), mapView).apply {
+            // تغییر آیکون نقطه مکانی کنونی کاربر
+            val customPersonBitmap = getBitmapFromDrawable(context, R.drawable.ic_my_location_dot)
+            if (customPersonBitmap != null) {
+                setPersonIcon(customPersonBitmap)
+                setPersonAnchor(0.5f, 0.5f)
+                // در صورت تمایل برای حالت جهت‌نما حین حرکت (Direction Arrow):
+                // setDirectionIcon(customDirectionBitmap)
+                // setDirectionAnchor(0.5f, 0.5f)
+            }
+        }
         myLocationOverlay = overlay
         mapView.overlays.add(overlay)
         overlay.enableMyLocation()
@@ -267,7 +282,10 @@ fun MapScreen(
                                 title = context.getString(R.string.location_organization)
                                 isDraggable = !isReadOnly
                                 position = initialPoint
+                                icon =
+                                    ContextCompat.getDrawable(context, R.drawable.ic_location_pin)
                             }
+
                             markerRef = marker
                             overlays.add(marker)
                         }
@@ -341,4 +359,19 @@ fun MapScreen(
             }
         }
     }
+
 }
+
+private fun getBitmapFromDrawable(context: android.content.Context, drawableId: Int): Bitmap? {
+    val drawable = ContextCompat.getDrawable(context, drawableId) ?: return null
+    val bitmap = Bitmap.createBitmap(
+        drawable.intrinsicWidth.takeIf { it > 0 } ?: 96,
+        drawable.intrinsicHeight.takeIf { it > 0 } ?: 96,
+        Bitmap.Config.ARGB_8888
+    )
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+    return bitmap
+}
+

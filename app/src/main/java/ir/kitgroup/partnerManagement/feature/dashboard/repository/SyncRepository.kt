@@ -1,7 +1,10 @@
 package ir.kitgroup.partnerManagement.feature.dashboard.repository
 
+import android.content.Context
 import android.util.Log
 import androidx.room.withTransaction
+import dagger.hilt.android.qualifiers.ApplicationContext
+import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.AppDatabase
 import ir.kitgroup.partnerManagement.core.database.dao.AssignStandChangeStatusDao
 import ir.kitgroup.partnerManagement.core.database.dao.AssignedSerialDao
@@ -24,10 +27,13 @@ import ir.kitgroup.partnerManagement.core.database.dao.VisitSubjectDao
 import ir.kitgroup.partnerManagement.core.database.dao.VisitorDao
 import ir.kitgroup.partnerManagement.core.database.dao.WarningDao
 import ir.kitgroup.partnerManagement.core.database.dao.WarningTypeDao
+import ir.kitgroup.partnerManagement.core.database.mapper.toCreateAssignStandRequest
 import ir.kitgroup.partnerManagement.core.database.mapper.toEntity
 import ir.kitgroup.partnerManagement.core.database.mapper.toPendingDto
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
 import ir.kitgroup.partnerManagement.core.network.exception.ApiException
+import ir.kitgroup.partnerManagement.core.network.exception.ApiRequestExecutor
+import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataResponse
@@ -40,6 +46,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SyncRepository @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val apiService: ApiService,
     private val cityDao: CityDao,
     private val regionDao: RegionDao,
@@ -159,7 +166,7 @@ class SyncRepository @Inject constructor(
             val pendingAssignedStands =
                 pendingAssignedStandsInserts + pendingAssignedStandsUpdates
             val pendingAssignedStandsDto =
-                pendingAssignedStands.map { entity -> entity.toPendingDto() }
+                pendingAssignedStands.map { entity -> entity.toCreateAssignStandRequest() }
 
             // واکشی تغییر وضعیت تخصیص استندها (آفلاین)
             val pendingAssignedStandChangeStatus = assignStandChangeStatusDao.getAll()
@@ -179,7 +186,7 @@ class SyncRepository @Inject constructor(
                 pendingContracts = pendingContractsDto,
                 pendingContractTerminations = pendingTerminationsDto,
                 pendingMeetingStatusChanges = meetingChangeStatusDto,
-                pendingUpdateStands = pendingAssignedStandsDto,
+                pendingAssignedStands = pendingAssignedStandsDto,
                 pendingStandStatusChanges = assignedStandChangeStatusDto
             )
 
@@ -219,6 +226,18 @@ class SyncRepository @Inject constructor(
                 pendingMeetings.forEach { offlineItem ->
                     meetingDao.deleteById(offlineItem.meetingId)
                 }
+                if (pendingOrganizationStatusChange.isNotEmpty()) {
+                    organizationChangeStatusDao.deleteAll()
+                }
+                if (pendingTerminations.isNotEmpty()) {
+                    contractTerminationDao.deleteAll()
+                }
+                if (pendingMeetingChangeStatus.isNotEmpty()) {
+                    meetingChangeStatusDao.deleteAll()
+                }
+                if (pendingAssignedStandChangeStatus.isNotEmpty()) {
+                    assignStandChangeStatusDao.deleteAll()
+                }
                 // سپس تمام داده‌های جدید سرور ذخیره می‌شوند
                 saveResponse(response)
             }
@@ -246,6 +265,7 @@ class SyncRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
 
     private suspend fun saveResponse(
         response: SyncDataResponse

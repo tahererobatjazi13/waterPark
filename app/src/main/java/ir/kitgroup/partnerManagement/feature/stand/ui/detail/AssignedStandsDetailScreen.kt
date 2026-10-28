@@ -1,6 +1,26 @@
 package ir.kitgroup.partnerManagement.feature.stand.ui.detail
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
+import ir.kitgroup.partnerManagement.core.ui.components.DualActionButtonBottomBar
+import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+
+import ir.kitgroup.partnerManagement.core.ui.util.SecondaryButtonVariant
+import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,241 +45,161 @@ import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.StandTypeEntity
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
-import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomOutlinedButton
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
-import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
-import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
 import ir.kitgroup.partnerManagement.core.ui.util.StandType
-import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 
 
 @Composable
-fun AssignedStandsDetailRoute(
+fun AssignedStandsDetailScreen(
     onEditClick: (String) -> Unit = {},
     onStatusChanged: (Int) -> Unit = {},
-    onNavigateBack: () -> Unit = {}, // اضافه شدن کال‌بک بازگشت
+    onNavigateBack: () -> Unit = {},
+    onStatusChangeSuccess: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AssignedStandsDetailViewModel = hiltViewModel()
 ) {
     val allocationDetail by viewModel.standDetail.collectAsStateWithLifecycle()
-    val isUpdatingStatus by viewModel.isUpdatingStatus.collectAsStateWithLifecycle()
+    val uiStateChange by viewModel.uiStateChange.collectAsStateWithLifecycle()
 
-    allocationDetail?.let { detail ->
-        AssignedStandsDetailScreen(
-            allocationWithDetail = detail,
-            onEditClick = onEditClick,
-            onNavigateBack = onNavigateBack,
-            onStatusChanged = { newStatusId, onDismissDialog ->
-                viewModel.changeStatusAssignStand(
-                    newStatusId = newStatusId,
-                    onSuccess = {
-                        onDismissDialog()
-                    }
-                )
-            }, isUpdatingStatus = isUpdatingStatus,
-            modifier = modifier
-        )
-    } ?: Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(LocalPartnerManagementColors.current.screenBackground),
-        contentAlignment = Alignment.Center
-    ) {
-        BouncingDotsIndicator(
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-}
-
-@Composable
-fun AssignedStandsDetailScreen(
-    allocationWithDetail: AssignedStandWithDetail,
-    onEditClick: (String) -> Unit,
-    onNavigateBack: () -> Unit,
-    onStatusChanged: (Int, () -> Unit) -> Unit,
-    isUpdatingStatus: Boolean = false,
-    modifier: Modifier = Modifier
-) {
-    val appColors = LocalPartnerManagementColors.current
-    val allocation = allocationWithDetail.assignedStand
-    val standType = allocationWithDetail.standType
-    val standCount = allocationWithDetail.assignedStand.count
+    // تعریف استیت‌ها
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
+    val snackBarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
-    Scaffold(
-
-        bottomBar = {
-            if (allocationWithDetail != null) {
-                Surface(
-                    color = appColors.screenBackground,
-                    tonalElevation = 4.dp,
-                    shadowElevation = 8.dp
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // دکمه ویرایش بازدید
-                        CustomButton(
-                            text = stringResource(R.string.label_edit_stand),
-                            onClick = { onEditClick(allocationWithDetail.assignedStand.assignedStandId) },
-                            fillMaxWidth = false,
-                            modifier = Modifier.weight(1f),
-                            height = 42.dp,
-                            cornerRadius = 12.dp,
-                            textStyle = typography.titleLarge,
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        )
-
-                        // دکمه تعیین وضعیت بازدید
-                        CustomButton(
-                            text = stringResource(R.string.label_determination_status),
-                            onClick = {
-                                if (!isUpdatingStatus) {
-                                    showStatusDialog = true
-                                }
-                            },
-                            fillMaxWidth = false,
-                            modifier = Modifier.weight(1f),
-                            height = 42.dp,
-                            cornerRadius = 12.dp,
-                            textStyle = typography.titleLarge,
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = appColors.error,
-                                contentColor = appColors.errorContainer
-                            )
-                        )
-                    }
-                }
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()),
-            shape = RoundedCornerShape(
-                topStart = 24.dp,
-                topEnd = 24.dp
-            ),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.navigationBars),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    top = 16.dp,
-                    end = 16.dp,
-                    bottom = 24.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // ۱. هدر اصلی (شامل عنوان استند، ماهیت تخصیص و وضعیت)
-                item {
-                    AssignmentHeaderCard(
-                        allocationWithDetail = allocationWithDetail
-                    )
-                }
-
-                // ۲. اطلاعات طرفین و تاریخ تحویل (سازمان/بازاریاب)
-                item {
-                    AssignmentInformationCard(
-                        assignedStandDetail = allocationWithDetail
-                    )
-                }
-
-                // ۳. هدر لیست آیتم‌های استند تخصیص‌یافته
-                item {
-                    AllocatedItemsSectionHeader(
-                        itemTypesCount = if (standType != null) 1 else 0,
-                        totalCount = allocation.count ?: 1
-                    )
-                }
-
-                // ۴. جزئیات کامل نوع استند واکشی‌شده از دیتابیس (Relation)
-                item {
-                    if (standType != null) {
-                        AllocatedStandItemCard(item = standType, standCount!!)
-                    } else {
-                        EmptyAllocatedItemsCard()
-                    }
-                }
-
-                // ۵. کارت توضیحات تکمیلی (در صورت وجود)
-                allocation.description
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { description ->
-                        item {
-                            AssignmentDescriptionCard(
-                                description = description
-                            )
-                        }
-                    }
+    // انتقال منطق رویدادها به یک LaunchedEffect امن
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(event.message.asString(context))
+                is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
             }
         }
     }
 
-// دیالوگ تغییر وضعیت
-    if (showStatusDialog) {
-        val initialStatus = StandAssignmentStatus.fromId(allocation.statusAssign)
-        ChangeAssignedStandStatusDialog(
-            initialStatus = initialStatus,
-            isSaving = isUpdatingStatus,
-            onDismiss = { showStatusDialog = false },
-            onConfirm = { selectedStatus ->
-                showStatusDialog = false
-                onStatusChanged(selectedStatus.id) {}
-                onNavigateBack()
+    // منطق اصلی: اگر داده هنوز لود نشده، نمایش لودینگ یا باکس خالی
+    val detail = allocationDetail // ذخیره در متغیر محلی برای null-check
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
+        bottomBar = {
+            // نمایش BottomBar تنها در صورت وجود داده
+            if (detail != null) {
+                DualActionButtonBottomBar(
+                    primaryText = stringResource(R.string.label_edit),
+                    secondaryText = stringResource(R.string.label_determination_status),
+                    primaryIcon = Icons.Outlined.Edit,
+                    secondaryIcon = Icons.Outlined.Cancel,
+                    secondaryVariant = SecondaryButtonVariant.FILLED,
+                    buttonHeight = 44.dp,
+                    onPrimaryClick = { onEditClick(detail.assignedStand.assignedStandId) },
+                    onSecondaryClick = {
+                        if (!uiStateChange.isChangeStatus) {
+                            showStatusDialog = true
+                        }
+                    }
+                )
             }
-        )
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        // مدیریت وضعیت نمایش
+        if (detail == null) {
+            // جایگزین کردن با یک لودینگ زیبا
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            // نمایش محتوا در صورت وجود داده
+            val allocation = detail.assignedStand
+            val standType = detail.standType
+            val standCount = allocation.count ?: 1
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding()),
+                contentPadding = PaddingValues(
+                    start = 16.dp, top = 16.dp, end = 16.dp, bottom = 24.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item { AssignmentHeaderCard(allocationWithDetail = detail) }
+                item { AssignmentInformationCard(assignedStandDetail = detail) }
+                item {
+                    AllocatedItemsSectionHeader(
+                        itemTypesCount = if (standType != null) 1 else 0,
+                        totalCount = standCount
+                    )
+                }
+                item {
+                    if (standType != null) {
+                        AllocatedStandItemCard(item = standType, standCount)
+                    } else {
+                        EmptyAllocatedItemsCard()
+                    }
+                }
+                allocation.description?.takeIf { it.isNotBlank() }?.let { description ->
+                    item { AssignmentDescriptionCard(description = description) }
+                }
+            }
+
+            // دیالوگ وضعیت (در صورت وجود داده نمایش داده می‌شود)
+            if (showStatusDialog) {
+                val initialStatus = StandAssignmentStatus.fromId(allocation.statusAssign)
+                ChangeAssignedStandStatusDialog(
+                    initialStatus = initialStatus,
+                    isSubmitting = uiStateChange.isChangeStatus,
+                    onDismiss = { if (!uiStateChange.isChangeStatus) showStatusDialog = false },
+                    onConfirm = { newStatusId ->
+                        viewModel.changeStatusAssignStand(
+                            newStatusId = newStatusId.id,
+                            onErrorCallback = {
+                                showStatusDialog = false
+                            },
+                            onSuccessCallback = {
+                                showStatusDialog = false
+                                onStatusChangeSuccess()
+                            }
+                        )
+                    }
+                )
+            }
+        }
     }
 }
+
+
 
 /**
  * دیالوگ انتخاب وضعیت جدید بازدید
@@ -267,7 +207,7 @@ fun AssignedStandsDetailScreen(
 @Composable
 fun ChangeAssignedStandStatusDialog(
     initialStatus: StandAssignmentStatus,
-    isSaving: Boolean = false,
+    isSubmitting: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (StandAssignmentStatus) -> Unit
 ) {
@@ -276,9 +216,7 @@ fun ChangeAssignedStandStatusDialog(
     val statusTitles = statusEntries.map { stringResource(it.titleRes) }
 
     Dialog(
-        onDismissRequest = {
-            if (!isSaving) onDismiss()
-        }
+        onDismissRequest = onDismiss
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -295,7 +233,7 @@ fun ChangeAssignedStandStatusDialog(
             ) {
                 Text(
                     text = "تعیین وضعیت استند",
-                    style = typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
 
@@ -314,9 +252,10 @@ fun ChangeAssignedStandStatusDialog(
                     }
                 )
 
-                if (isSaving) {
+                if (isSubmitting) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
+
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -324,14 +263,14 @@ fun ChangeAssignedStandStatusDialog(
                 ) {
                     CustomButton(
                         text = stringResource(R.string.label_registration),
-                        enabled = !isSaving,
+                        enabled = !isSubmitting,
                         onClick = { onConfirm(selectedStatus) },
                         modifier = Modifier.weight(1f)
                     )
 
                     CustomOutlinedButton(
                         text = stringResource(R.string.label_cancel),
-                        enabled = !isSaving,
+                        enabled = !isSubmitting,
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     )
@@ -553,7 +492,7 @@ private fun AssignmentInformationCard(
                 label = stringResource(R.string.label_delivery_organization_date),
                 value = formatJalaliDate(deliveryToOrgDate)
             )
-            // نمایش نام بازاریاب در صورت وجود
+          // نمایش نام بازاریاب در صورت وجود
             displayVisitorName?.let { visitor ->
                 AssignmentDetailRow(
                     icon = Icons.Default.PersonOutline,

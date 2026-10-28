@@ -1,60 +1,62 @@
 package ir.kitgroup.partnerManagement.feature.dashboard.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color.Companion.Red
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.ui.theme.*
-import ir.kitgroup.partnerManagement.core.ui.util.SideCurvedHeaderShape
-import ir.kitgroup.partnerManagement.feature.dashboard.model.*
-import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.TextOverflow
-import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.hilt.navigation.compose.hiltViewModel
-import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
-import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.util.UserRole
-import ir.kitgroup.partnerManagement.navigation.Screen
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.graphics.Color.Companion.Red
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.CustomHeader
-import ir.kitgroup.partnerManagement.core.ui.util.DataState
-import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
-import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
-import ir.kitgroup.partnerManagement.core.ui.util.SYNC_AFTER_ORGANIZATION_SAVE
-import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
-import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
+import ir.kitgroup.partnerManagement.core.ui.components.OfflinePendingFooterBanner
+import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
+import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
+import ir.kitgroup.partnerManagement.core.ui.theme.*
+import ir.kitgroup.partnerManagement.core.ui.util.*
+import ir.kitgroup.partnerManagement.feature.dashboard.model.SummaryCardData
 import ir.kitgroup.partnerManagement.feature.home.navigation.BottomNavItem
-import ir.kitgroup.partnerManagement.feature.meeting.ui.list.DetailRow
+import ir.kitgroup.partnerManagement.feature.meeting.ui.list.MeetingCard
 import ir.kitgroup.partnerManagement.feature.meeting.ui.list.MeetingTypeChip
+import ir.kitgroup.partnerManagement.navigation.Screen
 
 @Composable
 fun DashboardScreen(
@@ -69,62 +71,47 @@ fun DashboardScreen(
     val statistics by dashboardViewModel.statistics.collectAsStateWithLifecycle()
 
     val roleCode by sessionViewModel.roleCode.collectAsState()
-
     val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
     val isSupervisor = currentRole == UserRole.SUPERVISOR
 
-    val syncState by dashboardViewModel.syncState
-        .collectAsStateWithLifecycle()
+    val syncState by dashboardViewModel.syncState.collectAsStateWithLifecycle()
+    val uploadState by dashboardViewModel.uploadState.collectAsStateWithLifecycle()
 
-    val uploadState by dashboardViewModel.uploadState
-        .collectAsStateWithLifecycle()
+    val isSyncing = syncState is DataState.Loading
+    val isUploading = uploadState is DataState.Loading
+    val isBusy = isSyncing || isUploading
 
-    val isSyncing =
-        syncState is DataState.Loading
+    val pendingUploadCount by dashboardViewModel.pendingUploadCount.collectAsStateWithLifecycle()
+    val hasPendingUpload = pendingUploadCount > 0
 
-    val isUploading =
-        uploadState is DataState.Loading
-
-    val snackBarHostState =
-        remember { SnackbarHostState() }
-
-    val context =
-        LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     val currentBackStackEntry = remember(navController) {
         navController.getBackStackEntry(BottomNavItem.Dashboard.route)
     }
 
-    val shouldSyncAfterOrganizationCreate by currentBackStackEntry
-        .savedStateHandle
-        .getStateFlow(
-            SYNC_AFTER_ORGANIZATION_SAVE,
-            false
-        ).collectAsStateWithLifecycle()
 
-    LaunchedEffect(shouldSyncAfterOrganizationCreate) {
-        if (shouldSyncAfterOrganizationCreate) {
-            // اول flag را خاموش می‌کنیم
-            currentBackStackEntry.savedStateHandle[SYNC_AFTER_ORGANIZATION_SAVE] = false
-            // سپس سینک را اجرا می‌کنیم
-            dashboardViewModel.onReceiveDataClick()
-        }
-    }
     LaunchedEffect(dashboardViewModel.uiEvent) {
         dashboardViewModel.uiEvent.collect { event ->
             when (event) {
-                is UiEvent.ShowMessage -> {
-                    snackBarHostState.showSnackbar(
-                        event.message.asString(context)
+                is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
+                    event.message.asString(
+                        context
                     )
-                }
+                )
 
-                is UiEvent.ShowError -> {
-                    snackBarHostState.showSnackbar(
-                        event.error.asString(context)
-                    )
-                }
+                is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
             }
+        }
+    }
+
+    val fullName by sessionViewModel.fullName.collectAsState()
+    val userFullName = remember(fullName) {
+        if (!fullName.isNullOrBlank()) {
+            context.getString(R.string.label_welcome_user, fullName!!.trim())
+        } else {
+            context.getString(R.string.nav_dashboard)
         }
     }
 
@@ -165,336 +152,356 @@ fun DashboardScreen(
             accent = Red
         )
     )
-    val fullName by sessionViewModel.fullName.collectAsState()
 
-    val userFullName =
-        if (!fullName.isNullOrBlank()) {
-            stringResource(R.string.label_welcome_user, fullName!!.trim())
-        } else {
-            stringResource(R.string.nav_dashboard)
-        }
-
-    Scaffold(modifier = modifier.fillMaxSize(),
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackBarHostState
-            )
-        }
-    ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
+            CustomHeader(
+                title = userFullName,
+                showBackButton = false
             )
-            {
-                CustomHeader(
-                    title = userFullName.toString(),
-                    showBackButton = false
-                )
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 8.dp, end = 8.dp, top = 4.dp),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // بخش عملیات همگام‌سازی و سینک داده‌ها
-                    item {
-                        DataSyncSection(
-                            isSyncing = isSyncing,
-                            isUploading = isUploading,
-                            onSyncClick = dashboardViewModel::onReceiveDataClick,
-                            onUploadClick = dashboardViewModel::onSendDataClick
-                        )
-                    }
 
-                    item { SummarySection(summaryItems) }
-                    item { Spacer(Modifier.width(6.dp)) }
-                    item {
-                        QuickActionsSection(
-                            onQuickContractClick = {
-                                dashboardViewModel.checkCanNavigateToAddContract {
-                                    navController.navigate(Screen.AddContract.route)
-                                }
-                            },
-                            onQuickOrganizationClick = {
-                                dashboardViewModel.checkCanNavigateToAddOrganization {
-                                    navController.navigate(Screen.AddOrganization.route)
-                                }
-                            },
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = 24.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // کارت سینک
+                item {
+                    UnifiedSyncCard(
+                        hasPendingUpload = hasPendingUpload,
+                        pendingCount = pendingUploadCount,
+                        isLoading = isBusy,
+                        onClick = {
+                            if (hasPendingUpload) {
+                                onUploadDataClick()
+                                dashboardViewModel.onSendDataClick()
+                            } else {
+                                onSyncDataClick()
+                                dashboardViewModel.onReceiveDataClick()
+                            }
+                        }
+                    )
+                }
 
-                            onQuickMeetingClick = {
-                                dashboardViewModel.checkCanNavigateToAddMeeting {
-                                    navController.navigate(Screen.AddMeeting.createRoute())
-                                }
-                            },
-                            onQuickContractOfferClick =
-                            {
-                                dashboardViewModel.checkCanNavigateToAddOffer {
-                                    navController.navigate(Screen.AddSerialOffer.route)
-                                }
+                // دسترسی سریع اصلی
+                item {
+                    QuickActionsSection(
+                        onQuickMeetingClick = {
+                            dashboardViewModel.checkCanNavigateToAddMeeting {
+                                navController.navigate(Screen.AddMeeting.createRoute())
                             }
-                        )
-                    }
-                    item { Spacer(Modifier.width(6.dp)) }
-                    item {
-                        QuickAccessSection(
-                            onContractClick = { navController.navigate(Screen.ContractsList.route) },
-                            onAdvertisingClick = {
-                                if (isSupervisor) {
-                                    navController.navigate(Screen.AdvertisingStandMenu.route)
-                                } else {
-                                    navController.navigate(
-                                        Screen.AssignedStandsOrganizationList.route
-                                    )
-                                }
-                            },
-                            onReportClick = { navController.navigate(Screen.ReportMenu.route) },
-                            onMapClick = {
-                                navController.navigate(
-                                    Screen.Map.route
-                                )
+                        },
+                        onQuickOrganizationClick = {
+                            dashboardViewModel.checkCanNavigateToAddOrganization {
+                                navController.navigate(Screen.AddOrganization.route)
                             }
-                        )
-                    }
-                    item { Spacer(Modifier.width(6.dp)) }
-                    item {
+                        }
+                    )
+                }
+
+                // خلاصه وضعیت آماری
+                item {
+                    //  SummaryGridSection(summaryItems)
+                    SummaryRowSection(summaryItems)
+                }
+
+                // ماژول‌های سیستم
+                item {
+                    QuickAccessSection(
+                        onContractClick = { navController.navigate(Screen.ContractsList.route) },
+                        onAdvertisingClick = {
+                            if (isSupervisor) {
+                                navController.navigate(Screen.AdvertisingStandMenu.route)
+                            } else {
+                                navController.navigate(Screen.AssignedStandsOrganizationList.route)
+                            }
+                        },
+                        onReportClick = { navController.navigate(Screen.ReportMenu.route) },
+                        onMapClick = { navController.navigate(Screen.Map.route) }
+                    )
+                }
+
+                item {
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         SectionTitle(
                             stringResource(R.string.label_schedule_title),
-                            Icons.Default.Schedule
+                            Icons.Default.Analytics,
+                            titleColor = MaterialTheme.colorScheme.primary
                         )
-                    }
 
-                    if (todayMeetings.isEmpty()) {
-                        item {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                                        alpha = 0.3f
-                                    )
-                                )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        if (todayMeetings.isEmpty()) {
+                            EmptyState(
+                                textRes = R.string.msg_no_meeting_register_today,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                Text(
-                                    text = stringResource(R.string.msg_no_meeting_register_today),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    textAlign = TextAlign.Center,
-                                    style = typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    } else {
-                        items(
-                            items = todayMeetings,
-                            key = { it.meeting.meetingId }
-                        ) { item ->
-                            val meetingEntity = item.meeting
-                            val isEditableScheduledPhysicalVisit = meetingEntity.status == 1
-
-                            MeetingCard(
-                                item = item,
-                                isSupervisor = isSupervisor,
-                                onClick = {
-                                    /*    if (isEditableScheduledPhysicalVisit) {
+                                todayMeetings.forEach { meeting ->
+                                    MeetingCard(
+                                        item = meeting,
+                                        isSupervisor = isSupervisor,
+                                        onClick = {
                                             navController.navigate(
-                                                Screen.AddMeeting.createRoute(
-                                                    meetingId = meetingEntity.meetingId
+                                                Screen.MeetingDetail.createRoute(
+                                                    meetingId = meeting.meeting.meetingId
                                                 )
                                             )
-                                        } else {*/
-                                    navController.navigate(
-                                        Screen.MeetingDetail.createRoute(
-                                            meetingId = meetingEntity.meetingId
-                                        )
+                                        }
                                     )
-                                    // }
                                 }
-                            )
+                            }
                         }
                     }
 
-                    /*         item {
-                                 SectionTitle(
-                                     stringResource(R.string.label_schedule_title),
-                                     Icons.Default.Schedule
-                                 )
-                             }
-                             items(
-                                 items = demoMeetings,
-                                 key = { it.meetingId }
-                             ) { item ->
-                                 val isEditableScheduledPhysicalVisit =
-                                     item.status == 1
-
-                                 VisitCard(
-                                     item = item,
-                                     isSupervisor = isSupervisor,
-                                     onClick = {
-                                         if (isEditableScheduledPhysicalVisit) {
-                                             navController.navigate(
-                                                 Screen.AddMeeting.createRoute(
-                                                     meetingId = item.meetingId
-                                                 )
-                                             )
-                                         } else {
-                                             navController.navigate(
-                                                 Screen.MeetingDetail.createRoute(
-                                                     meetingId = item.meetingId
-                                                 )
-                                             )
-                                         }
-                                     }
-                                 )
-                             }*/
                 }
 
             }
         }
     }
-
 }
 
 @Composable
-private fun DashboardHeader(
-    fullName: String
+private fun UnifiedSyncCard(
+    hasPendingUpload: Boolean,
+    pendingCount: Int,
+    isLoading: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                color = MaterialTheme.colorScheme.primary,
-                shape = SideCurvedHeaderShape(50f)
-            )
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .height(64.dp)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = if (fullName.isBlank()) {
-                stringResource(R.string.greeting_text)
-            } else {
-                "$fullName خوش آمدی "
-            },
-            color = MaterialTheme.colorScheme.onPrimary,
-            style = typography.titleLarge
-        )
-        //  NotificationIcon()
-    }
-}
-
-
-@Composable
-private fun DataSyncSection(
-    isSyncing: Boolean,
-    isUploading: Boolean,
-    onSyncClick: () -> Unit,
-    onUploadClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    val infiniteTransition = rememberInfiniteTransition(label = "syncRotation")
+    val rotationAngle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
         ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+        label = "rotation"
+    )
+
+    val containerGradient = if (hasPendingUpload) {
+        listOf(
+            PartnerManagementTheme.colors.warningContainer.copy(alpha = 0.95f),
+            PartnerManagementTheme.colors.warningContainer.copy(alpha = 0.70f)
         )
+    } else {
+        listOf(
+            MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+            MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+        )
+    }
+
+    val iconContainerColor = if (hasPendingUpload) {
+        PartnerManagementTheme.colors.onWarningContainer.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    }
+
+    val accentContentColor = if (hasPendingUpload) {
+        PartnerManagementTheme.colors.onWarningContainer
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(
+                enabled = !isLoading,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = onClick
+            ), shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(
+            1.2.dp,
+            if (hasPendingUpload) PartnerManagementTheme.colors.onWarningContainer.copy(alpha = 0.4f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (hasPendingUpload) 4.dp else 1.dp)
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .background(Brush.horizontalGradient(containerGradient))
+                .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
-            SyncActionCardButton(
-                modifier = Modifier.weight(1f),
-                title = stringResource(R.string.label_receive_data),
-                subtitle = stringResource(R.string.label_update_data),
-                icon = Icons.Default.Sync,
-                accentColor = PartnerManagementTheme.colors.infoContainer,
-                iconTint = PartnerManagementTheme.colors.onInfoContainer,
-                isLoading = isSyncing,
-                onClick = onSyncClick
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(iconContainerColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val iconModifier = if (isLoading) Modifier.rotate(rotationAngle) else Modifier
+                    Icon(
+                        imageVector = if (hasPendingUpload) Icons.Default.CloudUpload else Icons.Default.Sync,
+                        contentDescription = null,
+                        tint = accentContentColor,
+                        modifier = iconModifier.size(26.dp)
+                    )
+                }
 
-            SyncActionCardButton(
-                modifier = Modifier.weight(1f),
-                title = stringResource(R.string.label_send_data),
-                subtitle = stringResource(R.string.label_transfer_changes),
-                icon = Icons.Default.CloudUpload,
-                accentColor = PartnerManagementTheme.colors.successContainer,
-                iconTint = PartnerManagementTheme.colors.onSuccessContainer,
-                isLoading = isUploading,
-                onClick = onUploadClick
-            )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = if (hasPendingUpload) {
+                                stringResource(R.string.msg_sync_changes_to_server)
+                            } else {
+                                stringResource(R.string.label_receive_data)
+                            },
+                            style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        AnimatedVisibility(
+                            visible = hasPendingUpload && pendingCount > 0,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Red,
+                                shadowElevation = 2.dp
+                            ) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.format_record_count,
+                                        pendingCount
+                                    ),
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = if (hasPendingUpload) {
+                            stringResource(R.string.desc_offline_data_exists)
+                        } else {
+                            stringResource(R.string.label_update_data)
+                        },
+                        style = typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.ArrowBackIosNew,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun SyncActionCardButton(
-    modifier: Modifier = Modifier,
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    accentColor: Color,
-    iconTint: Color,
-    isLoading: Boolean,
-    onClick: () -> Unit
+private fun QuickActionsSection(
+    onQuickMeetingClick: () -> Unit,
+    onQuickOrganizationClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        enabled = !isLoading,
-        modifier = modifier.height(64.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        shadowElevation = 1.dp
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        QuickActionCard(
+            title = stringResource(R.string.label_add_new_organization),
+            icon = Icons.Filled.AddBusiness,
+            gradient = listOf(
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+            ),
+            onClick = onQuickOrganizationClick,
+            modifier = Modifier.weight(1f)
+        )
+        QuickActionCard(
+            title = stringResource(R.string.label_register_visit),
+            icon = Icons.Filled.AddLocationAlt,
+            gradient = listOf(Color(0xFF2E7D32), Color(0xFF43A047)),
+            onClick = onQuickMeetingClick,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun QuickActionCard(
+    title: String,
+    icon: ImageVector,
+    gradient: List<Color>,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .height(76.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .background(Brush.horizontalGradient(gradient))
+                .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(accentColor),
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                        color = iconTint
-                    )
-                } else {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = title,
-                        tint = iconTint,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
             }
 
             Column(
@@ -503,16 +510,8 @@ private fun SyncActionCardButton(
             ) {
                 Text(
                     text = title,
-                    style = typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = subtitle,
-                    style = typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color.White,
+                    style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -521,209 +520,110 @@ private fun SyncActionCardButton(
     }
 }
 
+/**
+ * بخش خلاصه وضعیت آماری در قالب یک ردیف افقی با اسکرول نرم
+ */
 @Composable
-private fun NotificationIcon() {
-    Box(
-        modifier = Modifier.size(32.dp),
-        contentAlignment = Alignment.Center
-    ) {
-
-        Icon(
-            painter = painterResource(R.drawable.ic_bell),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.size(24.dp)
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(4.dp, (-4).dp)
-                .size(16.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.error),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("9", color = MaterialTheme.colorScheme.onError, fontSize = 9.sp)
-        }
-    }
-}
-
-
-@Composable
-private fun SummarySection(
+private fun SummaryRowSection(
     summaryItems: List<SummaryCardData>,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-
-        SectionTitle(stringResource(R.string.label_summary_title))
-        Spacer(Modifier.height(6.dp))
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        SectionTitle(
+            stringResource(R.string.label_summary_title), Icons.Default.Analytics,
+            titleColor = MaterialTheme.colorScheme.primary
+        )
 
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp)
         ) {
-            items(summaryItems) { item ->
-                SummaryCard(
-                    data = item,
-                    modifier = Modifier.width(130.dp)
+            items(
+                items = summaryItems,
+                key = { it.title }
+            ) { item ->
+                CompactSummaryCard(
+                    item = item,
+                    modifier = Modifier.width(145.dp)
                 )
             }
         }
     }
 }
 
+/**
+ * کارت آماری کامپکت با جلوه بصری مدرن و حداقل اشغال فضا
+ */
 @Composable
-private fun SummaryCard(data: SummaryCardData, modifier: Modifier) {
+private fun CompactSummaryCard(
+    item: SummaryCardData,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = modifier.height(140.dp),
+        modifier = modifier.height(96.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = data.accent.copy(alpha = 0.08f)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, item.accent.copy(alpha = 0.22f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(data.iconColor.copy(.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(data.icon, null, tint = data.iconColor)
-            }
-
-            Text(
-                data.value,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = typography.displayMedium
-            )
-
-            Text(
-                data.title,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = typography.labelMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(20))
-                    .background(data.accent)
-            )
-        }
-    }
-}
-
-
-@Composable
-private fun QuickActionsSection(
-    onQuickContractClick: () -> Unit,
-    onQuickOrganizationClick: () -> Unit,
-    onQuickMeetingClick: () -> Unit,
-    onQuickContractOfferClick: () -> Unit,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        SectionTitle(stringResource(R.string.label_shortcut_title))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-
-            QuickActionCard(
-                title = stringResource(R.string.label_register_visit),
-                icon = Icons.Filled.FactCheck,
-                onClick = onQuickMeetingClick,
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionCard(
-                title = stringResource(R.string.label_add_new_organization),
-                icon = Icons.Filled.AddBusiness,
-                onClick = onQuickOrganizationClick,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-     /*   Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            QuickActionCard(
-                title = stringResource(R.string.label_contract),
-                icon = Icons.Filled.AssignmentTurnedIn,
-                onClick = onQuickContractClick,
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionCard(
-                title = stringResource(R.string.label_contract_offer),
-                icon = Icons.Filled.FactCheck,
-                onClick = onQuickContractOfferClick,
-                modifier = Modifier.weight(1f)
-            )
-        }*/
-    }
-}
-
-@Composable
-private fun QuickActionCard(
-    title: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier
-) {
-
-    Card(
-        modifier = modifier
-            .height(64.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(Color.Transparent)
-    ) {
-
-        Row(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            item.accent.copy(alpha = 0.06f),
+                            Color.Transparent
                         )
                     )
                 )
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(item.accent.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = null,
+                        tint = item.accent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
 
-            Icon(
-                icon,
-                null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(18.dp)
-            )
-
-            Spacer(Modifier.width(6.dp))
+                Text(
+                    text = item.value,
+                    style = typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
 
             Text(
-                title, color = MaterialTheme.colorScheme.onPrimary, style = typography.labelMedium
+                text = item.title,
+                style = typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
 }
+
 
 @Composable
 fun QuickAccessSection(
@@ -732,51 +632,54 @@ fun QuickAccessSection(
     onReportClick: () -> Unit,
     onMapClick: () -> Unit
 ) {
-    Column {
-
-        SectionTitle(stringResource(R.string.label_quick_access))
-
-        Spacer(Modifier.height(12.dp))
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        SectionTitle(
+            stringResource(R.string.label_quick_access), Icons.Default.DashboardCustomize,
+            titleColor = MaterialTheme.colorScheme.primary
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            QuickAccessCard(
+            QuickAccessTile(
                 title = stringResource(R.string.label_contract_organization),
                 icon = Icons.Filled.Inventory2,
-                backgroundColor = PartnerManagementTheme.colors.successContainer,
-                iconTint = PartnerManagementTheme.colors.onSuccessContainer,
+                tint = PartnerManagementTheme.colors.successContainer,
+                onTint = PartnerManagementTheme.colors.onSuccessContainer,
                 onClick = onContractClick,
                 modifier = Modifier.weight(1f)
             )
-            QuickAccessCard(
+            QuickAccessTile(
                 title = stringResource(R.string.label_advertising_stands),
-                icon = Icons.Filled.Inventory2,
-                backgroundColor = PartnerManagementTheme.colors.warningContainer,
-                iconTint = PartnerManagementTheme.colors.onWarningContainer,
+                icon = Icons.Filled.Storefront,
+                tint = PartnerManagementTheme.colors.warningContainer,
+                onTint = PartnerManagementTheme.colors.onWarningContainer,
                 onClick = onAdvertisingClick,
                 modifier = Modifier.weight(1f)
             )
         }
-        Spacer(Modifier.height(12.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            QuickAccessCard(
+            QuickAccessTile(
                 title = stringResource(R.string.label_reports),
                 icon = Icons.Filled.Assessment,
-                backgroundColor = PartnerManagementTheme.colors.purpleContainer,
-                iconTint = PartnerManagementTheme.colors.onPurpleContainer,
+                tint = PartnerManagementTheme.colors.purpleContainer,
+                onTint = PartnerManagementTheme.colors.onPurpleContainer,
                 onClick = onReportClick,
                 modifier = Modifier.weight(1f)
             )
-            QuickAccessCard(
+            QuickAccessTile(
                 title = stringResource(R.string.label_map),
                 icon = Icons.Filled.Map,
-                backgroundColor = PartnerManagementTheme.colors.infoContainer,
-                iconTint = PartnerManagementTheme.colors.onInfoContainer,
+                tint = PartnerManagementTheme.colors.infoContainer,
+                onTint = PartnerManagementTheme.colors.onInfoContainer,
                 onClick = onMapClick,
                 modifier = Modifier.weight(1f)
             )
@@ -785,158 +688,44 @@ fun QuickAccessSection(
 }
 
 @Composable
-private fun QuickAccessCard(
+private fun QuickAccessTile(
     title: String,
     icon: ImageVector,
-    backgroundColor: Color,
-    iconTint: Color,
+    tint: Color,
+    onTint: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.height(104.dp),
+        modifier = modifier.height(86.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = iconTint.copy(alpha = 0.10f)
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 2.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = tint.copy(alpha = 0.65f)),
+        border = BorderStroke(1.dp, onTint.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = 10.dp
-                ),
+                .padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Box(
-                modifier = Modifier.size(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(7.dp))
-
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = onTint,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = title,
-                style = typography.titleMedium,
+                style = typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
     }
 }
-
-@Composable
-fun MeetingCard(
-    item: MeetingWithDetail,
-    isSupervisor: Boolean,
-    onClick: () -> Unit,
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
-        border = BorderStroke(0.7.dp, appColors.border)
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-
-                // عنوان + Badge وضعیت
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = item.subjectVisitName,
-                        style = typography.titleLarge,
-                        color = appColors.textPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    StatusBadge(status = MeetingStatus.fromId(item.meeting.status))
-
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // چیپ نوع بازدید
-                val meetingType = MeetingType.fromValue(item.meeting.type)
-
-                MeetingTypeChip(
-                    text = stringResource(id = meetingType.titleRes),
-                    icon = meetingType.icon
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-
-                DetailRow(
-                    icon = Icons.Default.Business,
-                    text = item.organizationName
-                )
-                if (isSupervisor && !item.meeting.visitorId.isNullOrBlank()) {
-                    val hasVisitor = !item.meeting.visitorName.isNullOrBlank() &&
-                            item.meeting.visitorId != null
-
-                    if (hasVisitor) {
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        DetailRow(
-                            icon = Icons.Default.Person,
-                            text = item.visitorName
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // نمایش تاریخ/زمان
-                val dateTimeText = buildString {
-                    append(formatJalaliDate(item.meeting.visitDate ?: "-"))
-                    item.meeting.visitTime?.let { t ->
-                        if (t.isNotBlank()) append("  |  $t")
-                    }
-                }
-
-                DetailRow(
-                    icon = Icons.Default.DateRange,
-                    text = dateTimeText
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-            }
-        }
-    }
-
-
-}
-

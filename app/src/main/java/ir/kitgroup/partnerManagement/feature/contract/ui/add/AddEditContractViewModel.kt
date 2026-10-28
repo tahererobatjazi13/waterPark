@@ -20,6 +20,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UiText
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import ir.kitgroup.partnerManagement.core.ui.util.formatPercentForInput
+import ir.kitgroup.partnerManagement.core.ui.util.isNetworkError
 import ir.kitgroup.partnerManagement.core.ui.util.jalaliToGregorian
 import ir.kitgroup.partnerManagement.feature.contract.model.ContractRequest
 import kotlinx.coroutines.delay
@@ -184,8 +185,7 @@ class AddEditContractViewModel @Inject constructor(
             try {
                 val formattedStartDate = jalaliToGregorian(state.startDate).orEmpty()
                 val discountVal = state.defaultDiscountPercent.replace(",", ".").toDoubleOrNull()
-                val commissionVal =
-                    state.defaultCommissionPercent.replace(",", ".").toDoubleOrNull()
+                val commissionVal = state.defaultCommissionPercent.replace(",", ".").toDoubleOrNull()
                 val currentTimestamp = System.currentTimeMillis()
                 val isoTimestamp = getCurrentIsoUtcTimestamp()
 
@@ -214,49 +214,59 @@ class AddEditContractViewModel @Inject constructor(
 
                     syncResult.fold(
                         onSuccess = { serverMsg ->
-                            val msg =
-                                if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
-                                else UiText.StringResource(R.string.msg_contract_updated)
+                            val msg = if (!serverMsg.isNullOrBlank()) {
+                                UiText.DynamicString(serverMsg)
+                            } else {
+                                UiText.StringResource(R.string.msg_contract_updated)
+                            }
                             _uiEvent.emit(UiEvent.ShowMessage(msg))
                             delay(400)
                             onSuccessCallback()
                         },
-                        onFailure = {
-                            // تعیین وضعیت سینک
-                            val nextSyncStatus =
-                                if (existingContract?.syncStatus == SyncStatus.SYNCED) {
-                                    SyncStatus.PENDING_UPDATE
-                                } else {
-                                    existingContract?.syncStatus ?: SyncStatus.PENDING_INSERT
-                                }
+                        onFailure = { error ->
+                            if (error.isNetworkError()) {
+                                // تعیین وضعیت سینک فقط در صورت قطعی واقعی شبکه
+                                val nextSyncStatus =
+                                    if (existingContract?.syncStatus == SyncStatus.SYNCED) {
+                                        SyncStatus.PENDING_UPDATE
+                                    } else {
+                                        existingContract?.syncStatus ?: SyncStatus.PENDING_INSERT
+                                    }
 
-                            // ذخیره تغییرات به عنوان ویرایش آفلاین در روم با پر کردن کامل تمام فیلدها
-                            val offlineEntity = ContractEntity(
-                                contractId = targetContractId,
-                                title = contractTitle,
-                                organizationId = state.organizationId,
-                                contractNumber = existingContract?.contractNumber,
-                                startDate = formattedStartDate,
-                                endDate = existingContract?.endDate,
-                                description = existingContract?.description,
-                                settlementPeriodType = state.settlementPeriodType.id,
-                                settlementPeriodTypeName = settlementPeriodTitle,
-                                cooperationModel = state.cooperationModel.id,
-                                cooperationModelName = cooperationTitle,
-                                defaultDiscountPercent = discountVal,
-                                defaultCommissionPercent = commissionVal,
-                                status = state.status.id,
-                                statusName = existingContract?.statusName,
-                                stateCode = existingContract?.stateCode ?: 0,
-                                modifiedOn = isoTimestamp,
-                                syncStatus = nextSyncStatus,
-                                isLocallyModified = true,
-                                lastModifiedTimestamp = currentTimestamp
-                            )
-                            contractRepository.saveLocal(offlineEntity)
-                            _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)))
-                            delay(400)
-                            onSuccessCallback()
+                                val offlineEntity = ContractEntity(
+                                    contractId = targetContractId,
+                                    title = contractTitle,
+                                    organizationId = state.organizationId,
+                                    contractNumber = existingContract?.contractNumber,
+                                    startDate = formattedStartDate,
+                                    endDate = existingContract?.endDate,
+                                    description = existingContract?.description,
+                                    settlementPeriodType = state.settlementPeriodType.id,
+                                    settlementPeriodTypeName = settlementPeriodTitle,
+                                    cooperationModel = state.cooperationModel.id,
+                                    cooperationModelName = cooperationTitle,
+                                    defaultDiscountPercent = discountVal,
+                                    defaultCommissionPercent = commissionVal,
+                                    status = state.status.id,
+                                    statusName = existingContract?.statusName,
+                                    stateCode = existingContract?.stateCode ?: 0,
+                                    modifiedOn = isoTimestamp,
+                                    syncStatus = nextSyncStatus,
+                                    isLocallyModified = true,
+                                    lastModifiedTimestamp = currentTimestamp
+                                )
+                                contractRepository.saveLocal(offlineEntity)
+                                _uiEvent.emit(
+                                    UiEvent.ShowMessage(
+                                        UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)
+                                    )
+                                )
+                                delay(400)
+                                onSuccessCallback()
+                            } else {
+                                // خطای منطقی سرور یا اعتبار سنجی
+                                _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(error)))
+                            }
                         }
                     )
                 } else {
@@ -276,42 +286,52 @@ class AddEditContractViewModel @Inject constructor(
 
                     result.fold(
                         onSuccess = { serverMsg ->
-                            val msg =
-                                if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
-                                else UiText.StringResource(R.string.msg_contract_created)
+                            val msg = if (!serverMsg.isNullOrBlank()) {
+                                UiText.DynamicString(serverMsg)
+                            } else {
+                                UiText.StringResource(R.string.msg_contract_created)
+                            }
                             _uiEvent.emit(UiEvent.ShowMessage(msg))
                             delay(400)
                             onSuccessCallback()
                         },
-                        onFailure = {
-                            // ایجاد شناسه محلی و ذخیره آفلاین کامل انتیتی
-                            val localUUID = UUID.randomUUID().toString()
-                            val offlineEntity = ContractEntity(
-                                contractId = localUUID,
-                                title = contractTitle,
-                                organizationId = state.organizationId,
-                                contractNumber = null,
-                                startDate = formattedStartDate,
-                                endDate = null,
-                                description = null,
-                                settlementPeriodType = state.settlementPeriodType.id,
-                                settlementPeriodTypeName = settlementPeriodTitle,
-                                cooperationModel = state.cooperationModel.id,
-                                cooperationModelName = cooperationTitle,
-                                defaultDiscountPercent = discountVal,
-                                defaultCommissionPercent = commissionVal,
-                                status = state.status.id,
-                                statusName = null,
-                                stateCode = 0,
-                                modifiedOn = isoTimestamp,
-                                syncStatus = SyncStatus.PENDING_INSERT,
-                                isLocallyModified = true,
-                                lastModifiedTimestamp = currentTimestamp
-                            )
-                            contractRepository.saveLocal(offlineEntity)
-                            _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_saved_local_storage_awaiting_synchronization)))
-                            delay(400)
-                            onSuccessCallback()
+                        onFailure = { error ->
+                            if (error.isNetworkError()) {
+                                val localUUID = UUID.randomUUID().toString()
+                                val offlineEntity = ContractEntity(
+                                    contractId = localUUID,
+                                    title = contractTitle,
+                                    organizationId = state.organizationId,
+                                    contractNumber = null,
+                                    startDate = formattedStartDate,
+                                    endDate = null,
+                                    description = null,
+                                    settlementPeriodType = state.settlementPeriodType.id,
+                                    settlementPeriodTypeName = settlementPeriodTitle,
+                                    cooperationModel = state.cooperationModel.id,
+                                    cooperationModelName = cooperationTitle,
+                                    defaultDiscountPercent = discountVal,
+                                    defaultCommissionPercent = commissionVal,
+                                    status = state.status.id,
+                                    statusName = null,
+                                    stateCode = 0,
+                                    modifiedOn = isoTimestamp,
+                                    syncStatus = SyncStatus.PENDING_INSERT,
+                                    isLocallyModified = true,
+                                    lastModifiedTimestamp = currentTimestamp
+                                )
+                                contractRepository.saveLocal(offlineEntity)
+                                _uiEvent.emit(
+                                    UiEvent.ShowMessage(
+                                        UiText.StringResource(R.string.msg_saved_local_storage_awaiting_synchronization)
+                                    )
+                                )
+                                delay(400)
+                                onSuccessCallback()
+                            } else {
+                                // خطای منطقی سرور یا اعتبار سنجی
+                                _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(error)))
+                            }
                         }
                     )
                 }

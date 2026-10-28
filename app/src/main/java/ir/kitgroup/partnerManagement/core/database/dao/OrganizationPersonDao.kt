@@ -13,6 +13,9 @@ interface OrganizationPersonDao {
     @Upsert
     suspend fun upsertAll(items: List<OrganizationPersonEntity>)
 
+    @Upsert
+    suspend fun upsert(item: OrganizationPersonEntity)
+
     @Query("""
         SELECT * FROM organization_persons
         WHERE organizationId = :organizationId
@@ -54,4 +57,7 @@ interface OrganizationPersonDao {
     @Query("DELETE FROM organization_persons WHERE orgPersonId = :orgPersonId")
     suspend fun deleteById(orgPersonId: String)
 
+
+    @Query("SELECT COUNT(*) FROM organization_persons WHERE syncStatus IN ('PENDING_INSERT', 'PENDING_UPDATE')")
+    fun observePendingCount(): Flow<Int>
 }

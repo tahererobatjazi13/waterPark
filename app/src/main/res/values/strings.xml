@@ -93,6 +93,7 @@
     <string name="label_cancel">لغو</string>
     <string name="label_select_time">انتخاب ساعت</string>
     <string name="label_images">تصاویر</string>
+    <string name="label_attachment">پیوست ها</string>
     <string name="label_submit_visit">ثبت بازدید</string>
     <string name="label_edit_visit">ویرایش بازدید</string>
     <string name="label_edit_stand">ویرایش استند</string>
@@ -114,7 +115,7 @@
     <string name="label_has">دارد</string>
     <string name="label_has_not">ندارد</string>
     <string name="label_organization_status">وضعیت: </string>
-    <string name="label_add_image">افزودن تصویر</string>
+    <string name="label_add_file">افزودن فایل</string>
     <string name="label_maximum_10_images">حداکثر 10 تصویر</string>
     <string name="label_registration_delivery_card">ثبت و تحویل کارت</string>
     <string name="label_card_delivery">تحویل کارت</string>
@@ -128,7 +129,7 @@
     <string name="label_deactivation">غیرفعال‌سازی</string>
 
     <string name="label_change_status">تغییر وضعیت</string>
-    <string name="label_determination_status">تعیین وضعیت</string>
+    <string name="label_determination_status">تغییر وضعیت</string>
     <string name="label_determination_organization_status">تعیین وضعیت سازمان</string>
     <string name="label_edit_organization">ویرایش سازمان</string>
     <string name="label_quick_access">دسترسی سریع</string>
@@ -178,6 +179,7 @@
     <string name="label_new_allocation">تخصیص جدید</string>
     <string name="label_new_assigning">انتساب جدید</string>
     <string name="label_allocation_record">ثبت تخصیص</string>
+    <string name="label_allocation_edit">ویرایش تخصیص</string>
     <string name="label_choose_visitor">انتخاب بازاریاب</string>
     <string name="label_choose_visitor_recipient">نام بازاریاب تحویل گیرنده</string>
     <string name="label_all">همه</string>
@@ -591,7 +593,7 @@
     <string name="msg_no_meeting_register_today">برای امروز برنامه‌ی بازدیدی ثبت نشده است.</string>
     <string name="msg_no_offers_details_found">هیچ جزئیاتی برای این طرح ثبت نشده است</string>
     <string name="msg_no_item_found">آیتمی برای نمایش یافت نشد</string>
-    <string name="msg_no_images_registered">تصویری یافت نشد</string>
+    <string name="msg_no_file_found">فایلی یافت نشد</string>
     <string name="msg_select_one_of_options">یکی از گزینه‌های زیر را انتخاب کنید</string>
     <string name="msg_delete_message">
     آیا از حذف «%1$s» مطمئن هستید؟ این عملیات قابل بازگشت نیست.</string>
@@ -735,9 +737,15 @@
     <string name="error_contract_update">خطا در ویرایش قرارداد</string>
     <string name="error_contract_terminate">خطا در خاتمه قرارداد</string>
     <string name="error_organization_change_status">خطا درتغییر وضعیت سازمان</string>
+    <string name="error_change_status">خطا درتغییر وضعیت </string>
     <string name="error_select_organization">لطفاً نام سازمان را انتخاب  کنید.</string>
     <string name="msg_contract_created">قرارداد با موفقیت ثبت شد.</string>
     <string name="msg_contract_updated">قرارداد با موفقیت ویرایش شد.</string>
+    <string name="msg_assigned_stand_updated">تخصیص استند با موفقیت ویرایش شد.</string>
+    <string name="msg_assigned_stand_create">تخصیص استند با موفقیت ثبت شد.</string>
+
+    <string name="msg_meeting_created">بازدید با موفقیت ثبت شد.</string>
+    <string name="msg_meeting_updated">بازدید با موفقیت ویرایش شد.</string>
     <string name="msg_contract_terminated">قرارداد با موفقیت خاتمه یافت</string>
     <string name="label_confirm_termination">تأیید خاتمه</string>
     <string name="label_waiting_synchronization">در انتظار همگام سازی</string>
@@ -745,7 +753,10 @@
 
     <string name="error_warning_create">خطا در ثبت تذکر</string>
     <string name="error_warning_update">خطا در ویرایش تذکر</string>
-
+    <string name="error_assign_stand_create">خطا در ثبت تخصیص استند</string>
+    <string name="error_assign_stand_update">خطا در ویرایش تخصیص استند</string>
+    <string name="error_meeting_create">خطا در ثبت بازدید</string>
+    <string name="error_meeting_update">خطا در ویرایش بازدید</string>
     <string name="error_assign_serial_offer">خطا در ثبت تخصیص سریال</string>
     <string name="error_update_serial_offer">خطا در ویرایش تخصیص سریال</string>
     <string name="error_change_status_serial_offer">خطا در تتغییر وضعیت  تخصیص سریال</string>
@@ -757,10 +768,14 @@
     <string name="msg_saved_local_storage_awaiting_synchronization">در حافظه محلی ذخیره شد و در انتظار همگام‌سازی است.</string>
     <string name="msg_changes_saved_offline_synchronized_connection">تغییرات به صورت آفلاین ذخیره شد و در اولین اتصال همگام خواهد شد.</string>
     <string name="msg_file_uploaded_successfully">فایل با موفقیت آپلود شد.</string>
+    <string name="msg_person_created">شخص با موفقیت ثبت شد.</string>
     <string name="error_invalid_mobile">شماره موبایل باید ۱۱ رقم و با 09 شروع شود</string>
-
     <string name="msg_server_error">خطا در دریافت اطلاعات از سرور</string>
     <string name="label_retry">تلاش مجدد</string>
+    <string name="error_person_create">خطا در ثبت  شخص</string>
+    <string name="error_no_active_visitor">ویزیتور فعال برای این سازمان مشخص نشده است</string>
+    <string name="label_person_full_name_required">نام و نام خانوادگی شخص را وارد کنید.</string>
+    <string name="label_organization_role_required">نقش شخص در سازمان را انتخاب کنید.</string>
 
     <string name="label_untitled">بدون عنوان</string>
     <string name="label_unknown">نامشخص</string>
@@ -793,18 +808,22 @@
     <string name="label_unit_commission">مبلغ پورسانت واحد</string>
     <string name="label_total_commission">پورسانت کل</string>
 
-    <string name="label_image_specifications">مشخصات تصویر</string>
-    <string name="label_image_type">نوع تصویر</string>
+    <string name="label_file_specifications">مشخصات فایل</string>
+    <string name="label_type">نوع</string>
     <string name="label_confirm_and_add">تایید و افزودن</string>
 
 
     //attachment type
     <string name="attachment_type_lobby_image">تصویر لابی</string>
     <string name="attachment_type_signboard_image">تصویر سردر</string>
-    <string name="attachment_type_other_images">تصویر سایر مکان‌ها</string>
+    <string name="attachment_type_other">سایر</string>
     <string name="attachment_type_contract">قرارداد</string>
     <string name="attachment_type_introduction_letter">معرفی‌نامه</string>
     <string name="attachment_type_receipt">رسید</string>
 
+    <string name="msg_sync_changes_to_server">ارسال تغییرات به سرور</string>
+    <string name="desc_offline_data_exists">شما داده‌های آفلاین ثبت‌شده جهت ارسال دارید</string>
+    <string name="format_record_count">%d رکورد</string>
+    <string name="format_items_count">%d مورد</string>
 
 </resources>

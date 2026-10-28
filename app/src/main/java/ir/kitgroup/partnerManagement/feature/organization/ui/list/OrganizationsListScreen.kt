@@ -1,64 +1,37 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.list
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Directions
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -68,13 +41,7 @@ import coil.request.ImageRequest
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.AttachmentFileEntity
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
-import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
-import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
-import ir.kitgroup.partnerManagement.core.ui.components.FilterSection
-import ir.kitgroup.partnerManagement.core.ui.components.LocationRow
-import ir.kitgroup.partnerManagement.core.ui.components.OfflinePendingFooterBanner
-import ir.kitgroup.partnerManagement.core.ui.components.Rating
-import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
+import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
@@ -85,20 +52,21 @@ import java.io.File
 fun OrganizationsListScreen(
     onOrganizationClick: (String) -> Unit,
     onAddOrganizationClick: () -> Unit,
+    onLocationClick: ((latitude: Double, longitude: Double) -> Unit)? = null,
     modifier: Modifier = Modifier,
     organizationsListViewModel: OrganizationsListViewModel = hiltViewModel()
 ) {
+    val appColors = LocalPartnerManagementColors.current
     val organizations by organizationsListViewModel.organizations.collectAsStateWithLifecycle()
     val statusOptions = remember { OrganizationStatus.entries }
 
     val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
 
-    var searchQuery by remember { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     var selectedStatus by rememberSaveable { mutableStateOf<OrganizationStatus?>(null) }
     var isWarningOnly by rememberSaveable { mutableStateOf(false) }
     val baseUrl by organizationsListViewModel.baseUrlFlow.collectAsStateWithLifecycle()
-
 
     LaunchedEffect(organizationsListViewModel.uiEvent) {
         organizationsListViewModel.uiEvent.collect { event ->
@@ -114,19 +82,21 @@ fun OrganizationsListScreen(
         }
     }
 
-    // فیلتر کردن لیست
+    // فیلتر هوشمند و بهینه‌شده
     val filteredOrganizations =
         remember(organizations, searchQuery, selectedStatus, isWarningOnly) {
             organizations?.filter { item ->
-                val matchesSearch = searchQuery.isBlank() ||
-                        item.organization.name.orEmpty().contains(searchQuery, ignoreCase = true) ||
-                        item.organization.address.orEmpty().contains(searchQuery, ignoreCase = true)
+                val query = searchQuery.trim()
+                val matchesSearch = query.isBlank() ||
+                        item.organization.name.orEmpty().contains(query, ignoreCase = true) ||
+                        item.organization.address.orEmpty().contains(query, ignoreCase = true) ||
+                        item.organization.phone.orEmpty().contains(query) ||
+                        item.cityName.contains(query, ignoreCase = true) ||
+                        item.regionName.contains(query, ignoreCase = true)
 
-                val matchesStatus = selectedStatus == null ||
-                        item.organization.status == selectedStatus!!.id
-
-                val matchesWarning = !isWarningOnly ||
-                        (item.organization.countWarning ?: 0) > 0
+                val matchesStatus =
+                    selectedStatus == null || item.organization.status == selectedStatus!!.id
+                val matchesWarning = !isWarningOnly || (item.organization.countWarning ?: 0) > 0
 
                 matchesSearch && matchesStatus && matchesWarning
             }
@@ -136,23 +106,21 @@ fun OrganizationsListScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = {
-            SnackbarHost(hostState = snackBarHostState)
-        },
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    // <-- بررسی وجود شهر و منطقه قبل از ناوبری
                     organizationsListViewModel.checkCanNavigateToAddOrganization {
                         onAddOrganizationClick()
                     }
                 },
-                containerColor = LocalPartnerManagementColors.current.success,
+                containerColor = appColors.success,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(16.dp),
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
                 modifier = Modifier
-                    .fillMaxWidth(0.5f)
-                    .height(52.dp)
+                    .fillMaxWidth(0.55f)
+                    .height(50.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -166,19 +134,19 @@ fun OrganizationsListScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.label_add_new_organization),
-                        style = typography.titleLarge
+                        style = typography.titleLarge,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
         },
         floatingActionButtonPosition = FabPosition.Center
-    ) {
+    ) { innerPadding ->
         Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(
-                topStart = 24.dp,
-                topEnd = 24.dp
-            ),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             color = MaterialTheme.colorScheme.background
         ) {
             Column(
@@ -186,22 +154,68 @@ fun OrganizationsListScreen(
                     .fillMaxSize()
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp)
             ) {
+                // جستجو و پاک کردن سریع
                 FilterSection(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    hint = stringResource(R.string.label_search)
+                    hint = "جستجوی نام سازمان، تلفن یا آدرس..."
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+               // Spacer(modifier = Modifier.height(4.dp))
 
-                OrganizationsFiltersRow(
+                // چیپ‌های فیلتر سریع (تک‌لمسی و ارگونومیک)
+                OrganizationsQuickFilterChips(
                     selectedStatus = selectedStatus,
                     statusOptions = statusOptions,
                     isWarningOnly = isWarningOnly,
-                    onStatusSelected = { selectedStatus = it },
-                    onClearStatus = { selectedStatus = null },
-                    onToggleWarningOnly = { isWarningOnly = !isWarningOnly }
+                    onSelectStatus = { selectedStatus = if (selectedStatus == it) null else it },
+                    onToggleWarningOnly = { isWarningOnly = !isWarningOnly },
+                    onResetFilters = {
+                        selectedStatus = null
+                        isWarningOnly = false
+                        searchQuery = ""
+                    }
                 )
+
+             //   Spacer(modifier = Modifier.height(6.dp))
+
+                // نوار وضعیت تعداد نتایج و ریست سریع
+                if (filteredOrganizations != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                     Text(
+                            text = "${filteredOrganizations.size} سازمان یافت شد",
+                            style = typography.labelMedium,
+                            color = appColors.textSecondary
+                        )
+
+                        if (selectedStatus != null || isWarningOnly || searchQuery.isNotBlank()) {
+                            Text(
+                                text = "حذف همه فیلترها",
+                                style = typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) {
+                                        selectedStatus = null
+                                        isWarningOnly = false
+                                        searchQuery = ""
+                                    }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // لیست سازمان‌ها
                 when {
                     organizations == null -> {
                         Box(
@@ -217,7 +231,7 @@ fun OrganizationsListScreen(
                         }
                     }
 
-                    organizations?.isEmpty() == true -> {
+                    filteredOrganizations?.isEmpty() == true -> {
                         EmptyState(
                             textRes = R.string.msg_no_item_found,
                             modifier = Modifier
@@ -229,8 +243,8 @@ fun OrganizationsListScreen(
                     else -> {
                         LazyColumn(
                             modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp)
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(top = 4.dp, bottom = 84.dp)
                         ) {
                             itemsIndexed(
                                 items = filteredOrganizations!!,
@@ -240,18 +254,28 @@ fun OrganizationsListScreen(
                                     organization.attachments.firstOrNull { it.isHeader }
                                         ?: organization.attachments.firstOrNull()
 
-                                OrganizationsCard(baseUrl = baseUrl,
+                                ModernOrganizationCard(
+                                    baseUrl = baseUrl,
                                     item = organization,
                                     number = index + 1,
                                     thumbnail = orgThumbnail,
-                                    onClick = {
-                                        onOrganizationClick(organization.organization.organizationId)
+                                    onClick = { onOrganizationClick(organization.organization.organizationId) },
+                                    onPhoneClick = { phone ->
+                                        val intent =
+                                            Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                                        context.startActivity(intent)
+                                    },
+                                    onNavigateMap = { lat, lng ->
+                                        if (onLocationClick != null) {
+                                            onLocationClick(lat, lng)
+                                        } else {
+                                            val gmmIntentUri =
+                                                Uri.parse("geo:$lat,$lng?q=$lat,$lng")
+                                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                                            context.startActivity(mapIntent)
+                                        }
                                     }
                                 )
-                            }
-
-                            item {
-                                Spacer(modifier = Modifier.height(80.dp))
                             }
                         }
                     }
@@ -261,19 +285,19 @@ fun OrganizationsListScreen(
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * چیپ‌های فیلتر افقی تک‌لمسی (جایگزین منوی Dropdown کند)
+ */
 @Composable
-fun OrganizationsFiltersRow(
+private fun OrganizationsQuickFilterChips(
     selectedStatus: OrganizationStatus?,
     statusOptions: List<OrganizationStatus>,
     isWarningOnly: Boolean,
-    onStatusSelected: (OrganizationStatus) -> Unit,
-    onClearStatus: () -> Unit,
-    onToggleWarningOnly: () -> Unit
+    onSelectStatus: (OrganizationStatus) -> Unit,
+    onToggleWarningOnly: () -> Unit,
+    onResetFilters: () -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
-    var statusExpanded by remember { mutableStateOf(false) }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         LazyRow(
@@ -281,158 +305,80 @@ fun OrganizationsFiltersRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // چیپ اخطاردارها
             item {
-                Row(
-                    modifier = Modifier.height(40.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_filter),
-                        contentDescription = null,
-                        tint = appColors.textSecondary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.label_filters),
-                        color = appColors.textSecondary,
-                        style = typography.titleSmall
-                    )
-                }
-            }
-
-            item {
-                ExposedDropdownMenuBox(
-                    expanded = statusExpanded,
-                    onExpandedChange = { statusExpanded = !statusExpanded }
-                ) {
-                    Surface(
-                        modifier = Modifier.height(40.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        color = appColors.cardBackground,
-                        border = BorderStroke(
-                            1.dp,
-                            if (selectedStatus != null) MaterialTheme.colorScheme.primary else appColors.border
+                FilterChip(
+                    selected = isWarningOnly,
+                    onClick = onToggleWarningOnly,
+                    label = {
+                        Text(
+                            text = stringResource(R.string.label_has_warnings),
+                            style = typography.labelMedium
                         )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FilterAlt,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = selectedStatus?.let { stringResource(it.titleRes) }
-                                    ?: stringResource(R.string.label_status),
-                                style = typography.labelSmall,
-                                color = if (selectedStatus != null) MaterialTheme.colorScheme.primary else appColors.textPrimary,
-                                maxLines = 1,
-                                modifier = Modifier.clickable { statusExpanded = true }
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = if (selectedStatus != null) Icons.Default.Close else Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
-                                tint = appColors.textSecondary,
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clickable {
-                                        if (selectedStatus != null) {
-                                            onClearStatus()
-                                        } else {
-                                            statusExpanded = !statusExpanded
-                                        }
-                                    }
-                            )
-                        }
-                    }
-
-                    ExposedDropdownMenu(
-                        expanded = statusExpanded,
-                        onDismissRequest = { statusExpanded = false }
-                    ) {
-                        statusOptions.forEach { status ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = stringResource(status.titleRes),
-                                        style = typography.labelMedium
-                                    )
-                                },
-                                onClick = {
-                                    onStatusSelected(status)
-                                    statusExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            item {
-                val warningBorderColor =
-                    if (isWarningOnly) appColors.warning else appColors.border
-                val warningBgColor =
-                    if (isWarningOnly) appColors.warning.copy(alpha = 0.12f) else appColors.cardBackground
-                val warningTextColor =
-                    if (isWarningOnly) appColors.warning else appColors.textPrimary
-
-                Surface(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onToggleWarningOnly() },
-                    shape = RoundedCornerShape(8.dp),
-                    color = warningBgColor,
-                    border = BorderStroke(1.dp, warningBorderColor)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    },
+                    leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.WarningAmber,
                             contentDescription = null,
-                            tint = if (isWarningOnly) appColors.warning else MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(16.dp),
+                            tint = if (isWarningOnly) appColors.warning else appColors.textSecondary
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = appColors.warning.copy(alpha = 0.15f),
+                        selectedLabelColor = appColors.warning
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        borderColor = if (isWarningOnly) appColors.warning else appColors.border,
+                        selectedBorderColor = appColors.warning,
+                        enabled = true,
+                        selected = isWarningOnly
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+            }
+
+            // چیپ‌های وضعیت‌ها
+            items(statusOptions) { status ->
+                val isSelected = selectedStatus == status
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { onSelectStatus(status) },
+                    label = {
                         Text(
-                            text = stringResource(R.string.label_has_warnings),
-                            style = typography.labelSmall,
-                            color = warningTextColor,
-                            maxLines = 1
+                            text = stringResource(status.titleRes),
+                            style = typography.labelMedium
                         )
-                        if (isWarningOnly) {
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = null,
-                                tint = appColors.warning,
-                                modifier = Modifier
-                                    .size(14.dp)
-                                    .clickable { onToggleWarningOnly() }
-                            )
-                        }
-                    }
-                }
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        borderColor = if (isSelected) MaterialTheme.colorScheme.primary else appColors.border,
+                        selectedBorderColor = MaterialTheme.colorScheme.primary,
+                        enabled = true,
+                        selected = isSelected
+                    )
+                )
             }
         }
     }
 }
 
+/**
+ * کارت مدرن سازمان با پشتیبانی از اقدامات سریع (تماس، نقشه) و چیدمان روان
+ */
 @Composable
-fun OrganizationsCard(
+fun ModernOrganizationCard(
     baseUrl: String,
     item: OrganizationWithDetail,
     number: Int,
     thumbnail: AttachmentFileEntity? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onPhoneClick: (String) -> Unit,
+    onNavigateMap: (Double, Double) -> Unit
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
@@ -441,15 +387,19 @@ fun OrganizationsCard(
     val warningCount = item.organization.countWarning ?: 0
     val orgGrade = item.organization.grade ?: 0
     val orgName = item.organization.name.orEmpty()
+    val phone = item.organization.phone?.trim()
+
+    val lat = item.organization.latitude
+    val lng = item.organization.longitude
+    val hasValidLocation = lat != 0.0 && lng != 0.0
 
     // ساخت آدرس سرور کاملاً امن بر اساس شناسه یا مسیر نسبی
     val serverImageUrl: String? = when {
         thumbnail == null -> null
-        // اگر آدرس فیزیکی دانلود بر اساس ID فایل مد نظرتان است
         !thumbnail.attachmentFileId.isNullOrBlank() -> {
             "${baseUrl.trimEnd('/')}/api/OrgAttachmentFiles/download/${thumbnail.attachmentFileId}"
         }
-        // اگر سرور فایل استاتیک سرو می‌کند بر اساس fileUrl
+
         !thumbnail.fileUrl.isNullOrBlank() -> {
             val path = thumbnail.fileUrl!!.removePrefix("/")
             "${baseUrl.trimEnd('/')}/$path"
@@ -458,25 +408,19 @@ fun OrganizationsCard(
         else -> null
     }
 
-    // اولویت‌بندی تصویر: ۱.فایل محلی ۲.آدرس سرور ۳.آیکون پیش‌فرض
     val imageModel: Any = when {
         !thumbnail?.localPath.isNullOrBlank() && File(thumbnail!!.localPath!!).exists() -> {
             File(thumbnail.localPath!!)
         }
 
-        !serverImageUrl.isNullOrBlank() -> {
-            serverImageUrl
-        }
-
-        else -> R.drawable.ic_logo
+        !serverImageUrl.isNullOrBlank() -> serverImageUrl
+        else -> R.drawable.ic_logo_placeholder
     }
 
     val locationText = when {
         !item.organization.address.isNullOrBlank() -> item.organization.address
         item.cityName.isNotBlank() || item.regionName.isNotBlank() -> {
-            listOf(item.cityName, item.regionName)
-                .filter { it.isNotBlank() }
-                .joinToString("، ")
+            listOf(item.cityName, item.regionName).filter { it.isNotBlank() }.joinToString("، ")
         }
 
         else -> "-"
@@ -485,150 +429,185 @@ fun OrganizationsCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
         border = BorderStroke(
             width = if (isPendingSync) 1.dp else 0.7.dp,
-            color = if (isPendingSync) appColors.warning.copy(alpha = 0.65f) else appColors.border
+            color = if (isPendingSync) appColors.warning.copy(alpha = 0.7f) else appColors.border
         )
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageModel)
-                    .crossfade(true)
-                    .listener(
-                        onError = { request, result ->
-                            android.util.Log.e(
-                                "CoilError",
-                                "Error loading: ${request.data}",
-                                result.throwable
-                            )
-                        },
-                        onSuccess = { _, _ ->
-                            android.util.Log.d(
-                                "CoilSuccess",
-                                "Image loaded successfully: $imageModel"
-                            )
-                        }
-                    )
-                    .placeholder(R.drawable.ic_logo)
-                    .error(R.drawable.ic_logo)
-                    .build(),
-                contentDescription = orgName,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.Start
+            // ردیف اول: تصویر، عنوان، رتبه و نشان وضعیت
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                // آواتار سازمان
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageModel)
+                        .crossfade(true)
+                        .placeholder(R.drawable.ic_logo_placeholder)
+                        .error(R.drawable.ic_logo_placeholder)
+                        .build(),
+                    contentDescription = orgName,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
                     Row(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "$number.",
+                            text = "$number. $orgName",
                             style = typography.titleLarge,
-                            color = colors.onSurface
-                        )
-
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        Text(
-                            text = orgName,
-                            style = typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
                             color = colors.onSurface,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        StatusBadge(status = OrganizationStatus.fromId(item.organization.status))
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                    StatusBadge(status = OrganizationStatus.fromId(item.organization.status))
-                }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Rating(orgGrade)
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Rating(orgGrade)
-
-                    if (warningCount > 0) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = appColors.warning.copy(alpha = 0.15f),
-                            border = BorderStroke(
-                                width = 0.4.dp,
-                                color = appColors.warning
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(
-                                    horizontal = 6.dp,
-                                    vertical = 2.dp
-                                ),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        if (warningCount > 0) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = appColors.warning.copy(alpha = 0.15f),
+                                border = BorderStroke(width = 0.5.dp, color = appColors.warning)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.WarningAmber,
-                                    contentDescription = null,
-                                    tint = appColors.warning,
-                                    modifier = Modifier.size(12.dp)
-                                )
-
-                                Text(
-                                    text = "$warningCount تذکر",
-                                    style = typography.labelSmall,
-                                    color = appColors.warning
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.WarningAmber,
+                                        contentDescription = null,
+                                        tint = appColors.warning,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Text(
+                                        text = "$warningCount تذکر",
+                                        style = typography.labelSmall,
+                                        color = appColors.warning,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(color = appColors.border.copy(alpha = 0.5f), thickness = 0.6.dp)
+            Spacer(modifier = Modifier.height(8.dp))
 
-                LocationRow(location = locationText)
+            // ردیف دوم: آدرس سازمان + اکشن‌های سریع (تماس و مسیریابی)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // آیکون و متن آدرس
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = appColors.textSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = locationText,
+                        style = typography.bodySmall,
+                        color = appColors.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
-                if (isPendingSync) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OfflinePendingFooterBanner()
+                // دکمه‌های اکشن سریع میدانی (Quick Actions)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (!phone.isNullOrBlank()) {
+                        IconButton(
+                            onClick = { onPhoneClick(phone) },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Call,
+                                contentDescription = "تماس سریع",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    if (hasValidLocation) {
+                        IconButton(
+                            onClick = { onNavigateMap(lat!!, lng!!) },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    color = appColors.success.copy(alpha = 0.15f),
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Directions,
+                                contentDescription = "مسیریابی",
+                                tint = appColors.success,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
             }
+
+            // نشانگر تغییرات آفلاین
+            if (isPendingSync) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OfflinePendingFooterBanner()
+            }
         }
-    }
-}
-
-
-@Preview(showBackground = true, widthDp = 412, heightDp = 915)
-@Composable
-private fun OrganizationsListScreenPreview() {
-    AppScreenPreview {
-        OrganizationsListScreen(
-            onOrganizationClick = {},
-            onAddOrganizationClick = {}
-        )
     }
 }

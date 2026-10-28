@@ -10,6 +10,7 @@ import ir.kitgroup.partnerManagement.core.repository.ContractRepository
 import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UiText
+import ir.kitgroup.partnerManagement.core.ui.util.isNetworkError
 import ir.kitgroup.partnerManagement.core.ui.util.jalaliToGregorian
 import ir.kitgroup.partnerManagement.feature.contract.model.TerminateActiveContractRequest
 import kotlinx.coroutines.delay
@@ -86,25 +87,28 @@ class ContractDetailViewModel @Inject constructor(
                         delay(500)
                         onSuccessCallback()
                     },
-                    onFailure = {
-                        try {
-                            // فراخوانی ریپازیتوری جهت ذخیره در جدول PendingContractTerminationEntity و به‌روزرسانی وضعیت لوکال
-                            contractRepository.saveOfflineTermination(
-                                contractId = contractId,
-                                organizationId = organizationId,
-                                terminationDate = gregorianTerminationDate
-                            )
-
-                            _uiEvent.emit(
-                                UiEvent.ShowMessage(
-                                    UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)
+                    onFailure = { error ->
+                        if (error.isNetworkError()) {
+                            try {
+                                contractRepository.saveOfflineTermination(
+                                    contractId = contractId,
+                                    organizationId = organizationId,
+                                    terminationDate = gregorianTerminationDate
                                 )
-                            )
 
-                            delay(500)
-                            onSuccessCallback()
-                        } catch (dbError: Exception) {
-                            _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(dbError)))
+                                _uiEvent.emit(
+                                    UiEvent.ShowMessage(
+                                        UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)
+                                    )
+                                )
+
+                                delay(500)
+                                onSuccessCallback()
+                            } catch (dbError: Exception) {
+                                _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(dbError)))
+                            }
+                        } else {
+                            _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(error)))
                         }
                     }
                 )

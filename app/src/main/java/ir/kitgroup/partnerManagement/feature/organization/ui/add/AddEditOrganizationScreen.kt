@@ -1,25 +1,17 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.add
 
-import ir.kitgroup.partnerManagement.core.network.model.AttachmentFileDto
-import ir.kitgroup.partnerManagement.core.ui.util.AttachmentFileType
-import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ImagePreviewDialog
+
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
@@ -28,18 +20,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.CityEntity
-import ir.kitgroup.partnerManagement.core.database.entity.PersonEntity
 import ir.kitgroup.partnerManagement.core.database.entity.RegionEntity
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
@@ -53,10 +41,8 @@ import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationLevel
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationType
-import android.view.ViewGroup
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -64,10 +50,21 @@ import org.osmdroid.views.overlay.Marker
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import ir.kitgroup.partnerManagement.core.ui.model.OrganizationImageItem
-import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ImagePreviewDialog
+import ir.kitgroup.partnerManagement.core.database.entity.VisitorEntity
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
+import ir.kitgroup.partnerManagement.core.ui.util.UserRole
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import ir.kitgroup.partnerManagement.core.network.model.AttachmentUploadResponse
+import ir.kitgroup.partnerManagement.core.ui.components.ImageAddEditSection
+import ir.kitgroup.partnerManagement.core.ui.util.AttachmentContext
+import ir.kitgroup.partnerManagement.core.ui.util.AttachmentFileType
+import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.isDocumentUri
+
 
 @Composable
 fun AddEditOrganizationScreen(
@@ -75,48 +72,63 @@ fun AddEditOrganizationScreen(
     onSelectLocationClick: (() -> Unit)? = null,
     selectedLatitude: Double? = null,
     selectedLongitude: Double? = null,
-    viewModel: AddEditOrganizationViewModel = hiltViewModel()
+    viewModel: AddEditOrganizationViewModel = hiltViewModel(),
+    sessionViewModel: SessionViewModel = hiltViewModel()
 ) {
+    val roleCode by sessionViewModel.roleCode.collectAsState()
+    val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
+    val isSupervisor = currentRole == UserRole.SUPERVISOR
 
     val baseUrl by viewModel.baseUrlFlow.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackBarHostState = remember { SnackbarHostState() }
+    val uploadState by viewModel.uploadState.collectAsStateWithLifecycle()
 
 
     // متغیرهای موقت برای نگهداری URI و نمایش دیالوگ تنظیمات تصویر
     var pendingImageUri by remember { mutableStateOf<Uri?>(null) }
     var showImageDetailDialog by remember { mutableStateOf(false) }
 
+
     LaunchedEffect(selectedLatitude, selectedLongitude) {
-        selectedLatitude?.let {
-            uiState.latitude = it
-        }
-        selectedLongitude?.let {
-            uiState.longitude = it
+        if (selectedLatitude != null && selectedLongitude != null) {
+            viewModel.onLocationChange(selectedLatitude, selectedLongitude)
         }
     }
 
-
     // لانچر انتخاب تصویر از گالری دستگاه
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
             pendingImageUri = it
             showImageDetailDialog = true
         }
     }
+
     if (showImageDetailDialog && pendingImageUri != null) {
+        val isDocument = remember(pendingImageUri) {
+            isDocumentUri(context, pendingImageUri!!)
+        }
+
+        val allowedTypes = remember(isDocument) {
+            AttachmentFileType.getAvailableTypes(
+                context = AttachmentContext.ORGANIZATION,
+                isDocument = isDocument
+            )
+        }
+
         ImageDetailInputDialog(
+            allowedTypes = allowedTypes,
             onDismiss = {
                 pendingImageUri = null
                 showImageDetailDialog = false
             },
             onConfirm = { selectedFileType, description ->
                 pendingImageUri?.let { uri ->
-                    viewModel.onAddLocalImage(
+                    viewModel.onAddLocalAttachment(
                         uri = uri,
                         fileType = selectedFileType,
                         description = description
@@ -127,6 +139,7 @@ fun AddEditOrganizationScreen(
             }
         )
     }
+
     LaunchedEffect(viewModel.uiEvent) {
         viewModel.uiEvent.collect { event ->
             when (event) {
@@ -156,7 +169,7 @@ fun AddEditOrganizationScreen(
                             stringResource(R.string.label_create_organization)
                         },
                         isLoading = uiState.isLoading,
-                        enabled = uiState.isFormValid,
+                        enabled = uiState.isFormValid && uploadState !is DataState.Loading,
                         onClick = { viewModel.submitOrganization(onSuccessCallback = onSuccessSave) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -167,7 +180,10 @@ fun AddEditOrganizationScreen(
     ) { paddingValues ->
         AddOrganizationContent(
             uiState = uiState,
+            uploadState = uploadState,
             baseUrl = baseUrl,
+            isEditMode = viewModel.isEditMode,
+            isSupervisor = isSupervisor,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
@@ -193,9 +209,17 @@ fun AddEditOrganizationScreen(
             onRegionSelected = viewModel::onRegionSelected,
             onSelectLocationClick = onSelectLocationClick ?: {},
             onAddImageClick = {
-                imagePickerLauncher.launch("image/*")
+                val mimeTypes = arrayOf(
+                    "image/*",
+                    "application/pdf",
+                    "application/msword",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
+                imagePickerLauncher.launch(mimeTypes)
             },
+
             onRemoveImageClick = viewModel::onRemoveImage,
+            onVisitorSelected = viewModel::onVisitorSelected,
         )
     }
 }
@@ -204,7 +228,10 @@ fun AddEditOrganizationScreen(
 @Composable
 fun AddOrganizationContent(
     uiState: AddEditOrganizationUiState,
+    uploadState: DataState<AttachmentUploadResponse>,
     baseUrl: String,
+    isEditMode: Boolean,
+    isSupervisor: Boolean,
     modifier: Modifier = Modifier,
     onOrganizationNameChange: (String) -> Unit,
     onOrganizationTypeChange: (Int) -> Unit,
@@ -217,6 +244,7 @@ fun AddOrganizationContent(
     onPhoneChange: (String) -> Unit,
     onMobileChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
+    onVisitorSelected: (String) -> Unit,
     onAddressChange: (String) -> Unit,
     onOrganizationGradeChange: (Int) -> Unit,
     onTicketSaleCountChange: (String) -> Unit,
@@ -248,6 +276,9 @@ fun AddOrganizationContent(
             onEnglishNameChange = onEnglishNameChange,
             onNationalIdChange = onNationalIdChange,
             onMobileChange = onMobileChange,
+            visitors = uiState.visitors,
+            onVisitorSelected = onVisitorSelected,
+            isSupervisor = isSupervisor
         )
 
         // اطلاعات تماس و آدرس
@@ -290,12 +321,14 @@ fun AddOrganizationContent(
             description = uiState.description,
             onDescriptionChange = onDescriptionChange
         )
-        OrganizationImagesSection(
+        ImageAddEditSection(
             images = uiState.images,
             baseUrl = baseUrl,
+            isEditMode = isEditMode,
             onAddImage = onAddImageClick,
             onRemoveImage = onRemoveImageClick
         )
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
@@ -311,7 +344,11 @@ fun OrganizationBasicInfoSection(
     onEnglishNameChange: (String) -> Unit,
     onNationalIdChange: (String) -> Unit,
     onMobileChange: (String) -> Unit,
-) {
+    visitors: List<VisitorEntity>,
+    onVisitorSelected: (String) -> Unit,
+    isSupervisor: Boolean,
+
+    ) {
     // گزینه‌های نوع سازمان
     val organizationTypeOptions = OrganizationType.entries.map { type ->
         type to stringResource(type.titleRes)
@@ -326,6 +363,7 @@ fun OrganizationBasicInfoSection(
     val selectedOrganizationLevel = organizationLevelOptions
         .firstOrNull { it.first.code == uiState.organizationLevel }
 
+    val selectedVisitor = visitors.firstOrNull { it.visitorId == uiState.visitorId }
 
 
     Column(
@@ -380,33 +418,49 @@ fun OrganizationBasicInfoSection(
                 }
             }
         )
+        if (isSupervisor && !uiState.isEditMode) {
+            DropdownSelectorField(
+                value = selectedVisitor?.name.orEmpty(),
+                label = stringResource(R.string.label_visitor_name),
+                placeholder = stringResource(R.string.hint_choose_visitor),
+                items = visitors.mapNotNull { it.name },
+                onItemSelected = { selectedName ->
+                    visitors.firstOrNull { it.name == selectedName }?.let {
+                        onVisitorSelected(it.visitorId)
+                    }
+                },
+                isRequired = false
+            )
+        }
+        if (!uiState.isEditMode) {
 
-        TwoColumnRow(
-            start = {
-                CustomEditTextField(
-                    value = uiState.ownerName,
-                    onValueChange = onOwnerNameChange,
-                    label = stringResource(R.string.label_owner_name),
-                    placeholder = stringResource(R.string.hint_enter_owner_name),
-                    isRequired = true,
-                    leadingIcon = null
-                )
-            },
-            end = {
-                CustomEditTextField(
-                    value = uiState.mobile,
-                    onValueChange = onMobileChange,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    label = stringResource(R.string.label_mobile_owner),
-                    placeholder = stringResource(R.string.hint_enter_mobile),
-                    isRequired = true,
-                    errorMessage = uiState.mobileError,
-                    leadingIcon = null
-                )
-            }
-        )
+            TwoColumnRow(
+                start = {
+                    CustomEditTextField(
+                        value = uiState.ownerName,
+                        onValueChange = onOwnerNameChange,
+                        label = stringResource(R.string.label_owner_name),
+                        placeholder = stringResource(R.string.hint_enter_owner_name),
+                        isRequired = true,
+                        leadingIcon = null
+                    )
+                },
+                end = {
+                    CustomEditTextField(
+                        value = uiState.mobile,
+                        onValueChange = onMobileChange,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number
+                        ),
+                        label = stringResource(R.string.label_mobile_owner),
+                        placeholder = stringResource(R.string.hint_enter_mobile),
+                        isRequired = true,
+                        errorMessage = uiState.mobileError,
+                        leadingIcon = null
+                    )
+                }
+            )
+        }
 
         TwoColumnRow(
             start = {
@@ -641,7 +695,7 @@ private fun OrganizationLocationSection(
                         onCitySelected(it.cityId)
                     }
                 },
-                isRequired = false
+                isRequired = true
             )
         },
         end = {
@@ -655,7 +709,7 @@ private fun OrganizationLocationSection(
                         onRegionSelected(it.regionId)
                     }
                 },
-                isRequired = false
+                isRequired = true
             )
         }
     )
@@ -746,21 +800,21 @@ private fun OrganizationStatusSection(
         title = stringResource(R.string.label_statuses),
         titleColor = MaterialTheme.colorScheme.primary
     )
-
-    DropdownSelectorField(
-        value = stringResource(uiState.organizationStatus.titleRes),
-        label = stringResource(R.string.label_status),
-        placeholder = "",
-        items = statusTitles,
-        isRequired = false,
-        onItemSelected = { selectedTitle ->
-            val selectedIndex = statusTitles.indexOf(selectedTitle)
-            if (selectedIndex != -1) {
-                onOrganizationStatusChange(statusEntries[selectedIndex])
+    if (!uiState.isEditMode) {
+        DropdownSelectorField(
+            value = stringResource(uiState.organizationStatus.titleRes),
+            label = stringResource(R.string.label_status),
+            placeholder = "",
+            items = statusTitles,
+            isRequired = false,
+            onItemSelected = { selectedTitle ->
+                val selectedIndex = statusTitles.indexOf(selectedTitle)
+                if (selectedIndex != -1) {
+                    onOrganizationStatusChange(statusEntries[selectedIndex])
+                }
             }
-        }
-    )
-
+        )
+    }
     YesNoSwitchRow(
         title = stringResource(R.string.label_foreign_guest_reception),
         checked = uiState.statusExternalCustomer,
@@ -790,246 +844,6 @@ private fun OrganizationDescriptionSection(
 
 
 @Composable
-fun OrganizationImagesSection(
-    images: List<OrganizationImageItem>,
-    baseUrl: String,
-    onAddImage: () -> Unit,
-    onRemoveImage: (Int) -> Unit
-) {
-    // نگهداری آدرس تصویر و مدل انتخابی جهت نمایش در ImagePreviewDialog
-    var previewData by remember { mutableStateOf<Pair<String, AttachmentFileDto>?>(null) }
-
-    // نمایش دیالوگ پیش‌نمایش
-    previewData?.let { (imageUrl, attachmentDto) ->
-        ImagePreviewDialog(
-            imageUrl = imageUrl,
-            attachment = attachmentDto,
-            onDismiss = { previewData = null }
-        )
-    }
-
-    SectionTitle(
-        title = stringResource(R.string.label_images),
-        titleColor = MaterialTheme.colorScheme.primary
-    )
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(vertical = 8.dp)
-    ) {
-        item {
-            AddImageCard(onClick = onAddImage)
-        }
-
-        itemsIndexed(images) { index, item ->
-            // استخراج آدرس کامل تصویر (چه Uri لوکال و چه شناسه سرور)
-            val resolvedImageUrl = item.uri?.toString()
-                ?: item.serverImageUrl
-                ?: item.uploadedFileId?.let { id ->
-                    if (baseUrl.isNotBlank()) "${baseUrl.trimEnd('/')}/api/OrgAttachmentFiles/download/$id" else null
-                }.orEmpty()
-
-            val imageModel = item.uri ?: resolvedImageUrl
-
-            val fileTypeEnum = AttachmentFileType.fromId(item.fileType)
-            val fileTypeTitle = fileTypeEnum?.titleRes?.let { stringResource(it) }
-                ?: stringResource(R.string.attachment_type_other_images)
-
-            Box(
-                modifier = Modifier
-                    .size(130.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable {
-
-                        val dto = AttachmentFileDto(
-                            attachmentFileId = item.uploadedFileId ?: "",
-                            fileType = item.fileType,
-                            name = null,
-                            description = item.description
-                        )
-                        previewData = Pair(resolvedImageUrl, dto)
-                    }
-            ) {
-                // نمایش بندانگشتی تصویر با Coil
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageModel)
-                        .crossfade(true)
-                        .placeholder(R.drawable.ic_image_placeholder)
-                        .error(R.drawable.ic_image_placeholder)
-                        .build(),
-                    contentDescription = item.description,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-                // برچسب نوع عکس (Badge)
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth(),
-                    color = Color.Black.copy(alpha = 0.65f)
-                ) {
-                    Text(
-                        text = fileTypeTitle,
-                        style = typography.labelSmall,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        modifier = Modifier.padding(vertical = 3.dp, horizontal = 4.dp)
-                    )
-                }
-
-                // دکمه حذف تصویر
-                IconButton(
-                    onClick = { onRemoveImage(index) },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(4.dp)
-                        .size(20.dp)
-                        .background(Color.Red.copy(alpha = 0.85f), CircleShape)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.label_delete),
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun OrganizationFormActionButtons(
-    isLoading: Boolean,
-    onSaveClick: () -> Unit,
-    onCancel: () -> Unit
-) {
-    Spacer(Modifier.height(8.dp))
-    println("onSaveClick = 3")
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        CustomButton(
-            text = stringResource(R.string.label_save),
-            onClick = onSaveClick,
-            enabled = !isLoading,
-            modifier = Modifier.weight(1f)
-        )
-
-        CustomOutlinedButton(
-            text = stringResource(R.string.label_cancel),
-            onClick = onCancel,
-            enabled = !isLoading,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-
-@Composable
-private fun OrganizationPersonCard(
-    person: PersonEntity,
-    index: Int,
-    onRemoveClick: () -> Unit
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColors.cardBackgroundAlt
-        ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = appColors.border.copy(alpha = 0.7f)
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "${index + 1}. ${person.name}".trim(),
-                        style = typography.titleSmall,
-                        color = appColors.textPrimary,
-                        maxLines = 1
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        person.gender?.let { genderCode ->
-                            val genderTitle = when (genderCode) {
-                                1 -> "مرد"
-                                2 -> "زن"
-                                else -> ""
-                            }
-                            if (genderTitle.isNotEmpty()) {
-                                Text(
-                                    text = genderTitle,
-                                    style = typography.labelSmall,
-                                    color = appColors.textSecondary
-                                )
-                            }
-                        }
-
-                    }
-                }
-
-                IconButton(
-                    onClick = onRemoveClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.label_delete),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-
-            PersonInfoRow(
-                title = stringResource(R.string.label_mobile),
-                value = person.mobile!!
-            )
-
-            PersonInfoRow(
-                title = stringResource(R.string.label_phone),
-                value = person.phone1!!
-            )
-
-            if (person.description!!.isNotBlank()) {
-                PersonInfoRow(
-                    title = stringResource(R.string.label_description),
-                    value = person.description
-                )
-            }
-        }
-    }
-}
-
-
-@Composable
 private fun MapCard(
     latitude: Double?,
     longitude: Double?,
@@ -1037,16 +851,13 @@ private fun MapCard(
 ) {
     val appColors = LocalPartnerManagementColors.current
 
-    val hasLocation =
-        latitude != null && longitude != null
+    val hasLocation = latitude != null && longitude != null && latitude != 0.0 && longitude != 0.0
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-
         if (!hasLocation) {
-
-            // هنوز موقعیت انتخاب نشده
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1062,7 +873,6 @@ private fun MapCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-
                 Button(
                     onClick = onSelectLocation,
                     shape = RoundedCornerShape(10.dp),
@@ -1071,7 +881,6 @@ private fun MapCard(
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null
@@ -1088,10 +897,7 @@ private fun MapCard(
                     )
                 }
             }
-
         } else {
-
-            // موقعیت انتخاب شده
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1106,12 +912,10 @@ private fun MapCard(
                     )
                     .padding(10.dp)
             ) {
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
@@ -1140,7 +944,7 @@ private fun MapCard(
                     longitude = longitude!!,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(180.dp)
+                        .height(160.dp)
                 )
 
                 Spacer(
@@ -1166,7 +970,6 @@ private fun MapCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null
@@ -1187,6 +990,7 @@ private fun MapCard(
     }
 }
 
+
 @Composable
 private fun LocationPreviewMap(
     latitude: Double,
@@ -1194,142 +998,67 @@ private fun LocationPreviewMap(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val customMarkerDrawable = remember(context) {
+        ContextCompat.getDrawable(context, R.drawable.ic_location_pin)
+    }
 
     val point = remember(latitude, longitude) {
         GeoPoint(latitude, longitude)
     }
 
+    val mapView = remember {
+        MapView(context).apply {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(false)
+            isClickable = false
+            setBuiltInZoomControls(false)
+            controller.setZoom(16.5)
+            controller.setCenter(point)
+
+            val marker = Marker(this).apply {
+                position = point
+                customMarkerDrawable?.let { icon = it }
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                title = context.getString(R.string.label_organization_location)
+                closeInfoWindow()
+            }
+            overlays.add(marker)
+        }
+    }
+
+    DisposableEffect(lifecycleOwner, mapView) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                Lifecycle.Event.ON_DESTROY -> mapView.onDetach()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            mapView.onPause()
+            mapView.onDetach()
+        }
+    }
+
     AndroidView(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp)),
-
-        factory = { ctx ->
-
-            Configuration.getInstance().userAgentValue =
-                ctx.packageName
-
-            MapView(ctx).apply {
-
-                setTileSource(
-                    TileSourceFactory.MAPNIK
-                )
-
-                setMultiTouchControls(false)
-
-                controller.setZoom(16.0)
-                controller.setCenter(point)
-
-                val marker = Marker(this).apply {
-
-                    position = point
-
-                    setAnchor(
-                        Marker.ANCHOR_CENTER,
-                        Marker.ANCHOR_BOTTOM
-                    )
-
-                    title = context.getString(
-                        R.string.label_organization_location
-                    )
-                }
-
-                overlays.add(marker)
-
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
+        modifier = modifier.clip(RoundedCornerShape(12.dp)),
+        factory = { mapView },
+        update = { view ->
+            val marker = view.overlays.filterIsInstance<Marker>().firstOrNull()
+            if (marker?.position?.latitude != latitude || marker.position?.longitude != longitude) {
+                marker?.position = point
+                // اطمینان از اعمال آیکون در آپدیت
+                customMarkerDrawable?.let { marker?.icon = it }
+                view.controller.setCenter(point)
+                view.postInvalidate()
             }
-        },
-
-        update = { mapView ->
-
-            val newPoint = GeoPoint(
-                latitude,
-                longitude
-            )
-
-            mapView.controller.animateTo(
-                newPoint
-            )
-
-            val marker =
-                mapView.overlays
-                    .filterIsInstance<Marker>()
-                    .firstOrNull()
-
-            if (marker != null) {
-                marker.position = newPoint
-            }
-
-            mapView.invalidate()
         }
     )
 }
 
-@Composable
-private fun AddImageCard(
-    onClick: () -> Unit
-) {
-    val appColors = LocalPartnerManagementColors.current
-    Box(
-        modifier = Modifier
-            .size(92.dp, 110.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                RoundedCornerShape(12.dp)
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = Icons.Default.CloudUpload,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = stringResource(R.string.label_add_image),
-                style = typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
-            )
-            /* Text(
-                 text = stringResource(R.string.label_maximum_10_images),
-                 style = typography.labelSmall,
-                 color = appColors.border,
-                 textAlign = TextAlign.Center
-             )*/
-        }
-    }
-}
-
-@Composable
-private fun PersonInfoRow(
-    title: String,
-    value: String
-) {
-    val appColors = LocalPartnerManagementColors.current
-
-    if (value.isBlank()) return
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Text(
-            text = "$title:",
-            style = typography.labelMedium,
-            color = appColors.textSecondary
-        )
-
-        Text(
-            text = value,
-            style = typography.labelMedium,
-            color = appColors.textPrimary,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}

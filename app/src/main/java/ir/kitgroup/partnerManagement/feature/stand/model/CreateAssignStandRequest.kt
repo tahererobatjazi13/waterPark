@@ -1,7 +1,9 @@
 package ir.kitgroup.partnerManagement.feature.stand.model
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CreateAssignStandRequest(
     @SerializedName("standAssignmentId")
     val standAssignmentId: String? = null,

@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.database.entity.VisitorOrganizationEntity
 import ir.kitgroup.partnerManagement.core.network.model.VisitorOrganizationDto
 import ir.kitgroup.partnerManagement.core.repository.OrganizationRepository
 import ir.kitgroup.partnerManagement.core.ui.util.DataState

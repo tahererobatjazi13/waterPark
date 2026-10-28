@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import ir.kitgroup.partnerManagement.core.database.entity.ContractTerminationEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ContractTerminationDao {
@@ -20,4 +21,7 @@ interface ContractTerminationDao {
 
     @Query("DELETE FROM  contract_terminations")
     suspend fun deleteAll()
+
+    @Query("SELECT COUNT(*) FROM contract_terminations")
+    fun observePendingCount(): Flow<Int>
 }

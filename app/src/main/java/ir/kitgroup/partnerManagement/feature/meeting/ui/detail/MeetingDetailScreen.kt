@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.feature.meeting.ui.detail
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,8 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.EventAvailable
-import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Subject
 import androidx.compose.material3.*
@@ -35,27 +32,43 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.MeetingWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.*
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.DataState
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingStatus
 import ir.kitgroup.partnerManagement.core.ui.util.MeetingType
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import ir.kitgroup.partnerManagement.core.network.model.AttachmentFileDto
+import ir.kitgroup.partnerManagement.core.ui.util.SecondaryButtonVariant
+import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 @Composable
 fun MeetingDetailScreen(
     meetingId: String,
     onEditClick: (String) -> Unit,
-    onStatusChanged: () -> Unit,
+    onLocationClick: (latitude: Double, longitude: Double) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
+    onStatusChangeSuccess: () -> Unit,
     viewModel: MeetingDetailViewModel = hiltViewModel()
 ) {
     val appColors = LocalPartnerManagementColors.current
     val context = LocalContext.current
 
     val meeting by viewModel.meeting.collectAsStateWithLifecycle()
-    val isUpdatingStatus by viewModel.isUpdatingStatus.collectAsStateWithLifecycle()
-    val statusUpdateState by viewModel.statusUpdateState.collectAsStateWithLifecycle()
 
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
+    val uiStateChange by viewModel.uiStateChange.collectAsStateWithLifecycle()
+    val snackBarHostState = remember { SnackbarHostState() }
+
+    val detailUiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val baseUrl by viewModel.baseUrlFlow.collectAsStateWithLifecycle()
 
     LaunchedEffect(meetingId) {
         if (meetingId.isNotBlank()) {
@@ -63,82 +76,44 @@ fun MeetingDetailScreen(
         }
     }
 
-    // بازخورد به کاربر پس از موفقیت یا خطا در تغییر وضعیت
-    LaunchedEffect(statusUpdateState) {
-        when (val state = statusUpdateState) {
-            is DataState.Success -> {
-                showStatusDialog = false
-                viewModel.resetStatusState()
-                Toast.makeText(context, "وضعیت بازدید با موفقیت تغییر یافت", Toast.LENGTH_SHORT)
-                    .show()
-                onStatusChanged()
-            }
+    LaunchedEffect(viewModel.uiEvent) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is UiEvent.ShowMessage -> snackBarHostState.showSnackbar(
+                    event.message.asString(
+                        context
+                    )
+                )
 
-            is DataState.Error -> {
-                Toast.makeText(context, state.error.asString(context), Toast.LENGTH_LONG).show()
-                viewModel.resetStatusState()
+                is UiEvent.ShowError -> snackBarHostState.showSnackbar(event.error.asString(context))
             }
-
-            else -> Unit
         }
     }
 
     val currentMeeting = meeting
 
     Scaffold(
-
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         bottomBar = {
+            // نمایش BottomBar تنها در صورت وجود داده
             if (currentMeeting != null) {
-                Surface(
-                    color = appColors.screenBackground,
-                    tonalElevation = 4.dp,
-                    shadowElevation = 8.dp
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // دکمه ویرایش بازدید
-                        CustomButton(
-                            text = stringResource(R.string.label_edit_visit),
-                            onClick = { onEditClick(currentMeeting.meeting.meetingId) },
-                            fillMaxWidth = false,
-                            modifier = Modifier.weight(1f),
-                            height = 42.dp,
-                            cornerRadius = 12.dp,
-                            textStyle = typography.titleLarge,
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        )
-
-                        // دکمه تعیین وضعیت بازدید
-                        CustomButton(
-                            text = stringResource(R.string.label_determination_status),
-                            onClick = {
-                                if (!isUpdatingStatus) {
-                                    showStatusDialog = true
-                                }
-                            },
-                            fillMaxWidth = false,
-                            modifier = Modifier.weight(1f),
-                            height = 42.dp,
-                            cornerRadius = 12.dp,
-                            textStyle = typography.titleLarge,
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = appColors.error,
-                                contentColor = appColors.errorContainer
-                            )
-                        )
+                DualActionButtonBottomBar(
+                    primaryText = stringResource(R.string.label_edit_visit),
+                    secondaryText = stringResource(R.string.label_determination_status),
+                    primaryIcon = Icons.Outlined.Edit,
+                    secondaryIcon = Icons.Outlined.Cancel,
+                    secondaryVariant = SecondaryButtonVariant.FILLED,
+                    buttonHeight = 44.dp,
+                    onPrimaryClick = { onEditClick(currentMeeting.meeting.meetingId) },
+                    onSecondaryClick = {
+                        if (!uiStateChange.isChangeStatus) {
+                            showStatusDialog = true
+                        }
                     }
-                }
+                )
             }
         },
+
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
 
@@ -170,22 +145,33 @@ fun MeetingDetailScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    VisitorInfoCard(item = currentMeeting)
+                    VisitorInfoCard(
+                        item = currentMeeting,
+                        isImagesLoading = detailUiState.isImagesLoading,
+                        attachments = detailUiState.attachments,
+                        baseUrl = baseUrl,
+                        onDownloadAttachment = { attachmentId, fileExtension ->
+                            viewModel.downloadAttachmentManually(attachmentId, fileExtension)
+                        }
+                    )
+                    val lat = currentMeeting.meeting.latitude
+                    val lng = currentMeeting.meeting.longitude
 
-                    val lat =
-                        currentMeeting.meeting.latitude?.replace(",", ".")?.toDoubleOrNull() ?: 0.0
-                    val lng =
-                        currentMeeting.meeting.longitude?.replace(",", ".")?.toDoubleOrNull() ?: 0.0
-                    val hasValidLocation = lat != 0.0 && lng != 0.0
-
-                    if (hasValidLocation) {
+                    if (lat != null && lng != null && lat != 0.0 && lng != 0.0) {
                         Spacer(Modifier.height(12.dp))
 
                         SectionTitle(stringResource(R.string.label_location))
 
                         Spacer(Modifier.height(8.dp))
 
-                        LocationCard()
+                        MeetingLocationCard(
+                            latitude = lat,
+                            longitude = lng,
+                            address = currentMeeting.organizationAddress,
+                            cityName = currentMeeting.cityName,
+                            regionName = currentMeeting.regionName,
+                            onLocationClick = onLocationClick
+                        )
                     }
 
                     currentMeeting.meeting.description?.takeIf { it.isNotBlank() }?.let { desc ->
@@ -203,19 +189,24 @@ fun MeetingDetailScreen(
             }
         }
     }
-
-    // دیالوگ تغییر وضعیت بازدید
     if (showStatusDialog && currentMeeting != null) {
         val initialStatus =
-            MeetingStatus.fromId(currentMeeting.meeting.status) ?: MeetingStatus.entries.first()
+            MeetingStatus.fromId(currentMeeting.meeting.status)
         ChangeMeetingStatusDialog(
             initialStatus = initialStatus,
-            isSaving = isUpdatingStatus,
-            onDismiss = { showStatusDialog = false },
-            onConfirm = { selectedStatus ->
+            isSubmitting = uiStateChange.isChangeStatus,
+            onDismiss = { if (!uiStateChange.isChangeStatus) showStatusDialog = false },
+            onConfirm = { newStatusId ->
                 viewModel.changeStatusMeeting(
                     meetingId = currentMeeting.meeting.meetingId,
-                    newStatus = selectedStatus.id
+                    newStatus = newStatusId.id,
+                    onErrorCallback = {
+                        showStatusDialog = false
+                    },
+                    onSuccessCallback = {
+                        showStatusDialog = false
+                        onStatusChangeSuccess()
+                    }
                 )
             }
         )
@@ -229,7 +220,7 @@ fun MeetingDetailScreen(
 @Composable
 fun ChangeMeetingStatusDialog(
     initialStatus: MeetingStatus,
-    isSaving: Boolean = false,
+    isSubmitting: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (MeetingStatus) -> Unit
 ) {
@@ -239,7 +230,7 @@ fun ChangeMeetingStatusDialog(
 
     Dialog(
         onDismissRequest = {
-            if (!isSaving) onDismiss()
+            if (!isSubmitting) onDismiss()
         }
     ) {
         Card(
@@ -276,7 +267,7 @@ fun ChangeMeetingStatusDialog(
                     }
                 )
 
-                if (isSaving) {
+                if (isSubmitting) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
 
@@ -286,14 +277,14 @@ fun ChangeMeetingStatusDialog(
                 ) {
                     CustomButton(
                         text = stringResource(R.string.label_registration),
-                        enabled = !isSaving,
+                        enabled = !isSubmitting,
                         onClick = { onConfirm(selectedStatus) },
                         modifier = Modifier.weight(1f)
                     )
 
                     CustomOutlinedButton(
                         text = stringResource(R.string.label_cancel),
-                        enabled = !isSaving,
+                        enabled = !isSubmitting,
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     )
@@ -350,7 +341,13 @@ private fun OrganizationInfoCard(item: MeetingWithDetail) {
 }
 
 @Composable
-private fun VisitorInfoCard(item: MeetingWithDetail) {
+private fun VisitorInfoCard(
+    item: MeetingWithDetail,
+    isImagesLoading: Boolean,
+    attachments: List<AttachmentFileDto>,
+    baseUrl: String,
+    onDownloadAttachment: (attachmentId: String, extension: String?) -> Unit
+) {
     val appColors = LocalPartnerManagementColors.current
 
     Card(
@@ -434,14 +431,19 @@ private fun VisitorInfoCard(item: MeetingWithDetail) {
                 status = item.meeting.status
             )
             HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 14.dp),
             ) {
                 SectionTitle(stringResource(R.string.label_images))
-            //    ImagesSection(images = listOf(R.drawable.ic_logo))
+                Spacer(Modifier.height(8.dp))
+                ImageDetailSection(
+                    isLoading = isImagesLoading,
+                    attachments = attachments,
+                    baseUrl = baseUrl,
+                    onDownloadClick = onDownloadAttachment
+                )
             }
         }
     }
@@ -497,11 +499,28 @@ private fun InfoRow(
 }
 
 @Composable
-private fun LocationCard() {
+private fun MeetingLocationCard(
+    latitude: Double,
+    longitude: Double,
+    address: String?,
+    cityName: String?,
+    regionName: String?,
+    onLocationClick: (latitude: Double, longitude: Double) -> Unit
+) {
+    val context = LocalContext.current
+    val colors = MaterialTheme.colorScheme
     val appColors = LocalPartnerManagementColors.current
 
+    val customMarkerDrawable = remember(context) {
+        ContextCompat.getDrawable(context, R.drawable.ic_location_pin)
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onLocationClick(latitude, longitude)
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
         border = BorderStroke(width = 0.7.dp, color = appColors.border)
@@ -509,27 +528,50 @@ private fun LocationCard() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
-                .padding(12.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .height(130.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.primaryContainer),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Place,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .size(44.dp)
-                    .align(Alignment.Center)
-            )
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx ->
+                    Configuration.getInstance().userAgentValue = ctx.packageName
+                    MapView(ctx).apply {
+                        setTileSource(TileSourceFactory.MAPNIK)
+                        setMultiTouchControls(false)
+                        isClickable = false
+                        isHorizontalMapRepetitionEnabled = false
+                        isVerticalMapRepetitionEnabled = false
+                        setBuiltInZoomControls(false)
+                        controller.setZoom(15.0)
+                        val point = GeoPoint(latitude, longitude)
+                        controller.setCenter(point)
 
-            Icon(
-                imageVector = Icons.Default.Fullscreen,
-                contentDescription = null,
-                tint = appColors.textPrimary,
-                modifier = Modifier
-                    .size(22.dp)
-                    .align(Alignment.TopEnd)
+                        val marker = Marker(this).apply {
+                            position = point
+                            customMarkerDrawable?.let { icon = it }
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            closeInfoWindow()
+                        }
+                        overlays.add(marker)
+                        onResume()
+                    }
+                },
+                update = { mapView ->
+                    val point = GeoPoint(latitude, longitude)
+                    mapView.controller.setCenter(point)
+                    val marker = mapView.overlays.filterIsInstance<Marker>().firstOrNull()
+                    if (marker != null) {
+                        marker.position = point
+                        customMarkerDrawable?.let { marker.icon = it }
+                    }
+                    mapView.postInvalidate()
+                },
+                onRelease = { mapView ->
+                    mapView.onPause()
+                    mapView.onDetach()
+                }
             )
         }
     }

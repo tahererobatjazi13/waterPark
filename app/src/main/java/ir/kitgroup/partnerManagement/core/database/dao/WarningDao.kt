@@ -59,4 +59,7 @@ interface WarningDao {
         status: SyncStatus,
         isLocallyModified: Boolean
     )
+
+    @Query("SELECT COUNT(*) FROM warnings WHERE syncStatus IN ('PENDING_INSERT', 'PENDING_UPDATE')")
+    fun observePendingCount(): Flow<Int>
 }

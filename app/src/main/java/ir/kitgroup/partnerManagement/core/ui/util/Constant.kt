@@ -1,8 +1,9 @@
 package ir.kitgroup.partnerManagement.core.ui.util
 
+import android.content.Intent
+import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.graphics.vector.ImageVector
 import ir.kitgroup.partnerManagement.R
 import androidx.compose.material.icons.filled.CheckCircle
@@ -10,16 +11,12 @@ import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Schedule
-import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus.INITIAL_REGISTRATION
+import java.io.File
 
-const val SYNC_AFTER_ORGANIZATION_SAVE =
-    "sync_after_organization_save"
-
-const val SYNC_AFTER_STAND_SAVE =
-    "sync_after_stand_save"
+import android.content.Context
+import android.provider.OpenableColumns
 
 enum class ThemeMode {
     LIGHT,
@@ -127,7 +124,7 @@ enum class CardStatusFilter(
     )
 }
 
-enum class AllocationFilterTab(val titleRes: Int) {
+enum class AssignedStandFilterTab(val titleRes: Int) {
     All(R.string.label_all),
     Active(R.string.status_active),
     Draft(R.string.status_draft),
@@ -187,10 +184,8 @@ enum class OrganizationStatus(
 ) : AppStatus {
     INITIAL_REGISTRATION(0, R.string.status_initial_registration, StatusColor.INFO),
     ACTIVE(1, R.string.status_active, StatusColor.SUCCESS),
-    INACTIVE(2, R.string.status_inactive, StatusColor.ERROR),
-    SUSPENDED(3, R.string.status_suspend, StatusColor.WARNING),
-    CLOSED(4, R.string.status_closed, StatusColor.ERROR),
     YELLOW(5, R.string.status_yellow, StatusColor.WARNING),
+    INACTIVE(2, R.string.status_inactive, StatusColor.ERROR),
     ORANGE(6, R.string.status_orange, StatusColor.WARNING);
 
     companion object {
@@ -614,6 +609,10 @@ enum class SyncStatus {
     PENDING_DELETE   // در آفلاین حذف/خاتمه یافته
 }
 
+enum class AttachmentContext {
+    ORGANIZATION,
+    MEETING
+}
 
 enum class AttachmentFileType(
     val id: Int,
@@ -629,7 +628,7 @@ enum class AttachmentFileType(
     ),
     OTHER_IMAGES(
         id = 3,
-        titleRes = R.string.attachment_type_other_images
+        titleRes = R.string.attachment_type_other
     ),
     CONTRACT(
         id = 10,
@@ -649,6 +648,90 @@ enum class AttachmentFileType(
         fun fromId(id: Int?): AttachmentFileType? {
             return entries.firstOrNull { it.id == id }
         }
+
+        fun getAvailableTypes(
+            context: AttachmentContext,
+            isDocument: Boolean = false
+        ): List<AttachmentFileType> {
+            return when (context) {
+                AttachmentContext.ORGANIZATION -> {
+                    // در سازمان: اگر فایل (ورد/پی‌دی‌اف) بود سردر و لابی حذف شوند، اگر عکس بود همه بیایند
+                    if (isDocument) {
+                        entries.filter { it != SIGNBOARD_IMAGE && it != LOBBY_IMAGE }
+                    } else {
+                        entries
+                    }
+                }
+
+                AttachmentContext.MEETING -> {
+                    entries.filter { it != SIGNBOARD_IMAGE && it != LOBBY_IMAGE }
+                }
+            }
+        }
+
+
     }
+}
+
+// متد کمکی برای باز کردن فایل دانلود شده با اپلیکیشن‌های مناسب دستگاه
+fun openDownloadedFile(context: Context, file: File) {
+    if (!file.exists()) return
+
+    // استخراج MimeType بر اساس پسوند فایل
+    val extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(file.absolutePath)
+    val mimeType =
+        android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.lowercase())
+            ?: "*/*"
+
+    val uri = androidx.core.content.FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider", // باید با Manifest مطابقت داشته باشد
+        file
+    )
+
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, mimeType)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        // اگر هیچ اپلیکیشنی برای باز کردن این نوع فایل نصب نبود
+        e.printStackTrace()
+    }
+}
+
+fun isDocumentUri(context: Context, uri: Uri): Boolean {
+    // ۱. بررسی MimeType از طریق سیستم‌عامل
+    val mimeType = context.contentResolver.getType(uri)?.lowercase()
+    if (mimeType != null) {
+        if (mimeType.startsWith("image/")) return false
+        if (mimeType.contains("pdf") ||
+            mimeType.contains("msword") ||
+            mimeType.contains("wordprocessingml") ||
+            mimeType.contains("officedocument")
+        ) {
+            return true
+        }
+    }
+
+    // ۲. بررسی نام واقعی فایل از ContentResolver (نه رشته خام uri)
+    var fileName: String? = null
+    try {
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (nameIndex != -1 && cursor.moveToFirst()) {
+                fileName = cursor.getString(nameIndex)
+            }
+        }
+    } catch (_: Exception) {
+    }
+
+    val targetName = fileName ?: uri.lastPathSegment.orEmpty()
+    val ext = targetName.substringAfterLast('.', "").lowercase()
+
+    return ext in listOf("pdf", "doc", "docx")
 }
 

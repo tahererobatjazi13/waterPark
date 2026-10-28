@@ -1,81 +1,44 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail
 
-
-import android.util.Log
+import android.content.Intent
+import android.net.Uri
+import android.view.ViewGroup
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Handshake
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.ManageAccounts
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Smartphone
-import androidx.compose.material.icons.filled.WorkspacePremium
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.components.GradeSelector
-import androidx.compose.material.icons.outlined.ConfirmationNumber
-import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material.icons.outlined.Storefront
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.platform.LocalContext
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.network.model.AttachmentFileDto
+import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionCard
+import ir.kitgroup.partnerManagement.core.ui.components.ImageDetailSection
+import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.OrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.outlined.ImageNotSupported
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import ir.kitgroup.partnerManagement.core.ui.util.AttachmentFileType
-import android.view.ViewGroup
-import androidx.compose.ui.viewinterop.AndroidView
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -89,273 +52,617 @@ fun OrganizationBasicInfoTabContent(
     activeContractName: String? = null,
     isImagesLoading: Boolean = false,
     baseUrl: String,
+    onDownloadAttachment: (attachmentId: String, extension: String?) -> Unit,
     attachments: List<AttachmentFileDto> = emptyList(),
     onLocationClick: (latitude: Double, longitude: Double) -> Unit = { _, _ -> },
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+
+        // اطلاعات پایه سازمانی و قرارداد
         SectionTitle(stringResource(R.string.label_organization_basic_information))
         BasicInfoSection(
-            organization,
+            organization = organization,
             activeVisitorName = activeVisitorName,
             activeContractName = activeContractName
         )
 
+        // اطلاعات تماس با قابلیت اکشن سریع (تماس و ایمیل مستقیم)
         SectionTitle(stringResource(R.string.label_contact_information))
-        ContactInfoSection(organization)
+        InteractiveContactSection(
+            organization = organization,
+            onDial = { phone ->
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                context.startActivity(intent)
+            },
+            onEmail = { email ->
+                val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email"))
+                context.startActivity(intent)
+            }
+        )
+        // ویترین شاخص‌های کلیدی و تجاری سازمان (KPIs)
+        BusinessOverviewCards(organization)
 
+
+        //  موقعیت مکانی با نقشه تمام‌عرض
         SectionTitle(stringResource(R.string.label_location))
         AddressMapCard(
             item = organization,
             onLocationClick = onLocationClick
         )
 
-        SectionTitle(stringResource(R.string.label_analytical_information))
-        AnalysisInfoSection(organization)
+        // ۵. توضیحات (در صورت وجود)
+        if (!organization.organization.description.isNullOrBlank()) {
+            SectionTitle(stringResource(R.string.label_description))
+            CustomDescriptionCard(description = organization.organization.description.toString())
+        }
 
-        SectionTitle(stringResource(R.string.label_statuses))
-        StatusInfoSection(organization)
-
-        /*SectionTitle(stringResource(R.string.label_description))
-        CustomDescriptionCard(description = "این سازمان از مشتریان فعال است...")
-*/
-        SectionTitle(stringResource(R.string.label_images))
-
-        ImagesSection(
+        // ۶. فایل‌ها و تصاویر پیوست
+        SectionTitle(stringResource(R.string.label_attachment))
+        ImageDetailSection(
             isLoading = isImagesLoading,
             attachments = attachments,
-            baseUrl = baseUrl
+            baseUrl = baseUrl,
+            onDownloadClick = onDownloadAttachment
         )
-        Spacer(Modifier.height(16.dp))
+
+        Spacer(Modifier.height(20.dp))
     }
 }
 
+/**
+ * کارت‌های شاخص تحلیلی و تجاری (ویترین بالای تب برای خوانایی فوری)
+ */
+@Composable
+private fun BusinessOverviewCards(item: OrganizationWithDetail) {
+    val appColors = LocalPartnerManagementColors.current
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // فروش بلیت
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp),
+                color = appColors.cardBackground,
+                border = BorderStroke(0.8.dp, appColors.border)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ConfirmationNumber,
+                        contentDescription = null,
+                        tint = colors.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "${item.organization.ticketSaleCountHistory ?: 0}",
+                        style = typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.label_ticket_sale_count_history),
+                        style = typography.labelSmall,
+                        color = appColors.textSecondary
+                    )
+                }
+            }
+
+            // ظرفیت مشتری
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp),
+                color = appColors.cardBackground,
+                border = BorderStroke(0.8.dp, appColors.border)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Groups,
+                        contentDescription = null,
+                        tint = appColors.success,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "${item.organization.customerCapacity ?: 0}",
+                        style = typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.label_customer_capacity),
+                        style = typography.labelSmall,
+                        color = appColors.textSecondary
+                    )
+                }
+            }
+
+
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+
+            // وضعیت استند
+            val hasStand = item.organization.statusGetStand == true
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp),
+                color = if (hasStand) colors.primaryContainer.copy(alpha = 0.4f) else appColors.cardBackground,
+                border = BorderStroke(
+                    0.8.dp,
+                    if (hasStand) colors.primary.copy(alpha = 0.5f) else appColors.border
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Storefront,
+                        contentDescription = null,
+                        tint = if (hasStand) colors.primary else appColors.textSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = if (hasStand) stringResource(R.string.label_has) else stringResource(
+                            R.string.label_has_not
+                        ),
+                        style = typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (hasStand) colors.primary else colors.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.label_desire_receive_advertising_stands),
+                        style = typography.labelSmall,
+                        color = appColors.textSecondary
+                    )
+                }
+            }
+
+
+            // وضعیت  مهمان خارجی
+            val hasForeignGuest = item.organization.statusExternalCustomer == true
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(14.dp),
+                color = if (hasStand) colors.primaryContainer.copy(alpha = 0.4f) else appColors.cardBackground,
+                border = BorderStroke(
+                    0.8.dp,
+                    if (hasStand) colors.primary.copy(alpha = 0.5f) else appColors.border
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Public,
+                        contentDescription = null,
+                        tint = if (hasForeignGuest) colors.primary else appColors.textSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = if (hasForeignGuest) stringResource(R.string.label_has) else stringResource(
+                            R.string.label_has_not
+                        ),
+                        style = typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (hasForeignGuest) colors.primary else colors.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.label_foreign_guest_reception),
+                        style = typography.labelSmall,
+                        color = appColors.textSecondary
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * اطلاعات پایه سازمانی با چیدمان تمیز
+ */
 @Composable
 private fun BasicInfoSection(
-    item: OrganizationWithDetail,
+    organization: OrganizationWithDetail,
     activeVisitorName: String? = null,
     activeContractName: String? = null
 ) {
-    val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
+    val appColors = LocalPartnerManagementColors.current
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(0.8.dp, appColors.border)
+    ) {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            if (!activeContractName.isNullOrBlank()) {
+                DetailRow(
+                    title = "قرارداد فعال",
+                    value = activeContractName,
+                    icon = Icons.Filled.Handshake,
+                    valueColor = colors.primary
+                )
+                ItemDivider()
+            }
 
-        // کادر یکپارچه اطلاعات پایه سازمان
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.surface),
-            border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.5f))
-        ) {
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                InfoRowItem(
-                    title = stringResource(R.string.label_organization_name),
-                    value = item.organization.name.orEmpty(),
-                    icon = Icons.Filled.Business,
-                    isHighlighted = true
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
-
-                if (!activeVisitorName.isNullOrBlank()) {
-                    InfoRowItem(
-                        title = "ویزیتور منتخب",
-                        value = activeVisitorName,
-                        icon = Icons.Filled.Badge
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        thickness = 0.8.dp,
-                        color = colors.outlineVariant.copy(alpha = 0.4f)
-                    )
-                }
-
-                if (!activeContractName.isNullOrBlank()) {
-                    InfoRowItem(
-                        title = "قراداد فعال",
-                        value = activeContractName,
-                        icon = Icons.Filled.Handshake
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        thickness = 0.8.dp,
-                        color = colors.outlineVariant.copy(alpha = 0.4f)
-                    )
-                }
-                InfoRowItem(
-                    title = stringResource(R.string.label_organization_type),
-                    value = item.organization.organizationTypeName.orEmpty(),
-                    icon = Icons.Filled.Category
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
-
-                InfoRowItem(
-                    title = stringResource(R.string.label_organization_level),
-                    value = item.organization.levelName.orEmpty(),
-                    icon = Icons.Filled.WorkspacePremium
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
-
-                InfoRowItem(
-                    title = stringResource(R.string.label_owner_name),
-                    value = item.organization.ownerName.orEmpty(),
-                    icon = Icons.Filled.ManageAccounts
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
-                InfoRowItem(
-                    title = stringResource(R.string.label_mobile_owner),
-                    value = item.organization.mobile.orEmpty(),
-                    icon = Icons.Filled.Smartphone
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
-                InfoRowItem(
-                    title = stringResource(R.string.label_english_name),
-                    value = item.organization.englishName.orEmpty(),
-                    icon = Icons.Filled.Language
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
-
-                InfoRowItem(
-                    title = stringResource(R.string.label_national_id),
-                    value = item.organization.nationalId.orEmpty(),
+            if (!activeVisitorName.isNullOrBlank()) {
+                DetailRow(
+                    title = "ویزیتور اختصاصی",
+                    value = activeVisitorName,
                     icon = Icons.Filled.Badge
                 )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
+                ItemDivider()
+            }
+
+            DetailRow(
+                title = stringResource(R.string.label_organization_type),
+                value = organization.organization.organizationTypeName.orEmpty(),
+                icon = Icons.Filled.Category
+            )
+            ItemDivider()
+
+            DetailRow(
+                title = stringResource(R.string.label_organization_level),
+                value = organization.organization.levelName.orEmpty(),
+                icon = Icons.Filled.WorkspacePremium
+            )
+            ItemDivider()
+
+            DetailRow(
+                title = stringResource(R.string.label_owner_name),
+                value = organization.organization.ownerName.orEmpty(),
+                icon = Icons.Filled.ManageAccounts
+            )
+            ItemDivider()
+
+            DetailRow(
+                title = stringResource(R.string.label_english_name),
+                value = organization.organization.englishName.orEmpty(),
+                icon = Icons.Filled.Language
+            )
+            ItemDivider()
+
+            DetailRow(
+                title = stringResource(R.string.label_national_id),
+                value = organization.organization.nationalId.orEmpty(),
+                icon = Icons.Filled.Badge
+            )
+
+            // اطلاعات غیرفعال‌سازی در صورت وجود
+            val currentStatus = OrganizationStatus.fromId(organization.organization.status)
+            if (currentStatus == OrganizationStatus.INACTIVE && !organization.organization.reasonDeactive.isNullOrBlank()) {
+                ItemDivider()
+                DetailRow(
+                    title = stringResource(R.string.label_inactivation_date),
+                    value = formatJalaliDate(organization.organization.deactiveDate),
+                    icon = Icons.Filled.CalendarMonth,
+                    valueColor = colors.error
                 )
-
-                // نمایش وضعیت
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.label_status),
-                        style = typography.bodyMedium,
-                        color = appColors.textSecondary
-                    )
-
-                    StatusBadge(
-                        status = OrganizationStatus.fromId(item.organization.status)
-                    )
-                }
-
-
-                // نمایش وضعیت
-                val currentStatus = OrganizationStatus.fromId(item.organization.status)
-
-                // نمایش دلیل غیرفعال‌سازی در صورت غیرفعال بودن سازمان
-                if (currentStatus == OrganizationStatus.INACTIVE && !item.organization.reasonDeactive.isNullOrBlank()) {
-                    InfoRowItem(
-                        title = stringResource(R.string.label_inactivation_date),
-                        value = formatJalaliDate(item.organization.deactiveDate),
-                        icon = Icons.Filled.CalendarMonth
-                    )
-                    InfoRowItem(
-                        title = stringResource(R.string.label_inactivation_reason_title),
-                        value = item.organization.reasonDeactive,
-                        icon = Icons.Filled.Description
-                    )
-
-                }
+                ItemDivider()
+                DetailRow(
+                    title = stringResource(R.string.label_inactivation_reason_title),
+                    value = organization.organization.reasonDeactive.orEmpty(),
+                    icon = Icons.Filled.Description,
+                    valueColor = colors.error
+                )
             }
         }
     }
 }
 
+/**
+ * سکشن تماس تعاملی با دکمه‌های مستقیم تماس تلفنی و ارسال ایمیل
+ */
 @Composable
-private fun ContactInfoSection(
-    item: OrganizationWithDetail
+private fun InteractiveContactSection(
+    organization: OrganizationWithDetail,
+    onDial: (String) -> Unit,
+    onEmail: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        val colors = MaterialTheme.colorScheme
+    val colors = MaterialTheme.colorScheme
+    val appColors = LocalPartnerManagementColors.current
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.surface),
-            border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.5f))
-        ) {
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                InfoRowItem(
-                    title = stringResource(R.string.label_organization_land_line),
-                    value = item.organization.landLine.orEmpty(),
-                    icon = Icons.Filled.Phone
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(0.8.dp, appColors.border)
+    ) {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            // شماره موبایل مدیر
+            val mobile = organization.organization.mobile?.trim().orEmpty()
+            ActionableContactRow(
+                title = stringResource(R.string.label_mobile_owner),
+                value = mobile,
+                icon = Icons.Filled.Smartphone,
+                actionIcon = if (mobile.isNotBlank()) Icons.Filled.Call else null,
+                onActionClick = { onDial(mobile) }
+            )
 
-                InfoRowItem(
-                    title = stringResource(R.string.label_phone),
-                    value = item.organization.phone.orEmpty(),
-                    icon = Icons.Filled.Phone
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.4f)
-                )
+            ItemDivider()
 
+            // تلفن ثابت
+            val landline = organization.organization.landLine?.trim().orEmpty()
+            ActionableContactRow(
+                title = stringResource(R.string.label_organization_land_line),
+                value = landline,
+                icon = Icons.Filled.Phone,
+                actionIcon = if (landline.isNotBlank()) Icons.Filled.Call else null,
+                onActionClick = { onDial(landline) }
+            )
 
-                InfoRowItem(
+            ItemDivider()
+
+            // تلفن همراه دوم / پشتیبان
+            val phone = organization.organization.phone?.trim().orEmpty()
+            ActionableContactRow(
+                title = stringResource(R.string.label_phone),
+                value = phone,
+                icon = Icons.Filled.Phone,
+                actionIcon = if (phone.isNotBlank()) Icons.Filled.Call else null,
+                onActionClick = { onDial(phone) }
+            )
+
+            // ایمیل
+            val email = organization.organization.email?.trim().orEmpty()
+            if (email.isNotBlank()) {
+                ItemDivider()
+                ActionableContactRow(
                     title = stringResource(R.string.label_email),
-                    value = item.organization.email.orEmpty(),
-                    icon = Icons.Filled.Email
+                    value = email,
+                    icon = Icons.Filled.Email,
+                    actionIcon = Icons.Filled.Email,
+                    onActionClick = { onEmail(email) }
                 )
             }
         }
     }
 }
 
+/**
+ * ردیف تماس همراه با دکمه Action
+ */
 @Composable
-private fun InfoRowItem(
+private fun ActionableContactRow(
     title: String,
     value: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier,
-    isHighlighted: Boolean = false
+    actionIcon: ImageVector? = null,
+    onActionClick: () -> Unit = {}
 ) {
     val colors = MaterialTheme.colorScheme
+    val appColors = LocalPartnerManagementColors.current
 
     Row(
-        modifier = modifier
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = appColors.textSecondary
+            )
+            Column {
+                Text(
+                    text = title,
+                    style = typography.labelSmall,
+                    color = appColors.textSecondary
+                )
+                Text(
+                    text = value.ifBlank { "—" },
+                    style = typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = colors.onSurface
+                )
+            }
+        }
+
+        if (actionIcon != null && value.isNotBlank() && value != "—") {
+            IconButton(
+                onClick = onActionClick,
+                modifier = Modifier
+                    .size(34.dp)
+                    .background(colors.primaryContainer.copy(alpha = 0.5f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = actionIcon,
+                    contentDescription = null,
+                    tint = colors.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * کارت موقعیت مکانی با نقشه تمام‌عرض باکیفیت و کلیک‌پذیر
+ */
+@Composable
+private fun AddressMapCard(
+    item: OrganizationWithDetail,
+    onLocationClick: (latitude: Double, longitude: Double) -> Unit
+) {
+    val context = LocalContext.current
+    val colors = MaterialTheme.colorScheme
+    val appColors = LocalPartnerManagementColors.current
+    val latitude = item.organization.latitude
+    val longitude = item.organization.longitude
+
+    val hasLocation = remember(latitude, longitude) {
+        latitude != null && longitude != null &&
+                kotlin.math.abs(latitude) > 0.001 &&
+                kotlin.math.abs(longitude) > 0.001
+    }
+
+    val customMarkerDrawable = remember(context) {
+        ContextCompat.getDrawable(context, R.drawable.ic_location_pin)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                enabled = hasLocation,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                if (hasLocation) {
+                    onLocationClick(latitude!!, longitude!!)
+                }
+            },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(0.8.dp, appColors.border)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // پیش‌نمایش نقشه تمام‌عرض (ارتفاع ۱۱۰dp)
+            if (hasLocation) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(colors.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { ctx ->
+                            Configuration.getInstance().userAgentValue = ctx.packageName
+                            MapView(ctx).apply {
+                                setTileSource(TileSourceFactory.MAPNIK)
+                                setMultiTouchControls(false)
+                                isClickable = false
+                                setBuiltInZoomControls(false)
+                                controller.setZoom(15.0)
+                                controller.setCenter(GeoPoint(latitude!!, longitude!!))
+
+                                val marker = Marker(this).apply {
+                                    position = GeoPoint(latitude, longitude)
+                                    customMarkerDrawable?.let { icon = it }
+                                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                    closeInfoWindow()
+                                }
+                                overlays.add(marker)
+
+                                layoutParams = ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                )
+                            }
+                        },
+                        update = { view ->
+                            val marker = view.overlays.filterIsInstance<Marker>().firstOrNull()
+                            if (marker?.position?.latitude != latitude || marker?.position?.longitude != longitude) {
+                                val newPoint = GeoPoint(latitude!!, longitude!!)
+                                marker?.position = newPoint
+                                customMarkerDrawable?.let { marker!!.icon = it }
+                                view.controller.setCenter(newPoint)
+                                view.postInvalidate()
+                            }
+                        }
+                    )
+                }
+            }
+
+            // اطلاعات شهر، منطقه و آدرس کامل
+            val locationScope = listOf(item.cityName.trim(), item.regionName.trim())
+                .filter { it.isNotBlank() }
+                .joinToString("، ")
+
+            if (locationScope.isNotBlank()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Place,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = colors.primary
+                    )
+                    Text(
+                        text = locationScope,
+                        style = typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.onSurface
+                    )
+                }
+            }
+
+            Text(
+                text = item.organization.address?.ifBlank { "آدرس ثبت نشده است" }
+                    ?: "آدرس ثبت نشده است",
+                style = typography.bodyMedium,
+                color = appColors.textSecondary,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+/**
+ * ردیف استاندارد نمایش مشخصه و مقدار
+ */
+@Composable
+private fun DetailRow(
+    title: String,
+    value: String,
+    icon: ImageVector,
+    valueColor: androidx.compose.ui.graphics.Color? = null
+) {
+    val colors = MaterialTheme.colorScheme
+    val appColors = LocalPartnerManagementColors.current
+
+    Row(
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -369,406 +676,30 @@ private fun InfoRowItem(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = if (isHighlighted) colors.primary else colors.onSurfaceVariant
+                tint = appColors.textSecondary
             )
             Text(
                 text = title,
                 style = typography.labelMedium,
-                color = colors.onSurfaceVariant
+                color = appColors.textSecondary
             )
         }
 
         Text(
             text = value.ifBlank { "—" },
-            style = if (isHighlighted) typography.titleLarge else typography.labelLarge,
-            color = if (isHighlighted) colors.primary else colors.onSurface
+            style = typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = valueColor ?: colors.onSurface
         )
     }
 }
 
-
 @Composable
-private fun AddressMapCard(
-    item: OrganizationWithDetail,
-    onLocationClick: (latitude: Double, longitude: Double) -> Unit
-) {
-    val context = LocalContext.current
-
+private fun ItemDivider() {
     val colors = MaterialTheme.colorScheme
-    val lat = item.organization.latitude
-    val lng = item.organization.longitude
-    val hasLocation = lat != null && lng != null
-
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = true) {
-                onLocationClick(lat!!, lng!!)
-            },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.surface),
-        border = BorderStroke(1.dp, colors.outlineVariant)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // باکس آیکون موقعیت مکانی / پیش‌نمایش نقشه
-            Box(
-                modifier = Modifier
-                    .size(width = 110.dp, height = 96.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(colors.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                if (hasLocation) {
-                    AndroidView(
-                        modifier = Modifier.fillMaxSize(),
-                        factory = { ctx ->
-                            Configuration.getInstance().userAgentValue = ctx.packageName
-                            MapView(ctx).apply {
-                                setTileSource(TileSourceFactory.MAPNIK)
-                                setMultiTouchControls(false) // برای جلوگیری از تداخل اسکرول
-                                controller.setZoom(15.0)
-                                controller.setCenter(GeoPoint(lat!!, lng!!))
-                                overlays.add(Marker(this).apply {
-                                    position = GeoPoint(lat, lng)
-                                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                })
-                                layoutParams = ViewGroup.LayoutParams(
-                                    ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.MATCH_PARENT
-                                )
-                            }
-                        }
-                    )
-                } else {
-                    // در صورتی که مختصاتی ثبت نشده باشد
-                    Icon(
-                        imageVector = Icons.Filled.LocationOn,
-                        contentDescription = null,
-                        tint = colors.primary,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
-            }
-
-            // ستون نمایش جزئیات شهر، منطقه و آدرس
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                // نمایش شهر و منطقه در صورت وجود
-                val locationScope = listOf(item.cityName.trim(), item.regionName.trim())
-                    .filter { it.isNotBlank() }
-                    .joinToString("، ")
-
-                if (locationScope.isNotBlank()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${stringResource(R.string.label_city)} / ${stringResource(R.string.label_region)}:",
-                            style = typography.labelSmall,
-                            color = colors.onSurfaceVariant
-                        )
-                        Text(
-                            text = locationScope,
-                            style = typography.labelMedium,
-                            color = colors.onSurface
-                        )
-                    }
-                }
-
-                // عنوان و متن آدرس
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.label_address) + ":",
-                        style = typography.labelSmall,
-                        color = colors.onSurfaceVariant
-                    )
-
-                    Text(
-                        text = item.organization.address?.ifBlank { "-" } ?: "-",
-                        style = typography.bodyMedium,
-                        color = colors.onSurface
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AnalysisInfoSection(
-    item: OrganizationWithDetail,
-    modifier: Modifier = Modifier
-) {
-    val colors = MaterialTheme.colorScheme
-
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        // ── بخش درجه‌بندی ──
-        GradeSelector(
-            grade = item.organization.grade ?: 0
-        )
-
-        // ── کارت یکپارچه اطلاعات آماری/تحلیلی ──
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = colors.surface
-            ),
-            border = BorderStroke(1.dp, colors.outlineVariant)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                // سابقه تعداد فروش بلیت
-                InfoRowItem(
-                    title = stringResource(R.string.label_ticket_sale_count_history),
-                    value = item.organization.ticketSaleCountHistory.toString(),
-                    icon = Icons.Outlined.ConfirmationNumber,
-                    isHighlighted = false
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 14.dp),
-                    thickness = 0.8.dp,
-                    color = colors.outlineVariant.copy(alpha = 0.5f)
-                )
-
-                // ظرفیت مشتریان
-                InfoRowItem(
-                    title = stringResource(R.string.label_customer_capacity),
-                    value = item.organization.customerCapacity.toString(),
-                    icon = Icons.Outlined.Groups,
-                    isHighlighted = false
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusInfoSection(
-    item: OrganizationWithDetail,
-    modifier: Modifier = Modifier
-) {
-    val colors = MaterialTheme.colorScheme
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.surface
-        ),
-        border = BorderStroke(1.dp, colors.outlineVariant)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-        ) {
-            // ── پذیرش مهمان خارجی ──
-            InfoRowItem(
-                title = stringResource(R.string.label_foreign_guest_reception),
-                value = if (item.organization.statusExternalCustomer == true) {
-                    stringResource(R.string.label_has)
-                } else {
-                    stringResource(R.string.label_has_not)
-                },
-                icon = Icons.Outlined.Public,
-                isHighlighted = false
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 14.dp),
-                thickness = 0.8.dp,
-                color = colors.outlineVariant.copy(alpha = 0.5f)
-            )
-
-            // ── تمایل به دریافت استند تبلیغاتی ──
-            InfoRowItem(
-                title = stringResource(R.string.label_desire_receive_advertising_stands),
-                value = if (item.organization.statusGetStand == true) {
-                    stringResource(R.string.label_has)
-                } else {
-                    stringResource(R.string.label_has_not)
-                },
-                icon = Icons.Outlined.Storefront,
-                isHighlighted = false
-            )
-        }
-    }
-}
-
-
-@Composable
-fun ImagesSection(
-    isLoading: Boolean,
-    attachments: List<AttachmentFileDto>,
-    baseUrl: String,
-    modifier: Modifier = Modifier
-) {
-    // نگهداری عکسی که کاربر روی آن کلیک کرده تا در دیالوگ باز شود
-    var selectedAttachmentForPreview by remember { mutableStateOf<AttachmentFileDto?>(null) }
-
-    if (isLoading) {
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(96.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 2.5.dp)
-        }
-        return
-    }
-
-    if (attachments.isEmpty()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.ImageNotSupported,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Text(
-                    text = stringResource(R.string.msg_no_images_registered),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        return
-    }
-
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
-    ) {
-        items(
-            items = attachments,
-            key = { it.attachmentFileId }
-        ) { attachment ->
-            val imageUrl =
-                "${baseUrl.trimEnd('/')}/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
-            Log.d("imageUrllllll1", imageUrl.toString())
-            Log.d("imageUrllllll2", attachment.toString())
-
-            ImageCard(
-                imageUrl = imageUrl,
-                attachment = attachment,
-                onClick = { selectedAttachmentForPreview = attachment }
-            )
-        }
-    }
-
-    // دیالوگ پیش‌نمایش تصویر به صورت بزرگ همراه با توضیحات
-    selectedAttachmentForPreview?.let { attachment ->
-        val fullImageUrl =
-            "${baseUrl.trimEnd('/')}/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
-
-        ImagePreviewDialog(
-            imageUrl = fullImageUrl,
-            attachment = attachment,
-            onDismiss = { selectedAttachmentForPreview = null }
-        )
-    }
-}
-
-
-@Composable
-private fun ImageCard(
-    imageUrl: Any?,
-    attachment: AttachmentFileDto,
-    onClick: () -> Unit
-) {
-    val context = LocalContext.current
-    val fileTypeEnum = AttachmentFileType.fromId(attachment.fileType ?: 3)
-
-    Box(
-        modifier = Modifier
-            .size(130.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable { onClick() }
-    ) {
-        // تصویر بندانگشتی
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data(imageUrl)
-                .crossfade(true)
-                .placeholder(R.drawable.ic_image_placeholder)
-                .error(R.drawable.ic_image_placeholder)
-                .build(),
-            contentDescription = attachment.name,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // گرادینت پایین کارت جهت خوانایی متن
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(36.dp)
-                .align(Alignment.BottomCenter)
-                .background(
-                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                        colors = listOf(
-                            androidx.compose.ui.graphics.Color.Transparent,
-                            androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.75f)
-                        )
-                    )
-                )
-        )
-
-        // برچسب نوع تصویر
-        Surface(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(6.dp),
-            shape = RoundedCornerShape(6.dp),
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
-        ) {
-            val titleText = fileTypeEnum?.let {
-                stringResource(it.titleRes)
-            } ?: stringResource(R.string.attachment_type_other_images)
-
-            Text(
-                text = titleText,
-                style = typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                maxLines = 1
-            )
-        }
-
-    }
+    HorizontalDivider(
+        modifier = Modifier.padding(horizontal = 14.dp),
+        thickness = 0.6.dp,
+        color = colors.outlineVariant.copy(alpha = 0.35f)
+    )
 }

@@ -62,6 +62,5 @@ class MeetingsListViewModel @Inject constructor(
             }
         }
     }
-
 }
 

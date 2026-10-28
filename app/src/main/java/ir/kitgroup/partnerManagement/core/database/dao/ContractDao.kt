@@ -102,4 +102,5 @@ interface ContractDao {
         status: SyncStatus,
         isLocallyModified: Boolean
     )
+
 }

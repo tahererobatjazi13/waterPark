@@ -33,7 +33,7 @@ fun ImagePreviewDialog(
     val context = LocalContext.current
     val fileTypeEnum = AttachmentFileType.fromId(attachment.fileType)
     val fileTypeTitle = fileTypeEnum?.titleRes?.let { stringResource(it) }
-        ?: stringResource(R.string.attachment_type_other_images)
+        ?: stringResource(R.string.attachment_type_other)
 
     Dialog(
         onDismissRequest = onDismiss,

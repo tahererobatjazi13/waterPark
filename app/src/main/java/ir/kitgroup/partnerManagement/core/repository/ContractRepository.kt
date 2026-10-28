@@ -8,6 +8,7 @@ import ir.kitgroup.partnerManagement.core.database.dao.ContractTerminationDao
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.database.entity.ContractTerminationEntity
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
+import ir.kitgroup.partnerManagement.core.network.exception.ApiException
 import ir.kitgroup.partnerManagement.core.network.exception.ApiRequestExecutor
 import ir.kitgroup.partnerManagement.core.ui.util.ContractStatus
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
@@ -68,7 +69,7 @@ class ContractRepository @Inject constructor(
     /**
      * ایجاد قرارداد آنلاین:
      * ریکوئست با contractId = null فرستاده می‌شود.
-     * پس از تایید سرور، فرآیند syncData اجرا می‌شود تا تمام داده‌های سرور بارگذاری گردند.
+     * در صورت تایید بیزینسی سرور، فرآیند syncData اجرا می‌شود.
      */
     suspend fun createContractAndSync(request: ContractRequest): Result<String?> {
         return ApiRequestExecutor.execute(
@@ -77,8 +78,12 @@ class ContractRepository @Inject constructor(
             apiService.createContract(request.copy(contractId = null))
         }.fold(
             onSuccess = { response ->
-                syncRepository.syncData()
-                Result.success(response.message)
+                if (response.success) {
+                    syncRepository.syncData()
+                    Result.success(response.message)
+                } else {
+                    Result.failure(ApiException(response.message))
+                }
             },
             onFailure = { error ->
                 Result.failure(error)
@@ -88,7 +93,7 @@ class ContractRepository @Inject constructor(
 
     /**
      * ویرایش قرارداد آنلاین:
-     * با شناسه رسمی سرور ارسال شده و در صورت موفقیت وضعیت سینک بروزرسانی می‌شود.
+     * با شناسه رسمی سرور ارسال شده و در صورت موفقیت کامل بیزینس، وضعیت سینک بروزرسانی می‌شود.
      */
     suspend fun updateContractAndSync(request: ContractRequest): Result<String?> {
         return ApiRequestExecutor.execute(
@@ -97,15 +102,19 @@ class ContractRepository @Inject constructor(
             apiService.updateContract(request)
         }.fold(
             onSuccess = { response ->
-                if (!request.contractId.isNullOrBlank()) {
-                    contractDao.updateSyncStatus(
-                        contractId = request.contractId,
-                        status = SyncStatus.SYNCED,
-                        isLocallyModified = false
-                    )
+                if (response.success) {
+                    if (!request.contractId.isNullOrBlank()) {
+                        contractDao.updateSyncStatus(
+                            contractId = request.contractId,
+                            status = SyncStatus.SYNCED,
+                            isLocallyModified = false
+                        )
+                    }
+                    syncRepository.syncData()
+                    Result.success(response.message)
+                } else {
+                    Result.failure(ApiException(response.message))
                 }
-                syncRepository.syncData()
-                Result.success(response.message)
             },
             onFailure = { error ->
                 Result.failure(error)
@@ -122,15 +131,19 @@ class ContractRepository @Inject constructor(
             apiService.terminateActiveContract(request)
         }.fold(
             onSuccess = { response ->
-
-                syncRepository.syncData()
-                Result.success(response.message)
+                if (response.success) {
+                    syncRepository.syncData()
+                    Result.success(response.message)
+                } else {
+                    Result.failure(ApiException(response.message))
+                }
             },
             onFailure = { error ->
                 Result.failure(error)
             }
         )
     }
+
 
     suspend fun saveOfflineTermination(
         contractId: String,

@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -107,7 +106,6 @@ fun OrganizationSerialsTabContent(
         if (serials.isEmpty()) {
             EmptyState(
                 textRes = R.string.msg_no_tickets_offers_found,
-                icon = Icons.Default.ConfirmationNumber,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()

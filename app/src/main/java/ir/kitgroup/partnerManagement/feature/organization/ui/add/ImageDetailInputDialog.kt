@@ -3,9 +3,10 @@ package ir.kitgroup.partnerManagement.feature.organization.ui.add
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -13,17 +14,30 @@ import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomOutlinedButton
+import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
 import ir.kitgroup.partnerManagement.core.ui.util.AttachmentFileType
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageDetailInputDialog(
+    allowedTypes: List<AttachmentFileType>,
     onDismiss: () -> Unit,
-    onConfirm: (fileType: Int, description: String) -> Unit
+    onConfirm: (selectedFileType: Int, description: String) -> Unit
 ) {
-    var selectedType by remember { mutableStateOf(AttachmentFileType.SIGNBOARD_IMAGE) }
-    var descriptionText by remember { mutableStateOf("") }
-    var expandedDropdown by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // نگاشت انواع به همراه عنوان متنی ترجمه‌شده با استفاده از context
+    val typeOptions = remember(allowedTypes, context) {
+        allowedTypes.map { it to context.getString(it.titleRes) }
+    }
+
+    var selectedType by remember(allowedTypes) {
+        mutableStateOf(allowedTypes.firstOrNull() ?: AttachmentFileType.OTHER_IMAGES)
+    }
+    var description by rememberSaveable { mutableStateOf("") }
+
+    val selectedTypeTitle = remember(selectedType, context) {
+        context.getString(selectedType.titleRes)
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -37,52 +51,32 @@ fun ImageDetailInputDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.label_image_specifications), // یا اگر در ریسورس ندارید: "مشخصات تصویر"
-                    style = typography.titleMedium,
+                    text = stringResource(R.string.label_file_specifications),
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                // انتخاب نوع عکس با Dropdown
-                ExposedDropdownMenuBox(
-                    expanded = expandedDropdown,
-                    onExpandedChange = { expandedDropdown = !expandedDropdown }
-                ) {
-                    OutlinedTextField(
-                        value = stringResource(selectedType.titleRes),
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text(stringResource(R.string.label_image_type)) }, // یا "نوع تصویر"
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDropdown) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expandedDropdown,
-                        onDismissRequest = { expandedDropdown = false }
-                    ) {
-                        AttachmentFileType.entries.forEach { type ->
-                            DropdownMenuItem(
-                                text = { Text(text = stringResource(type.titleRes)) },
-                                onClick = {
-                                    selectedType = type
-                                    expandedDropdown = false
-                                }
-                            )
+                DropdownSelectorField(
+                    value = selectedTypeTitle,
+                    label = stringResource(R.string.label_type),
+                    placeholder = "",
+                    items = typeOptions.map { it.second },
+                    isRequired = true,
+                    onItemSelected = { selectedTitle ->
+                        typeOptions.firstOrNull { it.second == selectedTitle }?.let {
+                            selectedType = it.first
                         }
                     }
-                }
+                )
 
-                // فیلد وارد کردن نام یا توضیحات عکس
                 CustomDescriptionField(
                     label = stringResource(R.string.label_description),
-                    value = descriptionText,
-                    onValueChange = { descriptionText = it },
-                    placeholder =""
+                    value = description,
+                    onValueChange = { description = it },
+                    placeholder = stringResource(R.string.hint_description)
                 )
 
                 Row(
@@ -96,9 +90,9 @@ fun ImageDetailInputDialog(
                     )
 
                     CustomButton(
-                        text = stringResource(R.string.label_confirm_and_add),
+                        text = stringResource(R.string.label_confirm),
                         onClick = {
-                            onConfirm(selectedType.id, descriptionText.trim())
+                            onConfirm(selectedType.id, description.trim())
                         },
                         modifier = Modifier.weight(1f)
                     )

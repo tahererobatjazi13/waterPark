@@ -119,13 +119,21 @@ fun NavGraphBuilder.meetingNavGraph(
                             navController.navigate(
                                 Screen.AddMeeting.createRoute(id)
                             )
+                        }, onStatusChangeSuccess = {
+                            navController.popBackStack()
                         },
-                        onStatusChanged = {
-                            navController.popBackStack(
-                                BottomNavItem.Dashboard.route,
-                                inclusive = false
-                            )
-                        },
+                        onLocationClick = { lat, lng ->
+                            if (lat != null && lng != null) {
+                                navController.navigate(
+                                    Screen.MapScreen.createRoute(
+                                        latitude = lat,
+                                        longitude = lng,
+                                        isReadOnly = true
+                                    )
+                                )
+                            }
+                        }
+
                     )
                 }
             }
@@ -153,17 +161,35 @@ fun NavGraphBuilder.meetingNavGraph(
             exitTransition = { fadeOut(tween(200)) },
             popEnterTransition = { fadeIn(tween(250)) },
             popExitTransition = { fadeOut(tween(200)) }
-        ) {
-            AddEditMeetingScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                }, onSaved = {
-                    navController.popBackStack(
-                        BottomNavItem.Dashboard.route,
-                        inclusive = false
+        ) { backStackEntry ->
+            val meetingId = backStackEntry.arguments?.getString("meetingId")
+            val isEditMode = !meetingId.isNullOrBlank()
+
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CustomHeader(
+                    title = if (isEditMode) {
+                        R.string.label_edit_visit
+                    } else {
+                        R.string.label_submit_visit
+                    },
+                    showBackButton = true,
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    AddEditMeetingScreen(
+                        onSuccessSave = {
+                            navController.popBackStack()
+                        }
                     )
                 }
-            )
+            }
         }
     }
 }

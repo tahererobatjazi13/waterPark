@@ -31,6 +31,10 @@ import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.core.database.entity.ContractEntity
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.feature.contract.ui.list.ContractListItem
@@ -38,11 +42,20 @@ import ir.kitgroup.partnerManagement.feature.contract.ui.list.ContractListItem
 
 @Composable
 fun OrganizationContractsTabContent(
-    contracts: List<ContractEntity>,
+    organizationId: String,
     onAssignContractClick: () -> Unit = {},
     onContractClick: (ContractEntity) -> Unit,
+    viewModel: OrganizationContractsViewModel = hiltViewModel()
+
 ) {
     val appColors = LocalPartnerManagementColors.current
+
+    val contracts by viewModel.contracts.collectAsStateWithLifecycle()
+
+
+    LaunchedEffect(organizationId) {
+        viewModel.observeOrganizationContracts(organizationId)
+    }
 
     Column(
         modifier = Modifier

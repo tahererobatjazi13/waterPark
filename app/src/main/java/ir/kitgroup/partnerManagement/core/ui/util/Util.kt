@@ -22,6 +22,9 @@ import java.io.IOException
 import java.util.UUID
 
 import saman.zamani.persiandate.PersianDate
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -265,6 +268,13 @@ fun jalaliToGregorian(date: String): String? {
         null
     }
 }
+ fun convertOptionalJalaliDate(value: String?): String? {
+    return value
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { jalaliToGregorian(it) }
+        ?.takeIf { it.isNotBlank() }
+}
 
 fun formatPercentForInput(value: Double?): String {
     if (value == null) return ""
@@ -344,3 +354,43 @@ fun formatPrice(price: Long?): String {
     }
 }
 
+fun Throwable.isNetworkError(): Boolean {
+    return this is IOException ||
+            this is UnknownHostException ||
+            this is SocketTimeoutException ||
+            this is ConnectException
+}
+
+
+object AttachmentMimeTypes {
+    val ALLOWED_MIME_TYPES = setOf(
+        // تصاویر
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        // اسناد
+        "application/pdf",
+        "application/msword", // .doc
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" // .docx
+    )
+
+    fun getExtension(mimeType: String?, defaultName: String? = null): String {
+        return when (mimeType?.lowercase()) {
+            "application/pdf" -> ".pdf"
+            "application/msword" -> ".doc"
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> ".docx"
+            "image/png" -> ".png"
+            "image/webp" -> ".webp"
+            "image/jpeg", "image/jpg" -> ".jpg"
+            else -> {
+                // اگر MimeType نامشخص بود، از روی نام اصلی فایل بررسی می‌کنیم
+                defaultName?.substringAfterLast('.', "")?.takeIf { it.isNotBlank() }?.let { ".$it" } ?: ".bin"
+            }
+        }
+    }
+
+    fun isAllowed(mimeType: String?): Boolean {
+        if (mimeType == null) return false
+        return ALLOWED_MIME_TYPES.any { it.equals(mimeType, ignoreCase = true) }
+    }
+}

@@ -16,6 +16,7 @@ data class AttachmentFileEntity(
     val attachmentFileId: String,
 
     val organizationId: String,
+    val meetingId: String?,
 
     val fileType: Int = 0,
     val description: String? = null,

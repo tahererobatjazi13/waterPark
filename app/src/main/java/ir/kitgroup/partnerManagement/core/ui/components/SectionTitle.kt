@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 
 @Composable
 fun SectionTitle(
@@ -23,6 +24,8 @@ fun SectionTitle(
     modifier: Modifier = Modifier,
     titleColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
+    val appColors = LocalPartnerManagementColors.current
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
@@ -40,7 +43,7 @@ fun SectionTitle(
         Text(
             text = title,
             style = typography.titleLarge,
-            color = titleColor,
+            color = appColors.textSecondary,
             modifier = Modifier.padding(start = if (leadingIcon != null) 6.dp else 0.dp)
         )
     }

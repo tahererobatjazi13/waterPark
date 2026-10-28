@@ -33,10 +33,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.AssignedStandWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
@@ -52,11 +56,18 @@ import ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_organizati
 
 @Composable
 fun OrganizationStandsTabContent(
-    assignments: List<AssignedStandWithDetail>,
+    organizationId: String,
     onAssignStandsClick: () -> Unit = {},
     onViewItemDetailsClick: (AssignedStandWithDetail) -> Unit,
+    viewModel: OrganizationStandsViewModel = hiltViewModel()
+
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val assignments by viewModel.assignedStands.collectAsStateWithLifecycle()
+
+    LaunchedEffect(key1 = organizationId) {
+        viewModel.observeOrganizationContracts(organizationId)
+    }
 
     Column(
         modifier = Modifier

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import ir.kitgroup.partnerManagement.core.database.entity.OrganizationChangeStatusEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface OrganizationChangeStatusDao {
@@ -23,5 +24,8 @@ interface OrganizationChangeStatusDao {
 
     @Query("DELETE FROM  organization_change_status")
     suspend fun deleteAll()
+
+    @Query("SELECT COUNT(*) FROM organization_change_status")
+    fun observePendingCount(): Flow<Int>
 
 }

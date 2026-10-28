@@ -1,5 +1,6 @@
 package ir.kitgroup.partnerManagement.core.network.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -16,6 +17,7 @@ data class AssignedStandDto(
 
     val organizationName: String?,
 
+    @SerialName("advertisingStandId")
     val standTypeId: String?,
 
     val standTypeName: String?,

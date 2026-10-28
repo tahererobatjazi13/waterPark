@@ -40,7 +40,7 @@ import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
-import ir.kitgroup.partnerManagement.core.ui.util.AllocationFilterTab
+import ir.kitgroup.partnerManagement.core.ui.util.AssignedStandFilterTab
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 import ir.kitgroup.partnerManagement.core.ui.util.AssignmentType
 import ir.kitgroup.partnerManagement.core.ui.util.StandAssignmentStatus
@@ -54,16 +54,16 @@ fun AssignedStandsVisitorListScreen(
     viewModel: AssignedStandsVisitorViewModel = hiltViewModel()
 ) {
     val appColors = LocalPartnerManagementColors.current
-    var selectedTab by rememberSaveable { mutableStateOf(AllocationFilterTab.All) }
+    var selectedTab by rememberSaveable { mutableStateOf(AssignedStandFilterTab.All) }
     val advertisingStandAssignments by viewModel.assignments.collectAsStateWithLifecycle()
 
     val filteredAllocations = remember(selectedTab, advertisingStandAssignments) {
         when (selectedTab) {
-            AllocationFilterTab.All -> advertisingStandAssignments
-            AllocationFilterTab.Active -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 1 }
-            AllocationFilterTab.Draft -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 0 }
-            AllocationFilterTab.Returned -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 2 }
-            AllocationFilterTab.Cancelled -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 3 }
+            AssignedStandFilterTab.All -> advertisingStandAssignments
+            AssignedStandFilterTab.Active -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 1 }
+            AssignedStandFilterTab.Draft -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 0 }
+            AssignedStandFilterTab.Returned -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 2 }
+            AssignedStandFilterTab.Cancelled -> advertisingStandAssignments.filter { it.assignedStand.statusAssign == 3 }
         }
     }
 
@@ -152,8 +152,8 @@ private fun AllocationHeader(
 
 @Composable
 private fun AllocationFilterTabs(
-    selectedTab: AllocationFilterTab,
-    onTabSelected: (AllocationFilterTab) -> Unit,
+    selectedTab: AssignedStandFilterTab,
+    onTabSelected: (AssignedStandFilterTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -168,7 +168,7 @@ private fun AllocationFilterTabs(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AllocationFilterTab.entries.forEach { tab ->
+        AssignedStandFilterTab.entries.forEach { tab ->
             val selected = selectedTab == tab
 
             Box(
