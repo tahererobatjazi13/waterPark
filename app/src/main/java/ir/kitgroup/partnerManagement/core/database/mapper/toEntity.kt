@@ -47,6 +47,7 @@ import ir.kitgroup.partnerManagement.core.network.model.MeetingChangeStatusDto
 import ir.kitgroup.partnerManagement.core.network.model.OrganizationChangeStatusDto
 import ir.kitgroup.partnerManagement.core.network.model.StatisticDto
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
+import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.stand.model.CreateAssignStandRequest
 
 
@@ -211,6 +212,7 @@ fun OrganizationDto.toEntity(): OrganizationEntity {
         reasonDeactive = this.reasonDeactive,
         stateCode = this.stateCode ?: 0,
         modifiedOn = this.modifiedOn,
+        flagInsUp = this.flagInsUp,
         syncStatus = SyncStatus.SYNCED,
         isLocallyModified = false
     )
@@ -219,9 +221,9 @@ fun OrganizationDto.toEntity(): OrganizationEntity {
 
 fun OrganizationEntity.toPendingDto(): OrganizationDto {
     return OrganizationDto(
-        organizationId = if (this.syncStatus == SyncStatus.PENDING_INSERT) null else (this.serverId
-            ?: this.organizationId),
-        serverId = null,
+        // اگر سرور آیدی پر بود از آن، در غیر این صورت از organizationId لوکال (GUID) استفاده شود
+        organizationId = this.serverId ?: this.organizationId,
+        serverId = this.serverId,
         activeVisitorId = this.activeVisitorId,
         activeContractId = this.activeContractId,
         name = this.name,
@@ -269,7 +271,8 @@ fun OrganizationEntity.toPendingDto(): OrganizationDto {
         deactiveDate = this.deactiveDate,
         reasonDeactive = this.reasonDeactive,
         stateCode = this.stateCode ?: 0,
-        modifiedOn = this.modifiedOn
+        modifiedOn = this.modifiedOn,
+        flagInsUp = this.flagInsUp
     )
 }
 
@@ -465,17 +468,16 @@ fun MeetingDto.toEntity(): MeetingEntity {
         longitude = this.longitude,
         stateCode = this.stateCode ?: 0,
         modifiedOn = this.modifiedOn,
+        flagInsUp = this.flagInsUp,
         syncStatus = SyncStatus.SYNCED,
         isLocallyModified = false
     )
 }
 
-
 fun MeetingEntity.toPendingDto(): MeetingDto {
     return MeetingDto(
-        meetingId = if (this.syncStatus == SyncStatus.PENDING_INSERT) null else (this.serverId
-            ?: this.meetingId),
-        serverId = null,
+        meetingId = this.serverId ?: this.meetingId,
+        serverId = this.serverId,
         organizationId = this.organizationId,
         organizationName = this.organizationName,
         visitorId = this.visitorId,
@@ -495,7 +497,8 @@ fun MeetingEntity.toPendingDto(): MeetingDto {
         latitude = this.latitude,
         longitude = this.longitude,
         stateCode = this.stateCode ?: 0,
-        modifiedOn = this.modifiedOn
+        modifiedOn = this.modifiedOn,
+        flagInsUp = this.flagInsUp,
     )
 }
 
@@ -582,7 +585,7 @@ fun AssignedStandDto.toEntity(): AssignedStandEntity {
         deliveryToOrgDate = this.deliveryToOrgDate,
         deliveryToVisitorDate = this.deliveryToVisitorDate,
         count = this.count ?: 1,
-        assignmentType = this.assignmentType ?: 0,
+        assignmentType = this.assignmentType ?: 1,
         assignmentTypeName = this.assignmentTypeName,
         assignmentMode = this.assignmentMode ?: 0,
         assignmentModeName = this.assignmentModeName,
@@ -614,7 +617,7 @@ fun AssignedStandEntity.toPendingDto(): AssignedStandDto {
         deliveryToOrgDate = this.deliveryToOrgDate,
         deliveryToVisitorDate = this.deliveryToVisitorDate,
         count = this.count ?: 1,
-        assignmentType = this.assignmentType ?: 0,
+        assignmentType = this.assignmentType ?: 1,
         assignmentTypeName = this.assignmentTypeName,
         assignmentMode = this.assignmentMode ?: 0,
         assignmentModeName = this.assignmentModeName,
@@ -638,8 +641,7 @@ fun AssignStandChangeStatusEntity.toPendingDto(): AssignStandChangeStatusDto {
 
 fun AssignedStandEntity.toCreateAssignStandRequest(): CreateAssignStandRequest {
     return CreateAssignStandRequest(
-        standAssignmentId = if (this.syncStatus == SyncStatus.PENDING_INSERT) null else (this.serverId
-            ?: this.assignedStandId),
+        standAssignmentId = this.serverId ?: this.assignedStandId,
         advertisingStandId = this.standTypeId.orEmpty(),
         visitorId = this.visitorId,
         organizationId = this.organizationId.orEmpty(),
@@ -656,6 +658,20 @@ fun AssignedStandEntity.toCreateAssignStandRequest(): CreateAssignStandRequest {
     )
 }
 
+fun WarningEntity.toCreateWarningRequest(): CreateOrganizationWarningRequest {
+    return CreateOrganizationWarningRequest(
+        organizationWarningId = if (this.syncStatus == SyncStatus.PENDING_INSERT) null else (this.serverId
+            ?: this.warningId),
+        organizationId = this.organizationId.orEmpty(),
+        warningId = this.warningTypeId.orEmpty(),
+        visitorId = this.visitorId.orEmpty(),
+        meetingId = this.meetingId,
+        warningDate = this.warningDate.orEmpty(),
+        description = this.description.orEmpty(),
+    )
+}
+
+
 fun AttachmentFileEntity.toDto() = AttachmentFileDto(
     attachmentFileId = this.attachmentFileId,
     name = null,
@@ -668,6 +684,7 @@ fun AttachmentFileEntity.toDto() = AttachmentFileDto(
     fileUrl = this.fileUrl,
     fileType = this.fileType,
     description = this.description,
+    meetingid = this.meetingId,
     createdOn = this.createdOn
 )
 

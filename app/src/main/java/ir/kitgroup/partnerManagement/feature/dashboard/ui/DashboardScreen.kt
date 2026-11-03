@@ -663,7 +663,7 @@ fun QuickAccessSection(
             )
         }
 
-        Row(
+    /*    Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -683,7 +683,7 @@ fun QuickAccessSection(
                 onClick = onMapClick,
                 modifier = Modifier.weight(1f)
             )
-        }
+        }*/
     }
 }
 

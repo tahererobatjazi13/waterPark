@@ -1,33 +1,33 @@
 package ir.kitgroup.partnerManagement.feature.stand.ui.stand_type
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.StandTypeEntity
-import ir.kitgroup.partnerManagement.core.ui.components.ActionIconButton
 import ir.kitgroup.partnerManagement.core.ui.components.AppScreenPreview
-import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -43,9 +43,7 @@ fun StandTypesListScreen(
     viewModel: StandTypesListViewModel = hiltViewModel()
 ) {
     val items by viewModel.stands.collectAsState()
-
     var standToDelete by remember { mutableStateOf<StandTypeEntity?>(null) }
-    val appColors = LocalPartnerManagementColors.current
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -62,14 +60,12 @@ fun StandTypesListScreen(
                 items = items,
                 onAddItemClick = onAddItemClick,
                 onEditItemClick = onEditItemClick,
-                onDeleteItemClick = { item ->
-                    standToDelete = item
-                },
+                onDeleteItemClick = { item -> standToDelete = item },
                 modifier = Modifier.fillMaxSize()
             )
-
         }
     }
+
     standToDelete?.let { item ->
         DeleteConfirmationDialog(
             itemType = stringResource(R.string.label_stand),
@@ -85,7 +81,6 @@ fun StandTypesListScreen(
     }
 }
 
-
 @Composable
 private fun AdvertisingItemsContent(
     items: List<StandTypeEntity>,
@@ -94,33 +89,61 @@ private fun AdvertisingItemsContent(
     onDeleteItemClick: (StandTypeEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     val appColors = LocalPartnerManagementColors.current
 
     Column(
-        modifier = modifier.padding(16.dp)
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-      /*  CustomButton(
-            text = stringResource(R.string.label_add_new_stand),
-            onClick = onAddItemClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = appColors.success,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ),
-        )
-        Spacer(modifier = Modifier.height(16.dp))*/
-
         if (items.isEmpty()) {
             EmptyState(
                 textRes = R.string.msg_no_item_found,
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             )
-
         } else {
+            // نوار خلاصه تعداد انواع استند ثبت شده
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp, start = 4.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    )
+                    Text(
+                        text = stringResource(R.string.label_type_assigned_stands),
+                        style = typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = appColors.textPrimary
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    border = BorderStroke(
+                        0.5.dp,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Text(
+                        text = "${items.size} مورد",
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+
             AdvertisingItemsList(
                 items = items,
                 onEditItemClick = onEditItemClick,
@@ -142,7 +165,7 @@ private fun AdvertisingItemsList(
 ) {
     LazyColumn(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         items(
@@ -167,121 +190,151 @@ private fun AdvertisingItemCard(
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val colors = MaterialTheme.colorScheme
+
+    val installationTitle = InstallationType.fromId(item.installationType)?.let {
+        stringResource(it.titleRes)
+    } ?: "-"
+
+    val displayTitle = DisplayType.fromId(item.displayType)?.let {
+        stringResource(it.titleRes)
+    } ?: "-"
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = appColors.cardBackground
-        ),
-        border = BorderStroke(
-            width = 0.7.dp,
-            color = appColors.border
-        )
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
+        border = BorderStroke(0.7.dp, appColors.border)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = item.title ?: "",
-                style = typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
+            // ردیف هدر: آیکون، نام و دکمه‌های عملیات
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                InfoBlockWithIcon(
-                    label = "${stringResource(R.string.label_stand_type)}: ",
-                    value = item.standTypeName.orEmpty(),
-                    icon = Icons.Default.Inventory2,
-                    modifier = Modifier.weight(1f)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .background(
+                            color = colors.primaryContainer.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(14.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Storefront,
+                        contentDescription = null,
+                        tint = colors.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.title.orEmpty().ifBlank { "-" },
+                        style = typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = appColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
-               /* ActionIconButton(
-                    icon = Icons.Default.Edit,
-                    contentDescription = stringResource(R.string.label_edit),
-                    onClick = onEditClick,
-                    tint = MaterialTheme.colorScheme.primary,
-                    backgroundColor = appColors.cardBackgroundAlt
-                )
+                    if (!item.standTypeName.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = item.standTypeName,
+                            style = typography.bodySmall,
+                            color = appColors.textSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                /*
+                                // دکمه‌های عملیاتی
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    ActionIconButton(
+                                        icon = Icons.Default.Edit,
+                                        contentDescription = stringResource(R.string.label_edit),
+                                        onClick = onEditClick,
+                                        tint = colors.primary,
+                                        backgroundColor = appColors.cardBackgroundAlt
+                                    )
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                ActionIconButton(
-                    icon = Icons.Default.DeleteOutline,
-                    contentDescription = stringResource(R.string.label_delete),
-                    onClick = onDeleteClick,
-                    tint = MaterialTheme.colorScheme.error,
-                    backgroundColor = MaterialTheme.colorScheme.errorContainer
-                )*/
+                                    ActionIconButton(
+                                        icon = Icons.Default.DeleteOutline,
+                                        contentDescription = stringResource(R.string.label_delete),
+                                        onClick = onDeleteClick,
+                                        tint = colors.error,
+                                        backgroundColor = colors.errorContainer.copy(alpha = 0.4f)
+                                    )
+                                }*/
             }
 
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 12.dp),
-                thickness = 0.5.dp,
-                color = appColors.border
+                thickness = 0.6.dp,
+                color = appColors.border.copy(alpha = 0.6f)
             )
 
+            // باکس‌های مشخصات فنی (نوع نصب و نوع نمایش)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.Top
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-
-                val installationTitle = InstallationType.fromId(item.installationType)?.let {
-                    stringResource(it.titleRes)
-                } ?: "-"
-
-                val displayTitle = DisplayType.fromId(item.displayType)?.let {
-                    stringResource(it.titleRes)
-                } ?: "-"
-
-                InfoBlockWithIcon(
-                    label = "${stringResource(R.string.label_installation_type)}: ",
+                AttributeTile(
+                    label = stringResource(R.string.label_installation_type),
                     value = installationTitle,
                     icon = Icons.Default.Build,
                     modifier = Modifier.weight(1f)
                 )
 
-                InfoBlockWithIcon(
-                    label = "${stringResource(R.string.label_display_type)}: ",
+                AttributeTile(
+                    label = stringResource(R.string.label_display_type),
                     value = displayTitle,
                     icon = Icons.Default.Visibility,
                     modifier = Modifier.weight(1f)
                 )
             }
 
+            // باکس توضیحات
             if (!item.description.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(
+                Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    shape = RoundedCornerShape(12.dp),
+                    color = appColors.cardBackgroundAlt,
+                    border = BorderStroke(0.5.dp, appColors.border)
                 ) {
-                    Text(
-                        text = stringResource(R.string.label_description_item),
-                        style = typography.labelMedium,
-                        color = appColors.textSecondary
-                    )
-
-                    Text(
-                        text = item.description,
-                        style = typography.bodyMedium,
-                        color = appColors.textPrimary,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Start
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notes,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .padding(top = 2.dp),
+                            tint = appColors.textTertiary
+                        )
+                        Text(
+                            text = item.description,
+                            style = typography.bodySmall,
+                            color = appColors.textSecondary,
+                            lineHeight = typography.bodySmall.lineHeight
+                        )
+                    }
                 }
             }
         }
@@ -289,47 +342,60 @@ private fun AdvertisingItemCard(
 }
 
 @Composable
-private fun InfoBlockWithIcon(
+private fun AttributeTile(
     label: String,
     value: String,
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
+    val colors = MaterialTheme.colorScheme
 
-    Row(
+    Surface(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
+        shape = RoundedCornerShape(12.dp),
+        color = appColors.cardBackgroundAlt,
+        border = BorderStroke(0.5.dp, appColors.border)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(colors.surface, RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = colors.primary
+                )
+            }
 
-        Spacer(modifier = Modifier.width(6.dp))
-
-        Column {
-            Text(
-                text = label,
-                style = typography.labelMedium,
-                color = appColors.textSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Text(
-                text = value,
-                style = typography.bodyMedium,
-                color = appColors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label,
+                    style = typography.labelSmall,
+                    color = appColors.textTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = value,
+                    style = typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = appColors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
-
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable

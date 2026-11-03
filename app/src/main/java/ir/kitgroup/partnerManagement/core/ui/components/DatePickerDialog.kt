@@ -21,7 +21,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import saman.zamani.persiandate.PersianDate
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -44,6 +46,7 @@ data class JalaliDate(
         return day > other.day
     }
 }
+
 @Composable
 fun DatePickerDialog(
     initialMillis: Long? = null,
@@ -67,84 +70,90 @@ fun DatePickerDialog(
         confirmButton = {},
         containerColor = colors.cardBackground,
         text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // هدر ماه‌ها
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = {
-                        if (month == 1) {
-                            month = 12
-                            year--
-                        } else {
-                            month--
-                        }
-                    }) { Text("ماه قبل") }
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // هدر ماه‌ها
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = {
+                            if (month == 1) {
+                                month = 12
+                                year--
+                            } else {
+                                month--
+                            }
+                        }) { Text("ماه قبل") }
 
-                    Text(
-                        text = "$year / ${getMonthName(month)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = colors.textPrimary
-                    )
+                        Text(
+                            text = "$year / ${getMonthName(month)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = colors.textPrimary
+                        )
 
-                    TextButton(onClick = {
-                        if (month == 12) {
-                            month = 1
-                            year++
-                        } else {
-                            month++
-                        }
-                    }) { Text("ماه بعد") }
-                }
+                        TextButton(onClick = {
+                            if (month == 12) {
+                                month = 1
+                                year++
+                            } else {
+                                month++
+                            }
+                        }) { Text("ماه بعد") }
+                    }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                LazyVerticalGrid(columns = GridCells.Fixed(7), modifier = Modifier.height(250.dp)) {
-                    items(days) { day ->
-                        val isToday = year == today.shYear && month == today.shMonth && day == today.shDay
-                        val backgroundColor = if (isToday) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                        }
-                        val textColor = if (isToday) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            colors.textPrimary
-                        }
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(7),
+                        modifier = Modifier.height(250.dp)
+                    ) {
+                        items(days) { day ->
+                            val isToday =
+                                year == today.shYear && month == today.shMonth && day == today.shDay
+                            val backgroundColor = if (isToday) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            }
+                            val textColor = if (isToday) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                colors.textPrimary
+                            }
 
-                        Box(
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .size(36.dp)
-                                .background(color = backgroundColor, shape = CircleShape)
-                                .clickable { onDateSelected(JalaliDate(year, month, day)) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = day.toString(),
-                                color = textColor,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .size(36.dp)
+                                    .background(color = backgroundColor, shape = CircleShape)
+                                    .clickable { onDateSelected(JalaliDate(year, month, day)) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = day.toString(),
+                                    color = textColor,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                Button(onClick = {
-                    val realToday = PersianDate()
-                    onDateSelected(
-                        JalaliDate(
-                            realToday.shYear,
-                            realToday.shMonth,
-                            realToday.shDay
+                    Button(onClick = {
+                        val realToday = PersianDate()
+                        onDateSelected(
+                            JalaliDate(
+                                realToday.shYear,
+                                realToday.shMonth,
+                                realToday.shDay
+                            )
                         )
-                    )
-                }) {
-                    Text("امروز")
+                    }) {
+                        Text("امروز")
+                    }
                 }
             }
         }

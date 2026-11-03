@@ -48,20 +48,29 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import androidx.compose.material.icons.outlined.Campaign
+import androidx.compose.material.icons.outlined.WarningAmber
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.warning.AddEditOrganizationWarningDialog
+import ir.kitgroup.partnerManagement.feature.organization.ui.detail.warning.OrganizationWarningViewModel
 
 @Composable
 fun MeetingDetailScreen(
     meetingId: String,
     onEditClick: (String) -> Unit,
+    onOrganizationClick: (String) -> Unit = {},
     onLocationClick: (latitude: Double, longitude: Double) -> Unit = { _, _ -> },
+    onAssignStandClick: (organizationId: String, meetingId: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
     onStatusChangeSuccess: () -> Unit,
-    viewModel: MeetingDetailViewModel = hiltViewModel()
+    viewModel: MeetingDetailViewModel = hiltViewModel(),
+    organizationWarningViewModel: OrganizationWarningViewModel = hiltViewModel()
 ) {
     val appColors = LocalPartnerManagementColors.current
     val context = LocalContext.current
 
     val meeting by viewModel.meeting.collectAsStateWithLifecycle()
+    var showWarningDialog by rememberSaveable { mutableStateOf(false) }
+    val uiState by organizationWarningViewModel.uiState.collectAsStateWithLifecycle()
 
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
     val uiStateChange by viewModel.uiStateChange.collectAsStateWithLifecycle()
@@ -141,8 +150,28 @@ fun MeetingDetailScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    OrganizationInfoCard(item = currentMeeting)
+                    OrganizationInfoCard(
+                        item = currentMeeting,
+                        onOrganizationClick = onOrganizationClick
+                    )
 
+                    Spacer(Modifier.height(12.dp))
+                    MeetingQuickActionsCard(
+                        onAssignStand = {
+                            onAssignStandClick(
+                                currentMeeting.meeting.organizationId!!,
+                                currentMeeting.meeting.meetingId
+                            )
+                        },
+                        onAddWarning = {
+                            organizationWarningViewModel.resetForm(
+                                targetOrgId = currentMeeting.meeting.organizationId,
+                                // این مهم است: meetingId را اینجا پاس می‌دهیم
+                                targetMeetingId = currentMeeting.meeting.meetingId
+                            )
+                            showWarningDialog = true
+                        }
+                    )
                     Spacer(Modifier.height(12.dp))
 
                     VisitorInfoCard(
@@ -167,9 +196,6 @@ fun MeetingDetailScreen(
                         MeetingLocationCard(
                             latitude = lat,
                             longitude = lng,
-                            address = currentMeeting.organizationAddress,
-                            cityName = currentMeeting.cityName,
-                            regionName = currentMeeting.regionName,
                             onLocationClick = onLocationClick
                         )
                     }
@@ -189,6 +215,33 @@ fun MeetingDetailScreen(
             }
         }
     }
+    if (showWarningDialog && currentMeeting != null) {
+        key(uiState.warningRecordId ?: "new_warning_${showWarningDialog}") {
+            AddEditOrganizationWarningDialog(
+                warningTypes = uiState.warningTypes,
+                isSubmitting = uiState.isLoading,
+                initialWarningId = uiState.warningTypeId.takeIf { it.isNotBlank() },
+                initialDescription = uiState.description,
+                onDismiss = {
+                    showWarningDialog = false
+                    organizationWarningViewModel.resetForm(currentMeeting.meeting.organizationId)
+                },
+                onConfirm = { warningId, description ->
+                    organizationWarningViewModel.submitWarning(
+
+                        organizationId = currentMeeting.meeting.organizationId,
+                        warningTypeId = warningId,
+                        description = description,
+                        onSuccessCallback = {
+                            showWarningDialog = false
+                            organizationWarningViewModel.resetForm(currentMeeting.meeting.organizationId)
+                        }
+                    )
+                }
+            )
+        }
+    }
+
     if (showStatusDialog && currentMeeting != null) {
         val initialStatus =
             MeetingStatus.fromId(currentMeeting.meeting.status)
@@ -211,7 +264,6 @@ fun MeetingDetailScreen(
             }
         )
     }
-
 }
 
 /**
@@ -295,7 +347,10 @@ fun ChangeMeetingStatusDialog(
 }
 
 @Composable
-private fun OrganizationInfoCard(item: MeetingWithDetail) {
+private fun OrganizationInfoCard(
+    item: MeetingWithDetail,
+    onOrganizationClick: (String) -> Unit
+) {
     val appColors = LocalPartnerManagementColors.current
 
     val locationText = item.organizationAddress
@@ -309,7 +364,11 @@ private fun OrganizationInfoCard(item: MeetingWithDetail) {
             .ifBlank { "-" }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onOrganizationClick(item.meeting.organizationId!!)
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
         border = BorderStroke(width = 0.7.dp, color = appColors.border)
@@ -431,19 +490,22 @@ private fun VisitorInfoCard(
                 status = item.meeting.status
             )
             HorizontalDivider(color = appColors.border.copy(alpha = 0.5f))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 14.dp),
-            ) {
-                SectionTitle(stringResource(R.string.label_images))
-                Spacer(Modifier.height(8.dp))
-                ImageDetailSection(
-                    isLoading = isImagesLoading,
-                    attachments = attachments,
-                    baseUrl = baseUrl,
-                    onDownloadClick = onDownloadAttachment
-                )
+
+            if (attachments.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 14.dp),
+                ) {
+                    SectionTitle(stringResource(R.string.label_attachment))
+                    Spacer(Modifier.height(8.dp))
+                    ImageDetailSection(
+                        isLoading = isImagesLoading,
+                        attachments = attachments,
+                        baseUrl = baseUrl,
+                        onDownloadClick = onDownloadAttachment
+                    )
+                }
             }
         }
     }
@@ -502,9 +564,6 @@ private fun InfoRow(
 private fun MeetingLocationCard(
     latitude: Double,
     longitude: Double,
-    address: String?,
-    cityName: String?,
-    regionName: String?,
     onLocationClick: (latitude: Double, longitude: Double) -> Unit
 ) {
     val context = LocalContext.current
@@ -576,3 +635,118 @@ private fun MeetingLocationCard(
         }
     }
 }
+
+
+@Composable
+fun MeetingQuickActionsCard(
+    onAddWarning: () -> Unit,
+    onAssignStand: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val appColors = LocalPartnerManagementColors.current
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
+        border = BorderStroke(
+            width = 0.8.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
+                )
+                Text(
+                    text = "عملیات برای این بازدید",
+                    style = typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+
+                // تخصیص استند
+                ActionItemButton(
+                    title = "تخصیص استند",
+                    icon = Icons.Outlined.Campaign,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    onClick = onAssignStand,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // ثبت تذکر
+                ActionItemButton(
+                    title = "ثبت تذکر",
+                    icon = Icons.Outlined.WarningAmber,
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    onClick = onAddWarning,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionItemButton(
+    title: String,
+    icon: ImageVector,
+    containerColor: androidx.compose.ui.graphics.Color,
+
+    contentColor: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = contentColor,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = title,
+                style = typography.titleMedium,
+                color = contentColor,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+

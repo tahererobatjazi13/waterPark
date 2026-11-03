@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -23,16 +22,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.TrendingFlat
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,7 +58,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.WarningWithDetail
-import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.DeleteConfirmationDialog
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.OfflinePendingFooterBanner
@@ -71,6 +67,8 @@ import ir.kitgroup.partnerManagement.core.ui.theme.PartnerManagementTheme
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.Assignment
 
 @Composable
 fun OrganizationWarningTabContent(
@@ -81,6 +79,7 @@ fun OrganizationWarningTabContent(
     onEditWarningClick: (WarningWithDetail) -> Unit = {},
     onWarningSuccess: () -> Unit = {},
     onDeleteWarningClick: (WarningWithDetail) -> Unit = {},
+    onMeetingClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -113,50 +112,45 @@ fun OrganizationWarningTabContent(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(hostState = snackBarHostState) }
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    organizationWarningViewModel.resetForm()
+                    showDialog = true
+                    onAddWarningClick()
+                },
+                containerColor = appColors.success,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp),
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = {
+                    Text(
+                        text = stringResource(R.string.label_register_organization_warning),
+                        style = typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            )
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // هدر تمیز همراه با عنوان و دکمه استاندارد ثبت تذکر
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // هدر تمیز فقط با تایتل تب
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    SectionTitle(title = stringResource(R.string.label_warnings_organization))
-                }
-
-                FilledTonalButton(
-                    onClick = {
-                        organizationWarningViewModel.resetForm()
-                        showDialog = true
-                        onAddWarningClick()
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(R.string.label_register_organization_warning),
-                        style = typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                SectionTitle(title = stringResource(R.string.label_warnings_organization))
             }
 
             if (warnings.isEmpty()) {
@@ -169,7 +163,7 @@ fun OrganizationWarningTabContent(
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp),
+                    contentPadding = PaddingValues(bottom = 88.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
@@ -190,7 +184,8 @@ fun OrganizationWarningTabContent(
                             onDeleteClick = {
                                 warningPendingDelete = item
                                 onDeleteWarningClick(item)
-                            }
+                            }, onMeetingClick = onMeetingClick
+
                         )
                     }
                 }
@@ -244,11 +239,13 @@ private fun OrganizationWarningCard(
     isSupervisor: Boolean,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onMeetingClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
     val isPendingSync = warning.warning.syncStatus != SyncStatus.SYNCED
+    val meetingId = warning.warning.meetingId
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -265,7 +262,7 @@ private fun OrganizationWarningCard(
                 .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // ردیف عنوان تذکر، امتیاز و اکشن‌ها
+            // ردیف عنوان تذکر، امتیاز و آیکون
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -305,7 +302,11 @@ private fun OrganizationWarningCard(
                 // بج امتیاز تذکر
                 WarningScoreChip(score = warning.warning.score ?: 0)
             }
-
+            if (!meetingId.isNullOrBlank() && meetingId != "00000000-0000-0000-0000-000000000000") {
+                MeetingBadge(
+                    onClick = { onMeetingClick(meetingId!!) }
+                )
+            }
             // باکس متن توضیحات (در صورت وجود)
             warning.warning.description?.takeIf { it.isNotBlank() }?.let { description ->
                 Row(
@@ -383,7 +384,7 @@ private fun OrganizationWarningCard(
                     }
                 }
 
-                // دکمه‌های اکشن ویرایش و حذف
+                // دکمه ویرایش
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -402,23 +403,6 @@ private fun OrganizationWarningCard(
                             )
                         }
                     }
-
-                 /*   if (isSupervisor) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = colors.error.copy(alpha = 0.1f),
-                            modifier = Modifier.size(34.dp)
-                        ) {
-                            IconButton(onClick = onDeleteClick) {
-                                Icon(
-                                    imageVector = Icons.Default.DeleteOutline,
-                                    contentDescription = stringResource(R.string.label_delete),
-                                    tint = colors.error,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                    }*/
                 }
             }
 
@@ -481,6 +465,43 @@ private fun WarningScoreChip(
                 style = typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = contentColor
+            )
+        }
+    }
+}
+
+
+@Composable
+fun MeetingBadge(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = MaterialTheme.colorScheme
+
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = colors.primary.copy(alpha = 0.08f),
+        border = BorderStroke(0.6.dp, colors.primary.copy(alpha = 0.25f)),
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Assignment,
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier.size(13.dp)
+            )
+            Text(
+                text = "ثبت‌شده در گزارش بازدید (مشاهده)",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium,
+                color = colors.primary
             )
         }
     }

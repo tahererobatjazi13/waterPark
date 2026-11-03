@@ -32,6 +32,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import ir.kitgroup.partnerManagement.core.ui.util.isNetworkError
 import ir.kitgroup.partnerManagement.core.ui.util.jalaliToGregorian
+import ir.kitgroup.partnerManagement.core.ui.util.mapDtosToImageItems
 import ir.kitgroup.partnerManagement.feature.meeting.model.CreateMeetingRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -54,7 +55,6 @@ import java.util.TimeZone
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
-import java.io.File
 
 @HiltViewModel
 class AddEditMeetingViewModel @Inject constructor(
@@ -126,8 +126,7 @@ class AddEditMeetingViewModel @Inject constructor(
             _uiState.update { it.copy(isInitialLoading = true) }
             try {
                 val currentVisitorId = mainPreferences.getVisitorId()
-                val roleCode =
-                    mainPreferences.getRoleCode()
+                val roleCode = mainPreferences.getRoleCode()
                 val isSupervisor = UserRole.fromCode(roleCode.toString()) == UserRole.SUPERVISOR
 
                 val orgs = organizationDao.observeAll().firstOrNull().orEmpty()
@@ -169,6 +168,7 @@ class AddEditMeetingViewModel @Inject constructor(
                 if (isEditMode && !meetingIdArg.isNullOrBlank()) {
                     val meetingWithDetail =
                         meetingRepository.observeMeetingById(meetingIdArg).firstOrNull()
+
                     meetingWithDetail?.let { detail ->
                         val entity = detail.meeting
                         val targetOrgId = entity.organizationId.orEmpty()
@@ -204,62 +204,70 @@ class AddEditMeetingViewModel @Inject constructor(
                                 longitude = entity.longitude
                             )
                         }
-                        val currentMeetingId = meetingIdArg
 
+                        // مدیریت پیوست‌ها (کش و سرور)
+                        val currentMeetingId = meetingIdArg
                         val currentBaseUrl =
                             mainPreferences.baseUrlFlow.firstOrNull().orEmpty().trimEnd('/')
+
+                        // الف: نمایش فوری از دیتابیس محلی (فقط فایل‌های مختص همین بازدید)
                         val cachedEntities = try {
                             attachmentFileDao.getMeetingAttachments(targetOrgId, currentMeetingId)
                         } catch (e: Exception) {
                             emptyList()
                         }
 
-                        val attachments = if (cachedEntities.isNotEmpty()) {
-                            cachedEntities.map { it.toDto() }
-                        } else {
-                            // اگر در کش نبود، از طریق ریپازیتوری از سرور می‌گیریم
-                            val result = attachmentFileRepository.getAttachmentsByOrgId(targetOrgId)
-                            result.getOrDefault(emptyList())
+                        if (cachedEntities.isNotEmpty()) {
+                            val localDtos = cachedEntities.map { it.toDto() }
+                            val meetingOnlyLocalList = localDtos.filter {
+                                !it.meetingid.isNullOrBlank() && it.meetingid.equals(
+                                    currentMeetingId,
+                                    ignoreCase = true
+                                )
+                            }
+                            _uiState.update {
+                                it.copy(
+                                    images = mapDtosToImageItems(
+                                        context,
+                                        meetingOnlyLocalList,
+                                        currentBaseUrl
+                                    )
+                                )
+                            }
                         }
 
-                        val loadedImages = attachments.map { attachment ->
-                            val imagesDir = File(context.filesDir, "attachments")
-                            val extension = if (!attachment.fileExtension.isNullOrBlank()) {
-                                if (attachment.fileExtension.startsWith(".")) attachment.fileExtension else ".${attachment.fileExtension}"
-                            } else ".jpg"
+                        // ب: دریافت از سرور و آپدیت نهایی
+                        val result = attachmentFileRepository.getAttachmentsByOrgId(targetOrgId)
+                        val dtoList = result.getOrDefault(emptyList())
 
-                            val localFile =
-                                File(imagesDir, "${attachment.attachmentFileId}$extension")
-                            val localUri = if (localFile.exists()) Uri.fromFile(localFile) else null
+                        if (dtoList.isNotEmpty()) {
+                            // ذخیره در دیتابیس با meetingId واقعی هر DTO
+                            attachmentFileRepository.saveAttachmentsToDatabase(
+                                orgId = targetOrgId,
+                                meetingId = null,
+                                attachments = dtoList,
+                                baseUrl = currentBaseUrl
+                            )
 
-                            val serverImageUrl = when {
-                                !attachment.fileUrl.isNullOrBlank() && attachment.fileUrl.startsWith(
-                                    "http",
-                                    true
-                                ) -> {
-                                    attachment.fileUrl
-                                }
-
-                                !attachment.fileUrl.isNullOrBlank() -> {
-                                    val cleanPath = attachment.fileUrl.removePrefix("/")
-                                    "$currentBaseUrl/$cleanPath"
-                                }
-
-                                else -> {
-                                    "$currentBaseUrl/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
-                                }
+                            // ✅ فقط فایلوهایی که meetingid آن‌ها برابر با شناسه جلسه جاری است نمایش داده شوند
+                            val meetingOnlyList = dtoList.filter {
+                                !it.meetingid.isNullOrBlank() && it.meetingid.equals(
+                                    currentMeetingId,
+                                    ignoreCase = true
+                                )
                             }
 
-                            // فرض بر این است که از مدل مشابه OrganizationImageItem یا MeetingImageItem استفاده می‌کنید
-                            OrganizationImageItem(
-                                uri = localUri,
-                                fileType = attachment.fileType,
-                                description = attachment.description.orEmpty(),
-                                uploadedFileId = attachment.attachmentFileId,
-                                serverImageUrl = serverImageUrl
-                            )
+                            // آپدیت UI با دیتاهای تازه سرور
+                            _uiState.update {
+                                it.copy(
+                                    images = mapDtosToImageItems(
+                                        context,
+                                        meetingOnlyList,
+                                        currentBaseUrl
+                                    )
+                                )
+                            }
                         }
-                        _uiState.update { it.copy(images = loadedImages) }
                     }
                 }
             } catch (e: Exception) {
@@ -358,10 +366,14 @@ class AddEditMeetingViewModel @Inject constructor(
 
                 val requestLatitude = if (isVisitInPerson) state.latitude else null
                 val requestLongitude = if (isVisitInPerson) state.longitude else null
-
+                val targetMeetingId = if (state.isEditMode && !state.meetingId.isNullOrBlank()) {
+                    state.meetingId
+                } else {
+                    UUID.randomUUID().toString()
+                }
 
                 val request = CreateMeetingRequest(
-                    meetingId = if (isEditMode) meetingIdArg else null,
+                    meetingId = targetMeetingId,
                     organizationId = state.organizationId,
                     organizationPersonId = state.organizationPersonId?.takeIf { it.isNotBlank() && it != "00000000-0000-0000-0000-000000000000" },
                     visitorId = actualVisitorId,
@@ -377,7 +389,7 @@ class AddEditMeetingViewModel @Inject constructor(
                 )
                 Log.d("requestrequest", request.toString())
 
-                if (isEditMode) {
+                if (state.isEditMode && !targetMeetingId.isNullOrBlank()) {
                     val targetId = meetingIdArg!!
                     val existingMeeting =
                         meetingRepository.observeMeetingById(targetId).firstOrNull()?.meeting
@@ -417,6 +429,7 @@ class AddEditMeetingViewModel @Inject constructor(
                                 longitude = state.longitude,
                                 stateCode = 0,
                                 modifiedOn = isoTimestamp,
+                                flagInsUp = true,
                                 syncStatus = nextSyncStatus,
                                 isLocallyModified = true,
                                 lastModifiedTimestamp = currentTimestamp
@@ -456,9 +469,8 @@ class AddEditMeetingViewModel @Inject constructor(
                         },
                         onFailure = { error ->
                             if (error.isNetworkError()) {
-                                val localUUID = UUID.randomUUID().toString()
                                 val offlineEntity = MeetingEntity(
-                                    meetingId = localUUID,
+                                    meetingId = targetMeetingId,
                                     subjectVisitId = state.subjectVisitId,
                                     organizationId = state.organizationId,
                                     visitorId = actualVisitorId,
@@ -474,6 +486,7 @@ class AddEditMeetingViewModel @Inject constructor(
                                     longitude = state.longitude,
                                     stateCode = 0,
                                     modifiedOn = isoTimestamp,
+                                    flagInsUp = false,
                                     syncStatus = SyncStatus.PENDING_INSERT,
                                     isLocallyModified = true,
                                     lastModifiedTimestamp = currentTimestamp

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -81,9 +82,11 @@ fun OrganizationVisitorTabContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        Spacer(modifier = Modifier.height(4.dp))
+
         // نوار عنوان بالای لیست به همراه دکمه تخصیص جدید
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -94,27 +97,27 @@ fun OrganizationVisitorTabContent(
                 SectionTitle(title = stringResource(R.string.label_assignment_visitor_to_organization_list))
             }
 
-  /*          FilledTonalButton(
-                onClick = onAssignVisitorClick,
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = appColors.success,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.label_new_assigning),
-                    style = typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-            }*/
+            /*          FilledTonalButton(
+                          onClick = onAssignVisitorClick,
+                          shape = RoundedCornerShape(12.dp),
+                          contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                          colors = ButtonDefaults.buttonColors(
+                              containerColor = appColors.success,
+                              contentColor = MaterialTheme.colorScheme.onPrimary
+                          )
+                      ) {
+                          Icon(
+                              imageVector = Icons.Default.Add,
+                              contentDescription = null,
+                              modifier = Modifier.size(18.dp)
+                          )
+                          Spacer(modifier = Modifier.width(6.dp))
+                          Text(
+                              text = stringResource(R.string.label_new_assigning),
+                              style = typography.titleSmall,
+                              fontWeight = FontWeight.Bold
+                          )
+                      }*/
         }
 
         when (val state = visitorsState) {
@@ -143,13 +146,16 @@ fun OrganizationVisitorTabContent(
                         style = typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
+
                     Spacer(modifier = Modifier.height(12.dp))
                     CustomButton(
                         text = stringResource(R.string.label_retry),
                         onClick = {
                             val online = isInternetAvailable(context)
                             organizationVisitorViewModel.retry(online)
-                        }
+                        },
+                        fillMaxWidth = false,
+                        modifier = Modifier.padding(end = 8.dp)
                     )
                 }
             }
@@ -281,43 +287,43 @@ private fun VisitorOrganizationCard(
             }
 
             // دکمه‌های عملیاتی (ویرایش / حذف)
-        /*    Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = colors.primary.copy(alpha = 0.1f),
-                    modifier = Modifier.size(36.dp)
+            /*    Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onEditClick) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.label_edit),
-                            tint = colors.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = colors.primary.copy(alpha = 0.1f),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        IconButton(onClick = onEditClick) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.label_edit),
+                                tint = colors.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = colors.error.copy(alpha = 0.1f),
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    IconButton(onClick = onDeleteClick) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = stringResource(R.string.label_delete),
-                            tint = colors.error,
-                            modifier = Modifier.size(18.dp)
-                        )
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = colors.error.copy(alpha = 0.1f),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        IconButton(onClick = onDeleteClick) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteOutline,
+                                contentDescription = stringResource(R.string.label_delete),
+                                tint = colors.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
-                }
-            }*/
+                }*/
         }
     }
 }

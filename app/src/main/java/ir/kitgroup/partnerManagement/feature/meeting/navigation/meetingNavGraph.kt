@@ -119,15 +119,31 @@ fun NavGraphBuilder.meetingNavGraph(
                             navController.navigate(
                                 Screen.AddMeeting.createRoute(id)
                             )
-                        }, onStatusChangeSuccess = {
+                        },
+                        onStatusChangeSuccess = {
                             navController.popBackStack()
                         },
-                        onLocationClick = { lat, lng ->
-                            if (lat != null && lng != null) {
+                        onOrganizationClick = { orgId ->
+                            navController.navigate(
+                                Screen.OrganizationDetail.createRoute(orgId)
+                            )
+                        },
+
+                        onAssignStandClick = { orgId, meetId ->
+                            navController.navigate(
+                                Screen.AddAssignedStandsOrganization.createRoute(
+                                    organizationId = orgId,
+                                    meetingId = meetId
+                                )
+                            )
+                        },
+
+                        onLocationClick = { latitude, longitude ->
+                            if (latitude != null && longitude != null && latitude != 0.0 && longitude != 0.0) {
                                 navController.navigate(
                                     Screen.MapScreen.createRoute(
-                                        latitude = lat,
-                                        longitude = lng,
+                                        latitude = latitude,
+                                        longitude = longitude,
                                         isReadOnly = true
                                     )
                                 )

@@ -26,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
-import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
@@ -36,7 +35,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
-fun OfferPlanListRoute(
+fun OfferPlanListScreen(
     onOfferClick: (OfferEntity) -> Unit,
     onAddOfferClick: () -> Unit,
     onEditOfferClick: (String) -> Unit,
@@ -68,7 +67,7 @@ fun OfferPlanListRoute(
         }
     }
 
-    OfferPlanListScreen(
+    OfferPlanListContent(
         offers = offers,
         isSupervisor = isSupervisor,
         snackBarHostState = snackBarHostState,
@@ -80,7 +79,7 @@ fun OfferPlanListRoute(
 }
 
 @Composable
-fun OfferPlanListScreen(
+fun OfferPlanListContent(
     offers: List<OfferEntity>?,
     isSupervisor: Boolean,
     snackBarHostState: SnackbarHostState,

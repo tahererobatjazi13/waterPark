@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 fun DropdownSelectorField(
     value: String,
     label: String,
-    placeholder: String,
+    placeholder: String = "",
     items: List<String>,
     onItemSelected: (String) -> Unit,
     modifier: Modifier = Modifier,

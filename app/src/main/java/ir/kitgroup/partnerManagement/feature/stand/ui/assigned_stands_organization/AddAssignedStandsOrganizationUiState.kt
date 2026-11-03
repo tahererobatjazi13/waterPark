@@ -3,13 +3,15 @@ package ir.kitgroup.partnerManagement.feature.stand.ui.assigned_stands_organizat
 
 import ir.kitgroup.partnerManagement.core.database.entity.StandTypeEntity
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 
 data class AddAssignedStandsOrganizationUiState(
     val organizationId: String = "",
+    val meetingId: String? = null,
     val advertisingStandId: String = "",
     val count: String = "1",
-    val assignmentType: Int = 2,
-    val assignmentMode: Int = 1,
+    val assignmentType: Int = 1,
+    val assignmentMode: Int = AssignmentMode.TABLIGHATI.id,
     val assignmentDate: String = "",
     val plannedReturnDate: String = "",
     val deliveryToVisitorDate: String = "",

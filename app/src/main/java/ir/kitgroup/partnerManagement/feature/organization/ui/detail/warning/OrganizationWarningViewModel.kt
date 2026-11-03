@@ -1,11 +1,9 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.detail.warning
 
 import android.content.Context
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.kitgroup.partnerManagement.R
@@ -22,8 +20,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,27 +39,26 @@ class OrganizationWarningViewModel @Inject constructor(
     private val mainPreferences: MainPreferences,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
     val organizationIdArg: String? = savedStateHandle["organizationId"]
     private val warningRecordIdArg: String? = savedStateHandle["warningId"]
     val isEditMode: Boolean = !warningRecordIdArg.isNullOrBlank()
 
-    // وضعیت لیست تذکرات سازمان برای نمایش در تب
     private val _warnings = MutableStateFlow<List<WarningWithDetail>>(emptyList())
     val warnings = _warnings.asStateFlow()
 
-    // وضعیت فرم ثبت و ویرایش تذکر
     private val _uiState = MutableStateFlow(
         AddEditOrganizationWarningUiState(
             organizationId = organizationIdArg.orEmpty(),
             warningRecordId = warningRecordIdArg,
-            isEditMode = isEditMode
+            isEditMode = isEditMode,
+            meetingId = null
         )
     )
     val uiState = _uiState.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
-
 
     init {
         loadWarningTypes()
@@ -81,7 +80,6 @@ class OrganizationWarningViewModel @Inject constructor(
         }
     }
 
-
     private fun loadWarningDetail(warningId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isInitialLoading = true) }
@@ -89,11 +87,13 @@ class OrganizationWarningViewModel @Inject constructor(
             if (existing != null) {
                 _uiState.update { current ->
                     current.copy(
-                        organizationId = existing.warning.organizationId!!,
+                        organizationId = existing.warning.organizationId.orEmpty(),
                         warningRecordId = existing.warning.warningId,
                         warningTypeId = existing.warning.warningTypeId.orEmpty(),
                         description = existing.warning.description.orEmpty(),
                         warningDate = existing.warning.warningDate.orEmpty(),
+                        meetingId = existing.warning.meetingId,
+                        isEditMode = true,
                         isInitialLoading = false
                     )
                 }
@@ -102,7 +102,6 @@ class OrganizationWarningViewModel @Inject constructor(
             }
         }
     }
-
     fun observeOrganizationWarnings(organizationId: String) {
         viewModelScope.launch {
             warningRepository.observeByOrganization(organizationId).collect { list ->
@@ -111,7 +110,6 @@ class OrganizationWarningViewModel @Inject constructor(
         }
     }
 
-    // متدهای دریافت ورودی‌های کاربر
     fun onWarningTypeSelected(warningTypeId: String) {
         _uiState.update { it.copy(warningTypeId = warningTypeId) }
     }
@@ -120,27 +118,31 @@ class OrganizationWarningViewModel @Inject constructor(
         _uiState.update { it.copy(description = description) }
     }
 
-    /**
-     * مقداردهی داده‌های ویرایش در صورتی که دیالوگ باز شود
-     */
     fun setupForEdit(warning: WarningWithDetail) {
         _uiState.update {
             it.copy(
                 isEditMode = true,
                 warningRecordId = warning.warning.warningId,
-                organizationId = warning.warning.organizationId!!,
+                organizationId = warning.warning.organizationId.orEmpty(),
                 warningTypeId = warning.warning.warningTypeId.orEmpty(),
                 description = warning.warning.description.orEmpty(),
-                warningDate = warning.warning.warningDate.orEmpty()
+                warningDate = warning.warning.warningDate.orEmpty(),
+                meetingId = warning.warning.meetingId
             )
         }
     }
 
-    fun resetForm() {
-        _uiState.update {
+    /**
+     * ریست کامل فرم برای ثبت جدید همراه با تعیین صریح شناسه سازمان
+     */
+    fun resetForm(targetOrgId: String? = null, targetMeetingId: String? = null) {
+        _uiState.update { current ->
             AddEditOrganizationWarningUiState(
-                organizationId = it.organizationId,
-                warningTypes = it.warningTypes
+                organizationId = targetOrgId ?: organizationIdArg.orEmpty(),
+                warningRecordId = null,
+                isEditMode = false,
+                warningTypes = current.warningTypes,
+                meetingId = targetMeetingId
             )
         }
     }
@@ -151,22 +153,19 @@ class OrganizationWarningViewModel @Inject constructor(
         return dateFormat.format(Date())
     }
 
-
-    /**
-     * ثبت و ویرایش تذکر با پشتیبانی کامل از ذخیره‌سازی آفلاین و سینک
-     */
-
     /**
      * ثبت و ویرایش تذکر با پشتیبانی کامل از ذخیره‌سازی آفلاین و سینک
      */
     fun submitWarning(
+        organizationId: String? = null,
         warningTypeId: String = _uiState.value.warningTypeId,
         description: String = _uiState.value.description,
         onSuccessCallback: () -> Unit
     ) {
-        // بروزرسانی مقادیر قبل از اعتبارسنجی
-        _uiState.update {
-            it.copy(
+        // بروزرسانی صریح استیت با مقادیر ورودی
+        _uiState.update { current ->
+            current.copy(
+                organizationId = organizationId ?: current.organizationId,
                 warningTypeId = warningTypeId,
                 description = description
             )
@@ -175,7 +174,8 @@ class OrganizationWarningViewModel @Inject constructor(
         val state = _uiState.value
         if (state.isLoading) return
 
-        if (!state.isFormValid) {
+        // بررسی اینکه آیا شناسه سازمان موجود است
+        if (state.organizationId.isBlank() || state.warningTypeId.isBlank()) {
             _uiEvent.tryEmit(UiEvent.ShowError(UiText.StringResource(R.string.error_warning_create)))
             return
         }
@@ -187,57 +187,51 @@ class OrganizationWarningViewModel @Inject constructor(
                 val currentVisitorId = mainPreferences.getVisitorId()
                 val currentTimestamp = System.currentTimeMillis()
                 val isoTimestamp = getCurrentIsoUtcTimestamp()
-                val selectedType =
-                    state.warningTypes.firstOrNull { it.warningTypeId == state.warningTypeId }
+                val selectedType = state.warningTypes.firstOrNull { it.warningTypeId == state.warningTypeId }
                 val score = selectedType?.score ?: 0
                 val effectiveDate = state.warningDate.ifBlank { isoTimestamp }
 
+                // شرط دقیق ورود به حالت ویرایش: باید حتماً هم isEditMode فعال باشد و هم شناسه تذکر وجود داشته باشد
                 if (state.isEditMode && !state.warningRecordId.isNullOrBlank()) {
                     // --- حالت ویرایش ---
                     val targetWarningId = state.warningRecordId
-                    val existingWarning =
-                        warningRepository.observeWarningById(targetWarningId).firstOrNull()
-                    val targetVisitorId =
-                        existingWarning?.warning?.visitorId?.takeIf { it.isNotBlank() }
-                            ?: currentVisitorId
+                    val existingWarning = warningRepository.observeWarningById(targetWarningId).firstOrNull()
+                    val targetVisitorId = existingWarning?.warning?.visitorId?.takeIf { it.isNotBlank() } ?: currentVisitorId
 
                     val updateRequest = CreateOrganizationWarningRequest(
                         organizationWarningId = targetWarningId,
                         organizationId = state.organizationId,
                         warningId = state.warningTypeId,
                         visitorId = targetVisitorId,
-                        meetingId = existingWarning?.warning?.meetingId,
+                        meetingId = state.meetingId,
                         warningDate = effectiveDate,
                         description = state.description.trim()
                     )
 
-                    val syncResult =
-                        warningRepository.updateOrganizationWarningAndSync(updateRequest)
+                    val syncResult = warningRepository.updateOrganizationWarningAndSync(updateRequest)
 
                     syncResult.fold(
                         onSuccess = { serverMsg ->
-                            val msg =
-                                if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
-                                else UiText.StringResource(R.string.label_warnings_organization)
+                            val msg = if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
+                            else UiText.StringResource(R.string.label_warnings_organization)
                             _uiEvent.emit(UiEvent.ShowMessage(msg))
-                            delay(400)
+                            delay(300)
+                            resetForm(state.organizationId, state.meetingId)
                             onSuccessCallback()
                         },
                         onFailure = {
-                            val nextSyncStatus =
-                                if (existingWarning?.warning?.syncStatus == SyncStatus.SYNCED) {
-                                    SyncStatus.PENDING_UPDATE
-                                } else {
-                                    existingWarning?.warning?.syncStatus
-                                        ?: SyncStatus.PENDING_INSERT
-                                }
+                            val nextSyncStatus = if (existingWarning?.warning?.syncStatus == SyncStatus.SYNCED) {
+                                SyncStatus.PENDING_UPDATE
+                            } else {
+                                existingWarning?.warning?.syncStatus ?: SyncStatus.PENDING_INSERT
+                            }
 
                             val offlineEntity = WarningEntity(
                                 warningId = targetWarningId,
                                 organizationId = state.organizationId,
                                 warningTypeId = state.warningTypeId,
                                 visitorId = targetVisitorId,
-                                meetingId = existingWarning?.warning?.meetingId,
+                                meetingId = state.meetingId,
                                 warningDate = effectiveDate,
                                 score = score,
                                 description = state.description.trim(),
@@ -249,42 +243,42 @@ class OrganizationWarningViewModel @Inject constructor(
 
                             warningRepository.saveLocal(offlineEntity)
                             _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)))
-                            delay(400)
+                            delay(300)
+                            resetForm(state.organizationId, state.meetingId)
                             onSuccessCallback()
                         }
                     )
                 } else {
-                    // --- حالت ثبت جدید ---
+                    // --- حالت ثبت جدید (تکمیل کامل کد) ---
+                    val localId = UUID.randomUUID().toString()
                     val newRequest = CreateOrganizationWarningRequest(
                         organizationWarningId = null,
                         organizationId = state.organizationId,
                         warningId = state.warningTypeId,
                         visitorId = currentVisitorId,
-                        meetingId = null,
+                        meetingId = state.meetingId,
                         warningDate = effectiveDate,
                         description = state.description.trim()
                     )
 
-                    val result = warningRepository.createOrganizationWarningAndSync(newRequest)
+                    val syncResult = warningRepository.createOrganizationWarningAndSync(newRequest)
 
-                    result.fold(
+                    syncResult.fold(
                         onSuccess = { serverMsg ->
-                            val msg =
-                                if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
-                                else UiText.StringResource(R.string.label_register_organization_warning)
+                            val msg = if (!serverMsg.isNullOrBlank()) UiText.DynamicString(serverMsg)
+                            else UiText.StringResource(R.string.label_warnings_organization)
                             _uiEvent.emit(UiEvent.ShowMessage(msg))
-                            delay(400)
+                            delay(300)
+                            resetForm(state.organizationId, state.meetingId)
                             onSuccessCallback()
                         },
                         onFailure = {
-                            val localUUID = UUID.randomUUID().toString()
-
                             val offlineEntity = WarningEntity(
-                                warningId = localUUID,
+                                warningId = localId,
                                 organizationId = state.organizationId,
                                 warningTypeId = state.warningTypeId,
                                 visitorId = currentVisitorId,
-                                meetingId = null,
+                                meetingId = state.meetingId,
                                 warningDate = effectiveDate,
                                 score = score,
                                 description = state.description.trim(),
@@ -295,8 +289,9 @@ class OrganizationWarningViewModel @Inject constructor(
                             )
 
                             warningRepository.saveLocal(offlineEntity)
-                            _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_saved_local_storage_awaiting_synchronization)))
-                            delay(400)
+                            _uiEvent.emit(UiEvent.ShowMessage(UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)))
+                            delay(300)
+                            resetForm(state.organizationId, state.meetingId)
                             onSuccessCallback()
                         }
                     )

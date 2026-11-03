@@ -61,6 +61,8 @@ data class MeetingEntity(
 
     val modifiedOn: String? = null,
 
+    val flagInsUp: Boolean,
+
     // فیلدهای کنترل سینک
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
 

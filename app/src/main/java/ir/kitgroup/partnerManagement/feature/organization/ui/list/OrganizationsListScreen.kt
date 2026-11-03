@@ -161,7 +161,7 @@ fun OrganizationsListScreen(
                     hint = "جستجوی نام سازمان، تلفن یا آدرس..."
                 )
 
-               // Spacer(modifier = Modifier.height(4.dp))
+                // Spacer(modifier = Modifier.height(4.dp))
 
                 // چیپ‌های فیلتر سریع (تک‌لمسی و ارگونومیک)
                 OrganizationsQuickFilterChips(
@@ -177,7 +177,7 @@ fun OrganizationsListScreen(
                     }
                 )
 
-             //   Spacer(modifier = Modifier.height(6.dp))
+                //   Spacer(modifier = Modifier.height(6.dp))
 
                 // نوار وضعیت تعداد نتایج و ریست سریع
                 if (filteredOrganizations != null) {
@@ -188,7 +188,7 @@ fun OrganizationsListScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                     Text(
+                        Text(
                             text = "${filteredOrganizations.size} سازمان یافت شد",
                             style = typography.labelMedium,
                             color = appColors.textSecondary
@@ -391,8 +391,7 @@ fun ModernOrganizationCard(
 
     val lat = item.organization.latitude
     val lng = item.organization.longitude
-    val hasValidLocation = lat != 0.0 && lng != 0.0
-
+    val hasValidLocation = (lat != null && lng != null && lat != 0.0 && lng != 0.0)
     // ساخت آدرس سرور کاملاً امن بر اساس شناسه یا مسیر نسبی
     val serverImageUrl: String? = when {
         thumbnail == null -> null

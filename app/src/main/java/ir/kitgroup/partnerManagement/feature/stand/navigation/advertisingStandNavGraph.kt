@@ -291,6 +291,9 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                         navController.navigate(
                             Screen.AssignedStandsDetail.createRoute(assignment.assignedStand.assignedStandId)
                         )
+                    },
+                    onMeetingClick = { meetId ->
+                        navController.navigate(Screen.MeetingDetail.createRoute(meetingId = meetId))
                     }
                 )
             }
@@ -301,12 +304,17 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
     composable(
         route = Screen.AddAssignedStandsOrganization.route,
         arguments = listOf(
-            navArgument("organizationId") {
+            navArgument(Screen.AddAssignedStandsOrganization.ORGANIZATION_ID_ARGUMENT) {
                 type = NavType.StringType
                 nullable = true
                 defaultValue = null
             },
-            navArgument("assignedStandId") {
+            navArgument(Screen.AddAssignedStandsOrganization.ASSIGNED_STAND_ID_ARGUMENT) {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            },
+            navArgument(Screen.AddAssignedStandsOrganization.MEETING_ID_ARGUMENT) {
                 type = NavType.StringType
                 nullable = true
                 defaultValue = null
@@ -325,8 +333,12 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
             ExitTransition.None
         }
     ) { backStackEntry ->
-        val organizationId = backStackEntry.arguments?.getString("organizationId")
-        val assignedStandId = backStackEntry.arguments?.getString("assignedStandId")
+        val organizationId =
+            backStackEntry.arguments?.getString(Screen.AddAssignedStandsOrganization.ORGANIZATION_ID_ARGUMENT)
+        val assignedStandId =
+            backStackEntry.arguments?.getString(Screen.AddAssignedStandsOrganization.ASSIGNED_STAND_ID_ARGUMENT)
+        val meetingId =
+            backStackEntry.arguments?.getString(Screen.AddAssignedStandsOrganization.MEETING_ID_ARGUMENT) // ⭐️ استخراج شناسه بازدید
         val isEditMode = !assignedStandId.isNullOrBlank()
 
         Column(
@@ -334,7 +346,7 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
         ) {
             CustomHeader(
                 title = stringResource(
-                    if (isEditMode) R.string.label_edit_stand else R.string.label_allocation_record
+                    if (isEditMode) R.string.label_allocation_edit else R.string.label_allocation_record
                 ),
                 showBackButton = true,
                 onBackClick = { navController.popBackStack() }
@@ -345,18 +357,23 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                 AddAssignedStandsOrganizationScreen(
                     onSuccessSave = {
                         if (isEditMode) {
-                            navController.popBackStack(
+                            val popped = navController.popBackStack(
                                 route = Screen.AssignedStandsOrganizationList.route,
                                 inclusive = false
                             )
+                            if (!popped) {
+                                navController.popBackStack()
+                            }
                         } else {
                             navController.popBackStack()
                         }
                     }
                 )
+
             }
         }
     }
+
 
     // مشاهده جزئیات تخصیص (سازمانی یا ویزیتوری)
     composable(
@@ -399,8 +416,6 @@ fun NavGraphBuilder.advertisingStandNavGraph(navController: NavController) {
                         )
                     },
                     onStatusChangeSuccess = {
-                        navController.popBackStack()
-                    } , onNavigateBack = {
                         navController.popBackStack()
                     }
                 )

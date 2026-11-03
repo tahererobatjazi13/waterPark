@@ -24,7 +24,7 @@ import ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.add.AddEdi
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail.OfferDetailScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.add.AddEditOfferDetailPlanScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.offer_detail_plan_list.list.OfferDetailPlanListScreen
-import ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.list.OfferPlanListRoute
+import ir.kitgroup.partnerManagement.feature.offer.ui.offer_plan_list.list.OfferPlanListScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.add.AddEditSerialOfferScreen
 import ir.kitgroup.partnerManagement.feature.offer.ui.serial_offer.detail.AssignedSerialDetailScreen
 import ir.kitgroup.partnerManagement.navigation.Screen
@@ -49,7 +49,7 @@ fun NavGraphBuilder.offerNavGraph(navController: NavController) {
                 showBackButton = false
             )
 
-            OfferPlanListRoute(
+            OfferPlanListScreen(
                 onOfferClick = { offer ->
                     navController.navigate(
                         Screen.OfferDetailList.createRoute(offer.offerId)

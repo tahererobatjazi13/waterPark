@@ -12,6 +12,7 @@ import ir.kitgroup.partnerManagement.core.network.model.OrganizationDto
 import ir.kitgroup.partnerManagement.core.network.model.OrganizationPersonDto
 import ir.kitgroup.partnerManagement.core.network.model.OrganizationChangeStatusDto
 import ir.kitgroup.partnerManagement.core.network.model.WarningDto
+import ir.kitgroup.partnerManagement.feature.organization.model.CreateOrganizationWarningRequest
 import ir.kitgroup.partnerManagement.feature.stand.model.CreateAssignStandRequest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -53,7 +54,7 @@ data class SyncRequestDto(
     val pendingMeetingStatusChanges: List<MeetingChangeStatusDto> = emptyList(),
 
     @SerialName("pendingWarnings")
-    val pendingWarnings: List<WarningDto> = emptyList(),
+    val pendingWarnings: List<CreateOrganizationWarningRequest> = emptyList(),
 
     @SerialName("pendingUpdateStands")
     val pendingAssignedStands: List<CreateAssignStandRequest> = emptyList(),

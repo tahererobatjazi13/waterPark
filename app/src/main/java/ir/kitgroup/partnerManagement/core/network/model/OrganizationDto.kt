@@ -106,6 +106,8 @@ data class OrganizationDto(
 
     val stateCode: Int?,
 
-    val modifiedOn: String?
+    val modifiedOn: String?,
+
+    val flagInsUp: Boolean
 
 )

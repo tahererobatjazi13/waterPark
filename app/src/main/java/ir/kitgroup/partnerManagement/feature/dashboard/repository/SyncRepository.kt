@@ -28,12 +28,11 @@ import ir.kitgroup.partnerManagement.core.database.dao.VisitorDao
 import ir.kitgroup.partnerManagement.core.database.dao.WarningDao
 import ir.kitgroup.partnerManagement.core.database.dao.WarningTypeDao
 import ir.kitgroup.partnerManagement.core.database.mapper.toCreateAssignStandRequest
+import ir.kitgroup.partnerManagement.core.database.mapper.toCreateWarningRequest
 import ir.kitgroup.partnerManagement.core.database.mapper.toEntity
 import ir.kitgroup.partnerManagement.core.database.mapper.toPendingDto
 import ir.kitgroup.partnerManagement.core.network.apiService.ApiService
 import ir.kitgroup.partnerManagement.core.network.exception.ApiException
-import ir.kitgroup.partnerManagement.core.network.exception.ApiRequestExecutor
-import ir.kitgroup.partnerManagement.core.network.model.ModelResponse
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.feature.dashboard.model.SyncDataResponse
@@ -110,8 +109,10 @@ class SyncRepository @Inject constructor(
                 warningDao.getWarningsBySyncStatus(SyncStatus.PENDING_INSERT)
             val pendingWarningsUpdates =
                 warningDao.getWarningsBySyncStatus(SyncStatus.PENDING_UPDATE)
-            val pendingWarnings = pendingWarningsInserts + pendingWarningsUpdates
-            val pendingWarningsDto = pendingWarnings.map { entity -> entity.toPendingDto() }
+            val pendingWarnings =
+                pendingWarningsInserts + pendingWarningsUpdates
+            val pendingWarningsDto =
+                pendingWarnings.map { entity -> entity.toCreateWarningRequest() }
 
 
             //  واکشی سازمان ها جدید/ویرایشی

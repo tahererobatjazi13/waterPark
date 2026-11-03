@@ -3,9 +3,6 @@ package ir.kitgroup.partnerManagement.feature.organization.ui.detail.person
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Notes
-import androidx.compose.material.icons.filled.Wc
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,27 +17,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.Wc
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
@@ -70,6 +65,7 @@ import ir.kitgroup.partnerManagement.core.database.entity.OrganizationPersonEnti
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDescriptionField
 import ir.kitgroup.partnerManagement.core.ui.components.CustomEditTextField
 import ir.kitgroup.partnerManagement.core.ui.components.DropdownSelectorField
+import ir.kitgroup.partnerManagement.core.ui.components.DualActionButtonBottomBar
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.OfflinePendingFooterBanner
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
@@ -80,7 +76,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
 import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationStatus
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
-import ir.kitgroup.partnerManagement.core.ui.components.DualActionButtonBottomBar
 
 @Composable
 fun OrganizationPersonsTabContent(
@@ -114,73 +109,77 @@ fun OrganizationPersonsTabContent(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Box(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // هدر تب
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 SectionTitle(title = stringResource(R.string.label_related_persons_list))
             }
-            FilledTonalButton(
-                onClick = {
-                    viewModel.resetForm()
-                    showAddPersonSheet = true
-                },
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = appColors.success,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.label_add_person),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
 
-        if (persons.isEmpty()) {
-            EmptyState(
-                textRes = R.string.msg_no_person_found,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                itemsIndexed(
-                    items = persons,
-                    key = { _, person -> person.orgPersonId }
-                ) { index, person ->
-                    PersonOrganizationCard(
-                        index = index,
-                        person = person,
-                        onPhoneClick = onPhoneClick
-                    )
+            if (persons.isEmpty()) {
+                EmptyState(
+                    textRes = R.string.msg_no_person_found,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(bottom = 84.dp) // فضای کافی جهت جلوگیری از پوشیده شدن آخرین آیتم زیر FAB
+                ) {
+                    itemsIndexed(
+                        items = persons,
+                        key = { _, person -> person.orgPersonId }
+                    ) { index, person ->
+                        PersonOrganizationCard(
+                            index = index,
+                            person = person,
+                            onPhoneClick = onPhoneClick
+                        )
+                    }
                 }
             }
         }
+
+        // دکمه شناور افزودن در پایین صفحه
+        ExtendedFloatingActionButton(
+            onClick = {
+                viewModel.resetForm()
+                showAddPersonSheet = true
+            },
+            containerColor = appColors.success,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shape = RoundedCornerShape(16.dp),
+            icon = { Icon(Icons.Default.Add, contentDescription = null) },
+            text = {
+                Text(
+                    text = stringResource(R.string.label_add_person),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        )
     }
 
     if (showAddPersonSheet) {
@@ -386,7 +385,6 @@ private fun PersonOrganizationCard(
     val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
     val isPendingSync = person.syncStatus != SyncStatus.SYNCED
-    val primaryContact = person.mobile?.takeIf { it.isNotBlank() } ?: person.phone
 
     val genderEnum = PersonGenderType.fromId(person.gender)
     val roleEnum = PersonOrganizationRole.fromId(person.role)
@@ -432,7 +430,6 @@ private fun PersonOrganizationCard(
                         StatusBadge(status = PersonOrganizationStatus.fromId(person.statusRelation))
                     }
                 }
-
             }
 
             // باکس مشخصات فردی، نقش سازمانی و راه‌های ارتباطی

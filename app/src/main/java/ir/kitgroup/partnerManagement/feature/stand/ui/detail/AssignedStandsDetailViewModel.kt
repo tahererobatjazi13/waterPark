@@ -1,5 +1,6 @@
 package ir.kitgroup.partnerManagement.feature.stand.ui.detail
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,6 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -47,37 +50,43 @@ class AssignedStandsDetailViewModel @Inject constructor(
         )
 
 
-
     private val _uiStateChange = MutableStateFlow(AssignedStandDetailUiState())
     val uiStateChange: StateFlow<AssignedStandDetailUiState> = _uiStateChange.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvent = _uiEvent.asSharedFlow()
 
+
     fun changeStatusAssignStand(
-     /*   standAssignmentId: String,
-        organizationId: String,*/
         newStatusId: Int,
-      /*  actualReturnDate: String? = null,
-        deliveryToOrgDate: String? = null,*/
         onErrorCallback: (() -> Unit)? = null,
         onSuccessCallback: () -> Unit
     ) {
         if (_uiStateChange.value.isChangeStatus) return
 
+        val currentDetail = standDetail.value?.assignedStand
+        if (currentDetail == null) {
+            viewModelScope.launch {
+                _uiEvent.emit(UiEvent.ShowError(UiText.DynamicString("اطلاعات تخصیص یافت نشد.")))
+                onErrorCallback?.invoke()
+            }
+            return
+        }
+
         viewModelScope.launch {
             _uiStateChange.update { it.copy(isChangeStatus = true) }
+            val todayDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
 
             try {
-                val currentDetail = standDetail.value?.assignedStand
-
                 val request = ChangeAssignStandStatusRequest(
-                    standAssignmentId = currentDetail!!.assignedStandId,
-                    organizationId = currentDetail.organizationId!!,
+                    standAssignmentId = currentDetail.assignedStandId,
+                    organizationId = currentDetail.organizationId.orEmpty(),
                     status = newStatusId,
-                    actualReturnDate = currentDetail.actualReturnDate,
+                    actualReturnDate = currentDetail.actualReturnDate?.takeIf { it.isNotBlank() }
+                        ?: todayDate,
                     deliveryToOrgDate = currentDetail.deliveryToOrgDate
                 )
+                Log.d("requestrequeststandDetail", request.toString())
 
                 val result = assignedStandsRepository.changeStatusAssignStand(request)
 
@@ -94,16 +103,21 @@ class AssignedStandsDetailViewModel @Inject constructor(
                         onSuccessCallback()
                     },
                     onFailure = { error ->
-                        if (error.isNetworkError()) {
+                        Log.e(
+                            "ChangeStatus",
+                            "Error received: ${error.javaClass.simpleName} - ${error.message}"
+                        )
 
-                            // تنها در صورت قطعی واقعی اینترنت در دیتابیس لوکال کش می‌شود
+                        if (error.isNetworkError()) {
                             try {
+                                // حذف عملگر خطرناک !! برای جلوگیری از NullPointerException
                                 assignedStandsRepository.saveOfflineAssignStandStatusChange(
                                     standAssignmentId = currentDetail.assignedStandId,
-                                    organizationId = currentDetail.organizationId,
+                                    organizationId = currentDetail.organizationId.orEmpty(),
                                     status = newStatusId,
-                                    actualReturnDate =  currentDetail.actualReturnDate!!,
-                                    deliveryToOrgDate = currentDetail.deliveryToOrgDate!!
+                                    actualReturnDate = currentDetail.actualReturnDate?.takeIf { it.isNotBlank() }
+                                        ?: todayDate,
+                                    deliveryToOrgDate = currentDetail.deliveryToOrgDate.orEmpty()
                                 )
 
                                 _uiEvent.emit(
@@ -114,11 +128,12 @@ class AssignedStandsDetailViewModel @Inject constructor(
                                 delay(500)
                                 onSuccessCallback()
                             } catch (dbError: Exception) {
-                               onErrorCallback?.invoke()
+                                Log.e("ChangeStatus", "Database save error", dbError)
+                                onErrorCallback?.invoke()
                                 _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(dbError)))
                             }
                         } else {
-                           onErrorCallback?.invoke()
+                            onErrorCallback?.invoke()
                             _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(error)))
                         }
                     }
@@ -126,11 +141,13 @@ class AssignedStandsDetailViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                onErrorCallback?.invoke()
                 _uiEvent.emit(UiEvent.ShowError(AppErrorMapper.map(e)))
             } finally {
                 _uiStateChange.update { it.copy(isChangeStatus = false) }
             }
         }
     }
+
 
 }

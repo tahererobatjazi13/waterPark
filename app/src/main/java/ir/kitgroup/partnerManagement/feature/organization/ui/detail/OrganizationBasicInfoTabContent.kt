@@ -63,11 +63,12 @@ fun OrganizationBasicInfoTabContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
         // اطلاعات پایه سازمانی و قرارداد
         SectionTitle(stringResource(R.string.label_organization_basic_information))
+
         BasicInfoSection(
             organization = organization,
             activeVisitorName = activeVisitorName,
@@ -250,10 +251,10 @@ private fun BusinessOverviewCards(item: OrganizationWithDetail) {
             Surface(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(14.dp),
-                color = if (hasStand) colors.primaryContainer.copy(alpha = 0.4f) else appColors.cardBackground,
+                color = if (hasForeignGuest) colors.primaryContainer.copy(alpha = 0.4f) else appColors.cardBackground,
                 border = BorderStroke(
                     0.8.dp,
-                    if (hasStand) colors.primary.copy(alpha = 0.5f) else appColors.border
+                    if (hasForeignGuest) colors.primary.copy(alpha = 0.5f) else appColors.border
                 )
             ) {
                 Column(

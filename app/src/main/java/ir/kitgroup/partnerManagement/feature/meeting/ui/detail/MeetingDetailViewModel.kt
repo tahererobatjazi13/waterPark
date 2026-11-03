@@ -163,7 +163,7 @@ class MeetingDetailViewModel @Inject constructor(
     val uiState: StateFlow<AttachmentsFileUiState> = _uiState.asStateFlow()
 
 
-    fun loadMeetingAttachments(orgId: String, meetingId: String) {
+    private fun loadMeetingAttachments(orgId: String, meetingId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isImagesLoading = true) }
 
@@ -191,10 +191,11 @@ class MeetingDetailViewModel @Inject constructor(
                     attachments = dtoList,
                     baseUrl = baseUrlFlow.value
                 )
+                val meetingFilesOnly = dtoList.filter { it.meetingid == meetingId }
 
                 _uiState.update {
                     it.copy(
-                        attachments = dtoList,
+                        attachments = meetingFilesOnly,
                         isImagesLoading = false
                     )
                 }
@@ -215,15 +216,48 @@ class MeetingDetailViewModel @Inject constructor(
 
     fun downloadAttachmentManually(attachmentId: String, fileExtension: String?) {
         viewModelScope.launch {
-            val imagesDir = File(context.filesDir, "attachments").apply { mkdirs() }
-            val localFile = File(imagesDir, "$attachmentId${fileExtension ?: ".jpg"}")
+            try {
+                val imagesDir = File(context.filesDir, "attachments").apply { mkdirs() }
+                val localFile = File(imagesDir, "$attachmentId${fileExtension ?: ".jpg"}")
 
-            val result = attachmentFileRepository.downloadAndSaveFile(attachmentId, localFile)
-            if (result.isSuccess) {
-                // بروزرسانی localPath در دیتابیس
-                attachmentFileDao.updateLocalPath(attachmentId, localFile.absolutePath)
-                // رفرش UI یا State
+                val result = attachmentFileRepository.downloadAndSaveFile(attachmentId, localFile)
+                if (result.isSuccess) {
+                    // بروزرسانی localPath در دیتابیس
+                    attachmentFileDao.updateLocalPath(attachmentId, localFile.absolutePath)
+
+                    _uiEvent.emit(
+                        UiEvent.ShowMessage(
+                            UiText.DynamicString(context.getString(R.string.msg_file_downloaded_successfully))
+                        )
+                    )
+
+                    // (اختیاری) اگر فایل تصویر است، اسکن کنیم تا در گالری دستگاه هم دیده شود
+                    if (localFile.exists() && isImageFile(localFile.name)) {
+                        android.media.MediaScannerConnection.scanFile(
+                            context,
+                            arrayOf(localFile.absolutePath),
+                            arrayOf("image/jpeg", "image/png"),
+                            null
+                        )
+                    }
+                } else {
+                    _uiEvent.emit(
+                        UiEvent.ShowError(UiText.DynamicString("خطا در دانلود فایل"))
+                    )
+                }
+            } catch (e: Exception) {
+                _uiEvent.emit(
+                    UiEvent.ShowError(AppErrorMapper.map(e))
+                )
             }
         }
     }
+
+    // تابع کمکی برای تشخیص پسوند تصویر
+    private fun isImageFile(fileName: String): Boolean {
+        val ext = fileName.substringAfterLast('.', "").lowercase()
+        return ext in listOf("jpg", "jpeg", "png", "webp")
+    }
+
+
 }

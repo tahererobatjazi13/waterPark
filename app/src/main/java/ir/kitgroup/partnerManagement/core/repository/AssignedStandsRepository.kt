@@ -133,8 +133,13 @@ class AssignedStandsRepository @Inject constructor(
                 status = status,
                 actualReturnDate = actualReturnDate,
                 deliveryToOrgDate = deliveryToOrgDate,
-
                 )
+        )
+
+        assignedStandDao.updateSyncStatus(
+            assignedStandId = standAssignmentId,
+            status = SyncStatus.PENDING_INSERT,
+            isLocallyModified = true
         )
     }
 }

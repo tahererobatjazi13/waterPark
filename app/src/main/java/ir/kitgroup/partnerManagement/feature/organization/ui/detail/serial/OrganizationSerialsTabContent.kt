@@ -11,42 +11,39 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import ir.kitgroup.partnerManagement.R
-import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
-import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
-import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.model.AssignedSerialWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
+import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
+import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.ContractOfferStatus
-
 
 @Composable
 fun OrganizationSerialsTabContent(
@@ -55,7 +52,6 @@ fun OrganizationSerialsTabContent(
     onAddTicketClick: () -> Unit,
     onTicketClick: (AssignedSerialWithDetail) -> Unit,
 ) {
-
     var selectedTicketForDetail by remember { mutableStateOf<AssignedSerialWithDetail?>(null) }
     val appColors = LocalPartnerManagementColors.current
 
@@ -65,68 +61,73 @@ fun OrganizationSerialsTabContent(
         organizationSerialViewModel.observeOrganizationAssignedSerials(organizationId)
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // هدر تب شامل عنوان و دکمه افزودن
-        Row(
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            Spacer(modifier = Modifier.height(4.dp))
 
-            Box(modifier = Modifier.weight(1f)) {
+            // هدر تب شامل عنوان
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 SectionTitle(title = stringResource(R.string.label_organization_serial_list))
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            FilledTonalButton(
-                onClick = onAddTicketClick,
-                shape = RoundedCornerShape(10.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = appColors.success,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+            if (serials.isEmpty()) {
+                EmptyState(
+                    textRes = R.string.msg_no_tickets_offers_found,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
                 )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.label_contract_offer),
-                    style = typography.titleLarge
-                )
-            }
-        }
-
-        if (serials.isEmpty()) {
-            EmptyState(
-                textRes = R.string.msg_no_tickets_offers_found,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(serials, key = { it.assignedSerial.serialAssignmentId }) { ticket ->
-                    TicketOfferCard(
-                        item = ticket,
-                        onClick = {
-                            selectedTicketForDetail = ticket
-                            onTicketClick(ticket)
-                        }
-                    )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues( bottom = 84.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(serials, key = { it.assignedSerial.serialAssignmentId }) { ticket ->
+                        TicketOfferCard(
+                            item = ticket,
+                            onClick = {
+                                selectedTicketForDetail = ticket
+                                onTicketClick(ticket)
+                            }
+                        )
+                    }
                 }
             }
         }
+
+        // دکمه شناور پایین صفحه
+        ExtendedFloatingActionButton(
+            onClick = onAddTicketClick,
+            containerColor = appColors.success,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shape = RoundedCornerShape(16.dp),
+            icon = { Icon(Icons.Default.Add, contentDescription = null) },
+            text = {
+                Text(
+                    text = stringResource(R.string.label_contract_offer),
+                    style = typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        )
     }
 }
 
@@ -139,13 +140,11 @@ fun TicketOfferCard(
 
     Card(
         onClick = onClick,
-
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = appColors.cardBackground),
         border = BorderStroke(0.5.dp, appColors.border)
-    )
-    {
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -159,7 +158,6 @@ fun TicketOfferCard(
                     modifier = Modifier.weight(1f)
                 )
                 StatusBadge(status = ContractOfferStatus.fromId(item.assignedSerial.contractOfferStatus))
-
             }
 
             Spacer(modifier = Modifier.height(8.dp))

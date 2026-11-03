@@ -14,6 +14,7 @@ import ir.kitgroup.partnerManagement.core.database.dao.StandTypeDao
 import ir.kitgroup.partnerManagement.core.database.entity.AssignedStandEntity
 import ir.kitgroup.partnerManagement.core.repository.AssignedStandsRepository
 import ir.kitgroup.partnerManagement.core.ui.util.AppErrorMapper
+import ir.kitgroup.partnerManagement.core.ui.util.AssignmentMode
 import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UiText
@@ -53,6 +54,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
 
     private val preselectedOrganizationId: String? = savedStateHandle["organizationId"]
     val isOrganizationLocked: Boolean = !preselectedOrganizationId.isNullOrBlank()
+    private val meetingIdArg: String? = savedStateHandle["meetingId"]
 
 
     private val assignedStandIdArg: String? =
@@ -63,7 +65,8 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         AddAssignedStandsOrganizationUiState(
             isEditMode = isEditMode,
-            organizationId = preselectedOrganizationId.orEmpty()
+            organizationId = preselectedOrganizationId.orEmpty(),
+            meetingId = meetingIdArg
         )
     )
 
@@ -94,7 +97,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 assignmentDate = today,
-                plannedReturnDate = today
+                plannedReturnDate = ""
             )
         }
     }
@@ -203,10 +206,19 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
     }
 
     fun onAssignmentModeChanged(mode: Int) {
-        _uiState.update {
-            it.copy(assignmentMode = mode)
+        _uiState.update { state ->
+            val isTrust = mode == AssignmentMode.AMANI.id
+            state.copy(
+                assignmentMode = mode,
+                plannedReturnDate = if (isTrust) {
+                    state.plannedReturnDate.ifBlank { getTodayJalaliDate() }
+                } else {
+                    ""
+                }
+            )
         }
     }
+
 
     fun onAssignmentDateChanged(date: String) {
         _uiState.update {
@@ -258,6 +270,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
     fun submitAssignStand(
         onSuccessCallback: () -> Unit
     ) {
+
         val state = _uiState.value
 
         if (state.isLoading) {
@@ -290,15 +303,18 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
 
                 val count =
                     state.count.toIntOrNull() ?: 1
+                val isTrustMode = state.assignmentMode == AssignmentMode.AMANI.id
 
-                val standTypeId =    state.advertisingStandId.orEmpty()
+                val standTypeId = state.advertisingStandId.orEmpty()
 
                 val formattedAssignmentDate =
                     jalaliToGregorian(state.assignmentDate).orEmpty()
 
-                val formattedPlannedReturnDate =
-                    jalaliToGregorian(state.plannedReturnDate).orEmpty()
-
+                val formattedPlannedReturnDate: String? = if (isTrustMode) {
+                    jalaliToGregorian(state.plannedReturnDate)?.ifBlank { null }
+                } else {
+                    null
+                }
                 val formattedDeliveryToVisitorDate =
                     jalaliToGregorian(state.deliveryToVisitorDate)
 
@@ -316,7 +332,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
                     advertisingStandId = state.advertisingStandId,
                     visitorId = actualVisitorId,
                     organizationId = state.organizationId,
-                    meetingId = null,
+                    meetingId = state.meetingId,
                     count = count,
                     assignmentType = state.assignmentType,
                     assignmentMode = state.assignmentMode,
@@ -329,6 +345,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
                         .ifEmpty { null },
                     status = state.status
                 )
+                Log.d("CreateAssignStandRequest", request.toString())
 
                 if (isEditMode) {
                     updateAssignedStand(
@@ -352,7 +369,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
                         request = request,
                         actualVisitorId = actualVisitorId,
                         count = count,
-                        standTypeId =state.advertisingStandId ,
+                        standTypeId = state.advertisingStandId,
                         formattedAssignmentDate = formattedAssignmentDate,
                         formattedPlannedReturnDate = formattedPlannedReturnDate,
                         formattedDeliveryToVisitorDate = formattedDeliveryToVisitorDate,
@@ -386,7 +403,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
         standTypeId: String,
         count: Int,
         formattedAssignmentDate: String,
-        formattedPlannedReturnDate: String,
+        formattedPlannedReturnDate: String?,
         formattedDeliveryToVisitorDate: String?,
         formattedDeliveryToOrgDate: String?,
         currentTimestamp: Long,
@@ -456,6 +473,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
                         count = count,
                         assignmentType = state.assignmentType,
                         assignmentMode = state.assignmentMode,
+                        meetingId = state.meetingId,
                         assignmentDate = formattedAssignmentDate,
                         plannedReturnDate = formattedPlannedReturnDate,
                         deliveryToVisitorDate = formattedDeliveryToVisitorDate,
@@ -494,7 +512,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
         count: Int,
         standTypeId: String,
         formattedAssignmentDate: String,
-        formattedPlannedReturnDate: String,
+        formattedPlannedReturnDate: String?,
         formattedDeliveryToVisitorDate: String?,
         formattedDeliveryToOrgDate: String?,
         currentTimestamp: Long,
@@ -539,6 +557,7 @@ class AddAssignedStandsOrganizationViewModel @Inject constructor(
                         visitorId = actualVisitorId,
                         standTypeId = standTypeId,
                         count = count,
+                        meetingId = state.meetingId,
                         assignmentType = state.assignmentType,
                         assignmentMode = state.assignmentMode,
                         assignmentDate = formattedAssignmentDate,

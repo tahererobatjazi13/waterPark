@@ -28,7 +28,7 @@ interface AssignedStandDao {
     fun observeByOrganizationWithDetail(organizationId: String): Flow<List<AssignedStandWithDetail>>
 
     @Transaction
-    @Query("SELECT * FROM assigned_stands  WHERE assignmentType = 2  ORDER BY modifiedOn DESC")
+    @Query("SELECT * FROM assigned_stands  WHERE assignmentType = 1  ORDER BY modifiedOn DESC")
     fun getOrganizationAssignedStandsWithDetail(): Flow<List<AssignedStandWithDetail>>
 
     @Transaction

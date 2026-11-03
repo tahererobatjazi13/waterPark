@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Typeface
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Build
 import android.util.TypedValue
 import android.view.View
@@ -14,6 +15,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import ir.kitgroup.partnerManagement.R
+import ir.kitgroup.partnerManagement.core.network.model.AttachmentFileDto
+import ir.kitgroup.partnerManagement.core.ui.model.OrganizationImageItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -394,3 +397,42 @@ object AttachmentMimeTypes {
         return ALLOWED_MIME_TYPES.any { it.equals(mimeType, ignoreCase = true) }
     }
 }
+
+
+fun mapDtosToImageItems(
+    context: Context,
+    attachments: List<AttachmentFileDto>,
+    currentBaseUrl: String
+): List<OrganizationImageItem> {
+    val imagesDir = File(context.filesDir, "attachments")
+    return attachments.map { attachment ->
+        val extension = if (!attachment.fileExtension.isNullOrBlank()) {
+            if (attachment.fileExtension.startsWith(".")) attachment.fileExtension else ".${attachment.fileExtension}"
+        } else ".jpg"
+
+        val localFile = File(imagesDir, "${attachment.attachmentFileId}$extension")
+        val localUri = if (localFile.exists()) Uri.fromFile(localFile) else null
+
+        val serverImageUrl = when {
+            !attachment.fileUrl.isNullOrBlank() && attachment.fileUrl.startsWith("http", true) -> {
+                attachment.fileUrl
+            }
+            !attachment.fileUrl.isNullOrBlank() -> {
+                val cleanPath = attachment.fileUrl.removePrefix("/")
+                "$currentBaseUrl/$cleanPath"
+            }
+            else -> {
+                "$currentBaseUrl/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
+            }
+        }
+
+        OrganizationImageItem(
+            uri = localUri,
+            fileType = attachment.fileType,
+            description = attachment.description.orEmpty(),
+            uploadedFileId = attachment.attachmentFileId,
+            serverImageUrl = serverImageUrl
+        )
+    }
+}
+

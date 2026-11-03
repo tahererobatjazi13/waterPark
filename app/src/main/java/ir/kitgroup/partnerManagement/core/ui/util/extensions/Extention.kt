@@ -11,7 +11,7 @@ fun Status.toDisplayName(): String = when (this) {
 
 /*
 git add .
-git commit -m "add file upload"
+git commit -m "pending list sync"
 git push -u origin master
 git push
 */

@@ -50,6 +50,8 @@ data class MeetingDto(
 
     val stateCode: Int?,
 
-    val modifiedOn: String?
+    val modifiedOn: String?,
+
+    val flagInsUp: Boolean
 
 )

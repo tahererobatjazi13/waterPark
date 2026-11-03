@@ -248,9 +248,6 @@ fun NavGraphBuilder.organizationNavGraph(
                                 )
                             )
                         },
-                        onDisableClick = {
-                            // عملیات غیرفعال‌سازی
-                        },
                         onMeetingClick = { meetingId ->
                             navController.navigate(
                                 Screen.MeetingDetail.createRoute(meetingId)

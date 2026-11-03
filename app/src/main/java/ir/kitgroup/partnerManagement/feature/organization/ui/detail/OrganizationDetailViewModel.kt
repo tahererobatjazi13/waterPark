@@ -192,7 +192,7 @@ class OrganizationDetailViewModel @Inject constructor(
                                         UiText.StringResource(R.string.msg_changes_saved_offline_synchronized_connection)
                                     )
                                 )
-                                delay(500)
+                                delay(400)
                                 onSuccessCallback()
                             } catch (dbError: Exception) {
                                 onErrorCallback?.invoke()
@@ -253,10 +253,11 @@ class OrganizationDetailViewModel @Inject constructor(
                     attachments = dtoList,
                     baseUrl = baseUrlFlow.value
                 )
+                val organizationFilesOnly = dtoList.filter { it.meetingid.isNullOrBlank() }
 
                 _uiState.update {
                     it.copy(
-                        attachments = dtoList,
+                        attachments = organizationFilesOnly,
                         isImagesLoading = false
                     )
                 }

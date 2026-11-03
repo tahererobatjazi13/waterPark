@@ -19,11 +19,6 @@ interface AttachmentFileDao {
     """)
     suspend fun getBestThumbnail(orgId: String): AttachmentFileEntity?
 
-    @Query("SELECT * FROM attachments_file WHERE organizationId IN (:orgIds)")
-    suspend fun getAttachmentsForOrganizations(orgIds: List<String>): List<AttachmentFileEntity>
-
-
-
     @Query("SELECT * FROM attachments_file WHERE attachmentFileId = :fileId")
     suspend fun getById(fileId: String): AttachmentFileEntity?
 
@@ -35,7 +30,7 @@ interface AttachmentFileDao {
 
 
     // پیوست‌های سازمان (بدون بازدید)
-    @Query("SELECT * FROM attachments_file WHERE organizationId = :orgId AND meetingId IS NULL")
+    @Query("SELECT * FROM attachments_file WHERE organizationId = :orgId AND (meetingId IS NULL OR meetingId = '')")
     suspend fun getOrganizationAttachments(orgId: String): List<AttachmentFileEntity>
 
     // ب) پیوست‌های یک بازدید خاص برای آن سازمان

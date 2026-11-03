@@ -61,7 +61,7 @@ fun OrganizationGeneralInfoTabContent(organization: OrganizationWithDetail) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         SectionTitle(stringResource(R.string.label_organization_statistical_information))

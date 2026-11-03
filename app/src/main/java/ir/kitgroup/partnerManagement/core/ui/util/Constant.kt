@@ -317,8 +317,8 @@ enum class StandType(val id: Int, @StringRes val titleRes: Int) {
 }
 
 enum class AssignmentType(val id: Int, @StringRes val titleRes: Int) {
-    ASSIGN_TO_VISITOR(1, R.string.assign_type_to_visitor),      // تخصیص به بازاریاب
-    ASSIGN_TO_ORGANIZATION(2, R.string.assign_type_to_organization), // تخصیص به سازمان
+    ASSIGN_TO_ORGANIZATION(1, R.string.assign_type_to_organization), // تخصیص به سازمان
+    ASSIGN_TO_VISITOR(2, R.string.assign_type_to_visitor),      // تخصیص به بازاریاب
     RETURN(3, R.string.assign_type_return),                          // عودت
     COLLECT(4, R.string.assign_type_collect),                        // جمع آوری
     TERMINATE(5, R.string.assign_type_terminate);                    // خاتمه
@@ -449,6 +449,25 @@ enum class PersonGenderType(
     }
 }
 
+enum class CustomerType(
+    val id: Int,
+    @StringRes val titleRes: Int
+) {
+    MALE(
+        id = 1,
+        titleRes = R.string.label_iran
+    ),
+    FEMALE(
+        id = 2,
+        titleRes = R.string.label_foreign
+    );
+
+    companion object {
+        fun fromId(id: Int?): CustomerType? {
+            return entries.firstOrNull { it.id == id }
+        }
+    }
+}
 
 enum class OfferDetailPlanStatus(
     override val id: Int,

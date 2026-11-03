@@ -13,7 +13,6 @@ data class VisitorItem(
 )
 
 data class AddEditMeetingUiState(
-    // فیلدهای فرم
     val meetingId: String? = null,
     val organizationId: String = "",
     val organizationName: String = "",
@@ -56,7 +55,10 @@ data class AddEditMeetingUiState(
             val isInPerson = visitType == MeetingType.PLANNED_IN_PERSON ||
                     visitType == MeetingType.UNPLANNED_IN_PERSON
 
-            val isLocationValid = !isInPerson || (!latitude!!.isNaN()&& !longitude!!.isNaN())
+            val isLocationValid = !isInPerson || (
+                    latitude != null && !latitude.isNaN() &&
+                            longitude != null && !longitude.isNaN()
+                    )
 
             return organizationId.isNotBlank() &&
                     subjectVisitId.isNotBlank() &&

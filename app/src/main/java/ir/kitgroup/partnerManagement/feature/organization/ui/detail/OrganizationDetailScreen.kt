@@ -92,20 +92,17 @@ import ir.kitgroup.partnerManagement.feature.organization.ui.detail.contract.Org
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.meeting.OrganizationMeetingsTabContent
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.person.OrganizationPersonsTabContent
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.serial.OrganizationSerialsTabContent
-import android.content.Intent
-import android.net.Uri
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.filled.*
+
 import androidx.compose.material3.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.*
 
 @Composable
 fun OrganizationDetailScreen(
     organizationId: String,
     onEditClick: (organizationId: String) -> Unit,
-    onDisableClick: () -> Unit,
     onStatusChangeSuccess: () -> Unit,
     onMeetingClick: (String) -> Unit,
     onAddMeetingClick: () -> Unit,
@@ -145,8 +142,6 @@ fun OrganizationDetailScreen(
     }
 
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
-    var showInactiveReasonDialog by rememberSaveable { mutableStateOf(false) }
-    var currentOrganizationStatus by rememberSaveable { mutableStateOf(OrganizationStatus.ACTIVE) }
 
     val activeVisitorName by organizationDetailViewModel.activeVisitorName.collectAsState()
     val activeContractName by organizationDetailViewModel.activeContractName.collectAsState()
@@ -209,22 +204,15 @@ fun OrganizationDetailScreen(
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             color = appColors.screenBackground
         ) {
-            if (organization == null) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-            } else {
-                val currentOrganization = organization!!
 
+            organization?.let { currentOrganization ->
                 Column(modifier = Modifier.fillMaxSize()) {
                     LaunchedEffect(isSupervisor) {
                         if (!isSupervisor && selectedTab == OrganizationDetailTab.VISITOR) {
                             selectedTab = OrganizationDetailTab.BASIC_INFO
                         }
                     }
+
 
                     // هدر یکپارچه سازمان در بالای صفحه برای دسترسی سریع میدانی
                     OrganizationSummaryHeader(
@@ -237,7 +225,7 @@ fun OrganizationDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(appColors.screenBackground)
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                .padding(horizontal = 12.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(horizontal = 2.dp)
                         ) {
@@ -253,8 +241,12 @@ fun OrganizationDetailScreen(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    )
 
                     // محتوای تب انتخاب‌شده
                     Box(modifier = Modifier.fillMaxSize()) {
@@ -322,6 +314,13 @@ fun OrganizationDetailScreen(
                                     onEditWarningClick = { item ->
                                         warningToEdit = item
                                         // showWarningDialog = true
+                                    },
+                                    onMeetingClick = { meetId ->
+                                        navController.navigate(
+                                            Screen.MeetingDetail.createRoute(
+                                                meetingId = meetId
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -368,14 +367,18 @@ fun OrganizationDetailScreen(
                             }
                         }
                     }
+
+
                 }
             }
         }
     }
 
-    if (showStatusDialog) {
+    if (showStatusDialog && organization != null) {
         ChangeOrganizationStatusDialog(
-            initialStatus = OrganizationStatus.ACTIVE,
+            initialStatus = OrganizationStatus.fromId(
+                organization!!.organization.status
+            ),
             visitSubjects = visitSubjects,
             initialReason = "",
             isSubmitting = uiStateChange.isChangeStatus,
@@ -408,25 +411,28 @@ fun OrganizationDetailScreen(
  */
 @Composable
 private fun OrganizationSummaryHeader(
-    organization: ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail,
+    organization: OrganizationWithDetail,
 ) {
-    val appColors = LocalPartnerManagementColors.current
     val colors = MaterialTheme.colorScheme
 
-    val lightGreenBorder = appColors.success.copy(alpha = 0.25f)
+    // رنگ حاشیه آبی ملایم بر اساس رنگ اصلی تم
+    val blueBorder = colors.primary.copy(alpha = 0.3f)
+    // رنگ پس‌زمینه داخلی خیلی ملایم آبی (اختیاری، برای هماهنگی با حاشیه آبی)
+    val lightBlueTint = colors.primary.copy(alpha = 0.04f)
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(0.8.dp, lightGreenBorder)
+        color = lightBlueTint,
+        border = BorderStroke(1.dp, blueBorder)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -534,7 +540,9 @@ fun ChangeOrganizationStatusDialog(
     }
     val statusTitles = statusEntries.map { stringResource(it.titleRes) }
 
-    var selectedStatus by rememberSaveable { mutableStateOf(initialStatus) }
+    var selectedStatus by rememberSaveable(initialStatus) {
+        mutableStateOf(initialStatus)
+    }
     var inactiveReason by rememberSaveable { mutableStateOf(initialReason) }
     var deactiveDateMillis by rememberSaveable { mutableStateOf(System.currentTimeMillis()) }
     var visitDateMillis by rememberSaveable { mutableStateOf(System.currentTimeMillis()) }
@@ -557,152 +565,154 @@ fun ChangeOrganizationStatusDialog(
         remember(deactiveDateMillis) { convertMillisToJalali(deactiveDateMillis) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Column(
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(16.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.label_determination_organization_status),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.label_determination_organization_status),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
-                DropdownSelectorField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = stringResource(selectedStatus.titleRes),
-                    label = stringResource(R.string.label_status),
-                    placeholder = "",
-                    items = statusTitles,
-                    isRequired = true,
-                    onItemSelected = { selectedTitle ->
-                        val index = statusTitles.indexOf(selectedTitle)
-                        if (index != -1) {
-                            selectedStatus = statusEntries[index]
-                            reasonError = false
-                            subjectError = false
-                        }
-                    }
-                )
-
-                AnimatedVisibility(visible = isInactive) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        StatusDateRow(
-                            label = "تاریخ غیرفعال‌سازی: $deactiveDateDisplay",
-                            onClick = { showDeactiveDatePicker = true }
-                        )
-                        CustomDescriptionField(
-                            value = inactiveReason,
-                            onValueChange = {
-                                inactiveReason = it
+                    DropdownSelectorField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = stringResource(selectedStatus.titleRes),
+                        label = stringResource(R.string.label_status),
+                        placeholder = "",
+                        items = statusTitles,
+                        isRequired = true,
+                        onItemSelected = { selectedTitle ->
+                            val index = statusTitles.indexOf(selectedTitle)
+                            if (index != -1) {
+                                selectedStatus = statusEntries[index]
                                 reasonError = false
-                            },
-                            label = stringResource(R.string.label_inactivation_reason_field),
-                            placeholder = ""
-                        )
-                        if (reasonError) {
-                            Text(
-                                text = stringResource(R.string.error_inactivation_reason_required),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-                    }
-                }
-
-                AnimatedVisibility(visible = isUrgentReferral) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        StatusDateRow(
-                            label = "تاریخ بازدید: $visitDateDisplay",
-                            onClick = { showVisitDatePicker = true }
-                        )
-                        DropdownSelectorField(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = visitSubjects.firstOrNull { it.subjectVisitId == selectedSubjectId }?.title
-                                ?: "",
-                            label = "موضوع بازدید",
-                            placeholder = "",
-                            items = visitSubjects.mapNotNull { it.title },
-                            isRequired = true,
-                            onItemSelected = { title ->
-                                selectedSubjectId =
-                                    visitSubjects.find { it.title == title }?.subjectVisitId
                                 subjectError = false
                             }
-                        )
-                        if (subjectError) {
-                            Text(
-                                text = "انتخاب موضوع بازدید الزامی است.",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelSmall
+                        }
+                    )
+
+                    AnimatedVisibility(visible = isInactive) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            StatusDateRow(
+                                label = "تاریخ غیرفعال‌سازی: $deactiveDateDisplay",
+                                onClick = { showDeactiveDatePicker = true }
                             )
+                            CustomDescriptionField(
+                                value = inactiveReason,
+                                onValueChange = {
+                                    inactiveReason = it
+                                    reasonError = false
+                                },
+                                label = stringResource(R.string.label_inactivation_reason_field),
+                                placeholder = ""
+                            )
+                            if (reasonError) {
+                                Text(
+                                    text = stringResource(R.string.error_inactivation_reason_required),
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
                         }
                     }
-                }
 
-                if (isSubmitting) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CustomButton(
-                        text = stringResource(R.string.label_registration),
-                        enabled = !isSubmitting,
-                        onClick = {
-                            when {
-                                isInactive && inactiveReason.trim().isBlank() -> {
-                                    reasonError = true
+                    AnimatedVisibility(visible = isUrgentReferral) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            StatusDateRow(
+                                label = "تاریخ بازدید: $visitDateDisplay",
+                                onClick = { showVisitDatePicker = true }
+                            )
+                            DropdownSelectorField(
+                                modifier = Modifier.fillMaxWidth(),
+                                value = visitSubjects.firstOrNull { it.subjectVisitId == selectedSubjectId }?.title
+                                    ?: "",
+                                label = "موضوع بازدید",
+                                placeholder = "",
+                                items = visitSubjects.mapNotNull { it.title },
+                                isRequired = true,
+                                onItemSelected = { title ->
+                                    selectedSubjectId =
+                                        visitSubjects.find { it.title == title }?.subjectVisitId
+                                    subjectError = false
                                 }
-
-                                isUrgentReferral && selectedSubjectId == null -> {
-                                    subjectError = true
-                                }
-
-                                isInactive -> {
-                                    onConfirm(
-                                        selectedStatus,
-                                        deactiveDateIso,
-                                        inactiveReason.trim(),
-                                        null,
-                                        null
-                                    )
-                                }
-
-                                isUrgentReferral -> {
-                                    onConfirm(
-                                        selectedStatus,
-                                        null,
-                                        null,
-                                        visitDateIso,
-                                        selectedSubjectId
-                                    )
-                                }
-
-                                else -> {
-                                    onConfirm(selectedStatus, null, null, null, null)
-                                }
+                            )
+                            if (subjectError) {
+                                Text(
+                                    text = "انتخاب موضوع بازدید الزامی است.",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
                             }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                    CustomOutlinedButton(
-                        text = stringResource(R.string.label_cancel),
-                        enabled = !isSubmitting,
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    )
+                        }
+                    }
+
+                    if (isSubmitting) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CustomButton(
+                            text = stringResource(R.string.label_registration),
+                            enabled = !isSubmitting,
+                            onClick = {
+                                when {
+                                    isInactive && inactiveReason.trim().isBlank() -> {
+                                        reasonError = true
+                                    }
+
+                                    isUrgentReferral && selectedSubjectId == null -> {
+                                        subjectError = true
+                                    }
+
+                                    isInactive -> {
+                                        onConfirm(
+                                            selectedStatus,
+                                            deactiveDateIso,
+                                            inactiveReason.trim(),
+                                            null,
+                                            null
+                                        )
+                                    }
+
+                                    isUrgentReferral -> {
+                                        onConfirm(
+                                            selectedStatus,
+                                            null,
+                                            null,
+                                            visitDateIso,
+                                            selectedSubjectId
+                                        )
+                                    }
+
+                                    else -> {
+                                        onConfirm(selectedStatus, null, null, null, null)
+                                    }
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        CustomOutlinedButton(
+                            text = stringResource(R.string.label_cancel),
+                            enabled = !isSubmitting,
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }

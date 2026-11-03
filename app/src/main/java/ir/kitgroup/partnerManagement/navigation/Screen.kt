@@ -93,17 +93,39 @@ sealed class Screen(val route: String) {
         Screen("assigned_stands_organization_list")
 
 
-    object AddAssignedStandsOrganization {
-        const val route =
-            "add_assigned_stands_org?organizationId={organizationId}&assignedStandId={assignedStandId}"
+    data object AddAssignedStandsOrganization : Screen(
+        "add_assigned_stands_org?organizationId={organizationId}&assignedStandId={assignedStandId}&meetingId={meetingId}"
+    ) {
+        const val BASE_ROUTE = "add_assigned_stands_org"
+        const val ORGANIZATION_ID_ARGUMENT = "organizationId"
+        const val ASSIGNED_STAND_ID_ARGUMENT = "assignedStandId"
+        const val MEETING_ID_ARGUMENT = "meetingId"
 
-        fun createRoute(organizationId: String? = null, assignedStandId: String? = null): String {
-            val orgParam = organizationId?.let { "organizationId=$it" } ?: ""
-            val standParam = assignedStandId?.let { "assignedStandId=$it" } ?: ""
-            val query = listOf(orgParam, standParam).filter { it.isNotEmpty() }.joinToString("&")
-            return if (query.isNotEmpty()) "add_assigned_stands_org?$query" else "add_assigned_stands_org"
+        fun createRoute(
+            organizationId: String? = null,
+            assignedStandId: String? = null,
+            meetingId: String? = null
+        ): String {
+            val params = buildList {
+                if (!organizationId.isNullOrBlank()) {
+                    add("$ORGANIZATION_ID_ARGUMENT=$organizationId")
+                }
+                if (!assignedStandId.isNullOrBlank()) {
+                    add("$ASSIGNED_STAND_ID_ARGUMENT=$assignedStandId")
+                }
+                if (!meetingId.isNullOrBlank()) {
+                    add("$MEETING_ID_ARGUMENT=$meetingId")
+                }
+            }
+
+            return if (params.isEmpty()) {
+                BASE_ROUTE
+            } else {
+                "$BASE_ROUTE?${params.joinToString("&")}"
+            }
         }
     }
+
 
     data object AssignedStandsDetail : Screen(
         route = "assigned_stands_detail/{assignedStandId}"
@@ -128,33 +150,40 @@ sealed class Screen(val route: String) {
         fun createRoute(contractId: String) = "contract_detail/$contractId"
     }
 
-    data object AddContract :
-        Screen("addContract") {
+    data object AddContract : Screen("addContract") {
 
-        const val ORGANIZATION_ID_ARGUMENT =
-            "organizationId"
-
-        const val CONTRACT_ID_ARGUMENT =
-            "contractId"
+        const val ORGANIZATION_ID_ARGUMENT = "organizationId"
+        const val MEETING_ID_ARGUMENT = "meetingId"
+        const val CONTRACT_ID_ARGUMENT = "contractId"
 
         fun createRoute(
-            organizationId: String? = null
+            organizationId: String? = null,
+            meetingId: String? = null,
+            contractId: String? = null
         ): String {
+            val params = buildList {
+                if (!organizationId.isNullOrBlank()) {
+                    add("$ORGANIZATION_ID_ARGUMENT=$organizationId")
+                }
+                if (!meetingId.isNullOrBlank()) {
+                    add("$MEETING_ID_ARGUMENT=$meetingId")
+                }
+                if (!contractId.isNullOrBlank()) {
+                    add("$CONTRACT_ID_ARGUMENT=$contractId")
+                }
+            }
 
-            return if (
-                organizationId.isNullOrBlank()
-            ) {
+            return if (params.isEmpty()) {
                 route
             } else {
-
-                "$route?" +
-                        "$ORGANIZATION_ID_ARGUMENT=$organizationId"
+                "$route?${params.joinToString("&")}"
             }
         }
     }
 
-    data object EditContract :
-        Screen("edit_contract/{contractId}") {
+    data object EditContract : Screen("edit_contract/{contractId}") {
+
+        const val CONTRACT_ID_ARGUMENT = "contractId"
 
         fun createRoute(
             contractId: String
@@ -162,6 +191,7 @@ sealed class Screen(val route: String) {
             return "edit_contract/$contractId"
         }
     }
+
 
 
     data object AddSerialOffer : Screen("add_serialOffer?organizationId={organizationId}") {

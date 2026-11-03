@@ -36,6 +36,9 @@ data class AttachmentFileDto(
     @SerializedName("description")
     val description: String? = null,
 
+    @SerializedName("meetingid")
+    val meetingid: String? = null,
+
     @SerializedName("createdOn")
     val createdOn: String? = null
 )

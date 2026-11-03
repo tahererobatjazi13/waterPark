@@ -75,6 +75,8 @@
     <string name="label_gps_success_msg">موقعیت مکانی با GPS ثبت شد</string>
     <string name="label_summary_title">خلاصه فعالیت ها</string>
     <string name="label_total_assigned_stands">استندهای تخصیص‌یافته</string>
+
+    <string name="label_type_assigned_stands">انواع استندهای تعریف‌شده</string>
     <string name="label_total_assigned_serials">سریال‌های تخصیص‌یافته</string>
     <string name="label_total_warnings_registered">تذکرهای ثبت‌شده</string>
     <string name="label_received_visits">بازدیدهای دریافتی</string>
@@ -371,6 +373,7 @@
     <string name="label_serials_revoked">سریال‌های ابطال شده</string>
     <string name="label_serials_remaining">سریال‌های باقی‌مانده</string>
     <string name="label_action_view_details">جزئیات بیشتر</string>
+    <string name="label_show_details">مشاهده جزئیات</string>
     <string name="label_percent">%</string>
     <string name="label_active_marketers">بازاریابان فعال</string>
     <string name="label_marketers_unit">نفر</string>
@@ -387,7 +390,8 @@
     <string name="gender_male">مرد</string>
     <string name="gender_female">زن</string>
     <string name="gender_not_required">نیاز نیست</string>
-
+    <string name="label_iran">ایرانی</string>
+    <string name="label_foreign">خارجی</string>
     <string name="label_organization_role">نقش شخص در سازمان</string>
     <string name="hint_choose_organization_role">نقش شخص را انتخاب کنید</string>
     <string name="label_update_wallet_balance">به‌روزرسانی مانده کیف پول</string>
@@ -771,6 +775,7 @@
     <string name="msg_person_created">شخص با موفقیت ثبت شد.</string>
     <string name="error_invalid_mobile">شماره موبایل باید ۱۱ رقم و با 09 شروع شود</string>
     <string name="msg_server_error">خطا در دریافت اطلاعات از سرور</string>
+    <string name="msg_file_downloaded_successfully">فایل با موفقیت ذخیره شد</string>
     <string name="label_retry">تلاش مجدد</string>
     <string name="error_person_create">خطا در ثبت  شخص</string>
     <string name="error_no_active_visitor">ویزیتور فعال برای این سازمان مشخص نشده است</string>
@@ -783,31 +788,31 @@
     <string name="label_zero">0</string>
     <string name="label_serial_number_value">سریال: %1$s</string>
     <string name="label_ticket_product_title">%1$d. %2$s</string>
-    <string name="label_total_used_count">تعداد کل / مصرفی:</string>
+    <string name="label_total_used_count">تعداد کل / قطعی:</string>
     <string name="label_total_amount">مبلغ کل:</string>
     <string name="label_price_with_currency">%1$s ریال</string>
-    <string name="label_usage_date">تاریخ مصرف:</string>
+    <string name="label_usage_date">تاریخ صدور سند:</string>
     <string name="label_time">ساعت:</string>
     <string name="title_ticket_issue_details">جزئیات بلیط صادر شده</string>
     <string name="label_close">بستن</string>
-    <string name="label_product_service_title">عنوان سرویس/کالا</string>
-    <string name="label_serial_number">شماره سریال</string>
+    <string name="label_product_service_title">کالا و خدمات مرتبط</string>
+    <string name="label_serial_number">سریال بلیط</string>
     <string name="label_issue_number">شماره صدور</string>
     <string name="label_customer">مشتری</string>
-    <string name="label_ticket_status">وضعیت بلیط</string>
-    <string name="label_usage_status">وضعیت مصرف</string>
-    <string name="label_usage_datetime">تاریخ و زمان مصرف</string>
+    <string name="label_customer_type">نوع مشتری</string>
+    <string name="label_ticket_status">وضعیت سریال/بلیط</string>
+    <string name="label_usage_status">وضعیت سند</string>
+    <string name="label_usage_datetime">تاریخ و زمان صدور سند</string>
     <string name="label_datetime_value">%1$s - ساعت %2$s</string>
-    <string name="label_approval_date">تاریخ تایید</string>
+    <string name="label_approval_date">تاریخ تایید سند</string>
     <string name="label_total_count">تعداد کل</string>
-    <string name="label_actual_used_count">تعداد واقعی مصرف شده</string>
-    <string name="label_unit_price">قیمت واحد</string>
+    <string name="label_actual_used_count">تعداد قطعی</string>
+    <string name="label_unit_price">قیمت پایه</string>
     <string name="label_discount_value">%1$s ریال (%2$s%%)</string>
-    <string name="label_net_price">قیمت خالص</string>
-    <string name="label_total_paid">جمع کل پرداختی</string>
-    <string name="label_unit_commission">مبلغ پورسانت واحد</string>
-    <string name="label_total_commission">پورسانت کل</string>
-
+    <string name="label_net_price">مبلغ نهایی</string>
+    <string name="label_total_paid">مبلغ کل</string>
+    <string name="label_unit_commission">مبلغ پورسانت</string>
+    <string name="label_total_commission">پورسانت محاسبه شده</string>
     <string name="label_file_specifications">مشخصات فایل</string>
     <string name="label_type">نوع</string>
     <string name="label_confirm_and_add">تایید و افزودن</string>

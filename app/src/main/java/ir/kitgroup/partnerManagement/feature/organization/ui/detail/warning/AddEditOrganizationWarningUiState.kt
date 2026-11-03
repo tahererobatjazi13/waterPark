@@ -4,6 +4,7 @@ import ir.kitgroup.partnerManagement.core.database.entity.WarningTypeEntity
 
 data class AddEditOrganizationWarningUiState(
     val organizationId: String = "",
+    val meetingId : String? = null,
     val warningRecordId: String? = null,
     val warningTypeId: String = "",
     val description: String = "",

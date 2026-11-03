@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -60,7 +61,10 @@ import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
 import ir.kitgroup.partnerManagement.core.ui.components.SectionTitle
 import ir.kitgroup.partnerManagement.core.ui.components.StatusBadge
 import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
+import ir.kitgroup.partnerManagement.core.ui.util.CustomerType
 import ir.kitgroup.partnerManagement.core.ui.util.DataState
+import ir.kitgroup.partnerManagement.core.ui.util.GenderType
+import ir.kitgroup.partnerManagement.core.ui.util.PersonCategory
 import ir.kitgroup.partnerManagement.core.ui.util.TicketStatus
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 import ir.kitgroup.partnerManagement.core.ui.util.formatPrice
@@ -83,8 +87,10 @@ fun OrganizationTicketIssueTabContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        Spacer(modifier = Modifier.height(4.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -118,16 +124,20 @@ fun OrganizationTicketIssueTabContent(
                 ) {
                     Text(
                         text = errorMessage,
-                        style = typography.bodyLarge,
+                        style = typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     CustomButton(
                         text = stringResource(R.string.label_retry),
                         onClick = {
                             val online = isInternetAvailable(context)
                             organizationTicketIssueViewModel.retry(online)
-                        }
+                        },
+                        fillMaxWidth = false,
+                        modifier = Modifier.padding(end = 8.dp)
                     )
                 }
             }
@@ -390,6 +400,29 @@ private fun TicketIssueLineDetailDialog(
                             value = ticket.customerName
                                 ?: stringResource(R.string.label_not_available)
                         )
+
+                        DetailRowItem(
+                            label = stringResource(R.string.label_customer_type),
+                            value = ticket.finalCustomerType
+                                ?.let { CustomerType.fromId(it) }
+                                ?.let { stringResource(it.titleRes) }
+                                ?: stringResource(R.string.label_not_available)
+                        )
+                        DetailRowItem(
+                            label = stringResource(R.string.label_gender),
+                            value = ticket.gender
+                                ?.let { GenderType.fromId(it) }
+                                ?.let { stringResource(it.titleRes) }
+                                ?: stringResource(R.string.label_not_available)
+                        )
+
+                        DetailRowItem(
+                            label = stringResource(R.string.label_age_category),
+                            value = ticket.personCategory
+                                ?.let { PersonCategory.fromId(it) }
+                                ?.let { stringResource(it.titleRes) }
+                                ?: stringResource(R.string.label_not_available)
+                        )
                         DetailRowItem(
                             label = stringResource(R.string.label_ticket_status),
                             value = ticket.ticketStatusName
@@ -514,7 +547,7 @@ private fun DetailRowItem(
         )
         Text(
             text = value,
-            style = if (isHighlighted) typography.titleSmall.copy(fontWeight = FontWeight.Bold) else typography.bodyMedium,
+            style = if (isHighlighted) typography.titleMedium.copy(fontWeight = FontWeight.Bold) else typography.bodyMedium,
             color = if (isHighlighted) MaterialTheme.colorScheme.primary else appColors.textPrimary
         )
     }

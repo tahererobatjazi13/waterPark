@@ -87,7 +87,6 @@ import ir.kitgroup.partnerManagement.core.ui.util.SyncStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
 import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
-import saman.zamani.persiandate.PersianDate
 
 @Composable
 fun MeetingsListScreen(
@@ -112,14 +111,6 @@ fun MeetingsListScreen(
     val currentRole = remember(roleCode) { UserRole.fromCode(roleCode.toString()) }
     val isSupervisor = currentRole == UserRole.SUPERVISOR
 
-    val today = remember { PersianDate() }
-    val todayDate = remember(today) {
-        normalizeDate(
-            "${today.shYear}/${today.shMonth.toString().padStart(2, '0')}/${
-                today.shDay.toString().padStart(2, '0')
-            }"
-        )
-    }
     val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -143,25 +134,26 @@ fun MeetingsListScreen(
         allMeetings,
         searchQuery,
         selectedStartDate,
-        selectedStatus,
-        todayDate
+        selectedStatus
     ) {
         allMeetings?.filter { item ->
             val matchesSearch = searchQuery.isBlank() ||
                     item.subjectVisitName.contains(searchQuery, ignoreCase = true) ||
                     item.organizationName.contains(searchQuery, ignoreCase = true) ||
-                    item.visitorName.contains(searchQuery, ignoreCase = true) ||
-                    item.meeting.visitDate?.contains(searchQuery, ignoreCase = true) == true
+                    item.visitorName.contains(searchQuery, ignoreCase = true)
 
             val matchesStatus = selectedStatus == null || item.meeting.status == selectedStatus
 
             val matchesDateRange = selectedStartDate == null || run {
-                val itemVisitDate = item.meeting.visitDate ?: return@run false
-                val itemDate = normalizeDate(itemVisitDate)
-                val startDate = normalizeDate(selectedStartDate!!)
-                itemDate in startDate..todayDate
-            }
+                val rawVisitDate = item.meeting.visitDate ?: return@run false
 
+                // تبدیل تاریخ میلادی دیتابیس به تاریخ شمسی با فرمت استاندارد
+                val itemJalaliDate = formatJalaliDate(rawVisitDate)
+                val itemNormalized = normalizeDate(itemJalaliDate)
+                val startNormalized = normalizeDate(selectedStartDate!!)
+
+                itemNormalized == startNormalized
+            }
             matchesSearch && matchesStatus && matchesDateRange
         }
     }
@@ -199,7 +191,7 @@ fun MeetingsListScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = stringResource(R.string.label_register_visit),
-                        style = typography.titleMedium,
+                        style = typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -350,7 +342,7 @@ private fun MeetingFiltersRow(
                     onExpandedChange = { statusExpanded = !statusExpanded }
                 ) {
                     val statusText = selectedStatus?.let { id ->
-                        MeetingStatus.fromId(id)?.let { stringResource(it.titleRes) }
+                        MeetingStatus.fromId(id).let { stringResource(it.titleRes) }
                     } ?: stringResource(R.string.label_status)
 
                     val isStatusActive = selectedStatus != null
@@ -565,7 +557,7 @@ fun MeetingCard(
                     icon = meetingType.icon
                 )
             }
-            if (isSupervisor && !item.visitorName.isNullOrBlank()) {
+            if (isSupervisor && item.visitorName.isNotBlank()) {
                 val hasVisitor = !item.meeting.visitorName.isNullOrBlank() &&
                         item.meeting.visitorId != null
 
@@ -634,7 +626,7 @@ fun MeetingCard(
                             tint = appColors.textSecondary
                         )
                         Text(
-                            text = item.meeting.visitTime!!,
+                            text = item.meeting.visitTime,
                             style = typography.labelMedium,
                             color = appColors.textSecondary
                         )

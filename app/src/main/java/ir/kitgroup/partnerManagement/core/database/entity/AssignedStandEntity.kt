@@ -38,13 +38,13 @@ data class AssignedStandEntity(
 
     val assignmentDate: String? = null,
 
-    val plannedReturnDate: String? = null,
+    val plannedReturnDate: String? = null,  //تاریخ سررسید عودت
 
-    val actualReturnDate: String? = null,
+    val actualReturnDate: String? = null, // تاریخ عودت واقعی
 
-    val deliveryToOrgDate: String? = null,
+    val deliveryToOrgDate: String? = null,  //تاریخ تحویل به سازمان
 
-    val deliveryToVisitorDate: String? = null,
+    val deliveryToVisitorDate: String? = null, //تاریخ تحویل به بازاریاب
 
     val count: Int? = null,
 

@@ -2,6 +2,7 @@ package ir.kitgroup.partnerManagement.feature.organization.ui.add
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,8 +50,8 @@ import ir.kitgroup.partnerManagement.core.repository.AttachmentFileRepository
 import ir.kitgroup.partnerManagement.core.repository.OrganizationPersonRepository
 import ir.kitgroup.partnerManagement.core.ui.util.PersonOrganizationRole
 import ir.kitgroup.partnerManagement.core.ui.util.isNetworkError
+import ir.kitgroup.partnerManagement.core.ui.util.mapDtosToImageItems
 import ir.kitgroup.partnerManagement.feature.organization.ui.add.model.AddOrganizationPersonRequest
-import java.io.File
 
 @HiltViewModel
 class AddEditOrganizationViewModel @Inject constructor(
@@ -92,20 +93,19 @@ class AddEditOrganizationViewModel @Inject constructor(
         loadInitialData()
     }
 
-
     private fun loadInitialData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isInitialLoading = true) }
 
-            // واکشی لیست شهرها
+            // ۱. واکشی اطلاعات پایه (شهرها و ویزیتورها)
             val cities = repository.observeAllCity().firstOrNull().orEmpty()
             val visitors = try {
                 visitorRepository.getAllVisitors().firstOrNull().orEmpty()
             } catch (e: Exception) {
                 emptyList()
             }
-
             val defaultVisitorId = mainPreferences.getVisitorId()
+
             _uiState.update { state ->
                 state.copy(
                     cities = cities,
@@ -114,16 +114,12 @@ class AddEditOrganizationViewModel @Inject constructor(
                 )
             }
 
-            // در صورتی که ویرایش باشد، لود کردن جزئیات سازمان
+            // ۲. لود جزئیات در حالت ویرایش
             if (isEditMode && !organizationIdArg.isNullOrBlank()) {
                 val orgWithDetail = repository.observeById(organizationIdArg).firstOrNull()
                 if (orgWithDetail != null) {
                     val org = orgWithDetail.organization
-
-                    // لود منطقه‌های متناظر با شهر
-                    if (!org.cityId.isNullOrBlank()) {
-                        loadRegions(org.cityId)
-                    }
+                    if (!org.cityId.isNullOrBlank()) loadRegions(org.cityId)
 
                     _uiState.update { current ->
                         current.copy(
@@ -153,56 +149,55 @@ class AddEditOrganizationViewModel @Inject constructor(
                     }
                 }
 
-                val currentBaseUrl = mainPreferences.baseUrlFlow.firstOrNull().orEmpty().trimEnd('/')
+                // ۳. مدیریت پیوست‌ها (کش و سرور)
+                val currentBaseUrl =
+                    mainPreferences.baseUrlFlow.firstOrNull().orEmpty().trimEnd('/')
 
-                // ۱. ابتدا تلاش برای خواندن پیوست‌ها از دیتابیس لوکال (برای دسترسی آفلاین سریع و مطمئن)
+                // الف: نمایش فوری از دیتابیس محلی
                 val cachedEntities = try {
                     attachmentFileDao.getOrganizationAttachments(organizationIdArg)
                 } catch (e: Exception) {
                     emptyList()
                 }
-
-                val attachments = if (cachedEntities.isNotEmpty()) {
-                    cachedEntities.map { it.toDto() }
-                } else {
-                    // اگر در کش نبود، ازپوستر/رپازیتوری می‌گیریم
-                    val result = attachmentFileRepository.getAttachmentsByOrgId(organizationIdArg)
-                    result.getOrDefault(emptyList())
-                }
-
-                // ۲. نگاشت استاندارد پیوست‌ها به OrganizationImageItem با بررسی دقیق فایل‌های محلی
-                val loadedImages = attachments.map { attachment ->
-                    val imagesDir = File(context.filesDir, "attachments")
-                    val extension = if (!attachment.fileExtension.isNullOrBlank()) {
-                        if (attachment.fileExtension.startsWith(".")) attachment.fileExtension else ".${attachment.fileExtension}"
-                    } else ".jpg"
-
-                    val localFile = File(imagesDir, "${attachment.attachmentFileId}$extension")
-                    val localUri = if (localFile.exists()) Uri.fromFile(localFile) else null
-
-                    val serverImageUrl = when {
-                        !attachment.fileUrl.isNullOrBlank() && attachment.fileUrl.startsWith("http", true) -> {
-                            attachment.fileUrl
-                        }
-                        !attachment.fileUrl.isNullOrBlank() -> {
-                            val cleanPath = attachment.fileUrl.removePrefix("/")
-                            "$currentBaseUrl/$cleanPath"
-                        }
-                        else -> {
-                            "$currentBaseUrl/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
-                        }
+                if (cachedEntities.isNotEmpty()) {
+                    _uiState.update {
+                        it.copy(
+                            images = mapDtosToImageItems(
+                                context,
+                                cachedEntities.map { e -> e.toDto() },
+                                currentBaseUrl
+                            )
+                        )
                     }
-
-                    OrganizationImageItem(
-                        uri = localUri,
-                        fileType = attachment.fileType,
-                        description = attachment.description.orEmpty(),
-                        uploadedFileId = attachment.attachmentFileId,
-                        serverImageUrl = serverImageUrl
-                    )
                 }
 
-                _uiState.update { it.copy(images = loadedImages) }
+                // ب: دریافت از سرور و آپدیت نهایی
+                val result = attachmentFileRepository.getAttachmentsByOrgId(organizationIdArg)
+                val dtoList = result.getOrDefault(emptyList())
+
+                if (dtoList.isNotEmpty()) {
+                    // ذخیره در دیتابیس (با meetingId واقعی)
+                    attachmentFileRepository.saveAttachmentsToDatabase(
+                        orgId = organizationIdArg,
+                        meetingId = null,
+                        attachments = dtoList,
+                        baseUrl = currentBaseUrl
+                    )
+
+                    // فیلتر فایل‌های مربوط به سازمان (آن‌هایی که meetingid نال یا خالی هستند)
+                    val orgOnlyList = dtoList.filter { it.meetingid.isNullOrBlank() }
+
+                    // آپدیت UI با دیتاهای تازه
+                    _uiState.update {
+                        it.copy(
+                            images = mapDtosToImageItems(
+                                context,
+                                orgOnlyList,
+                                currentBaseUrl
+                            )
+                        )
+                    }
+                }
             }
 
             _uiState.update { it.copy(isInitialLoading = false) }
@@ -332,7 +327,12 @@ class AddEditOrganizationViewModel @Inject constructor(
             try {
                 val currentTimestamp = System.currentTimeMillis()
                 val isoTimestamp = getCurrentIsoUtcTimestamp()
-                val targetOrgId = state.organizationId
+
+                val targetOrgId = if (state.isEditMode && !state.organizationId.isNullOrBlank()) {
+                    state.organizationId
+                } else {
+                    UUID.randomUUID().toString()
+                }
                 val visitorIdToSubmit =
                     uiState.value.visitorId.ifBlank { mainPreferences.getVisitorId() }
 
@@ -364,6 +364,7 @@ class AddEditOrganizationViewModel @Inject constructor(
                 )
 
                 val defaultPersonName = state.ownerName.ifBlank { state.organizationName }.trim()
+                Log.d("requestrequest222", request.toString())
 
                 if (state.isEditMode && !targetOrgId.isNullOrBlank()) {
                     // --- ویرایش سازمان ---
@@ -418,6 +419,7 @@ class AddEditOrganizationViewModel @Inject constructor(
                                     email = request.email,
                                     ticketSaleCountHistory = request.ticketSaleCountHistory,
                                     modifiedOn = isoTimestamp,
+                                    flagInsUp = true,
                                     syncStatus = nextSyncStatus,
                                     isLocallyModified = true,
                                     lastModifiedTimestamp = currentTimestamp
@@ -438,25 +440,19 @@ class AddEditOrganizationViewModel @Inject constructor(
 
                     result.fold(
                         onSuccess = { response ->
-                            val newOrganizationId = response.data
-                            if (newOrganizationId.isNullOrBlank()) {
-                                _uiEvent.emit(
-                                    UiEvent.ShowError(
-                                        UiText.DynamicString("شناسه سازمان از سمت سرور دریافت نشد.")
-                                    )
-                                )
-                                return@fold
-                            }
+                            val resolvedOrgId =
+                                response.data?.takeIf { it.isNotBlank() } ?: targetOrgId
+
 
                             createDefaultPersonForOrganization(
-                                organizationId = newOrganizationId,
+                                organizationId = resolvedOrgId,
                                 personName = defaultPersonName,
                                 mobile = state.mobile.trim(),
                                 isOnline = true
                             )
 
                             if (_uiState.value.images.isNotEmpty()) {
-                                uploadImagesForOrganization(newOrganizationId)
+                                uploadImagesForOrganization(resolvedOrgId)
                             }
 
                             val msg = response.message
@@ -470,10 +466,9 @@ class AddEditOrganizationViewModel @Inject constructor(
                         },
                         onFailure = { error ->
                             if (error.isNetworkError()) {
-                                val localUUID = UUID.randomUUID().toString()
 
                                 val offlineEntity = OrganizationEntity(
-                                    organizationId = localUUID,
+                                    organizationId = targetOrgId,
                                     serverId = null,
                                     name = request.name,
                                     ownerName = request.ownerName,
@@ -499,6 +494,7 @@ class AddEditOrganizationViewModel @Inject constructor(
                                     email = request.email,
                                     ticketSaleCountHistory = request.ticketSaleCountHistory,
                                     modifiedOn = isoTimestamp,
+                                    flagInsUp = false,
                                     syncStatus = SyncStatus.PENDING_INSERT,
                                     isLocallyModified = true,
                                     lastModifiedTimestamp = currentTimestamp
@@ -506,7 +502,7 @@ class AddEditOrganizationViewModel @Inject constructor(
 
                                 repository.saveLocal(offlineEntity)
                                 createDefaultPersonForOrganization(
-                                    organizationId = localUUID,
+                                    organizationId = targetOrgId,
                                     personName = defaultPersonName,
                                     mobile = state.mobile.trim(),
                                     isOnline = false
@@ -622,7 +618,11 @@ class AddEditOrganizationViewModel @Inject constructor(
             val extension = when {
                 mimeType.contains("pdf", ignoreCase = true) -> ".pdf"
                 mimeType.contains("png", ignoreCase = true) -> ".png"
-                mimeType.contains("word", ignoreCase = true) || mimeType.contains("officedocument", ignoreCase = true) -> ".docx"
+                mimeType.contains("word", ignoreCase = true) || mimeType.contains(
+                    "officedocument",
+                    ignoreCase = true
+                ) -> ".docx"
+
                 else -> ".jpg"
             }
             val fileName = "org_${System.currentTimeMillis()}_${img.fileType}$extension"

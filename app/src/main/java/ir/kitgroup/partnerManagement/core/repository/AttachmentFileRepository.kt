@@ -115,26 +115,28 @@ class AttachmentFileRepository @Inject constructor(
             Result.failure(e)
         }
     }
-
     suspend fun saveAttachmentsToDatabase(
         orgId: String,
         meetingId: String?,
         attachments: List<AttachmentFileDto>,
         baseUrl: String
     ) {
-        // خواندن رکوردهای موجود بر اساس orgId و meetingId برای حفظ localPath
-        val existingEntities = if (meetingId == null) {
-            attachmentFileDao.getOrganizationAttachments(orgId)
-        } else {
-            attachmentFileDao.getMeetingAttachments(orgId, meetingId)
-        }.associateBy { it.attachmentFileId }
+        // خواندن رکوردهای موجود برای حفظ localPath
+        val existingEntities = try {
+            attachmentFileDao.getOrganizationAttachments(orgId).associateBy { it.attachmentFileId }
+        } catch (_: Exception) {
+            emptyMap()
+        }
 
         val entities = attachments.map { dto ->
             val existing = existingEntities[dto.attachmentFileId]
+
+            val actualMeetingId = dto.meetingid?.takeIf { it.isNotBlank() } ?: meetingId
+
             AttachmentFileEntity(
                 attachmentFileId = dto.attachmentFileId,
                 organizationId = orgId,
-                meetingId = meetingId,
+                meetingId = actualMeetingId,
                 fileType = dto.fileType,
                 description = dto.description,
                 fileUrl = dto.fileUrl
