@@ -46,19 +46,22 @@ import ir.kitgroup.partnerManagement.core.ui.util.GenderType
 import ir.kitgroup.partnerManagement.core.ui.util.PersonCategory
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomDialog
 import ir.kitgroup.partnerManagement.core.ui.components.DualActionButtonBottomBar
 import ir.kitgroup.partnerManagement.core.ui.util.OfferDetailPlanStatus
 import ir.kitgroup.partnerManagement.core.ui.util.SecondaryButtonVariant
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.core.ui.util.toAmountDisplay
 
 @Composable
 fun OfferDetailScreen(
     onNavigateBack: () -> Unit,
     onEditClick: (offerDetailId: String) -> Unit,
-    viewModel: OfferDetailViewModel = hiltViewModel()
+    viewModel: OfferDetailViewModel = hiltViewModel(),
+    sessionViewModel: SessionViewModel = hiltViewModel()
 ) {
     val offerDetail by viewModel.offerDetail.collectAsStateWithLifecycle()
     val offer by viewModel.offer.collectAsStateWithLifecycle()
@@ -69,7 +72,11 @@ fun OfferDetailScreen(
     val snackBarHostState = remember { SnackbarHostState() }
 
     var showDeleteConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    val roleCode by sessionViewModel.roleCode.collectAsStateWithLifecycle()
 
+    val isSupervisor = remember(roleCode) {
+        roleCode?.let { UserRole.fromCode(it.toString()) == UserRole.SUPERVISOR } ?: false
+    }
     LaunchedEffect(viewModel.uiEvent) {
         viewModel.uiEvent.collect { event ->
             when (event) {
@@ -88,15 +95,17 @@ fun OfferDetailScreen(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = {
-            if (offerDetail != null) {
-                DualActionButtonBottomBar(
-                    primaryText = stringResource(R.string.label_edit),
-                    secondaryText = stringResource(R.string.label_delete),
-                    onPrimaryClick = { onEditClick(viewModel.offerDetailId) },
-                    onSecondaryClick = { showDeleteConfirmationDialog = true },
-                    isSecondaryLoading = uiState.isLoading,
-                    secondaryVariant = SecondaryButtonVariant.FILLED
-                )
+            if (isSupervisor) {
+                if (offerDetail != null) {
+                    DualActionButtonBottomBar(
+                        primaryText = stringResource(R.string.label_edit),
+                        secondaryText = stringResource(R.string.label_delete),
+                        onPrimaryClick = { onEditClick(viewModel.offerDetailId) },
+                        onSecondaryClick = { showDeleteConfirmationDialog = true },
+                        isSecondaryLoading = uiState.isLoading,
+                        secondaryVariant = SecondaryButtonVariant.FILLED
+                    )
+                }
             }
         }
     ) { innerPadding ->

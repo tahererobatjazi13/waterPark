@@ -51,6 +51,7 @@ fun OrganizationBasicInfoTabContent(
     activeVisitorName: String? = null,
     activeContractName: String? = null,
     isImagesLoading: Boolean = false,
+    downloadingAttachmentId: String? = null,
     baseUrl: String,
     onDownloadAttachment: (attachmentId: String, extension: String?) -> Unit,
     attachments: List<AttachmentFileDto> = emptyList(),
@@ -110,7 +111,7 @@ fun OrganizationBasicInfoTabContent(
         ImageDetailSection(
             isLoading = isImagesLoading,
             attachments = attachments,
-            baseUrl = baseUrl,
+            baseUrl = baseUrl, downloadingAttachmentId = downloadingAttachmentId,
             onDownloadClick = onDownloadAttachment
         )
 

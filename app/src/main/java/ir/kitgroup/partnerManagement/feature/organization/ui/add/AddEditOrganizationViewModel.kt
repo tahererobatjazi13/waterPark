@@ -1,5 +1,6 @@
 package ir.kitgroup.partnerManagement.feature.organization.ui.add
-
+import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -569,13 +570,7 @@ class AddEditOrganizationViewModel @Inject constructor(
     }
 
     fun onAddLocalAttachment(uri: Uri, fileType: Int, description: String) {
-        val contentResolver = context.contentResolver
-        val mimeType = contentResolver.getType(uri) ?: ""
-        val extension = when {
-            mimeType.contains("pdf", ignoreCase = true) -> ".pdf"
-            mimeType.contains("png", ignoreCase = true) -> ".png"
-            else -> ".jpg"
-        }
+        val (originalFileName, extension) = getFileNameAndExtension(uri)
 
         val currentList = _uiState.value.images.toMutableList()
         currentList.add(
@@ -593,10 +588,43 @@ class AddEditOrganizationViewModel @Inject constructor(
                 fileUri = uri,
                 organizationId = currentOrgId,
                 fileType = fileType,
-                fileName = "org_${System.currentTimeMillis()}$extension",
+                fileName = originalFileName.ifBlank { "org_${System.currentTimeMillis()}$extension" },
                 description = description
             )
         }
+    }
+
+
+    private fun getFileNameAndExtension(uri: Uri): Pair<String, String> {
+        var fileName = ""
+        // تلاش برای خواندن نام اصلی فایل از ContentResolver
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (nameIndex != -1 && cursor.moveToFirst()) {
+                fileName = cursor.getString(nameIndex) ?: ""
+            }
+        }
+
+        // استخراج پسوند از نام فایل
+        var ext = fileName.substringAfterLast('.', "").lowercase().trim()
+
+        // اگر از روی نام پیدا نشد، از روی MimeType شناسایی شود
+        if (ext.isEmpty()) {
+            val mimeType = context.contentResolver.getType(uri) ?: ""
+            ext = when {
+                mimeType.contains("wordprocessingml", ignoreCase = true) ||
+                        mimeType.contains("msword", ignoreCase = true) -> "docx"
+                mimeType.contains("pdf", ignoreCase = true) -> "pdf"
+                mimeType.contains("png", ignoreCase = true) -> "png"
+                mimeType.contains("jpeg", ignoreCase = true) || mimeType.contains("jpg", ignoreCase = true) -> "jpg"
+                else -> MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "jpg"
+            }
+        }
+
+        val finalExtension = if (ext.startsWith(".")) ext else ".$ext"
+        val finalName = if (fileName.isNotBlank()) fileName else "file_${System.currentTimeMillis()}$finalExtension"
+
+        return Pair(finalName, finalExtension)
     }
 
     fun onRemoveImage(index: Int) {
@@ -613,19 +641,12 @@ class AddEditOrganizationViewModel @Inject constructor(
         for (img in imagesToUpload) {
             val uri = img.uri ?: continue
 
-            // تشخیص دقیق پسوند فایل به جای hardcode کردن jpg
-            val mimeType = context.contentResolver.getType(uri).orEmpty()
-            val extension = when {
-                mimeType.contains("pdf", ignoreCase = true) -> ".pdf"
-                mimeType.contains("png", ignoreCase = true) -> ".png"
-                mimeType.contains("word", ignoreCase = true) || mimeType.contains(
-                    "officedocument",
-                    ignoreCase = true
-                ) -> ".docx"
-
-                else -> ".jpg"
+            val (originalFileName, extension) = getFileNameAndExtension(uri)
+            val fileName = if (originalFileName.isNotBlank()) {
+                originalFileName
+            } else {
+                "org_${System.currentTimeMillis()}_${img.fileType}$extension"
             }
-            val fileName = "org_${System.currentTimeMillis()}_${img.fileType}$extension"
 
             try {
                 val uploadResult = attachmentFileRepository.uploadAttachmentFile(
@@ -640,7 +661,6 @@ class AddEditOrganizationViewModel @Inject constructor(
 
                 uploadResult.fold(
                     onSuccess = { uploadResponse ->
-                        // ذخیره در جدول پیوست‌های دیتابیس محلی
                         attachmentFileRepository.upsertUploadedAttachment(
                             orgId = organizationId,
                             meetingId = null,

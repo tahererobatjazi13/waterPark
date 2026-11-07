@@ -53,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.database.entity.OfferEntity
 import ir.kitgroup.partnerManagement.core.database.model.OfferDetailWithProduct
+import ir.kitgroup.partnerManagement.core.ui.SessionViewModel
 import ir.kitgroup.partnerManagement.core.ui.components.BouncingDotsIndicator
 import ir.kitgroup.partnerManagement.core.ui.components.CustomButton
 import ir.kitgroup.partnerManagement.core.ui.components.EmptyState
@@ -63,6 +64,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.DiscountType
 import ir.kitgroup.partnerManagement.core.ui.util.OfferDetailPlanStatus
 import ir.kitgroup.partnerManagement.core.ui.util.OfferPlanStatus
 import ir.kitgroup.partnerManagement.core.ui.util.UiEvent
+import ir.kitgroup.partnerManagement.core.ui.util.UserRole
 import ir.kitgroup.partnerManagement.core.ui.util.formatJalaliDate
 
 @Composable
@@ -70,6 +72,7 @@ fun OfferDetailPlanListScreen(
     onAddOfferDetailPlanClick: (planId: String, planTitle: String) -> Unit,
     onOfferDetailPlanClick: (OfferDetailWithProduct) -> Unit,
     viewModel: OfferDetailPlanListViewModel = hiltViewModel(),
+    sessionViewModel: SessionViewModel = hiltViewModel()
 ) {
     val headerOffer by viewModel.headerOffer.collectAsStateWithLifecycle()
     val offerDetails by viewModel.offerDetails.collectAsStateWithLifecycle()
@@ -77,6 +80,11 @@ fun OfferDetailPlanListScreen(
 
     val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
+    val roleCode by sessionViewModel.roleCode.collectAsStateWithLifecycle()
+
+    val isSupervisor = remember(roleCode) {
+        roleCode?.let { UserRole.fromCode(it.toString()) == UserRole.SUPERVISOR } ?: false
+    }
 
     LaunchedEffect(viewModel.uiEvent) {
         viewModel.uiEvent.collect { event ->
@@ -96,35 +104,38 @@ fun OfferDetailPlanListScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         bottomBar = {
-            Surface(
-                color = appColors.cardBackground,
-                shadowElevation = 8.dp
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    CustomButton(
-                        text = stringResource(R.string.label_new_plan_detail),
-                        onClick = {
-                            val plan = headerOffer
-                            val planId = plan?.offerId.orEmpty()
-                            val title = plan?.title?.takeIf { it.isNotBlank() }.orEmpty()
+            if (isSupervisor) {
 
-                            if (planId.isNotBlank()) {
-                                onAddOfferDetailPlanClick(planId, title)
-                            }
-                        },
-                        fillMaxWidth = true,
-                        height = 48.dp,
-                        textStyle = typography.titleLarge,
-                        icon = Icons.Default.Add,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = appColors.success,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                Surface(
+                    color = appColors.cardBackground,
+                    shadowElevation = 8.dp
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        CustomButton(
+                            text = stringResource(R.string.label_new_plan_detail),
+                            onClick = {
+                                val plan = headerOffer
+                                val planId = plan?.offerId.orEmpty()
+                                val title = plan?.title?.takeIf { it.isNotBlank() }.orEmpty()
+
+                                if (planId.isNotBlank()) {
+                                    onAddOfferDetailPlanClick(planId, title)
+                                }
+                            },
+                            fillMaxWidth = true,
+                            height = 48.dp,
+                            textStyle = typography.titleLarge,
+                            icon = Icons.Default.Add,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = appColors.success,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         )
-                    )
+                    }
                 }
             }
         },

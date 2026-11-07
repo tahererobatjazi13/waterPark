@@ -58,7 +58,7 @@ fun ImageAddEditSection(
     }
 
     SectionTitle(
-        title = stringResource(R.string.label_attachment),
+        title = stringResource(R.string.label_attachment_with_types),
         titleColor = MaterialTheme.colorScheme.primary
     )
 

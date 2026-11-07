@@ -98,6 +98,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import ir.kitgroup.partnerManagement.core.database.model.OrganizationWithDetail
 import ir.kitgroup.partnerManagement.core.ui.components.*
+import ir.kitgroup.partnerManagement.feature.attachment.AttachmentViewModel
 
 @Composable
 fun OrganizationDetailScreen(
@@ -119,7 +120,7 @@ fun OrganizationDetailScreen(
     navController: NavController
 ) {
     val baseUrl by organizationDetailViewModel.baseUrlFlow.collectAsStateWithLifecycle()
-    val detailUiState by organizationDetailViewModel.uiState.collectAsStateWithLifecycle()
+    val attachmentsUiState by organizationDetailViewModel.uiState.collectAsStateWithLifecycle()
     val organization by organizationDetailViewModel.organization.collectAsState()
 
     var warningToEdit by remember { mutableStateOf<WarningWithDetail?>(null) }
@@ -256,8 +257,9 @@ fun OrganizationDetailScreen(
                                     organization = currentOrganization,
                                     activeVisitorName = activeVisitorName,
                                     activeContractName = activeContractName,
-                                    isImagesLoading = detailUiState.isImagesLoading,
-                                    attachments = detailUiState.attachments,
+                                    isImagesLoading = attachmentsUiState.isImagesLoading,
+                                    attachments = attachmentsUiState.attachments,
+                                    downloadingAttachmentId = attachmentsUiState.downloadingAttachmentId,
                                     baseUrl = baseUrl,
                                     onDownloadAttachment = { attachmentId, fileExtension ->
                                         organizationDetailViewModel.downloadAttachmentManually(

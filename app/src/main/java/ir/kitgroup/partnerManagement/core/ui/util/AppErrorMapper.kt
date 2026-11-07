@@ -1,7 +1,5 @@
 package ir.kitgroup.partnerManagement.core.ui.util
 
-import android.os.RemoteException
-import androidx.annotation.StringRes
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.network.exception.ApiException
 import retrofit2.HttpException

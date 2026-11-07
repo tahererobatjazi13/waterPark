@@ -204,7 +204,6 @@ interface ApiService {
     @GET("api/OrgAttachmentFiles/download/{id}")
     suspend fun downloadAttachment(
         @Path("id") fileId: String
-
     ): Response<ResponseBody>
 
     @GET("api/OrgAttachmentFiles/getAttachments/{id}")

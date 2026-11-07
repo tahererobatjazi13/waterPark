@@ -96,6 +96,7 @@
     <string name="label_select_time">انتخاب ساعت</string>
     <string name="label_images">تصاویر</string>
     <string name="label_attachment">پیوست ها</string>
+    <string name="label_attachment_with_types">پیوست‌ها (تصویر، Word، PDF)</string>
     <string name="label_submit_visit">ثبت بازدید</string>
     <string name="label_edit_visit">ویرایش بازدید</string>
     <string name="label_edit_stand">ویرایش استند</string>

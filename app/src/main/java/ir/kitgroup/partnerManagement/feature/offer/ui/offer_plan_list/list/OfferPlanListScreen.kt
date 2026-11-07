@@ -96,6 +96,7 @@ fun OfferPlanListContent(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         floatingActionButton = {
+
             if (isSupervisor) {
                 ExtendedFloatingActionButton(
                     onClick = onAddOfferClick,

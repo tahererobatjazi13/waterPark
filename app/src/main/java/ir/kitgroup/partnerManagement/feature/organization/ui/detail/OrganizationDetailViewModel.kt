@@ -25,6 +25,7 @@ import ir.kitgroup.partnerManagement.core.ui.util.UiText
 import ir.kitgroup.partnerManagement.core.ui.util.datastore.MainPreferences
 import ir.kitgroup.partnerManagement.core.ui.util.isNetworkError
 import ir.kitgroup.partnerManagement.feature.organization.model.ChangeStatusOrganizationRequest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +35,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -226,7 +229,7 @@ class OrganizationDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isImagesLoading = true) }
 
-            // ۱. ابتدا دیتای ذخیره‌شده قبلی را از دیتابیس لوکال می‌خوانیم تا کاربر بلافاصله عکس‌ها را ببیند
+            // ابتدا دیتای ذخیره‌شده قبلی را از دیتابیس لوکال می‌خوانیم تا کاربر بلافاصله عکس‌ها را ببیند
             try {
                 val cachedEntities =
                     attachmentFileDao.getOrganizationAttachments(organizationId)
@@ -262,7 +265,7 @@ class OrganizationDetailViewModel @Inject constructor(
                     )
                 }
             }.onFailure { error ->
-                // ۳. اگر اینترنت قطع بود یا سرور خطا داد، مطمئن می‌شویم لودینگ بسته شود و دیتابیس لوکال اگر لود نشده خوانده شود
+                //  اگر اینترنت قطع بود یا سرور خطا داد، مطمئن می‌شویم لودینگ بسته شود و دیتابیس لوکال اگر لود نشده خوانده شود
                 val cachedEntities =
                     attachmentFileDao.getOrganizationAttachments(organizationId)
                 val cachedDtos = cachedEntities.map { it.toDto() }
@@ -278,17 +281,78 @@ class OrganizationDetailViewModel @Inject constructor(
         }
     }
 
+    fun downloadAttachmentManually(
+        attachmentId: String,
+        fileExtension: String?
+    ) {
+        if (attachmentId.isBlank()) {
+            viewModelScope.launch {
+                _uiEvent.emit(
+                    UiEvent.ShowError(
+                        UiText.DynamicString("شناسه فایل نامعتبر است.")
+                    )
+                )
+            }
+            return
+        }
 
-    fun downloadAttachmentManually(attachmentId: String, fileExtension: String?) {
         viewModelScope.launch {
-            val imagesDir = File(context.filesDir, "attachments").apply { mkdirs() }
-            val localFile = File(imagesDir, "$attachmentId${fileExtension ?: ".jpg"}")
+            _uiState.update { it.copy(downloadingAttachmentId = attachmentId) }
 
-            val result = attachmentFileRepository.downloadAndSaveFile(attachmentId, localFile)
-            if (result.isSuccess) {
-                // بروزرسانی localPath در دیتابیس
-                attachmentFileDao.updateLocalPath(attachmentId, localFile.absolutePath)
-                // رفرش UI یا State
+            try {
+                val imagesDir = File(context.getExternalFilesDir(null), "attachments")
+                if (!imagesDir.exists() && !imagesDir.mkdirs()) {
+                    throw IOException("امکان ایجاد پوشه ذخیره‌سازی وجود ندارد.")
+                }
+
+                val ext = when {
+                    fileExtension.isNullOrBlank() -> ".jpg"
+                    fileExtension.startsWith(".") -> fileExtension
+                    else -> ".$fileExtension"
+                }
+
+                val localFile = File(imagesDir, "$attachmentId$ext")
+                val result = attachmentFileRepository.downloadAndSaveFile(
+                    fileId = attachmentId,
+                    outputFile = localFile
+                )
+
+                result
+                    .onSuccess {
+                        attachmentFileDao.updateLocalPath(
+                            attachmentId,
+                            localFile.absolutePath
+                        )
+
+                        val cachedEntities =
+                            attachmentFileDao.getOrganizationAttachments(organizationId)
+                        val cachedDtos = cachedEntities.map { it.toDto() }
+
+                        _uiState.update {
+                            it.copy(attachments = cachedDtos)
+                        }
+
+                        _uiEvent.emit(
+                            UiEvent.ShowMessage(
+                                UiText.DynamicString("فایل با موفقیت ذخیره شد.")
+                            )
+                        )
+                    }
+                    .onFailure { error ->
+                        _uiEvent.emit(
+                            UiEvent.ShowError(AppErrorMapper.map(error))
+                        )
+                    }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiEvent.emit(
+                    UiEvent.ShowError(AppErrorMapper.map(e))
+                )
+            } finally {
+                _uiState.update {
+                    it.copy(downloadingAttachmentId = null)
+                }
             }
         }
     }

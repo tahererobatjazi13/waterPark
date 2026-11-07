@@ -12,8 +12,11 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.File
 import javax.inject.Inject
+import retrofit2.HttpException
+import java.io.File
+import java.io.IOException
+import kotlin.coroutines.cancellation.CancellationException
 
 class AttachmentFileRepository @Inject constructor(
     private val attachmentFileDao: AttachmentFileDao,
@@ -31,30 +34,18 @@ class AttachmentFileRepository @Inject constructor(
     ): Result<AttachmentUploadResponse> {
         return try {
             val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(uri)
+                ?: return Result.failure(Exception("Cannot read file"))
+            val fileBytes = inputStream.readBytes()
+            inputStream.close()
+
             val mimeType = contentResolver.getType(uri) ?: "application/octet-stream"
-            val extension = when {
-                mimeType.contains("pdf", ignoreCase = true) -> ".pdf"
-                mimeType.contains("png", ignoreCase = true) -> ".png"
-                else -> ".jpg"
-            }
-            // تابع کمکی برای خواندن بایت‌ها یا تبدیل Uri به File
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val fileBytes = inputStream?.readBytes() ?: throw Exception("Cannot read file")
-            withContext(Dispatchers.IO) {
-                inputStream.close()
-            }
-            val mediaType = mimeType.toMediaTypeOrNull() ?: "image/*".toMediaTypeOrNull()
-            val requestFile = fileBytes.toRequestBody(mediaType)
 
-            val timestamp = System.currentTimeMillis()
-            val originalFileName = name ?: "file_$timestamp$extension"
+            val requestFile = fileBytes.toRequestBody(mimeType.toMediaTypeOrNull())
 
-            val finalFileName = if (!originalFileName.endsWith(extension, ignoreCase = true)) {
-                "$originalFileName$extension"
-            } else {
-                originalFileName
-            }
-            val body = MultipartBody.Part.createFormData("File", finalFileName, requestFile)
+            val finalFileName = name?.takeIf { it.isNotBlank() } ?: "file_${System.currentTimeMillis()}"
+
+            val fileBody = MultipartBody.Part.createFormData("File", finalFileName, requestFile)
             val orgIdBody = organizationId.toRequestBody("text/plain".toMediaTypeOrNull())
             val meetingIdBody = meetingId?.toRequestBody("text/plain".toMediaTypeOrNull())
             val fileTypeBody = fileType.toString().toRequestBody("text/plain".toMediaTypeOrNull())
@@ -62,7 +53,7 @@ class AttachmentFileRepository @Inject constructor(
             val descBody = description?.toRequestBody("text/plain".toMediaTypeOrNull())
 
             val response = apiService.uploadAttachment(
-                file = body,
+                file = fileBody,
                 name = nameBody,
                 organizationId = orgIdBody,
                 meetingId = meetingIdBody,
@@ -80,23 +71,41 @@ class AttachmentFileRepository @Inject constructor(
         }
     }
 
+
+
+
     suspend fun downloadAndSaveFile(
         fileId: String,
         outputFile: File
-    ): Result<Unit> {
-        return try {
-            val response = apiService.downloadAttachment(fileId)
-            if (response.isSuccessful && response.body() != null) {
-                val body = response.body()!!
-                body.byteStream().use { inputStream ->
-                    outputFile.outputStream().use { outputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-                }
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("Download failed with status: ${response.code()}"))
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val parent = outputFile.parentFile
+            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                return@withContext Result.failure(
+                    IOException("امکان ایجاد پوشه ذخیره‌سازی وجود ندارد.")
+                )
             }
+
+            val response = apiService.downloadAttachment(fileId)
+
+            if (!response.isSuccessful) {
+                return@withContext Result.failure(HttpException(response))
+            }
+
+            val body = response.body()
+                ?: return@withContext Result.failure(
+                    IOException("محتوای فایل از سرور دریافت نشد.")
+                )
+
+            body.byteStream().use { inputStream ->
+                outputFile.outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -115,6 +124,7 @@ class AttachmentFileRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
     suspend fun saveAttachmentsToDatabase(
         orgId: String,
         meetingId: String?,
@@ -172,7 +182,6 @@ class AttachmentFileRepository @Inject constructor(
         )
         attachmentFileDao.upsertAll(listOf(entity))
     }
-
 
 
 }

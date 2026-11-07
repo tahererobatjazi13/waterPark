@@ -93,9 +93,9 @@ fun AddContractContent(
     val settlementPeriodTypeMap = remember {
         SettlementPeriodType.entries.associateBy { context.getString(it.titleRes) }
     }
-
     val contractStatusMap = remember {
-        ContractStatus.entries.associateBy { context.getString(it.titleRes) }
+        listOf(ContractStatus.DRAFT, ContractStatus.ACTIVE)
+            .associateBy { context.getString(it.titleRes) }
     }
 
     Scaffold(

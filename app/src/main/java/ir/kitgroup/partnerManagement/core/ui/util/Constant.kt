@@ -521,7 +521,7 @@ enum class ContractStatus(
 
     DRAFT(0, R.string.status_draft, StatusColor.INFO),
     ACTIVE(1, R.string.status_active, StatusColor.SUCCESS),
-    SUSPENDED(2, R.string.status_suspended, StatusColor.ERROR),
+    SUSPENDED(2, R.string.status_suspend, StatusColor.ERROR),
     INACTIVE(3, R.string.status_inactive, StatusColor.ERROR);
 
     companion object {

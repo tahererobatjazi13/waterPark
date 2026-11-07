@@ -57,7 +57,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import ir.kitgroup.partnerManagement.core.network.model.AttachmentUploadResponse
 import ir.kitgroup.partnerManagement.core.ui.components.ImageAddEditSection
 import ir.kitgroup.partnerManagement.core.ui.util.AttachmentContext
@@ -527,93 +526,6 @@ private fun TwoColumnRow(
         Box(modifier = Modifier.weight(1f)) { end() }
     }
 }
-
-@Composable
-fun InactivationReasonDialog(
-    initialReason: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var reasonText by rememberSaveable { mutableStateOf(initialReason) }
-    var isError by remember { mutableStateOf(false) }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.label_inactivation_reason_title),
-                    style = typography.titleLarge,
-                    color = MaterialTheme.colorScheme.error
-                )
-
-                Text(
-                    text = stringResource(R.string.label_inactivation_reason_description),
-                    style = typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                CustomDescriptionField(
-                    label = stringResource(R.string.label_inactivation_reason_field),
-                    value = reasonText,
-                    onValueChange = {
-                        reasonText = it
-                        if (it.isNotBlank()) isError = false
-                    },
-                    placeholder = stringResource(R.string.hint_enter_inactivation_reason)
-                )
-
-                if (isError) {
-                    Text(
-                        text = stringResource(R.string.error_inactivation_reason_required),
-                        style = typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CustomOutlinedButton(
-                        text = stringResource(R.string.label_cancel),
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    CustomButton(
-                        text = stringResource(R.string.label_registration),
-                        onClick = {
-                            if (reasonText.trim().isNotBlank()) {
-                                onConfirm(reasonText.trim())
-                            } else {
-                                isError = true
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
-
 
 @Composable
 private fun OrganizationContactSection(

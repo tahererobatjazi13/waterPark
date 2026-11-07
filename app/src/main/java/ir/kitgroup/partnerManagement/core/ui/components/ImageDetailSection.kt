@@ -1,6 +1,5 @@
 package ir.kitgroup.partnerManagement.core.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -45,6 +45,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import ir.kitgroup.partnerManagement.R
 import ir.kitgroup.partnerManagement.core.network.model.AttachmentFileDto
+import ir.kitgroup.partnerManagement.core.ui.theme.LocalPartnerManagementColors
 import ir.kitgroup.partnerManagement.core.ui.util.AttachmentFileType
 import ir.kitgroup.partnerManagement.core.ui.util.openDownloadedFile
 import ir.kitgroup.partnerManagement.feature.organization.ui.detail.ImagePreviewDialog
@@ -55,14 +56,13 @@ fun ImageDetailSection(
     isLoading: Boolean,
     attachments: List<AttachmentFileDto>,
     baseUrl: String,
+    downloadingAttachmentId: String? = null,
     onDownloadClick: (attachmentId: String, extension: String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var selectedAttachmentForPreview by remember {
-        mutableStateOf<Pair<AttachmentFileDto, Any>?>(
-            null
-        )
+        mutableStateOf<Pair<AttachmentFileDto, Any>?>(null)
     }
 
     if (isLoading) {
@@ -119,7 +119,6 @@ fun ImageDetailSection(
                 if (extFromField.isNotEmpty()) {
                     extFromField
                 } else {
-                    // اگر فیلد fileExtension خالی بود، از انتهای fileUrl استخراج کن
                     attachment.fileUrl?.substringAfterLast('.', "")?.substringBefore('?')
                         ?.trim()?.removePrefix(".")?.lowercase().orEmpty()
                 }
@@ -129,55 +128,62 @@ fun ImageDetailSection(
             val isWord = cleanExt in listOf("doc", "docx")
             val isDocument = isPdf || isWord
 
-            val imagesDir = File(context.filesDir, "attachments")
+            val imagesDir = File(context.getExternalFilesDir(null), "attachments")
             val extensionWithDot = if (cleanExt.isNotEmpty()) ".$cleanExt" else ".jpg"
-            val localAttachmentFile =
-                File(imagesDir, "${attachment.attachmentFileId}$extensionWithDot")
 
-            // ۳. ساخت آدرس دانلود استاندارد سرور
+            // ⭐️ بررسی هوشمند تمام حالت‌های ممکن ذخیره فایل در حافظه
+            val candidateFileById = File(imagesDir, "${attachment.attachmentFileId}$extensionWithDot")
+            val candidateFileByUrl = if (!attachment.fileUrl.isNullOrBlank()) File(attachment.fileUrl) else null
+            val candidateFileByName = if (!attachment.name.isNullOrBlank()) File(imagesDir, attachment.name) else null
+
+            val existingLocalFile: File? = when {
+                candidateFileById.exists() -> candidateFileById
+                candidateFileByUrl?.exists() == true -> candidateFileByUrl
+                candidateFileByName?.exists() == true -> candidateFileByName
+                else -> null
+            }
+
+            val isDownloaded = existingLocalFile != null
+
+            // آدرس دانلود از سرور
             val serverDownloadUrl =
                 "${baseUrl.trimEnd('/')}/api/OrgAttachmentFiles/download/${attachment.attachmentFileId}"
 
-            // اولویت با فایل محلی است؛ اگر وجود نداشت به اندپوینت معتبر دانلود اشاره می‌کند
-            val imageModel: Any = when {
-                localAttachmentFile.exists() -> localAttachmentFile
-                !attachment.fileUrl.isNullOrBlank() && File(attachment.fileUrl).exists() -> File(
-                    attachment.fileUrl
-                )
-
-                else -> serverDownloadUrl
-            }
-
-            Log.d(
-                "ImageDetailSection",
-                "Resolved cleanExt: '$cleanExt', isPdf: $isPdf, imageModel: $imageModel"
-            )
+            val imageModel: Any = existingLocalFile ?: serverDownloadUrl
+            val isCurrentlyDownloading = downloadingAttachmentId == attachment.attachmentFileId
 
             ImageCard(
                 imageUrl = imageModel,
                 attachment = attachment,
                 isPdf = isPdf,
                 isWord = isWord,
+                isDownloaded = isDownloaded,
+                isDownloading = isCurrentlyDownloading,
                 onClick = {
                     if (isDocument) {
-                        if (localAttachmentFile.exists()) {
-                            openDownloadedFile(context, localAttachmentFile)
+                        // ⭐️ وقتی روی کارت کلیک شد: فقط اگر دانلود شده باشد بازش کن
+                        if (existingLocalFile != null && existingLocalFile.exists()) {
+                            openDownloadedFile(context, existingLocalFile)
                         } else {
-                            onDownloadClick(attachment.attachmentFileId, attachment.fileExtension)
+                            // اگر هنوز دانلود نشده، دانلود را شروع کن
+                            onDownloadClick(attachment.attachmentFileId, cleanExt)
                         }
                     } else {
-                        // پاس دادن مدل معتبر به دیالوگ پیش‌نمایش
+                        // برای تصاویر دیالوگ پیش‌نمایش باز شود
                         selectedAttachmentForPreview = Pair(attachment, imageModel)
                     }
                 },
                 onDownloadClick = {
-                    onDownloadClick(attachment.attachmentFileId, attachment.fileExtension)
+                    // ⭐️ دکمه دانلود گوشه کارت منحصراً برای دانلود است
+                    if (!isCurrentlyDownloading) {
+                        onDownloadClick(attachment.attachmentFileId, cleanExt)
+                    }
                 }
             )
         }
     }
 
-    // پیش‌نمایش تمام صفحه تصویر
+    // پیش‌نمایش تصویر در دیالوگ
     selectedAttachmentForPreview?.let { (attachment, model) ->
         ImagePreviewDialog(
             imageUrl = model.toString(),
@@ -187,12 +193,15 @@ fun ImageDetailSection(
     }
 }
 
+
 @Composable
 private fun ImageCard(
     imageUrl: Any?,
     attachment: AttachmentFileDto,
     isPdf: Boolean,
     isWord: Boolean,
+    isDownloaded: Boolean,
+    isDownloading: Boolean,
     onClick: () -> Unit,
     onDownloadClick: () -> Unit
 ) {
@@ -271,7 +280,7 @@ private fun ImageCard(
                 }
             }
 
-            // ۳. تصویر (JPG, PNG و غیره)
+            // ۳. تصویر
             else -> {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -287,7 +296,7 @@ private fun ImageCard(
             }
         }
 
-        // گرادینت پایین کارت جهت خوانایی برچسب
+        // گرادینت پایین کارت جهت خوانایی متن
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -303,26 +312,48 @@ private fun ImageCard(
                 )
         )
 
-        // دکمه دانلود در گوشه بالا راست
+        // ⭐️ دکمه دانلود / وضعیت ذخیره‌سازی در گوشه بالا راست
         Surface(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(6.dp)
                 .size(30.dp)
-                .clickable { onDownloadClick() },
+                .clickable(enabled = !isDownloading) { onDownloadClick() },
             shape = CircleShape,
-            color = Color.Black.copy(alpha = 0.55f),
+            color = Color.Black.copy(alpha = 0.6f),
             contentColor = Color.White
         ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
             ) {
-                Icon(
-                    imageVector = Icons.Default.FileDownload,
-                    contentDescription = "دانلود",
-                    modifier = Modifier.size(17.dp)
-                )
+                when {
+                    // در حال دانلود
+                    isDownloading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    // قبلاً دانلود شده و آفلاین موجود است
+                    isDownloaded -> {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "دانلود شده",
+                            modifier = Modifier.size(17.dp),
+                            tint = LocalPartnerManagementColors.current.success
+                        )
+                    }
+                    // نیاز به دانلود دارد
+                    else -> {
+                        Icon(
+                            imageVector = Icons.Default.FileDownload,
+                            contentDescription = "دانلود",
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+                }
             }
         }
 
